@@ -1,8 +1,37 @@
 <?php
 
-function mysqlConnect($domain = 'localhost', $user = 'root', $pass = '', $db = 'universe') {   
+function mysqlInit($domain = 'localhost', $user = 'root', $pass = '') {   
    @mysql_connect($domain, $user, $pass) or die('Error connecting to database: '.mysql_error());
-   mysql_select_db($db);
+   mysql_query('CREATE DATABASE IF NOT EXISTS `universe`') or die(__LINE__.' Error database: '.mysql_error());
+   mysql_select_db('universe');
+   mysql_query('CREATE TABLE IF NOT EXISTS `uniusers`(`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, PRIMARY KEY  (`id`) )') or die(' Error database: '.mysql_error());
+}
+
+function mysqlConnect($domain = 'localhost', $user = 'root', $pass = '') {   
+   @mysql_connect($domain, $user, $pass) or die('Error connecting to database: '.mysql_error());
+   mysql_select_db('universe');
+}
+
+function mysqlBool($query) {
+   $a = mysql_fetch_array(mysql_query($query));
+   return !!$a[0];
+}
+
+function userExists($user) {
+   mysqlConnect();
+   return mysql_num_rows(mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$user.'"'));
+}
+
+function mailExists($mail) {
+   mysqlConnect();
+   return mysql_num_rows(mysql_query('SELECT * FROM `uniusers` WHERE `mail`="'.$mail.'"'));
+}
+
+function generateSessId() {
+   mysqlConnect();
+   do $sessid = mySalt(64);
+   while ( mysql_fetch_array ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$sessid.'"') ) );
+   return $sessid;
 }
 
 function correctUserName($nick) {
@@ -12,7 +41,7 @@ function correctUserName($nick) {
    else return false;
 }
 
-function correctEmail($mail) {
+function correctMail($mail) {
    if (preg_match('/([a-z0-9_\.\-]{1,20})@([a-z0-9\.\-]{1,20})\.([a-z]{2,4})/is', $mail, $res) && $mail == $res[0] ) return true;
    else return false;
 }
@@ -30,13 +59,17 @@ function correctAdminPassword($pass) {
 }
 
 function correctUserPassword($pass) {
-   ##
+   if (strlen($pass)>9 &&
+       strlen($pass)<=32 &&
+       preg_match( '/[\!\@\#\$\%\^\&\*\(\)\_\+A-Za-z0-9]+/', $pass, $res) &&
+       $pass == $res[0]) return true;
+   else return false;
 }
 
-function mySalt() {
+function mySalt($n) {
    $salt = '';
-   $a = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-   for($i=0; $i<16; $i++){ $salt.=$a[rand(0,51)]; }
+   $a = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+   for($i=0; $i<$n; $i++) { $salt.=$a[rand(0,strlen($a)-1)]; }
    return $salt;
 }
 
