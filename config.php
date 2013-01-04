@@ -4,7 +4,7 @@
 $keyring = file_exists('keyring') ? file_get_contents('keyring') : 0;
 
 if ($keyring) {
-   $key = explode("|", $keyring);
+   $key = explode("|", trim($keyring));
    $host = $key[0];
    $user = $key[1];
    $pass = $key[2];
