@@ -3,7 +3,7 @@
 require_once('utils.php');
 mysqlConnect();
 
-if ($_COOKIE['sessid'] && strlen($_COOKIE['sessid'])==64 )
+if ($_COOKIE && $_COOKIE['sessid'] && strlen($_COOKIE['sessid'])==64 )
    if (mysql_num_rows(mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$_COOKIE['sessid'].'"')) &&
        mysqlBool('SELECT `sessexpire` > NOW() FROM `uniusers` WHERE `sessid`="'.$_COOKIE['sessid'].'"')) header('location: index.php');
 

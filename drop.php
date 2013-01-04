@@ -1,13 +1,9 @@
 <?php
 
-$domain = 'localhost';
-$user = 'root';
-$pass = '';
+require_once('utils.php');
 
-$db = 'universe';
+mysqlConnect();
 
-@mysql_connect($domain, $user, $pass) or die('Error connecting to database: '.mysql_error());
-
-mysql_query('DROP DATABASE '.$db);
+mysql_query('DROP DATABASE '.mysql_base);
 
 ?>
