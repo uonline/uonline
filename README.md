@@ -1,4 +1,4 @@
 uonline
 =======
 
-A browser-based MMORPG game in a fantasy world
+A browser-based MMORPG game in a fantasy world.
