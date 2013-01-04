@@ -7,10 +7,9 @@ if ($keyring) {
    $key = explode("|", $keyring);
    $host = $key[0];
    $user = $key[1];
-   $pass = $key[0];
+   $pass = $key[2];
    $base = $key[3];
 }
-
 
 define(mysql_host, $host ? $host : 'localhost');
 define(mysql_user, $user ? $user : 'root');
