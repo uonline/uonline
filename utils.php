@@ -3,16 +3,16 @@
 require_once('config.php');
 
 
-function mysqlInit($domain = mysql_domain, $user = mysql_user, $pass = mysql_pass) {   
-   @mysql_connect($domain, $user, $pass) or die('Error connecting to database: '.mysql_error());
-   mysql_query('CREATE DATABASE IF NOT EXISTS `universe`') or die(__LINE__.' Error database: '.mysql_error());
-   mysql_select_db('universe');
-   mysql_query('CREATE TABLE IF NOT EXISTS `uniusers`(`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, PRIMARY KEY  (`id`) )') or die(' Error database: '.mysql_error());
+function mysqlInit($domain = mysql_host, $user = mysql_user, $pass = mysql_pass, $base = mysql_base) {   
+   mysql_connect($domain, $user, $pass) or die('Error connecting to database: '.mysql_error());
+   mysql_query('CREATE DATABASE IF NOT EXISTS `'.$base.'`') or die(__LINE__.' Error database: '.mysql_error());
+   mysql_select_db($base);
+   mysql_query('CREATE TABLE IF NOT EXISTS `uniusers` (`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, PRIMARY KEY  (`id`) )') or die(' Error database: '.mysql_error());
 }
 
-function mysqlConnect($domain = mysql_domain, $user = mysql_user, $pass = mysql_pass) {   
-   @mysql_connect($domain, $user, $pass) or die('Error connecting to database: '.mysql_error());
-   mysql_select_db('universe');
+function mysqlConnect($domain = mysql_host, $user = mysql_user, $pass = mysql_pass, $base = mysql_base) {   
+   mysql_connect($domain, $user, $pass) or die('Error connecting to database: '.mysql_error());
+   mysql_select_db($base);
 }
 
 function mysqlBool($query) {
