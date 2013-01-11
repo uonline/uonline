@@ -1,0 +1,4 @@
+<Files keyring>
+order allow,deny
+deny from all
+</Files>
