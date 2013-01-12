@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once('utils.php');
 
@@ -12,8 +12,10 @@ require_once('utils.php');
 if (!$_COOKIE['sessid'] || strlen($_COOKIE['sessid'])!=64) echo foe();
 else {
    mysqlConnect();
-   $a = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$_COOKIE['sessid'].'"') );
-   echo $a['sessexpire'].'<br/>';
+   $a = mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$_COOKIE['sessid'].'"')?
+      mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$_COOKIE['sessid'].'"') ):
+      false;
+   echo $a?($a['sessexpire'].'<br/>'):'';
    if (!$a) echo foe();
    else if( mysqlBool('SELECT `sessexpire` < NOW() FROM `uniusers` WHERE `sessid`="'.$_COOKIE['sessid'].'"') ) echo friend();
         else { echo friend($a['user']); mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW()+1000 /*10 minutes*/ WHERE `sessid`="'.$_COOKIE['sessid'].'"'); }

@@ -47,8 +47,8 @@ function generateSessId() {
 }
 
 function correctUserName($nick) {
-   return strlen($nick)>2 &&
-          strlen($nick)<=16 &&
+   return strlen($nick)>1 &&
+          strlen($nick)<=32 &&
           !preg_match('/[^a-zA-Z0-9а-яА-ЯёЁйЙр_\\- ]/', $nick);
 }
 
@@ -64,7 +64,7 @@ function correctAdminPassword($pass) {
 }
 
 function correctUserPassword($pass) {
-   return strlen($pass)>9 &&
+   return strlen($pass)>3 &&
           strlen($pass)<=32 &&
           preg_match( '/[\!\@\#\$\%\^\&\*\(\)\_\+A-Za-z0-9]+/', $pass, $res) &&
           $pass == $res[0];

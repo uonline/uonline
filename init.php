@@ -19,7 +19,7 @@ else {
 function fofForm() {
    return '<form method="post" action="init.php">'.
           'Создание базы данных.<br/>'.
-          'Администраторский пароль: <input name="pass" type="password"/><br/>'.
+          'Административный пароль: <input name="pass" type="password" value="'.(ADMIN_PASS=='clearpass'?ADMIN_PASS:'').'"/><br/>'.
           '<input type="submit" value="Создать"/><br/>';
 }
 
