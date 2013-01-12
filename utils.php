@@ -49,7 +49,7 @@ function generateSessId() {
 function correctUserName($nick) {
    return strlen($nick)>2 &&
           strlen($nick)<=16 &&
-          !preg_match('/[^a-zA-Z]/', $nick);
+          !preg_match('/[^a-zA-Z0-9а-яА-ЯёЁйЙр_\\- ]/', $nick);
 }
 
 function correctMail($mail) {

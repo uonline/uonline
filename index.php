@@ -2,6 +2,13 @@
 
 require_once('utils.php');
 
+##$ar = array('hell', 'пре в_е-д', 'Збса', 'ррр', 'Рид');
+
+##foreach ($ar as $a=>$b) {
+##   preg_match('/[^a-zA-Z0-9а-яА-ЯёЁйЙр_\\- ]/', $b, $res);
+##   echo $b.' => '.(correctUserName($b)?'1':'0').' => '.$res[0].'<br/>';
+##}
+
 if (!$_COOKIE['sessid'] || strlen($_COOKIE['sessid'])!=64) echo foe();
 else {
    mysqlConnect();
