@@ -4,10 +4,10 @@ require_once('utils.php');
 
 $HEAD = $BODY = '';
 
-if (!$_COOKIE['sessid'] || strlen($sess = $_COOKIE['sessid'])!=64) foe();
+if (!$_COOKIE['sessid'] || strlen($sess = $_COOKIE['sessid'])!=64) { foe(); }
 else {
-   $BODY.= (sessionExists($sess)?(sessionExpire($sess).'<br/>'):''); //remove
-   
+   $BODY .= (sessionExists($sess)?(sessionExpire($sess).'<br/>'):''); //remove
+
    if ( !sessionExists($sess) ) foe();
    else
       if( sessionExpired($sess) ) friend();
@@ -18,25 +18,20 @@ else {
 }
 
 
-//insertEncoding('utf-8');
-//echo strlen($BODY);
-//echo makePage($HEAD, $BODY);
-//echo makePage('', 'booody');
-var_dump($BODY);
-
-
+insertEncoding('utf-8');
+echo makePage($HEAD, $BODY);
 
 
 
 function foe() {
-   echo 'foe<br/>';
-   $BODY .= ('<i>Я тебя не знать!</i><br/>'.
-   '<i><a href="reg.php">Зарегистрироваться</a> или <a href="login.php">войти</a>.</i>');
-   $BODY .= ' string';
-   echo $BODY.'<br/>';
+   global $BODY;
+   $BODY .= 
+   '<i>Я тебя не знать!</i><br/>'.
+   '<i><a href="reg.php">Зарегистрироваться</a> или <a href="login.php">войти</a>.</i>';
 }
 
 function friend($user='') {
+   global $BODY;
    $BODY.=
    $user?
    'Привет, '.$user.'. <i><a href="logout.php">Выход</a></i>.':
