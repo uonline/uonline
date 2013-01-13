@@ -8,8 +8,8 @@ if ($_POST) {
     if (correctUserName($_POST['user']) && !userExists($_POST['user']) && /*correctMail($_POST['mail']) && !mailExists($_POST['mail']) &&  */ correctUserPassword($_POST['pass'])) {
        $salt = mySalt(16); $session = generateSessId();
        setcookie('sessid', $session);
-       mysql_query('INSERT INTO `uniusers` (`user`, /*`mail`,*/ `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`) VALUES ("'.$_POST['user'].'", /*"'.$_POST['mail'].'",*/ "'.$salt.'", "'.myCrypt($_POST['pass'], $salt).'", "'.$session.'", NOW(), NOW()+600)') or die(__LINE__.' Error database: '.mysql_error());
-       echo '<meta http-equiv="refresh" content="3;url=index.php">Пользователь зарегистрирован.<br/>';
+       mysql_query('INSERT INTO `uniusers` (`user`, /*`mail`,*/ `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`) VALUES ("'.$_POST['user'].'", /*"'.$_POST['mail'].'",*/ "'.$salt.'", "'.myCrypt($_POST['pass'], $salt).'", "'.$session.'", NOW(), NOW()+1000)');
+       echo userRegistered();
     }
     else {
        if ( !correctUserName($_POST['user']) || /* !correctMail($_POST['mail']) || */ !correctUserPassword($_POST['pass']) )
@@ -25,6 +25,14 @@ else {
    echo regForm();
 }
 
+
+
+
+
+function userRegistered() {
+    return '<meta http-equiv="refresh" content="3;url=index.php">Пользователь зарегистрирован.<br/>';
+}
+
 function alreadyExists($a) {
    return
    '<span style="background-color: #f00">'.
@@ -32,15 +40,12 @@ function alreadyExists($a) {
    ' уже существу'.(count(array_filter($a))>1?'ю':'е').'т. Попробуйте другие.</span><br/>';
 }
 
-
 function incorrectDatas($a) {
-   return '<span style="background-color: #f00">'.
-          implode( ', ', array_filter_( array('ник', /*'e-mail', */ 'пароль'), $a ) ).
-          ' неправильны'.(count(array_filter($a))>1?'е':'й').'. Введите корректные данные.</span><br/>';
+   return
+   '<span style="background-color: #f00">'.
+   implode( ', ', array_filter_( array('ник', /*'e-mail', */ 'пароль'), $a ) ).
+   ' неправильны'.(count(array_filter($a))>1?'е':'й').'. Введите корректные данные.</span><br/>';
 }
-
-
-
 
 function regForm($n = '', $p = '' /* ,$e = '' */) {
    return

@@ -1,6 +1,7 @@
 <?php
 
 require_once('utils.php');
+
 mysqlConnect();
 
 if ($_COOKIE && $_COOKIE['sessid'] && strlen($_COOKIE['sessid'])==64 && sessionExists($_COOKIE['sessid']) && sessionActive($_COOKIE['sessid']) ) header('location: index.php');

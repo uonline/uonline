@@ -39,11 +39,31 @@ function sessionActive($sess) {
    return mysqlBool('SELECT `sessexpire` > NOW() FROM `uniusers` WHERE `sessid`="'.$sess.'"');
 }
 
+function sessionExpired($sess) {
+   return !sessionActive($sess);
+}
+
+function sessionExpire($sess) {
+   $a = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$sess.'"') );
+   return $a['sessexpire'];
+}
+
 function generateSessId() {
    mysqlConnect();
    do $sessid = mySalt(64);
    while ( mysql_fetch_array ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$sessid.'"') ) );
    return $sessid;
+}
+
+function userBySession($sess) {
+   mysqlConnect();
+   $a = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$sess.'"') );
+   return $a['user'];
+}
+
+function refreshSession($sess) {
+   mysqlConnect();
+   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW()+1000 /*10 minutes*/ WHERE `sessid`="'.$sess.'"');
 }
 
 function correctUserName($nick) {
@@ -92,6 +112,19 @@ function array_filter_($a, $m) {
    $r = array();
    foreach ($m as $i=>$v ) { if($v) $r[$i]=$a[$i]; }
    return $r;
+}
+
+function insertEncoding($e) {
+   header('Content-Type: text/html; charset='.$e);
+   //echo '<head><meta charset="'.$e.'" /></head>';
+}
+
+function makePage($head, $body) {
+   return
+   "<html>\n".
+   "<head>\n".$head."\n</head>\n".
+   "<body>\n".$body."\n</body>\n".
+   "</html>";
 }
 
 
