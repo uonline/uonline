@@ -48,8 +48,8 @@ function fofForm() {
    $BODY .=
    '<form method="post" action="init.php">'.
    'Создание базы данных.<br/>'.
-   'Административный пароль: <input name="pass" type="password" value="'.(ADMIN_PASS=='clearpass'?ADMIN_PASS:'').'"/><br/>'.
-   '<input type="submit" value="Создать"/><br/>';
+   'Административный пароль: <input name="pass" type="password" value="'.(ADMIN_PASS=='clearpass'?ADMIN_PASS:'').'" /><br/>'.
+   '<input type="submit" value="Создать" /><br/>';
 }
 
 ?>

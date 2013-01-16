@@ -54,7 +54,7 @@ function regForm($n = '', $p = '' /* ,$e = '' */) {
    'Ник: <input type="text" name="user" maxlength=16 value="'.$n.'"><i> От 2 до 32 символов, [a-zA-Z0-9а-яА-Я_- ].</i><br/>'.
    'Пароль: <input type="password" name="pass" maxlength=32 value="'.$p.'"><i style="white-space: pre"> От 4 до 32 символов, [a-zA-Z0-9!@#$%^&*()_+]</i><br/>'.
 ##   'E-mail: <input type="text" name="mail" maxlength=46 value="'.$e.'"><br/>'.
-   '<input type="submit" value="Регистрация"/><br/>'.
+   '<input type="submit" value="Регистрация" /><br/>'.
    '</form>';
 }
 

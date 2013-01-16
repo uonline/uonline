@@ -57,7 +57,7 @@ function loginForm($n = '', $p = '') {
    '<form method="post" action="login.php" name="reg">'.
    'Ник: <input type="text" name="user" maxlength=16 value="'.$n.'"><br/>'.
    'Пароль: <input type="password" name="pass" maxlength=32 value="'.$p.'"><br/>'.
-   '<input type="submit" value="Вход"/><br/>'.
+   '<input type="submit" value="Вход" /><br/>'.
    '</form>';
 }
 
