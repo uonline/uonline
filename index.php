@@ -19,7 +19,7 @@ else {
 
 
 insertEncoding('utf-8');
-echo makePage($HEAD, $BODY);
+echo makePage($HEAD, $BODY, 'utf-8');
 
 
 

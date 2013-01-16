@@ -2,6 +2,8 @@
 
 require_once('utils.php');
 
+$HEAD = $BODY = '';
+
 mysqlConnect();
 
 if ($_COOKIE && $_COOKIE['sessid'] && strlen($_COOKIE['sessid'])==64 && sessionExists($_COOKIE['sessid']) && sessionActive($_COOKIE['sessid']) ) header('location: index.php');
@@ -16,9 +18,9 @@ if ($_POST) {
          
          $q = mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$_POST['user'].'"');
          $r = mysql_fetch_assoc($q);
-         echo $r['sessexpire'].'<br/>';
+         $BODY .= $r['sessexpire'].'<br/>'; //remove
          
-         echo '<meta http-equiv="refresh" content="3;url=index.php">Успешный вход.<br/>';
+         successLogIn();
       }
       else {
          echo wrongPass();
@@ -26,41 +28,62 @@ if ($_POST) {
    }
    else {
        if ( !correctUserName($_POST['user']) || !correctPassword($_POST['pass']) ) 
-          echo incorrectData( array( !correctUserName($_POST['user']), !correctPassword($_POST['pass']) ) );
+          incorrectData( array( !correctUserName($_POST['user']), !correctPassword($_POST['pass']) ) );
           
-       else if ( !userExists($_POST['user']) && !mailExists($_POST['mail']) ) echo userNotExists();
+       else if ( !userExists($_POST['user']) /*&& !mailExists($_POST['mail']) */ ) userNotExists();
        
-       
-       echo loginForm($_POST['user'], $_POST['pass']);
+       loginForm($_POST['user'], $_POST['pass']);
     }
 }
 else {
-   echo loginForm();
+   loginForm();
 }
 
+
+
+insertEncoding('utf-8');
+echo makePage($HEAD, $BODY, 'utf-8');
+
+
+
+
+
+
+
 function loginForm($n = '', $p = '') {
-   return
+   global $BODY;
+   $BODY.=
    'Вход.<br/>'.
    '<form method="post" action="login.php" name="reg">'.
    'Ник: <input type="text" name="user" maxlength=16 value="'.$n.'"><br/>'.
    'Пароль: <input type="password" name="pass" maxlength=32 value="'.$p.'"><br/>'.
-   '<input type="submit"value="Вход"/><br/>'.
+   '<input type="submit" value="Вход"/><br/>'.
    '</form>';
 }
 
 function wrongPass() {
-   return '<meta http-equiv="refresh" content="3;url=login.php"><span style="background-color: #f00">Неверный пароль.</span><br/>';
+   global $BODY, $HEAD;
+   $HEAD.='<meta http-equiv="refresh" content="3;url=login.php">';
+   $BODY.='<span style="background-color: #f00">Неверный пароль.</span><br/>';
 }
 
 function userNotExists() {
-   return '<span style="background-color: #f00">Пользователя не существует. Попробуйте ввести другой ник.</span><br/>';
+   global $BODY;
+   $BODY.='<span style="background-color: #f00">Пользователя не существует. Попробуйте ввести другой ник.</span><br/>';
 }
 
 function incorrectData($a) {
-   return
+   global $BODY;
+   $BODY.=
    '<span style="background-color: #f00">'.
    implode( ', ', array_filter_( array('ник', 'пароль'), $a ) ).
    ' неправильны'.(count(array_filter($a))>1?'е':'й').'. Введите корректные данные.</span><br/>';
+}
+
+function successLogIn() {
+   global $BODY, $HEAD;
+   $HEAD.='<meta http-equiv="refresh" content="3;url=index.php">';
+   $BODY.='Успешный вход.<br/>';
 }
 
 

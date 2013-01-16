@@ -10,6 +10,11 @@ function mysqlInit($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $
    mysql_query('CREATE TABLE IF NOT EXISTS `uniusers` (`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, PRIMARY KEY  (`id`) )');
 }
 
+function mysqlDelete() {
+   mysqlConnect();
+   mysql_query('DROP DATABASE '.MYSQL_BASE);
+}
+
 function mysqlConnect($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE) {
    defined("MYSQL_CONN") || (define ("MYSQL_CONN", mysql_connect($host, $user, $pass) ) && mysql_select_db($base));
 }
@@ -66,6 +71,12 @@ function refreshSession($sess) {
    mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW()+1000 /*10 minutes*/ WHERE `sessid`="'.$sess.'"');
 }
 
+function closeSession($sess) {
+   mysqlConnect();
+   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW()-1 WHERE `sessid`="'.$sess.'"');
+}
+
+
 function correctUserName($nick) {
    return strlen($nick)>1 &&
           strlen($nick)<=32 &&
@@ -102,6 +113,13 @@ function mySalt($n) {
    return $salt;
 }
 
+function registerUser($u, $p, $e) {
+   $salt = mySalt(16);
+   $session = generateSessId();
+   setcookie('sessid', $session);
+   mysql_query('INSERT INTO `uniusers` (`user`, /*`mail`,*/ `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`) VALUES ("'.$_POST['user'].'", /*"'.$_POST['mail'].'",*/ "'.$salt.'", "'.myCrypt($_POST['pass'], $salt).'", "'.$session.'", NOW(), NOW()+1000)');
+}
+
 ##SHA-512
 function myCrypt($pass, $salt) {
    return crypt($pass, '$6$rounds=10000$'.$salt.'$');
@@ -116,13 +134,13 @@ function array_filter_($a, $m) {
 
 function insertEncoding($e) {
    header('Content-Type: text/html; charset='.$e);
-   //echo '<head><meta charset="'.$e.'" /></head>';
 }
 
-function makePage($head, $body) {
+function makePage($head, $body, $enc) {
    return
+   "<!DOCTYPE html>\n".
    "<html>\n".
-   "<head>\n".$head."\n</head>\n".
+   "<head>\n".$head.'<head><meta content-type="text/html" charset="'.$enc.'" /></head>'."\n</head>\n".
    "<body>\n".$body."\n</body>\n".
    "</html>";
 }
