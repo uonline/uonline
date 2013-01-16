@@ -52,8 +52,8 @@ function fofForm() {
    $BODY .=
    '<form method="post" action="drop.php">'.
    'Удаление базы данных.<br/>'.
-   'Административный пароль: <input name="ad_pass" type="password" value="'.(ADMIN_PASS=='clearpass'?ADMIN_PASS:'').'"/><br/>'.
-   '<input type="submit" value="Удалить"/><br/>';
+   'Административный пароль: <input name="ad_pass" type="password" value="'.(ADMIN_PASS=='clearpass'?ADMIN_PASS:'').'" /><br/>'.
+   '<input type="submit" value="Удалить" /><br/>';
 }
 
 ?>
