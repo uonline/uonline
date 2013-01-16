@@ -140,8 +140,13 @@ function makePage($head, $body, $enc) {
    return
    "<!DOCTYPE html>\n".
    "<html>\n".
-   "<head>\n".$head.'<head><meta content-type="text/html" charset="'.$enc.'" /></head>'."\n</head>\n".
-   "<body>\n".$body."\n</body>\n".
+   "<head>\n".
+   $head.
+   '<meta http-equiv="Content-Type" content="text/html; charset='.$enc.'">'.
+   "\n</head>\n".
+   "<body>\n".
+   $body.
+   "\n</body>\n".
    "</html>";
 }
 
