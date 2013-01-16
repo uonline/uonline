@@ -142,7 +142,7 @@ function makePage($head, $body, $enc) {
    "<html>\n".
    "<head>\n".
    $head.
-   '<meta charset="'.$enc.'">'.
+   '<meta charset="'.$enc.'" />'.
    "\n</head>\n".
    "<body>\n".
    $body.
