@@ -6,33 +6,28 @@ $HEAD = $BODY = '';
 
 mysqlConnect();
 
-if ($_COOKIE && $_COOKIE['sessid'] && strlen($_COOKIE['sessid'])==64 && sessionExists($_COOKIE['sessid']) && sessionActive($_COOKIE['sessid']) ) header('location: index.php');
+if ($_COOKIE && $s = $_COOKIE['sessid'] && strlen($s)==64 && sessionExists($s) && sessionActive($s) ) header('location: /');
 
 if ($_POST) {
-   if ( ( correctUserName($_POST['user']) && userExists($_POST['user']) ) && correctPassword($_POST['pass']) && mysql_num_rows($q = mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$_POST['user'].'"')) ) {
-      $r = mysql_fetch_assoc($q);
-      if ( $r['hash'] == myCrypt($_POST['pass'], $r['salt']) ) {
-         $session = generateSessId();
-         setcookie('sessid', $session);
-         mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW()+1000, `sessid`="'.$session.'" WHERE `user`="'.$_POST['user'].'"');
-         
-         $q = mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$_POST['user'].'"');
-         $r = mysql_fetch_assoc($q);
-         $BODY .= $r['sessexpire'].'<br/>'; //remove
-         
-         successLogIn();
-      }
-      else {
-         echo wrongPass();
-      }
+   $u = $_POST['user']; $p = $_POST['pass']; //$e = $_POST['mail'];
+   if ( correctUserName($u) && userExists($u) && correctPassword($p) && validPassword($u, $p) ) {
+      $s = setSession($u);
+      setcookie('sessid', $s);
+
+      $BODY .= sessionExpire($s).'<br/>'; //remove
+      
+      successLogIn();
+
    }
    else {
-       if ( !correctUserName($_POST['user']) || !correctPassword($_POST['pass']) ) 
-          incorrectData( array( !correctUserName($_POST['user']), !correctPassword($_POST['pass']) ) );
+       if ( !correctUserName($u) || !correctPassword($p) ) 
+          incorrectData( array( !correctUserName($u), !correctPassword($p) ) );
           
-       else if ( !userExists($_POST['user']) /*&& !mailExists($_POST['mail']) */ ) userNotExists();
-       
-       loginForm($_POST['user'], $_POST['pass']);
+       else if ( !userExists($u) /*&& !mailExists($e) */ ) userNotExists();
+
+       wrongPass();
+
+       loginForm($u, $p);
     }
 }
 else {
@@ -82,7 +77,7 @@ function incorrectData($a) {
 
 function successLogIn() {
    global $BODY, $HEAD;
-   $HEAD.='<meta http-equiv="refresh" content="3;url=index.php">';
+   $HEAD.='<meta http-equiv="refresh" content="3;url=/">';
    $BODY.='Успешный вход.<br/>';
 }
 

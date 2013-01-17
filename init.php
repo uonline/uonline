@@ -39,7 +39,7 @@ function initError() {
 
 function initSuccess() {
    global $BODY, $HEAD;
-   $HEAD .= '<meta http-equiv="refresh" content="3;url=index.php">';
+   $HEAD .= '<meta http-equiv="refresh" content="3;url=/">';
    $BODY .= 'Успех.';
 }
 

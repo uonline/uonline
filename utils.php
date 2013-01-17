@@ -113,11 +113,24 @@ function mySalt($n) {
    return $salt;
 }
 
-function registerUser($u, $p, $e) {
+function registerUser($u, $p, $e = NULL) {
    $salt = mySalt(16);
    $session = generateSessId();
-   setcookie('sessid', $session);
-   mysql_query('INSERT INTO `uniusers` (`user`, /*`mail`,*/ `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`) VALUES ("'.$_POST['user'].'", /*"'.$_POST['mail'].'",*/ "'.$salt.'", "'.myCrypt($_POST['pass'], $salt).'", "'.$session.'", NOW(), NOW()+1000)');
+   mysql_query('INSERT INTO `uniusers` (`user`, /*`mail`,*/ `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`) VALUES ("'.$u.'", /*"'.$e.'",*/ "'.$salt.'", "'.myCrypt($p, $salt).'", "'.$session.'", NOW(), NOW()+1000)');
+   return $session;
+}
+
+function validPassword($u, $p) {
+   mysqlConnect();
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$u.'"') );
+   return $q['hash'] == myCrypt($p, $q['salt']);
+}
+
+function setSession($u) {
+   mysqlConnect();
+   $s = generateSessId();
+   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW()+1000, `sessid`="'.$s.'" WHERE `user`="'.$u.'"');
+   return $s;
 }
 
 ##SHA-512

@@ -4,12 +4,11 @@ require_once('utils.php');
 
 $HEAD = $BODY = '';
 
-mysqlConnect();
-
 if ($_POST) {
    $u = $_POST['user']; $p = $_POST['pass']; //$e = $_POST['mail'];
    if (correctUserName($u) && !userExists($u) && /*correctMail($e) && !mailExists($e) && */ correctAdminPassword($p) && $_POST['ad_pass'] == ADMIN_PASS) {
-      registerUser($u, $p);
+      $s = registerUser($u, $p);
+      setcookie('sessid', $s);
       registerSuccess();
    }
    else {
@@ -17,7 +16,7 @@ if ($_POST) {
       else
          if (!correctUserName($u) || /* correctMail($_POST['mail']) || */ !correctAdminPassword($p)) 
             incorrectDatas( array( !correctUserName($u), /* correctMail($_POST['mail']), */ !correctAdminPassword($p) ) );
-         else echo alreadyExists( array (userExists($u) /*, mailExists($_POST['mail']) */ ) );
+         else alreadyExists( array (userExists($u) /*, mailExists($_POST['mail']) */ ) );
       regForm($u, $p /* , $e */ );
    }
 }
@@ -35,10 +34,9 @@ echo makePage($HEAD, $BODY, 'utf-8');
 
 
 
-
 function registerSuccess() {
    global $BODY, $HEAD;
-   $HEAD .= '<meta http-equiv="refresh" content="3;url=index.php">';
+   $HEAD .= '<meta http-equiv="refresh" content="3;url=/">';
    $BODY .= 'Зарегистрирован.<br/>';
 }
 

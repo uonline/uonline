@@ -2,53 +2,60 @@
 
 require_once('utils.php');
 
-
+$HEAD = $BODY = '';
 
 if ($_POST) {
-    if (correctUserName($_POST['user']) && !userExists($_POST['user']) && /*correctMail($_POST['mail']) && !mailExists($_POST['mail']) &&  */ correctUserPassword($_POST['pass'])) {
-       $salt = mySalt(16); $session = generateSessId();
-       setcookie('sessid', $session);
-       mysql_query('INSERT INTO `uniusers` (`user`, /*`mail`,*/ `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`) VALUES ("'.$_POST['user'].'", /*"'.$_POST['mail'].'",*/ "'.$salt.'", "'.myCrypt($_POST['pass'], $salt).'", "'.$session.'", NOW(), NOW()+1000)');
-       echo userRegistered();
-    }
-    else {
-       if ( !correctUserName($_POST['user']) || /* !correctMail($_POST['mail']) || */ !correctUserPassword($_POST['pass']) )
-          echo incorrectDatas( array( !correctUserName($_POST['user']), /* !correctMail($_POST['mail']), */ !correctUserPassword($_POST['pass']) ) );
+   $u = $_POST['user']; $p = $_POST['pass']; //$e = $_POST['mail'];
+   if (correctUserName($u) && !userExists($u) && /*correctMail($e) && !mailExists($e) &&  */ correctUserPassword($p)) {
+      $s = registerUser($u, $p);
+      setcookie('sessid', $s);
+      userRegistered();
+   }
+   else {
+      if ( !correctUserName($u) || /* !correctMail($e) || */ !correctUserPassword($p) )
+         incorrectDatas( array( !correctUserName($u), /* !correctMail($e), */ !correctUserPassword($p) ) );
           
-       if (userExists($_POST['user']) /* || mailExists($_POST['mail']) */ )
-          echo alreadyExists( array(userExists($_POST['user']) /* , mailExists($_POST['mail']) */) );
+      if (userExists($u) /* || mailExists($e) */ )
+         alreadyExists( array(userExists($u) /* , mailExists($e) */) );
        
-       echo regForm($_POST['user'], $_POST['pass'] /* , $_POST['mail'] */);
-    }
+      regForm($u, $p /* , $e */);
+   }
 }
 else {
-   echo regForm();
+   regForm();
 }
 
+insertEncoding('utf-8');
+echo makePage($HEAD, $BODY, 'utf-8');
 
 
 
 
 function userRegistered() {
-    return '<meta http-equiv="refresh" content="3;url=index.php">Пользователь зарегистрирован.<br/>';
+   global $BODY, $HEAD;
+   $HEAD .= '<meta http-equiv="refresh" content="3;url=/">';
+   $BODY .= 'Пользователь зарегистрирован.<br/>';
 }
 
 function alreadyExists($a) {
-   return
+   global $BODY;
+   $BODY .=
    '<span style="background-color: #f00">'.
    implode( ', ', array_filter_( array( 'ник' /* , 'e-mail' */ ), $a ) ).
    ' уже существу'.(count(array_filter($a))>1?'ю':'е').'т. Попробуйте другие.</span><br/>';
 }
 
 function incorrectDatas($a) {
-   return
+   global $BODY;
+   $BODY .=
    '<span style="background-color: #f00">'.
    implode( ', ', array_filter_( array('ник', /*'e-mail', */ 'пароль'), $a ) ).
    ' неправильны'.(count(array_filter($a))>1?'е':'й').'. Введите корректные данные.</span><br/>';
 }
 
 function regForm($n = '', $p = '' /* ,$e = '' */) {
-   return
+   global $BODY;
+   $BODY .=
    'Регистрация пользователя.'.
    '<form method="post" action="reg.php" name="reg">'.
    'Ник: <input type="text" name="user" maxlength=16 value="'.$n.'"><i> От 2 до 32 символов, [a-zA-Z0-9а-яА-Я_- ].</i><br/>'.

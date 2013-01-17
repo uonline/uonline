@@ -4,12 +4,12 @@ require_once('utils.php');
 
 $HEAD = $BODY = '';
 
-if (!$_COOKIE['sessid'] || strlen($sess = $_COOKIE['sessid'])!=64) header('location: index.php');
+if (!$_COOKIE['sessid'] || strlen($s = $_COOKIE['sessid'])!=64) header('location: /');
 else {
-   if (sessionExpired($sess)) header('location: index.php');
+   if (sessionExpired($s)) header('location: /');
    else {
-      closeSession($sess);
-      logoutSuccess(userBySession($sess));
+      closeSession($s);
+      logoutSuccess(userBySession($s));
    }
 }
 
@@ -22,7 +22,7 @@ echo makePage($HEAD, $BODY, 'utf-8');
 
 function logoutSuccess($user) {
    global $BODY, $HEAD;
-   $HEAD .= '<meta http-equiv="refresh" content="3;url=index.php">';
+   $HEAD .= '<meta http-equiv="refresh" content="3;url=/">';
    $BODY .= 'Сессия '.$user.' завершена.';
 }
 
