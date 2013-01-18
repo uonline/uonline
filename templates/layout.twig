@@ -32,7 +32,7 @@
 						<li><p class="navbar-text"><i class="icon-user"></i> <b>{{ login }}</b></p></li>
 						<li class="divider-vertical"></li>
 						<li><a href="#">Игра</a></li>
-						<li><a href="#">Почта <span class="badge badge-info">7</span></a></li>
+						<li><a href="#">Почта {% if mail_count > 0 %}<span class="badge badge-info">{{ mail_count }}</span>{% endif %}</a></li>
 						<li><a href="#">Кабинет</a></li>
 						<li><a href="logout.php">Выйти</a></li>
 						{% elseif loggedIn == false %}
