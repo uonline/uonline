@@ -23,7 +23,6 @@ if ( $s && strlen($s)==64 && sessionActive($s) ) refreshSession($s);
 
 ///// And render.
 echo $twig->render('index.twig', array(
-	'title' => 'Well',
 	'admin' => false,
 	'loggedIn' => sessionActive($s),
 	'login' => userBySession($s),
@@ -33,7 +32,7 @@ echo $twig->render('index.twig', array(
 $time_end = microtime(true);
 $time_seconds = $time_end - $time_start;
 
-echo "<!-- Did nothing in $time_seconds -->\n";
+echo "<!-- Did nothing in ".($time_seconds*1000)." milliseconds -->\n";
 
 
 ?>
