@@ -22,7 +22,8 @@ echo $twig->render('index.twig', array(
 	'title' => 'Well',
 	'admin' => false,
 	'loggedIn' => sessionActive($s),
-	'login' => userBySession($s)
+	'login' => userBySession($s),
+	'mail_count' => 0
 ));
 
 ?>
