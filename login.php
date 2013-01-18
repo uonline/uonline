@@ -25,7 +25,7 @@ if ($_POST) {
           
        else if ( !userExists($u) /*&& !mailExists($e) */ ) userNotExists();
 
-       wrongPass();
+       else wrongPass();
 
        loginForm($u, $p);
     }
@@ -63,12 +63,14 @@ function wrongPass() {
 }
 
 function userNotExists() {
-   global $BODY;
+   global $BODY, $HEAD;
+   $HEAD.='<meta http-equiv="refresh" content="3;url=login.php">';
    $BODY.='<span style="background-color: #f00">Пользователя не существует. Попробуйте ввести другой ник.</span><br/>';
 }
 
 function incorrectData($a) {
-   global $BODY;
+   global $BODY, $HEAD;
+   $HEAD.='<meta http-equiv="refresh" content="3;url=login.php">';
    $BODY.=
    '<span style="background-color: #f00">'.
    implode( ', ', array_filter_( array('ник', 'пароль'), $a ) ).
