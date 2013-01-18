@@ -1,13 +1,8 @@
 <?php
 
-//require_once('utils.php'); $s = $_COOKIE['sessid'];
-//if ( $s && strlen($s)==64 && sessionActive($s) ) refreshSession($s);
-//insertEncoding('utf-8');
-//include('inc/index');
-
+///// Load Twig. (Don't touch.)
 require_once './Twig/Autoloader.php';
 Twig_Autoloader::register();
-
 $loader = new Twig_Loader_Filesystem('./templates');
 $twig = new Twig_Environment($loader, array(
 	// UNCOMMENT LATER
@@ -15,6 +10,17 @@ $twig = new Twig_Environment($loader, array(
     'cache' => false,
 ));
 
-echo $twig->render('index.twig', array('title' => 'Well'));
+///// Do some actions.
+
+//require_once('utils.php'); $s = $_COOKIE['sessid'];
+//if ( $s && strlen($s)==64 && sessionActive($s) ) refreshSession($s);
+//insertEncoding('utf-8');
+//include('inc/index');
+
+
+///// And render.
+echo $twig->render('index.twig', array(
+	'title' => 'Well'
+));
 
 ?>
