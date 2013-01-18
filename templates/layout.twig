@@ -28,23 +28,24 @@
 						<li><a href="#">Форум</a></li>
 						<li><a href="#">Рейтинг</a></li>
 						<li class="divider-vertical"></li>
-						<!-- для залогиненных -->						
+						{% if loggedIn == true %}
 						<li><p class="navbar-text"><i class="icon-user"></i> <b>Вася</b></p></li>
 						<li class="divider-vertical"></li>
 						<li><a href="#">Игра</a></li>
 						<li><a href="#">Почта <span class="badge badge-info">7</span></a></li>
 						<li><a href="#">Кабинет</a></li>
 						<li><a href="#">Выйти</a></li>
-						<!-- для остальных -->
+						{% else if loggedIn == false %}
 						<li><a href="#">Войти</a></li>
 						<li><a href="#">Зарегистрироваться</a></li>
-						<!-- / -->
+						{% else %}
+						{% endif %}
 					</ul>
-					<!-- для админов -->
+					{% if admin == true %}
 					<ul class="nav pull-right">
 						<li><a href="#">Бункер</a></li>
 					</ul>
-					<!-- / -->
+					{% endif %}
 				</div>
 			</div>
 		</div>
