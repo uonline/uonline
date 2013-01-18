@@ -1,5 +1,9 @@
 <?php
 
+$time_start = microtime(true);
+// Sleep for a while
+usleep(100);
+
 ///// Load Twig. (Don't touch.)
 require_once './Twig/Autoloader.php';
 Twig_Autoloader::register();
@@ -25,5 +29,11 @@ echo $twig->render('index.twig', array(
 	'login' => userBySession($s),
 	'mail_count' => 0
 ));
+
+$time_end = microtime(true);
+$time_seconds = $time_end - $time_start;
+
+echo "<!-- Did nothing in $time_seconds -->\n";
+
 
 ?>
