@@ -79,7 +79,7 @@ function incorrectData($a) {
 
 function successLogIn() {
    global $BODY, $HEAD;
-   $HEAD.='<meta http-equiv="refresh" content="3;url=/">';
+   $HEAD.='<meta http-equiv="refresh" content="3;url=index.php">';
    $BODY.='Успешный вход.<br/>';
 }
 

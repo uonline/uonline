@@ -33,7 +33,7 @@ echo makePage($HEAD, $BODY, 'utf-8');
 
 function userRegistered() {
    global $BODY, $HEAD;
-   $HEAD .= '<meta http-equiv="refresh" content="3;url=/">';
+   $HEAD .= '<meta http-equiv="refresh" content="3;url=index.php">';
    $BODY .= 'Пользователь зарегистрирован.<br/>';
 }
 

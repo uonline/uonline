@@ -22,7 +22,7 @@ echo makePage($HEAD, $BODY, 'utf-8');
 
 function logoutSuccess($user) {
    global $BODY, $HEAD;
-   $HEAD .= '<meta http-equiv="refresh" content="3;url=/">';
+   $HEAD .= '<meta http-equiv="refresh" content="3;url=index.php">';
    $BODY .= 'Сессия '.$user.' завершена.';
 }
 
