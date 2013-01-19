@@ -1,0 +1,32 @@
+{% extends "layout.twig" %}
+
+{% block content %}
+			<div class="page-header"><h1>Регистрация</h1></div>
+
+			<div class="alert alert-error">
+				<a href="#" class="close" data-dismiss="alert">&times;</a>
+				Ойбля! Какая-то ошибка.
+			</div>
+
+			<form class="form-horizontal">
+				<div class="control-group">
+					<label class="control-label" for="user">Логин</label>
+					<div class="controls">
+						<input type="text" id="user" maxlength="32">
+						<span class="help-inline"><small>От 2 до 32 символов, [a-zA-Z0-9а-яА-Я_- ].</small></span>
+					</div>
+				</div>
+				<div class="control-group">
+					<label class="control-label" for="pass">Пароль</label>
+					<div class="controls">
+						<input type="password" id="pass" maxlength="32">
+						<span class="help-inline"><small>От 4 до 32 символов, [a-zA-Z0-9!@#$%^&amp;*()_+]</small></span>
+					</div>
+				</div>
+				<div class="control-group">
+					<div class="controls">
+						<button type="submit" class="btn">Зарегистрироваться</button>			
+					</div>
+				</div>
+			</form>
+{% endblock content %}
