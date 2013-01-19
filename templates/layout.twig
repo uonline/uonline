@@ -27,7 +27,8 @@
 						<li><a href="#">Новости</a></li>
 						<li><a href="#">Форум</a></li>
 						<li><a href="#">Рейтинг</a></li>
-						<li class="divider-vertical"></li>
+					</ul>
+					<ul class="nav pull-right">
 						{% if loggedIn == true %}
 						<li><p class="navbar-text"><i class="icon-user"></i> <b>{{ login }}</b></p></li>
 						<li class="divider-vertical"></li>
@@ -40,12 +41,10 @@
 						<li><a href="reg.php">Зарегистрироваться</a></li>
 						{% else %}
 						{% endif %}
-					</ul>
-					{% if admin == true %}
-					<ul class="nav pull-right">
+						{% if admin == true %}
 						<li><a href="#">Бункер</a></li>
+						{% endif %}
 					</ul>
-					{% endif %}
 				</div>
 			</div>
 		</div>
