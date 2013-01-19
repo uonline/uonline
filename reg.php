@@ -1,8 +1,24 @@
 <?php
+require_once './Twig/Autoloader.php';
+Twig_Autoloader::register();
+$loader = new Twig_Loader_Filesystem('./templates');
+$twig = new Twig_Environment($loader, array(
+	// UNCOMMENT LATER
+   // 'cache' => './templates_cache',
+   'cache' => false,
+));
 
-require_once('utils.php');
 
-$HEAD = $BODY = '';
+
+
+
+
+
+
+
+require_once('utils.php'); $HEAD = $BODY = '';
+
+print_r($_POST);
 
 if ($_POST) {
    $u = $_POST['user']; $p = $_POST['pass']; //$e = $_POST['mail'];
@@ -25,44 +41,36 @@ else {
    regForm();
 }
 
-insertEncoding('utf-8');
-echo makePage($HEAD, $BODY, 'utf-8');
 
 
+function regForm() {
+   global $BODY, $HEAD, $twig;
+   echo $twig->render('register.twig', array(
+      'error' => $BODY ? $BODY : false
+));
 
+   die;
+
+}
 
 function userRegistered() {
-   global $BODY, $HEAD;
+   global $BODY, $HEAD, $twig;
    $HEAD .= '<meta http-equiv="refresh" content="3;url=index.php">';
-   $BODY .= 'Пользователь зарегистрирован.<br/>';
+   $BODY .= 'Пользователь зарегистрирован.';
 }
 
 function alreadyExists($a) {
-   global $BODY;
+   global $BODY, $twig;
    $BODY .=
-   '<span style="background-color: #f00">'.
    implode( ', ', array_filter_( array( 'ник' /* , 'e-mail' */ ), $a ) ).
-   ' уже существу'.(count(array_filter($a))>1?'ю':'е').'т. Попробуйте другие.</span><br/>';
+   ' уже существу'.(count(array_filter($a))>1?'ю':'е').'т. Попробуйте другие.';
 }
 
 function incorrectDatas($a) {
-   global $BODY;
+   global $BODY, $twig;
    $BODY .=
-   '<span style="background-color: #f00">'.
    implode( ', ', array_filter_( array('ник', /*'e-mail', */ 'пароль'), $a ) ).
-   ' неправильны'.(count(array_filter($a))>1?'е':'й').'. Введите корректные данные.</span><br/>';
-}
-
-function regForm($n = '', $p = '' /* ,$e = '' */) {
-   global $BODY;
-   $BODY .=
-   'Регистрация пользователя.'.
-   '<form method="post" action="reg.php" name="reg">'.
-   'Ник: <input type="text" name="user" maxlength=16 value="'.$n.'"><i> От 2 до 32 символов, [a-zA-Z0-9а-яА-Я_- ].</i><br/>'.
-   'Пароль: <input type="password" name="pass" maxlength=32 value="'.$p.'"><i style="white-space: pre"> От 4 до 32 символов, [a-zA-Z0-9!@#$%^&*()_+]</i><br/>'.
-##   'E-mail: <input type="text" name="mail" maxlength=46 value="'.$e.'"><br/>'.
-   '<input type="submit" value="Регистрация" /><br/>'.
-   '</form>';
+   ' неправильны'.(count(array_filter($a))>1?'е':'й').'. Введите корректные данные.';
 }
 
 
