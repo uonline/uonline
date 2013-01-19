@@ -21,17 +21,18 @@ $twig = new Twig_Environment($loader, array(
 require_once('utils.php'); $HEAD = $BODY = '';
 
 if ($_POST) {
-   $u = $_POST['user']; $p = $_POST['pass']; //$e = $_POST['mail'];
-   if (correctUserName($u) && !userExists($u) && /*correctMail($e) && !mailExists($e) &&  */ correctUserPassword($p)) {
+   $u = $_POST['user']; $p = $_POST['pass'];
+   if (correctUserName($u) && !userExists($u) && correctUserPassword($p)) {
       $s = registerUser($u, $p);
       setcookie('sessid', $s);
       userRegistered();
+      header('localion: index.php')
    }
    else {
-      if ( !correctUserName($u) || /* !correctMail($e) || */ !correctUserPassword($p) )
-         incorrectDatas( array( !correctUserName($u), /* !correctMail($e), */ !correctUserPassword($p) ) );
+      if ( !correctUserName($u) || !correctUserPassword($p) )
+         incorrectDatas( array( !correctUserName($u), !correctUserPassword($p) ) );
           
-      if (userExists($u) /* || mailExists($e) */ )
+      if (userExists($u))
          alreadyExists( array(userExists($u) /* , mailExists($e) */) );
        
       regForm($u, $p /* , $e */);
