@@ -1,3 +1,4 @@
 keyring
-/nbproject/
-/inc/
+nbproject/
+templates_cache/
+source/
