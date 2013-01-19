@@ -1,10 +1,12 @@
 <?php
+
+$time_start = microtime(true);
+
 require_once './Twig/Autoloader.php';
 Twig_Autoloader::register();
 $loader = new Twig_Loader_Filesystem('./templates');
 $twig = new Twig_Environment($loader, array(
-	// UNCOMMENT LATER
-   // 'cache' => './templates_cache',
+   //'cache' => './templates_cache', // UNCOMMENT LATER
    'cache' => false,
 ));
 
@@ -17,8 +19,6 @@ $twig = new Twig_Environment($loader, array(
 
 
 require_once('utils.php'); $HEAD = $BODY = '';
-
-print_r($_POST);
 
 if ($_POST) {
    $u = $_POST['user']; $p = $_POST['pass']; //$e = $_POST['mail'];
@@ -44,9 +44,14 @@ else {
 
 
 function regForm() {
-   global $BODY, $HEAD, $twig;
+   global $BODY, $HEAD, $twig, $u, $p;
    echo $twig->render('register.twig', array(
-      'error' => $BODY ? $BODY : false
+      'error' => $BODY ? $BODY : false,
+      'invalidLogin' => !correctUserName($u), // логин хуйня
+      'invalidPass' => !correctUserPassword($p), // тут хуйня
+      'loginIsBusy' => userExists($u), // логин занят
+      'user' => $u,
+      'pass' => $p,
 ));
 
    die;
@@ -73,6 +78,8 @@ function incorrectDatas($a) {
    ' неправильны'.(count(array_filter($a))>1?'е':'й').'. Введите корректные данные.';
 }
 
+$time_end = microtime(true);
+echo "\n<!-- Done in ".( ($time_end - $time_start) *1000).' milliseconds -->';
 
 
 ?>
