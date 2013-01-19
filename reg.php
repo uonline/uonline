@@ -26,7 +26,7 @@ if ($_POST) {
       $s = registerUser($u, $p);
       setcookie('sessid', $s);
       userRegistered();
-      header('localion: index.php')
+      header('Location: index.php')
    }
    else {
       if ( !correctUserName($u) || !correctUserPassword($p) )
