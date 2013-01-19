@@ -50,29 +50,39 @@
 		</div>
     
 		<div class="container">
-			<div class="hero-unit">
-				<h1 style="margin-left: -0.075em;">uonline</h1>
-				<p>Добро пожаловать в наш маленький мир.</p>
-				<!-- <p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p> -->
+			<!-- content -->
+			
+			<div class="page-header"><h1>Регистрация</h1></div>
+
+			<div class="alert alert-error">
+				<a href="#" class="close" data-dismiss="alert">&times;</a>
+				Ойбля! Какая-то ошибка.
 			</div>
 
-			<div class="row">
-				<div class="span4">
-					<h2>Лучшая игра в мире</h2>
-					<p>На слово пацана отвечаю, ёба! У нас охуенный движок! У нас всё охуенное! Ваще всё! Я так сказал! И Вася тоже! И Pжавый!</p>
-					<p><a class="btn" href="#">Узнайте больше &raquo;</a></p>
+			<form class="form-horizontal">
+				<div class="control-group">
+					<label class="control-label" for="inputEmail">Логин</label>
+					<div class="controls">
+						<input type="text" id="inputEmail">
+						<span class="help-inline"><small>От 2 до 32 символов, [a-zA-Z0-9а-яА-Я_- ].</small></span>
+					</div>
 				</div>
-				<div class="span4">
-					<h2>Очень клёвый AI</h2>
-					<p>Его нет, и, следовательно, он идеален. Ваще чоткий, коpоче. Да. Вот так вот.</p>
-					<p><a class="btn" href="#">Узнайте всё &raquo;</a></p>
+				<div class="control-group">
+					<label class="control-label" for="inputPassword">Пароль</label>
+					<div class="controls">
+						<input type="password" id="inputPassword">
+						<span class="help-inline"><small>От 4 до 32 символов, [a-zA-Z0-9!@#$%^&amp;*()_+]</small></span>
+					</div>
 				</div>
-				<div class="span4">
-					<h2>Отличный сюжет</h2>
-					<p>А вот тут без шуток. Мы в него душу вложили, так-то. Не то что остальные.</p>
-					<p><a class="btn" href="#">Увидеть &raquo;</a></p>
+				<div class="control-group">
+					<div class="controls">
+						<button type="submit" class="btn">Зарегистрироваться</button>			
+					</div>
 				</div>
-			</div>
+			</form>
+
+
+			<!-- / -->
 
 			<hr />
 
