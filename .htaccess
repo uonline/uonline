@@ -2,3 +2,5 @@
 order allow,deny
 deny from all
 </Files>
+
+AddDefaultCharset utf-8
