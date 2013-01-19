@@ -31,6 +31,6 @@ echo $twig->render('index.twig', array(
 ///// Mark end time.
 $time_end = microtime(true);
 $time_seconds = $time_end - $time_start;
-echo "<!-- Done in ".($time_seconds*1000)." milliseconds -->\n";
+echo "\n<!-- Done in ".($time_seconds*1000).' milliseconds -->';
 
 ?>
