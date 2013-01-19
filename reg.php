@@ -47,9 +47,9 @@ function regForm() {
    global $BODY, $HEAD, $twig, $u, $p;
    echo $twig->render('register.twig', array(
       'error' => $BODY ? $BODY : false,
-      'invalidLogin' => !correctUserName($u), // логин хуйня
-      'invalidPass' => !correctUserPassword($p), // тут хуйня
-      'loginIsBusy' => userExists($u), // логин занят
+      'invalidLogin' => !correctUserName($u) && $_POST, // логин хуйня
+      'invalidPass' => !correctUserPassword($p) && $_POST, // тут хуйня
+      'loginIsBusy' => userExists($u) && $_POST, // логин занят
       'user' => $u,
       'pass' => $p,
 ));
