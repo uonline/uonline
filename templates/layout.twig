@@ -31,7 +31,6 @@
 					<ul class="nav pull-right">
 						{% if loggedIn == true %}
 						<li><p class="navbar-text"><i class="icon-user"></i> <b>{{ login }}</b></p></li>
-						<li class="divider-vertical"></li>
 						<li><a href="#">Игра</a></li>
 						<li><a href="#">Почта {% if mail_count > 0 %}<span class="badge badge-info">{{ mail_count }}</span>{% endif %}</a></li>
 						<li><a href="#">Кабинет</a></li>
@@ -42,6 +41,7 @@
 						{% else %}
 						{% endif %}
 						{% if admin == true %}
+						<li class="divider-vertical"></li>
 						<li><a href="#">Бункер</a></li>
 						{% endif %}
 					</ul>
