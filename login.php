@@ -34,6 +34,10 @@ if ($_POST) {
        else $error = true;
     }
 }
+else
+{
+	$error = false;
+}
 
 
 echo $twig->render('login.twig', array(
