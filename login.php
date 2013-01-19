@@ -1,87 +1,51 @@
 <?php
 
+$time_start = microtime(true);
+
+require_once './Twig/Autoloader.php';
+Twig_Autoloader::register();
+$loader = new Twig_Loader_Filesystem('./templates');
+$twig = new Twig_Environment($loader, array(
+   //'cache' => './templates_cache', // UNCOMMENT LATER
+   'cache' => false,
+));
+
+
+
 require_once('utils.php');
-
-$HEAD = $BODY = '';
-
 mysqlConnect();
+$error = false;
 
-if ($_COOKIE && $s = $_COOKIE['sessid'] && strlen($s)==64 && sessionExists($s) && sessionActive($s) ) header('location: /');
+if ($_COOKIE && $s = $_COOKIE['sessid'] && strlen($s)==64 && sessionExists($s) && sessionActive($s) ) header('location: index.php');
 
 if ($_POST) {
-   $u = $_POST['user']; $p = $_POST['pass']; //$e = $_POST['mail'];
+   $u = $_POST['user']; $p = $_POST['pass'];
    if ( correctUserName($u) && userExists($u) && correctPassword($p) && validPassword($u, $p) ) {
       $s = setSession($u);
       setcookie('sessid', $s);
 
-      $BODY .= sessionExpire($s).'<br/>'; //remove
+      //$BODY .= sessionExpire($s).'<br/>'; //remove
       
-      successLogIn();
-
+      header('Location: index.php');
    }
    else {
-       if ( !correctUserName($u) || !correctPassword($p) ) 
-          incorrectData( array( !correctUserName($u), !correctPassword($p) ) );
-          
-       else if ( !userExists($u) /*&& !mailExists($e) */ ) userNotExists();
-
-       else wrongPass();
-
-       loginForm($u, $p);
+       if ( !correctUserName($u) || !correctPassword($p) ) $error = true;
+       else if ( !userExists($u) ) $error = true;
+       else $error = true;
     }
 }
-else {
-   loginForm();
-}
 
 
+echo $twig->render('login.twig', array(
+   'admin' => false,
+   'loggedIn' => sessionActive($s),
+   'login' => userBySession($s),
+   'mail_count' => 0,
 
-insertEncoding('utf-8');
-echo makePage($HEAD, $BODY, 'utf-8');
+   'error' => $error
+));
 
-
-
-
-
-
-
-function loginForm($n = '', $p = '') {
-   global $BODY;
-   $BODY.=
-   'Вход.<br/>'.
-   '<form method="post" action="login.php" name="reg">'.
-   'Ник: <input type="text" name="user" maxlength=16 value="'.$n.'"><br/>'.
-   'Пароль: <input type="password" name="pass" maxlength=32 value="'.$p.'"><br/>'.
-   '<input type="submit" value="Вход" /><br/>'.
-   '</form>';
-}
-
-function wrongPass() {
-   global $BODY, $HEAD;
-   $HEAD.='<meta http-equiv="refresh" content="3;url=login.php">';
-   $BODY.='<span style="background-color: #f00">Неверный пароль.</span><br/>';
-}
-
-function userNotExists() {
-   global $BODY, $HEAD;
-   $HEAD.='<meta http-equiv="refresh" content="3;url=login.php">';
-   $BODY.='<span style="background-color: #f00">Пользователя не существует. Попробуйте ввести другой ник.</span><br/>';
-}
-
-function incorrectData($a) {
-   global $BODY, $HEAD;
-   $HEAD.='<meta http-equiv="refresh" content="3;url=login.php">';
-   $BODY.=
-   '<span style="background-color: #f00">'.
-   implode( ', ', array_filter_( array('ник', 'пароль'), $a ) ).
-   ' неправильны'.(count(array_filter($a))>1?'е':'й').'. Введите корректные данные.</span><br/>';
-}
-
-function successLogIn() {
-   global $BODY, $HEAD;
-   $HEAD.='<meta http-equiv="refresh" content="3;url=index.php">';
-   $BODY.='Успешный вход.<br/>';
-}
-
+$time_end = microtime(true);
+echo "\n<!-- Done in ".( ($time_end - $time_start) *1000).' milliseconds -->';
 
 ?>
