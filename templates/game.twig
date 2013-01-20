@@ -3,14 +3,28 @@
 {% block content %}
 			<div class="page-header"><h1>{{ location_name }} <small>{{ area_name }}</small></h1></div>
 
+			{% if pic is defined %}<img src="{{ pic }}" />{% endif %}
+
 			<p>{{ description }}</p>
 
-			<div>
-			<pre>location_name == {{ location_name }}
-area_name == {{ area_name }}</pre>
-			</div>
-			
 			{{ for i in ways }}
 				<a class="btn" href="go.php?to={{ i.to }}">{{ i.name }}</a>
-			{{ endfor }}	
+			{{ endfor }}
+			
+			<br />
+			
+			{{ for i in players_list }}
+				{{ i.name }} ({{ i.id }}), 
+			{{ endfor }}
+			
+			<div>
+			<pre>
+location_name == {{ location_name }}
+area_name == {{ area_name }}
+pic == {{ pic }}
+description == {{ description }}
+ways == {{ ways }}
+players_list == {{ players_list }}
+</pre>
+			</div>
 {% endblock content %}

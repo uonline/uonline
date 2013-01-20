@@ -57,3 +57,12 @@ None needed.
 ### login
 
 * error (`true` or `false`)
+
+### game
+
+* location\_name (string)
+* area\_name (string)
+* pic (URL string)
+* description (string)
+* ways (array; elements: ways\[i\].to, ways\[i\].name)
+* players\_list (array; elements: players\_list\[i\].id, players\_list\[i\].name)

@@ -54,6 +54,8 @@
 			
 			<div class="page-header"><h1>{{ location_name }} <small>{{ area_name }}</small></h1></div>
 
+			{% if pic is defined %}<img src="{{ pic }}" />{% endif %}
+
 			<p>{{ description }}</p>
 
 			<div>
@@ -63,7 +65,13 @@ area_name == {{ area_name }}</pre>
 			
 			{{ for i in ways }}
 				<a class="btn" href="go.php?to={{ i.to }}">{{ i.name }}</a>
-			{{ endfor }}			
+			{{ endfor }}
+			
+			<br />
+			
+			{{ for i in players_list }}
+				{{ i.name }} ({{ i.id }}), 
+			{{ endfor }}
 			
 			<!-- / -->
 
