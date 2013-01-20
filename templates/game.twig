@@ -1,0 +1,16 @@
+{% extends "layout.twig" %}
+
+{% block content %}
+			<div class="page-header"><h1>{{ location_name }} <small>{{ area_name }}</small></h1></div>
+
+			<p>{{ description }}</p>
+
+			<div>
+			<pre>location_name == {{ location_name }}
+area_name == {{ area_name }}</pre>
+			</div>
+			
+			{{ for i in ways }}
+				<a class="btn" href="go.php?to={{ i.to }}">{{ i.name }}</a>
+			{{ endfor }}	
+{% endblock content %}
