@@ -12,8 +12,8 @@ $twig = new Twig_Environment($loader, array(
 
 
 require_once('utils.php'); $s = $_COOKIE['sessid'];
-if (!($s && strlen($s)==64 && sessionExists($s) && sessionActive($s) ) ) header('Location: index.php');
-refreshSession($s);
+if ($s && strlen($s)==64 && sessionActive($s) ) refreshSession($s);
+else { header('Location: login.php'); die; }
 
 if ($_GET && $to = $_GET['to']) {
     changeLocation($s, $to);
@@ -26,7 +26,15 @@ echo $twig->render('game.twig', array(
    'pic' => 'img/sasuke.jpeg',
    'description' => currentZoneDescription($s),
    'ways' => allowedZones($s),
-   'players_list' => array( array( id => idBySession($s), name => userBySession($s) ) ), 
+   'players_list' => array( array( id => idBySession($s), name => userBySession($s) ) ),
+   
+   'admin' => false,
+   'loggedIn' => sessionActive($s),
+   'login' => userBySession($s),
+   'mail_count' => 0,
+   'file' => fileFromPath(__FILE__),
+     
+   'title' => 'Игра',
 ));
 
 $time_end = microtime(true);

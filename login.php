@@ -33,10 +33,12 @@ else $error = false;
 
 
 echo $twig->render('login.twig', array(
+   'title' => 'Вход',
    'admin' => false,
    'loggedIn' => sessionActive($s),
    'login' => userBySession($s),
    'mail_count' => 0,
+   'file' => fileFromPath(__FILE__),
 
    'error' => $error
 ));

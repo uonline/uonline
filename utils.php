@@ -3,12 +3,26 @@
 require_once('config.php');
 
 
-function mysqlInit($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE) {   
+function mysqlInit($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE)  {
    defined("MYSQL_CONN") || define ("MYSQL_CONN", mysql_connect($host, $user, $pass) );
    mysql_query('CREATE DATABASE IF NOT EXISTS `'.$base.'`');
    mysql_select_db($base);
    mysql_query('CREATE TABLE IF NOT EXISTS `uniusers` (`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT, PRIMARY KEY  (`id`) )');
-   mysql_query('CREATE TABLE IF NOT EXISTS `locations` (`title` TINYTEXT, `name` TINYTEXT, `type` TINYTEXT, `goto` TINYTEXT, `parent` TINYTEXT, `description` TINYTEXT, `id` INT, `default` TINYINT(1) ) ');
+   mysql_query('CREATE TABLE IF NOT EXISTS `locations` (`title` TINYTEXT, `name` TINYTEXT, `type` TINYTEXT, `goto` TINYTEXT, `parent` TINYTEXT, `description` TINYTEXT, `id` INT, `default` TINYINT(1), PRIMARY KEY  (`id`) ) ');
+   
+   mysql_query("ALTER TABLE `uniusers` ADD COLUMN `location` INT DEFAULT 3 AFTER `id`");
+
+   /********* fill datas ***********/
+   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Лес', 'wood', 'area', 'castle|marge|river|den', '', 'Обычный лес...', 1, 0)");
+   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Замок', 'castle', 'area', 'wood|cellar|kitchen|livingroom|attic', '', 'Старый замок...', 2, 0)");
+   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Погреб', 'cellar', 'location', 'kitchen', 'castle', 'Большие бочки и запах плесени...', 3, 1)");
+   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Кухня', 'kitchen', 'location', 'cellar|livingroom', 'castle', 'Разрушенная печь и горшки...', 4, 0)");
+   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Гостинная', 'livingroom', 'location', 'cellar|kitchen|castle|attic', 'castle', 'Большой круглый стол, обставленный стульями, картины на стенах...', 5, 0)");
+   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Чердак', 'attic', 'location', 'livingroom', 'castle', 'Много старинных вещей и пыли...', 6, 0)");
+   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Берлога', 'den', 'location', 'marge|river|wood', 'wood', 'Много следов и обглоданные останки...', 7, 0)");
+   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Опушка', 'marge', 'location', 'den|river|wood', 'wood', 'И тут мне надоело...', 8, 0)");
+   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Река', 'river', 'location', 'den|marge|wood', 'wood', 'Прозрачная вода и каменистый берег...', 9, 0)");
+   /********************************/
 }
 
 function mysqlDelete() {
@@ -133,6 +147,10 @@ function validPassword($u, $p) {
    return $q['hash'] == myCrypt($p, $q['salt']);
 }
 
+function fileFromPath($p) {
+   if (preg_match('/[^\\\\\\/]+$/', $p, $res)) return $res[0];
+}
+
 function setSession($u) {
    mysqlConnect();
    $s = generateSessId();
@@ -196,9 +214,9 @@ function changeLocation($s, $lid) {
    $con = ($q0['parent']==$q1['parent']) || ($q0['name']==$q1['parent']) || ($q0['parent']==$q1['name']);
    if (in_array( $q1['name'], explode('|', $q0['goto'])) &&  $con) {
       mysql_query('UPDATE `uniusers` SET `location` = '.$lid.' WHERE `sessid`="'.$s.'"');
-      return 0;
+      return true;
    }
-   else return 5;
+   else return false;
 }
 /**********************************************************/
 

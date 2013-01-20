@@ -53,6 +53,8 @@ function regForm() {
       'loginIsBusy' => userExists($u) && $_POST, // логин занят
       'user' => $u,
       'pass' => $p,
+
+      'file' => fileFromPath(__FILE__),
 ));
 
    die;

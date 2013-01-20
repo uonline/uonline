@@ -18,7 +18,8 @@ echo $twig->render('index.twig', array(
    'admin' => false,
    'loggedIn' => sessionActive($s),
    'login' => userBySession($s),
-   'mail_count' => 0
+   'mail_count' => 0,
+   'file' => fileFromPath(__FILE__),
 ));
 
 $time_end = microtime(true);
