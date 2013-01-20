@@ -1,21 +1,21 @@
 {% extends "layout.twig" %}
 
 {% block content %}
-			<div class="page-header"><h1>{{ location_name }} <small>{{ area_name }}</small></h1></div>
+			<div class="page-header"><h1>{{ area_name }} <small>{{ location_name }}</small></h1></div>
 
 			{% if pic is defined %}<img src="{{ pic }}" />{% endif %}
 
 			<p>{{ description }}</p>
 
-			{{ for i in ways }}
-				<a class="btn" href="go.php?to={{ i.to }}">{{ i.name }}</a>
-			{{ endfor }}
+			{% for i in ways %}
+				<a class="btn" href="game.php?to={{ i.to }}">{{ i.name }}</a>
+			{% endfor %}
 			
 			<br />
 			
-			{{ for i in players_list }}
+			{% for i in players_list %}
 				{{ i.name }} ({{ i.id }}), 
-			{{ endfor }}
+			{% endfor %}
 			
 			<div>
 			<pre>

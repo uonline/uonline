@@ -13,20 +13,14 @@ $twig = new Twig_Environment($loader, array(
 
 
 require_once('utils.php');
-mysqlConnect();
-$error = false;
-
-$s = $_COOKIE['sessid'];
-if ($_COOKIE && $s && strlen($s)==64 && sessionExists($s) && sessionActive($s) ) header('Location: index.php');
+$error = false; $s = $_COOKIE['sessid'];
+if ($s && strlen($s)==64 && sessionExists($s) && sessionActive($s) ) header('Location: index.php');
 
 if ($_POST) {
    $u = $_POST['user']; $p = $_POST['pass'];
    if ( correctUserName($u) && userExists($u) && correctPassword($p) && validPassword($u, $p) ) {
       $s = setSession($u);
       setcookie('sessid', $s);
-
-      //$BODY .= sessionExpire($s).'<br/>'; //remove
-      
       header('Location: index.php');
    }
    else {
@@ -35,10 +29,7 @@ if ($_POST) {
        else $error = true;
     }
 }
-else
-{
-	$error = false;
-}
+else $error = false;
 
 
 echo $twig->render('login.twig', array(

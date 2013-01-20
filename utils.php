@@ -7,7 +7,8 @@ function mysqlInit($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $
    defined("MYSQL_CONN") || define ("MYSQL_CONN", mysql_connect($host, $user, $pass) );
    mysql_query('CREATE DATABASE IF NOT EXISTS `'.$base.'`');
    mysql_select_db($base);
-   mysql_query('CREATE TABLE IF NOT EXISTS `uniusers` (`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, PRIMARY KEY  (`id`) )');
+   mysql_query('CREATE TABLE IF NOT EXISTS `uniusers` (`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT, PRIMARY KEY  (`id`) )');
+   mysql_query('CREATE TABLE IF NOT EXISTS `locations` (`title` TINYTEXT, `name` TINYTEXT, `type` TINYTEXT, `goto` TINYTEXT, `parent` TINYTEXT, `description` TINYTEXT, `id` INT, `default` TINYINT(1) ) ');
 }
 
 function mysqlDelete() {
@@ -66,6 +67,12 @@ function userBySession($sess) {
    return $a['user'];
 }
 
+function idBySession($sess) {
+   mysqlConnect();
+   $a = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$sess.'"') );
+   return $a['id'];
+}
+
 function refreshSession($sess) {
    mysqlConnect();
    mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL 10 MINUTE WHERE `sessid`="'.$sess.'"');
@@ -116,7 +123,7 @@ function mySalt($n) {
 function registerUser($u, $p, $e = NULL) {
    $salt = mySalt(16);
    $session = generateSessId();
-   mysql_query('INSERT INTO `uniusers` (`user`, /*`mail`,*/ `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`) VALUES ("'.$u.'", /*"'.$e.'",*/ "'.$salt.'", "'.myCrypt($p, $salt).'", "'.$session.'", NOW(), NOW()+1000)');
+   mysql_query('INSERT INTO `uniusers` (`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`) VALUES ("'.$u.'", "'.$salt.'", "'.myCrypt($p, $salt).'", "'.$session.'", NOW(), NOW() + INTERVAL 10 MINUTE, "'.defaultLocation().'")');
    return $session;
 }
 
@@ -132,6 +139,70 @@ function setSession($u) {
    mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL 10 MINUTE, `sessid`="'.$s.'" WHERE `user`="'.$u.'"');
    return $s;
 }
+
+
+/************************* GAME ***************************/
+function defaultLocation() {
+   mysqlConnect();
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `default`=1') );
+   return $q['id'];
+}
+
+function userLocation($s) {
+   mysqlConnect();
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
+   return $q['location'];
+}
+
+function currentLocationTitle($s) {
+   mysqlConnect();
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.$q['location'].'"') );
+   return $q['parent']?$q['title']:false;
+}
+
+function currentAreaTitle($s) {
+   mysqlConnect();
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.$q['location'].'"') );
+   if (!$q['parent']) return $q['title'];
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `name`="'.$q['parent'].'"') );
+   return $q['title'];
+}
+
+function currentZoneDescription($s) {
+   mysqlConnect();
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.$q['location'].'"') );
+   return $q['description'];
+}
+
+function allowedZones($s) {
+   mysqlConnect();
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.$q['location'].'"') );
+   $a = array(); $i = 0;
+   foreach (explode('|', $q['goto']) as $v) {
+      $q0 = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `name`="'.$v.'"') );
+      $a[$i++] = array (to => $q0['id'], name => $q0['title']);
+   }
+   return $a;
+}
+
+function changeLocation($s, $lid) {
+   mysqlConnect();
+   $q0 = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.userLocation($s).'"') );
+   $q1 = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.$lid.'"') );
+   $con = ($q0['parent']==$q1['parent']) || ($q0['name']==$q1['parent']) || ($q0['parent']==$q1['name']);
+   if (in_array( $q1['name'], explode('|', $q0['goto'])) &&  $con) {
+      mysql_query('UPDATE `uniusers` SET `location` = '.$lid.' WHERE `sessid`="'.$s.'"');
+      return 0;
+   }
+   else return 5;
+}
+/**********************************************************/
+
+
 
 ##SHA-512
 function myCrypt($pass, $salt) {
