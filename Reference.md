@@ -34,3 +34,11 @@ echo "\n<!-- Done in ".( ($time_end - $time_start) *1000).' milliseconds -->';
 
 ?>
 ```
+
+Options you pass
+----------------
+
+* admin (`true` or `false`)
+* loggedIn (`true` or `false`)
+* login (string or `false`)
+* mail_count (number)
