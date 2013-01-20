@@ -42,3 +42,18 @@ Options you pass
 * loggedIn (`true` or `false`)
 * login (string or `false`)
 * mail_count (number)
+
+### index
+
+None needed.
+
+### register
+
+* error (`true` or `false`)
+* invalidLogin (`true` or `false`)
+* loginIsBusy (`true` or `false`)
+* invalidPass (`true` or `false`)
+
+### login
+
+* error (`true` or `false`)
