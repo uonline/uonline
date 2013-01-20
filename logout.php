@@ -4,9 +4,9 @@ require_once('utils.php');
 
 $HEAD = $BODY = '';
 
-if (!$_COOKIE['sessid'] || strlen($s = $_COOKIE['sessid'])!=64) header('location: /');
+if (!$_COOKIE['sessid'] || strlen($s = $_COOKIE['sessid'])!=64) header('Location: index.php');
 else {
-   if (sessionExpired($s)) header('location: /');
+   if (sessionExpired($s)) header('Location: index.php');
    else {
       closeSession($s);
       logoutSuccess(userBySession($s));
