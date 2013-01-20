@@ -16,7 +16,8 @@ require_once('utils.php');
 mysqlConnect();
 $error = false;
 
-if ($_COOKIE && $s = $_COOKIE['sessid'] && strlen($s)==64 && sessionExists($s) && sessionActive($s) ) header('location: index.php');
+$s = $_COOKIE['sessid'];
+if ($_COOKIE && $s && strlen($s)==64 && sessionExists($s) && sessionActive($s) ) header('Location: index.php');
 
 if ($_POST) {
    $u = $_POST['user']; $p = $_POST['pass'];
