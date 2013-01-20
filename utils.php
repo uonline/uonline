@@ -68,12 +68,12 @@ function userBySession($sess) {
 
 function refreshSession($sess) {
    mysqlConnect();
-   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW()+1000 /*10 minutes*/ WHERE `sessid`="'.$sess.'"');
+   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL 10 MINUTE WHERE `sessid`="'.$sess.'"');
 }
 
 function closeSession($sess) {
    mysqlConnect();
-   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW()-1 WHERE `sessid`="'.$sess.'"');
+   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid`="'.$sess.'"');
 }
 
 
@@ -129,7 +129,7 @@ function validPassword($u, $p) {
 function setSession($u) {
    mysqlConnect();
    $s = generateSessId();
-   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW()+1000, `sessid`="'.$s.'" WHERE `user`="'.$u.'"');
+   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL 10 MINUTE, `sessid`="'.$s.'" WHERE `user`="'.$u.'"');
    return $s;
 }
 
