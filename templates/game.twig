@@ -14,12 +14,9 @@
 			<br />
 
 			<p>Здесь находятся:
-			{% set output = [] %}
 			{% for i in players_list %}
-				{% set item %}<a href="#{{ i.id }}">{{ i.name }}</a>{% endset %}
-				{% set output = output ~ item %}
+				<a href="#{{ i.id }}">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
 			{% endfor %}
-			{{ output|join(',')|split('Array')[1] }}
 			</p>
 
 			<div style="clear: both;"></div>
