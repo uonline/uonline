@@ -13,12 +13,14 @@
 
 			<br />
 
+			<p>Здесь находятся:
 			{% set output = [] %}
 			{% for i in players_list %}
-				{% set item %}{{ i.name }} ({{ i.id }}){% endset %}
+				{% set item %}<a href="#{{ i.id }}">{{ i.name }}</a>{% endset %}
 				{% set output = output ~ item %}
 			{% endfor %}
 			{{ output|join(',')|split('Array')[1] }}
+			</p>
 
 			<div style="clear: both;"></div>
 
