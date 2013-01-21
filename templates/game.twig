@@ -7,13 +7,15 @@
 
 			<p>{{ description }}</p>
 
+			<p>
 			{% for i in ways %}
 				<a class="btn" href="game.php?to={{ i.to }}">{{ i.name }}</a>
 			{% endfor %}
+			</p>
 
 			<br />
 
-			<p>Здесь находятся:
+			<p>На этой локации находятся:
 			{% for i in players_list %}
 				<a href="#{{ i.id }}">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
 			{% endfor %}
