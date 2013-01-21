@@ -3,22 +3,25 @@
 {% block content %}
 			<div class="page-header"><h1>{{ area_name }} <small>{{ location_name }}</small></h1></div>
 
-			{% if pic is defined %}<img src="{{ pic }}" width="200" height="200" />{% endif %}
+			{% if pic is defined %}<img src="{{ pic }}" style="float: right;" />{% endif %}
 
 			<p>{{ description }}</p>
 
 			{% for i in ways %}
 				<a class="btn" href="game.php?to={{ i.to }}">{{ i.name }}</a>
 			{% endfor %}
-			
+
 			<br />
-			
+
+			{% set output = [] %}
 			{% for i in players_list %}
-				{{ i.name }} ({{ i.id }}), 
+				{% set item %}{{ i.name }}({{ i.id }}){% endset %}
+				{% set output = output ~ item %}
 			{% endfor %}
-			
+			{{ output | join(',') }}
+
 			<div>
-			<pre>
+<pre>
 location_name == {{ location_name }}
 area_name == {{ area_name }}
 pic == {{ pic }}

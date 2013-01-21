@@ -52,26 +52,35 @@
 		<div class="container">
 			<!-- content -->
 			
-			<div class="page-header"><h1>{{ location_name }} <small>{{ area_name }}</small></h1></div>
+			<div class="page-header"><h1>{{ area_name }} <small>{{ location_name }}</small></h1></div>
 
-			{% if pic is defined %}<img src="{{ pic }}" />{% endif %}
+			{% if pic is defined %}<img src="{{ pic }}" style="float: right;" />{% endif %}
 
 			<p>{{ description }}</p>
 
-			<div>
-			<pre>location_name == {{ location_name }}
-area_name == {{ area_name }}</pre>
-			</div>
-			
-			{{ for i in ways }}
-				<a class="btn" href="go.php?to={{ i.to }}">{{ i.name }}</a>
-			{{ endfor }}
-			
+			{% for i in ways %}
+				<a class="btn" href="game.php?to={{ i.to }}">{{ i.name }}</a>
+			{% endfor %}
+
 			<br />
-			
-			{{ for i in players_list }}
-				{{ i.name }} ({{ i.id }}), 
-			{{ endfor }}
+
+			{% set output = [] %}
+			{% for i in players_list %}
+				{% set item %}{{ i.name }}({{ i.id }}){% endset %}
+				{% set output = output ~ item %}
+			{% endfor %}
+			{{ output | join(',') }}
+
+			<div>
+<pre>
+location_name == {{ location_name }}
+area_name == {{ area_name }}
+pic == {{ pic }}
+description == {{ description }}
+ways == {{ ways }}
+players_list == {{ players_list }}
+</pre>
+			</div>
 			
 			<!-- / -->
 
