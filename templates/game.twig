@@ -18,7 +18,7 @@
 				{% set item %}{{ i.name }} ({{ i.id }}){% endset %}
 				{% set output = output ~ item %}
 			{% endfor %}
-			{# {{ output|join(',') }} #}
+			{{ output|join(',')|split('Array')[1] }}
 
 			<div style="clear: both;"></div>
 
