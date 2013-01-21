@@ -15,10 +15,10 @@
 
 			{% set output = [] %}
 			{% for i in players_list %}
-				{% set item %}{{ i.name }}({{ i.id }}){% endset %}
+				{% set item %}{{ i.name }} ({{ i.id }}){% endset %}
 				{% set output = output ~ item %}
 			{% endfor %}
-			{{ output | join(',') }}
+			{{ output|join(',') }}
 
 			<div>
 <pre>
