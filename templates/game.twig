@@ -15,11 +15,11 @@
 
 			<br />
 
-			<p>На этой локации находятся:
+			<p><small>На этой локации находятся:
 			{% for i in players_list %}
 				<a href="#{{ i.id }}">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
 			{% endfor %}
-			</p>
+			</small></p>
 
 			<div style="clear: both;"></div>
 
