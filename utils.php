@@ -10,8 +10,11 @@ function mysqlInit($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $
    mysql_query('CREATE TABLE IF NOT EXISTS `uniusers` (`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT, PRIMARY KEY  (`id`) )');
    mysql_query('CREATE TABLE IF NOT EXISTS `locations` (`title` TINYTEXT, `name` TINYTEXT, `type` TINYTEXT, `goto` TINYTEXT, `parent` TINYTEXT, `description` TINYTEXT, `id` INT, `default` TINYINT(1), PRIMARY KEY  (`id`) ) ');
    
+   /********* add new columns ***********/
    mysql_query("ALTER TABLE `uniusers` ADD COLUMN `location` INT DEFAULT 3 AFTER `id`");
-
+   mysql_query("ALTER TABLE `uniusers` ADD COLUMN `permissions` INT AFTER `location`");
+   /********* add new columns ***********/
+   
    /********* fill datas ***********/
    mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Лес', 'wood', 'area', 'castle|marge|river|den', '', 'Обычный лес...', 1, 0)");
    mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Замок', 'castle', 'area', 'wood|cellar|kitchen|livingroom|attic', '', 'Старый замок...', 2, 0)");
@@ -22,7 +25,7 @@ function mysqlInit($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $
    mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Берлога', 'den', 'location', 'marge|river|wood', 'wood', 'Много следов и обглоданные останки...', 7, 0)");
    mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Опушка', 'marge', 'location', 'den|river|wood', 'wood', 'И тут мне надоело...', 8, 0)");
    mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Река', 'river', 'location', 'den|marge|wood', 'wood', 'Прозрачная вода и каменистый берег...', 9, 0)");
-   /********************************/
+   /********* fill datas ***********/
 }
 
 function mysqlDelete() {
@@ -134,10 +137,10 @@ function mySalt($n) {
    return $salt;
 }
 
-function registerUser($u, $p, $e = NULL) {
+function registerUser($u, $p, $p = null) {
    $salt = mySalt(16);
    $session = generateSessId();
-   mysql_query('INSERT INTO `uniusers` (`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`) VALUES ("'.$u.'", "'.$salt.'", "'.myCrypt($p, $salt).'", "'.$session.'", NOW(), NOW() + INTERVAL 10 MINUTE, "'.defaultLocation().'")');
+   mysql_query('INSERT INTO `uniusers` (`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES ("'.$u.'", "'.$salt.'", "'.myCrypt($p, $salt).'", "'.$session.'", NOW(), NOW() + INTERVAL 10 MINUTE, "'.defaultLocation().'", '.$p.')');
    return $session;
 }
 
@@ -145,6 +148,12 @@ function validPassword($u, $p) {
    mysqlConnect();
    $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$u.'"') );
    return $q['hash'] == myCrypt($p, $q['salt']);
+}
+
+function userPermissions($s) {
+   mysqlConnect();
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
+   return $q['permissions'];
 }
 
 function fileFromPath($p) {
@@ -218,7 +227,7 @@ function changeLocation($s, $lid) {
    }
    else return false;
 }
-/**********************************************************/
+/************************* GAME ***************************/
 
 
 

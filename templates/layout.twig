@@ -23,7 +23,7 @@
 				<div class="container">
 					<a class="brand" href="index.php">uonline</a>
 					<ul class="nav">
-						<li {% if file == '' or file == 'index.php' %} class="active" {% endif %}><a href="index.php">Об игре</a></li>
+						<li {% if section == '' or section == 'index' %} class="active" {% endif %}><a href="index.php">Об игре</a></li>
 						<li><a href="#">Новости</a></li>
 						<li><a href="#">Форум</a></li>
 						<li><a href="#">Рейтинг</a></li>
@@ -31,13 +31,13 @@
 					<ul class="nav pull-right">
 						{% if loggedIn == true %}
 						<li><a href="#"><i class="icon-user"></i> <b>{{ login }}</b></a></li>
-						<li {% if file == 'game.php' %} class="active" {% endif %}><a href="game.php">Игра</a></li>
+						<li {% if section == 'game' %} class="active" {% endif %}><a href="index.php?section=game">Игра</a></li>
 						<li><a href="#">Почта {% if mail_count > 0 %}<span class="badge badge-info">{{ mail_count }}</span>{% endif %}</a></li>
 						<li><a href="#">Кабинет</a></li>
 						<li><a href="logout.php">Выйти</a></li>
 						{% elseif loggedIn == false %}
-						<li {% if file == 'login.php' %} class="active" {% endif %}><a href="login.php">Войти</a></li>
-						<li{% if file == 'reg.php' %} class="active" {% endif %}><a href="reg.php">Зарегистрироваться</a></li>
+						<li {% if section == 'login' %} class="active" {% endif %}><a href="index.php?section=login">Войти</a></li>
+						<li{% if section == 'reg' %} class="active" {% endif %}><a href="index.php?section=register">Зарегистрироваться</a></li>
 						{% else %}
 						{% endif %}
 						{% if admin == true %}

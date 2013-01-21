@@ -7,7 +7,7 @@ $HEAD = $BODY = '';
 if ($_POST) {
    $u = $_POST['user']; $p = $_POST['pass']; //$e = $_POST['mail'];
    if (correctUserName($u) && !userExists($u) && /*correctMail($e) && !mailExists($e) && */ correctAdminPassword($p) && $_POST['ad_pass'] == ADMIN_PASS) {
-      $s = registerUser($u, $p);
+      $s = registerUser($u, $p, 65535);
       setcookie('sessid', $s);
       registerSuccess();
    }

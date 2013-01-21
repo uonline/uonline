@@ -21,14 +21,14 @@ invalidPass = {{ invalidPass }}</pre>
 				<div class="control-group {% if (invalidLogin == true) or (loginIsBusy == true) %}error{% endif %}">
 					<label class="control-label" for="user">Логин</label>
 					<div class="controls">
-						<input type="text" id="user" name="user" maxlength="32">
+						<input type="text" id="user" name="user" maxlength="32" value="{{ user }}">
 						<span class="help-inline"><small>От 2 до 32 символов, [a-zA-Z0-9а-яА-Я_- ].</small></span>
 					</div>
 				</div>
 				<div class="control-group {% if (invalidPass == true) %}error{% endif %}">
 					<label class="control-label" for="pass">Пароль</label>
 					<div class="controls">
-						<input type="password" id="pass" name="pass" maxlength="32">
+						<input type="password" id="pass" name="pass" maxlength="32" value="{{ pass }}">
 						<span class="help-inline"><small>От 4 до 32 символов, [a-zA-Z0-9!@#$%^&amp;*()_+]</small></span>
 					</div>
 				</div>

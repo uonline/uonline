@@ -11,18 +11,89 @@ $twig = new Twig_Environment($loader, array(
 ));
 
 
-require_once('utils.php'); $s = $_COOKIE['sessid'];
-if ( $s && strlen($s)==64 && sessionActive($s) ) refreshSession($s);
+require_once('utils.php'); $s = $_COOKIE['sessid']; $ca = array();
+if ($s && strlen($s) == 64 && sessionActive($s)) refreshSession($s);
 
-echo $twig->render('index.twig', array(
-   'admin' => false,
-   'loggedIn' => sessionActive($s),
-   'login' => userBySession($s),
-   'mail_count' => 0,
-   'file' => fileFromPath(__FILE__),
+if ($se = $_GET['section']) {
+   
+   /******************* register ***********************/
+   if ($se == 'register') {
+      if ($_POST) {
+         $u = $_POST['user']; $p = $_POST['pass'];
+         if (correctUserName($u) && !userExists($u) && correctUserPassword($p)) {
+            $s = registerUser($u, $p); setcookie('sessid', $s); header('Location: index.php'); die;
+         }
+         else {
+            if ( !correctUserName($u) || !correctUserPassword($p) ) $error = true;
+            if (userExists($u)) $error = true;
+         }
+      }
+      $page = 'register.twig';
+      $ca = array(
+         'section' => 'register',
+         'title' => 'Регистрация',
+
+         'invalidLogin' => !correctUserName($u) && $_POST, // логин хуйня
+         'invalidPass' => !correctUserPassword($p) && $_POST, // тут хуйня
+         'loginIsBusy' => userExists($u) && $_POST, // логин занят
+
+         'user' => $u,
+         'pass' => $p,
+         'error' => $error,
+      );
+   }
+   /******************* register ***********************/
+   
+   /******************* login ***********************/
+   elseif ($se == 'login') {
+      if ($_POST) {
+         $u = $_POST['user']; $p = $_POST['pass'];
+         if (correctUserName($u) && userExists($u) && correctPassword($p) && validPassword($u, $p)) {
+            $s = setSession($u); setcookie('sessid', $s); header('Location: index.php'); die;
+         } else {
+            if (!correctUserName($u) || !correctPassword($p)) $error = true;
+            else if (!userExists($u)) $error = true;
+            else $error = true;
+         }
+      }
+
+      $page = 'login.twig';
+      $ca = array(
+          'section' => 'login',
+          'title' => 'Вход',
+          
+          'user' => $u,
+          
+          'error' => $error,
+      );
+   }
+   /******************* login ***********************/
+   
+   /******************* game ***********************/
+   elseif ($se == 'game') {
+      $page = 'game.twig';
+      $ca = array(
+         'section' => 'game',
+         'title' => 'Игра',
+
+         'location_name' => currentLocationTitle($s),
+         'area_name' => currentAreaTitle($s),
+         'pic' => 'img/sasuke.jpeg',
+         'description' => currentZoneDescription($s),
+         'ways' => allowedZones($s),
+         'players_list' => array( array( id => idBySession($s), name => userBySession($s) ) ),
+      );
+   }
+   /******************* game ***********************/
+}
+
+echo $twig->render($page ? $page : 'index.twig', $ca + array(
+    'admin' => userPermissions($s),
+    'loggedIn' => sessionActive($s),
+    'login' => userBySession($s),
+    'mail_count' => 0,
 ));
 
 $time_end = microtime(true);
-echo "\n<!-- Done in ".( ($time_end - $time_start) *1000).' milliseconds -->';
-
+echo "\n<!-- Done in " . ( ($time_end - $time_start) * 1000) . ' milliseconds -->';
 ?>
