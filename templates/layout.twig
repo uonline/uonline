@@ -30,7 +30,7 @@
 					</ul>
 					<ul class="nav pull-right">
 						{% if loggedIn == true %}
-						<li><a href="#"><i class="icon-user"></i> <b>{{ login }}</b></a></li>
+						<li><a href="#"><i class="{% if admin == true %}icon-certificate{% else %}icon-user{% endif %}"></i> <b>{{ login }}</b></a></li>
 						<li {% if section == 'game' %} class="active" {% endif %}><a href="index.php?section=game">Игра</a></li>
 						<li><a href="#">Почта {% if mail_count > 0 %}<span class="badge badge-info">{{ mail_count }}</span>{% endif %}</a></li>
 						<li><a href="#">Кабинет</a></li>
