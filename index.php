@@ -25,7 +25,8 @@ if ($se = $_GET['section']) {
          }
          else {
             if ( !correctUserName($u) || !correctUserPassword($p) ) $error = true;
-            if (userExists($u)) $error = true;
+            elseif (userExists($u)) $error = true;
+            else $error = true;
          }
       }
       $page = 'register.twig';

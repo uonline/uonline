@@ -137,10 +137,10 @@ function mySalt($n) {
    return $salt;
 }
 
-function registerUser($u, $p, $p = null) {
+function registerUser($u, $p, $perm = 0) {
    $salt = mySalt(16);
    $session = generateSessId();
-   mysql_query('INSERT INTO `uniusers` (`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES ("'.$u.'", "'.$salt.'", "'.myCrypt($p, $salt).'", "'.$session.'", NOW(), NOW() + INTERVAL 10 MINUTE, "'.defaultLocation().'", '.$p.')');
+   mysql_query('INSERT INTO `uniusers` (`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES ("'.$u.'", "'.$salt.'", "'.myCrypt($p, $salt).'", "'.$session.'", NOW(), NOW() + INTERVAL 10 MINUTE, '.defaultLocation().', '.$perm.')');
    return $session;
 }
 
