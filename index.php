@@ -75,9 +75,6 @@ if ($se = $_GET['section']) {
       if ($s && strlen($s)==64 && sessionActive($s) ) refreshSession($s);
       else { header('Location: index.php?section=login'); die; }
 
-      if ($_GET && $to = $_GET['to']) {
-         changeLocation($s, $to);
-      }
       $page = 'game.twig';
       $ca = array(
          'section' => 'game',
@@ -90,6 +87,13 @@ if ($se = $_GET['section']) {
          'ways' => allowedZones($s),
          'players_list' => usersOnLocation($s),
       );
+   }
+   elseif ($se == 'go') {
+      if ($to = $_GET['to']) {
+         changeLocation($s, $to);
+         header('Location: index.php?section=game');
+         die;
+      }
    }
    /******************* game ***********************/
 }
