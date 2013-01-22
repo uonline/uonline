@@ -73,7 +73,7 @@ if ($se = $_GET['section']) {
    /******************* game ***********************/
    elseif ($se == 'game') {
       if ($s && strlen($s)==64 && sessionActive($s) ) refreshSession($s);
-      else { header('Location: login.php'); die; }
+      else { header('Location: index.php?section=login'); die; }
 
       if ($_GET && $to = $_GET['to']) {
          changeLocation($s, $to);
@@ -88,7 +88,7 @@ if ($se = $_GET['section']) {
          'pic' => 'img/sasuke.jpeg',
          'description' => currentZoneDescription($s),
          'ways' => allowedZones($s),
-         'players_list' => array( array( id => idBySession($s), name => userBySession($s) ) ),
+         'players_list' => usersOnLocation($s),
       );
    }
    /******************* game ***********************/

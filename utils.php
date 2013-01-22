@@ -227,6 +227,12 @@ function changeLocation($s, $lid) {
    }
    else return false;
 }
+
+function usersOnLocation($s) {
+   $q = mysql_query( 'SELECT `user`, `id` FROM `uniusers` WHERE `sessexpire` > NOW() AND `location`='.userLocation($s) );
+   for ($a=array(), $i=0; $r = mysql_fetch_assoc($q); $a[$i++]=array(id => $r['id'], name => $r['user']) );
+   return $a;
+}
 /************************* GAME ***************************/
 
 
@@ -241,6 +247,14 @@ function array_filter_($a, $m) {
    $r = array();
    foreach ($m as $i=>$v ) { if($v) $r[$i]=$a[$i]; }
    return $r;
+}
+
+function b64UrlEncode($i) {
+ return strtr(base64_encode($i), '+/=', '-_,');
+}
+
+function b64UrlDecode($i) {
+ return base64_decode(strtr($i, '-_,', '+/='));
 }
 
 function insertEncoding($e) {
