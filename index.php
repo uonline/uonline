@@ -25,7 +25,8 @@ if ($se = $_GET['section']) {
          }
          else {
             if ( !correctUserName($u) || !correctUserPassword($p) ) $error = true;
-            if (userExists($u)) $error = true;
+            elseif (userExists($u)) $error = true;
+            else $error = true;
          }
       }
       $page = 'register.twig';
@@ -71,6 +72,12 @@ if ($se = $_GET['section']) {
    
    /******************* game ***********************/
    elseif ($se == 'game') {
+      if ($s && strlen($s)==64 && sessionActive($s) ) refreshSession($s);
+      else { header('Location: login.php'); die; }
+
+      if ($_GET && $to = $_GET['to']) {
+         changeLocation($s, $to);
+      }
       $page = 'game.twig';
       $ca = array(
          'section' => 'game',
@@ -88,7 +95,7 @@ if ($se = $_GET['section']) {
 }
 
 echo $twig->render($page ? $page : 'index.twig', $ca + array(
-    'admin' => userPermissions($s),
+    'admin' => userPermissions($s) && sessionActive($s),
     'loggedIn' => sessionActive($s),
     'login' => userBySession($s),
     'mail_count' => 0,
