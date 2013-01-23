@@ -7,25 +7,30 @@ function mysqlInit($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $
    defined("MYSQL_CONN") || define ("MYSQL_CONN", mysql_connect($host, $user, $pass) );
    mysql_query('CREATE DATABASE IF NOT EXISTS `'.$base.'`');
    mysql_select_db($base);
-   mysql_query('CREATE TABLE IF NOT EXISTS `uniusers` (`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT, PRIMARY KEY  (`id`) )');
-   mysql_query('CREATE TABLE IF NOT EXISTS `locations` (`title` TINYTEXT, `name` TINYTEXT, `type` TINYTEXT, `goto` TINYTEXT, `parent` TINYTEXT, `description` TINYTEXT, `id` INT, `default` TINYINT(1), PRIMARY KEY  (`id`) ) ');
-   
+   mysql_query('CREATE TABLE IF NOT EXISTS `uniusers` (`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT DEFAULT 1, `permissions` INT DEFAULT 0, PRIMARY KEY  (`id`) )');
+
+   /********** areas and locations **********/
+   mysql_query('CREATE TABLE IF NOT EXISTS `locations` (`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `super` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))');
+   mysql_query('CREATE TABLE IF NOT EXISTS `areas` (`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))');
+   /********** areas and locations **********/
+
    /********* add new columns ***********/
    mysql_query("ALTER TABLE `uniusers` ADD COLUMN `location` INT DEFAULT 3 AFTER `id`");
    mysql_query("ALTER TABLE `uniusers` ADD COLUMN `permissions` INT AFTER `location`");
    /********* add new columns ***********/
+
+   /********* filling areas and locations ***********/
+   mysql_query("REPLACE INTO `areas` (`title`, `id`) VALUES ('Лес', 1)");
+   mysql_query("REPLACE INTO `areas` (`title`, `id`) VALUES ('Замок', 2)");
    
-   /********* fill datas ***********/
-   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Лес', 'wood', 'area', 'castle|marge|river|den', '', 'Обычный лес...', 1, 0)");
-   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Замок', 'castle', 'area', 'wood|cellar|kitchen|livingroom|attic', '', 'Старый замок...', 2, 0)");
-   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Погреб', 'cellar', 'location', 'kitchen', 'castle', 'Большие бочки и запах плесени...', 3, 1)");
-   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Кухня', 'kitchen', 'location', 'cellar|livingroom', 'castle', 'Разрушенная печь и горшки...', 4, 0)");
-   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Гостинная', 'livingroom', 'location', 'cellar|kitchen|castle|attic', 'castle', 'Большой круглый стол, обставленный стульями, картины на стенах...', 5, 0)");
-   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Чердак', 'attic', 'location', 'livingroom', 'castle', 'Много старинных вещей и пыли...', 6, 0)");
-   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Берлога', 'den', 'location', 'marge|river|wood', 'wood', 'Много следов и обглоданные останки...', 7, 0)");
-   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Опушка', 'marge', 'location', 'den|river|wood', 'wood', 'И тут мне надоело...', 8, 0)");
-   mysql_query("REPLACE INTO `locations` (`title`, `name`, `type`, `goto`, `parent`, `description`, `id`, `default`) VALUES ('Река', 'river', 'location', 'den|marge|wood', 'wood', 'Прозрачная вода и каменистый берег...', 9, 0)");
-   /********* fill datas ***********/
+   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Погреб', 'Выбраться на кухню=2', 'Большие бочки и запах плесени...', 1, 2, 1)");
+   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Кухня', 'Спуститься в погреб=1|Пройти в гостинную=3', 'Разрушенная печь и горшки...', 2, 2, 0)");
+   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Гостинная', 'Выбраться на кухню=2|Подняться на чердак=4|Убраться на опушку=6', 'Большой круглый стол, обставленный стульями, картины на стенах...', 3, 2, 0)");
+   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Чердак', 'Спуститься в гостинную=3', 'Много старинных вещей и пыли...', 4, 2, 0)");
+   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Берлога', 'Двигаться на опушку=6|Выбраться к реке=7', 'Много следов и обглоданные останки...', 5, 1, 0)");
+   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Опушка', 'Забраться в берлогу=5|Подняться к реке=7|Войти в замок=3', 'И тут мне надоело...', 6, 1, 0)");
+   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Река', 'Забраться в берлогу=5|Выйти на опушку=6', 'Прозрачная вода и каменистый берег...', 7, 1, 0)");
+   /********* filling areas and locations ***********/
 }
 
 function mysqlDelete() {
@@ -175,53 +180,50 @@ function defaultLocation() {
    return $q['id'];
 }
 
-function userLocation($s) {
+function userLocationId($s) {
    mysqlConnect();
    $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
    return $q['location'];
 }
 
+function userAreaId($s) {
+   mysqlConnect();
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.userLocationId($s).'"') );
+   return $q['super'];
+}
+
 function currentLocationTitle($s) {
    mysqlConnect();
-   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
-   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.$q['location'].'"') );
-   return $q['parent']?$q['title']:false;
+   $q = mysql_fetch_assoc (mysql_query('SELECT * FROM `locations` WHERE `id`="'.userLocationId($s).'"'));
+   return $q['title'];
 }
 
 function currentAreaTitle($s) {
    mysqlConnect();
-   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
-   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.$q['location'].'"') );
-   if (!$q['parent']) return $q['title'];
-   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `name`="'.$q['parent'].'"') );
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `areas` WHERE `id`="'.userAreaId($s).'"') );
    return $q['title'];
 }
 
-function currentZoneDescription($s) {
+function currentLocationDescription($s) {
    mysqlConnect();
-   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
-   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.$q['location'].'"') );
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.userLocationId($s).'"') );
    return $q['description'];
 }
 
-function allowedZones($s) {
+function allowedZones($s, $idsonly = false) {
    mysqlConnect();
-   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
-   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.$q['location'].'"') );
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.userLocationId($s).'"') );
    $a = array(); $i = 0;
    foreach (explode('|', $q['goto']) as $v) {
-      $q0 = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `name`="'.$v.'"') );
-      $a[$i++] = array (to => $q0['id'], name => $q0['title']);
+      $la = explode('=', $v);
+      $a[$i++] = $idsonly ? $la[1] : array (to => $la[1], name => $la[0]);
    }
    return $a;
 }
 
 function changeLocation($s, $lid) {
    mysqlConnect();
-   $q0 = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.userLocation($s).'"') );
-   $q1 = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.$lid.'"') );
-   $con = ($q0['parent']==$q1['parent']) || ($q0['name']==$q1['parent']) || ($q0['parent']==$q1['name']);
-   if (in_array( $q1['name'], explode('|', $q0['goto'])) &&  $con) {
+   if (in_array( $lid, allowedZones($s, true) ) ) {
       mysql_query('UPDATE `uniusers` SET `location` = '.$lid.' WHERE `sessid`="'.$s.'"');
       return true;
    }
@@ -229,7 +231,7 @@ function changeLocation($s, $lid) {
 }
 
 function usersOnLocation($s) {
-   $q = mysql_query( 'SELECT `user`, `id` FROM `uniusers` WHERE `sessexpire` > NOW() AND `location`='.userLocation($s) );
+   $q = mysql_query( 'SELECT `user`, `id` FROM `uniusers` WHERE `sessexpire` > NOW() AND `location`='.userLocationId($s) );
    for ($a=array(), $i=0; $r = mysql_fetch_assoc($q); $a[$i++]=array(id => $r['id'], name => $r['user']) );
    return $a;
 }

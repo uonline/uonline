@@ -83,7 +83,7 @@ if ($se = $_GET['section']) {
          'location_name' => currentLocationTitle($s),
          'area_name' => currentAreaTitle($s),
          'pic' => 'img/sasuke.jpeg',
-         'description' => currentZoneDescription($s),
+         'description' => currentLocationDescription($s),
          'ways' => allowedZones($s),
          'players_list' => usersOnLocation($s),
       );
