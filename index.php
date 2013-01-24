@@ -14,7 +14,7 @@ $twig = new Twig_Environment($loader, array(
 require_once('utils.php'); $s = $_COOKIE['sessid']; $ca = array();
 if ($s && strlen($s) == 64 && sessionActive($s)) refreshSession($s);
 
-if ($se = $_GET['section']) {
+if ($se = $_GET['instance']) {
    
    /******************* register ***********************/
    if ($se == 'register') {
@@ -31,7 +31,7 @@ if ($se = $_GET['section']) {
       }
       $page = 'register.twig';
       $ca = array(
-         'section' => 'register',
+         'instance' => 'register',
          'title' => 'Регистрация',
 
          'invalidLogin' => !correctUserName($u) && $_POST, // логин хуйня
@@ -60,7 +60,7 @@ if ($se = $_GET['section']) {
 
       $page = 'login.twig';
       $ca = array(
-          'section' => 'login',
+          'instance' => 'login',
           'title' => 'Вход',
           
           'user' => $u,
@@ -73,11 +73,11 @@ if ($se = $_GET['section']) {
    /******************* game ***********************/
    elseif ($se == 'game') {
       if ($s && strlen($s)==64 && sessionActive($s) ) refreshSession($s);
-      else { header('Location: index.php?section=login'); die; }
+      else { header('Location: index.php?instance=login'); die; }
 
       $page = 'game.twig';
       $ca = array(
-         'section' => 'game',
+         'instance' => 'game',
          'title' => 'Игра',
 
          'location_name' => currentLocationTitle($s),
@@ -91,7 +91,7 @@ if ($se = $_GET['section']) {
    elseif ($se == 'go') {
       if ($to = $_GET['to']) {
          changeLocation($s, $to);
-         header('Location: index.php?section=game');
+         header('Location: index.php?instance=game');
          die;
       }
    }

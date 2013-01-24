@@ -23,7 +23,7 @@
 				<div class="container">
 					<a class="brand" href="index.php">uonline</a>
 					<ul class="nav">
-						<li {% if section == '' or section == 'index' %} class="active" {% endif %}><a href="index.php">Об игре</a></li>
+						<li {% if instance == '' or instance == 'index' %} class="active" {% endif %}><a href="index.php">Об игре</a></li>
 						<li><a href="#">Новости</a></li>
 						<li><a href="#">Форум</a></li>
 						<li><a href="#">Рейтинг</a></li>
@@ -31,13 +31,13 @@
 					<ul class="nav pull-right">
 						{% if loggedIn == true %}
 						<li><a href="#"><i class="{% if admin == true %}icon-certificate{% else %}icon-user{% endif %}"></i> <b>{{ login }}</b></a></li>
-						<li {% if section == 'game' %} class="active" {% endif %}><a href="index.php?section=game">Игра</a></li>
+						<li {% if instance == 'game' %} class="active" {% endif %}><a href="index.php?instance=game">Игра</a></li>
 						<li><a href="#">Почта {% if mail_count > 0 %}<span class="badge badge-info">{{ mail_count }}</span>{% endif %}</a></li>
 						<li><a href="#">Кабинет</a></li>
 						<li><a href="logout.php">Выйти</a></li>
 						{% elseif loggedIn == false %}
-						<li {% if section == 'login' %} class="active" {% endif %}><a href="index.php?section=login">Войти</a></li>
-						<li{% if section == 'reg' %} class="active" {% endif %}><a href="index.php?section=register">Зарегистрироваться</a></li>
+						<li {% if instance == 'login' %} class="active" {% endif %}><a href="index.php?instance=login">Войти</a></li>
+						<li{% if instance == 'reg' %} class="active" {% endif %}><a href="index.php?instance=register">Зарегистрироваться</a></li>
 						{% else %}
 						{% endif %}
 						{% if admin == true %}
