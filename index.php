@@ -1,21 +1,20 @@
 <?php
-
+//error_reporting(E_ALL); ini_set('display_errors', 'on');
 $time_start = microtime(true);
 
+require_once 'utils.php';
 require_once './Twig/Autoloader.php';
 Twig_Autoloader::register();
 $loader = new Twig_Loader_Filesystem('./templates');
 $twig = new Twig_Environment($loader, array(
-   //'cache' => './templates_cache', // UNCOMMENT LATER
-   'cache' => false,
+   'cache' => TWIG_CACHE
 ));
 
-
-require_once('utils.php'); $s = $_COOKIE['sessid']; $ca = array();
+$s = $_COOKIE['sessid']; $ca = array();
 if ($s && strlen($s) == 64 && sessionActive($s)) refreshSession($s);
 
-if ($se = $_GET['instance']) {
-   
+if ($se = $_GET['instance'] /*&& preg_match('/[^\\/]+/', $se, $res)*/) {
+   //$se = $res[0];
    /******************* register ***********************/
    if ($se == 'register') {
       if ($_POST) {
@@ -29,9 +28,7 @@ if ($se = $_GET['instance']) {
             else $error = true;
          }
       }
-      $page = 'register.twig';
       $ca = array(
-         'instance' => 'register',
          'title' => 'Регистрация',
 
          'invalidLogin' => !correctUserName($u) && $_POST, // логин хуйня
@@ -58,13 +55,9 @@ if ($se = $_GET['instance']) {
          }
       }
 
-      $page = 'login.twig';
       $ca = array(
-          'instance' => 'login',
           'title' => 'Вход',
-          
           'user' => $u,
-          
           'error' => $error,
       );
    }
@@ -73,11 +66,9 @@ if ($se = $_GET['instance']) {
    /******************* game ***********************/
    elseif ($se == 'game') {
       if ($s && strlen($s)==64 && sessionActive($s) ) refreshSession($s);
-      else { header('Location: index.php?instance=login'); die; }
+      else { redirect('login'); die; }
 
-      $page = 'game.twig';
       $ca = array(
-         'instance' => 'game',
          'title' => 'Игра',
 
          'location_name' => currentLocationTitle($s),
@@ -88,17 +79,22 @@ if ($se = $_GET['instance']) {
          'players_list' => usersOnLocation($s),
       );
    }
+   /******************* game ***********************/
+   
+   /******************* moving ***********************/
    elseif ($se == 'go') {
       if ($to = $_GET['to']) {
          changeLocation($s, $to);
-         header('Location: index.php?instance=game');
+         redirect('game');
          die;
       }
    }
-   /******************* game ***********************/
+   /******************* moving ***********************/
 }
 
-echo $twig->render($page ? $page : 'index.twig', $ca + array(
+$il = array('register', 'login', 'game', 'about');
+echo $twig->render( ($in = in_array($se, $il) ? $se : DEFAULT_INSTANCE).'.twig', $ca + array(
+    'instance' => $in,
     'admin' => userPermissions($s) && sessionActive($s),
     'loggedIn' => sessionActive($s),
     'login' => userBySession($s),

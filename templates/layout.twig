@@ -23,7 +23,7 @@
 				<div class="container">
 					<a class="brand" href="index.php">uonline</a>
 					<ul class="nav">
-						<li {% if instance == '' or instance == 'index' %} class="active" {% endif %}><a href="index.php">Об игре</a></li>
+						<li {% if instance == '' or instance == 'about' %} class="active" {% endif %}><a href="index.php?instance=about">Об игре</a></li>
 						<li><a href="#">Новости</a></li>
 						<li><a href="#">Форум</a></li>
 						<li><a href="#">Рейтинг</a></li>
@@ -37,7 +37,7 @@
 						<li><a href="logout.php">Выйти</a></li>
 						{% elseif loggedIn == false %}
 						<li {% if instance == 'login' %} class="active" {% endif %}><a href="index.php?instance=login">Войти</a></li>
-						<li{% if instance == 'reg' %} class="active" {% endif %}><a href="index.php?instance=register">Зарегистрироваться</a></li>
+						<li{% if instance == 'register' %} class="active" {% endif %}><a href="index.php?instance=register">Зарегистрироваться</a></li>
 						{% else %}
 						{% endif %}
 						{% if admin == true %}

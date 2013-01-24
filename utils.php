@@ -172,6 +172,10 @@ function setSession($u) {
    return $s;
 }
 
+function redirect($i) {
+   header('Location: index.php?instance='.($i?$i:DEFAULT_INSTANCE) );
+}
+
 
 /************************* GAME ***************************/
 function defaultLocation() {

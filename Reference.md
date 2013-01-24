@@ -21,7 +21,7 @@ $twig = new Twig_Environment($loader, array(
 
 
 // and render template you need
-echo $twig->render('index.twig', array(
+echo $twig->render('about.twig', array(
    'admin' => false,
    'loggedIn' => sessionActive($s),
    'login' => userBySession($s),
