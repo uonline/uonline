@@ -9,7 +9,7 @@ define('MYSQL_USER', $user);
 define('MYSQL_PASS', $pass);
 define('MYSQL_BASE', $base);
 define('ADMIN_PASS', $admpass);
-define('DEFAULT_INSTANCE', 'about');
+define('DEFAULT_INSTANCE', 'game');
 define('TWIG_CACHE', false); // './templates_cache'
 
 
