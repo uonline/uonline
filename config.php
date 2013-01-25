@@ -12,8 +12,4 @@ define('ADMIN_PASS', $admpass);
 define('DEFAULT_INSTANCE', 'game');
 define('TWIG_CACHE', false); // './templates_cache'
 
-
-
-
-
 ?>

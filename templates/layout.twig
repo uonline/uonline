@@ -23,7 +23,7 @@
 				<div class="container">
 					<a class="brand" href="index.php">uonline</a>
 					<ul class="nav">
-						<li {% if instance == '' or instance == 'about' %} class="active" {% endif %}><a href="index.php?instance=about">Об игре</a></li>
+						<li {% if instance == 'about' %} class="active" {% endif %}><a href="index.php?instance=about">Об игре</a></li>
 						<li><a href="#">Новости</a></li>
 						<li><a href="#">Форум</a></li>
 						<li><a href="#">Рейтинг</a></li>
@@ -57,7 +57,7 @@
 			<hr />
 
 			<footer>
-				<p>&copy; m1kc и К<sup>o</sup>, 2013</p>
+				<p class="muted">&copy; m1kc и К<sup>о</sup>, 2012&ndash;{{ "now"|date("Y") }}</p>
 			</footer>
 			
 		</div>
