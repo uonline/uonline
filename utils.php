@@ -95,9 +95,11 @@ function idBySession($sess) {
    return $a['id'];
 }
 
-function refreshSession($sess) {
+function refreshSession($s) {
    mysqlConnect();
-   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL 10 MINUTE WHERE `sessid`="'.$sess.'"');
+   if ($s && strlen($s) == 64 && sessionActive($s))
+      mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL 10 MINUTE WHERE `sessid`="'.$s.'"');
+   else return;
 }
 
 function closeSession($sess) {
