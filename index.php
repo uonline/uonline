@@ -15,10 +15,6 @@ $redirect = false;
 $s = $_COOKIE['sessid']; refreshSession($s);
 $in = $_GET['instance']; if($in[strlen($in)-1] == '/') $in = substr($in, 0, strlen($in)-1);
 
-$il = array('register', 'login', 'game', 'about');
-if (!$in) $redirect = DEFAULT_INSTANCE;
-$in = in_array($in, $il) ? $in : '404';
-
 $options = array(
     'instance' => $in,
     'admin' => userPermissions($s) && sessionActive($s),
@@ -26,6 +22,14 @@ $options = array(
     'login' => userBySession($s),
     'mail_count' => 0,
 );
+
+$il = array('register', 'login', 'game', 'about', 'go');
+if (!$in) $redirect = DEFAULT_INSTANCE;
+if (!in_array($in, $il)) {
+   $in = '404';
+   header( $_SERVER[SERVER_PROTOCOL].' 404 Not Found' );
+   $options['title'] = 'Not Found';
+}
 
 
 
@@ -56,7 +60,7 @@ elseif ($in == 'login') {
    if ($_POST) {
       $u = $_POST['user']; $p = $_POST['pass'];
       if (correctUserName($u) && userExists($u) && correctPassword($p) && validPassword($u, $p)) {
-         $s = setSession($u); setcookie('sessid', $s); $redirect = 'about';
+         $s = setSession($u); setcookie('sessid', $s); $redirect = DEFAULT_INSTANCE;
       } else {
          if (!correctUserName($u) || !correctPassword($p)) $error = true; elseif (!userExists($u)) $error = true; else $error = true;
       }
@@ -70,14 +74,15 @@ elseif ($in == 'login') {
 /******************* game ***********************/
 elseif ($in == 'game') {
    if (sessionExpired($s)) $redirect = 'login';
-
-   $options['title'] = 'Игра';
-   $options['location_name'] = currentLocationTitle($s);
-   $options['area_name'] = currentAreaTitle($s);
-   $options['pic'] = 'img/sasuke.jpeg';
-   $options['description'] = currentLocationDescription($s);
-   $options['ways'] = allowedZones($s);
-   $options['players_list'] = usersOnLocation($s);
+   else {
+      $options['title'] = 'Игра';
+      $options['location_name'] = currentLocationTitle($s);
+      $options['area_name'] = currentAreaTitle($s);
+      $options['pic'] = 'img/sasuke.jpeg';
+      $options['description'] = currentLocationDescription($s);
+      $options['ways'] = allowedZones($s);
+      $options['players_list'] = usersOnLocation($s);
+   }
 }
 /******************* game ***********************/
 
