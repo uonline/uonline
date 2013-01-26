@@ -28,7 +28,6 @@ if (!$in) $redirect = DEFAULT_INSTANCE;
 if (!in_array($in, $il)) {
    $in = '404';
    header( $_SERVER[SERVER_PROTOCOL].' 404 Not Found' );
-   $options['title'] = '404 Not Found';
 }
 
 
@@ -43,7 +42,6 @@ if ($in == 'register') {
       else {
          if ( !correctUserName($u) || !correctUserPassword($p) ) $error = true; elseif (userExists($u)) $error = true; else $error = true;
 
-         $options['title'] = 'Регистрация';
          $options['invalidLogin'] = !correctUserName($u) && $_POST; // логин хуйня
          $options['invalidPass'] = !correctUserPassword($p) && $_POST; // тут хуйня
          $options['loginIsBusy'] = userExists($u) && $_POST; // логин занят
@@ -65,7 +63,6 @@ elseif ($in == 'login') {
          if (!correctUserName($u) || !correctPassword($p)) $error = true; elseif (!userExists($u)) $error = true; else $error = true;
       }
    }
-   $options['title'] = 'Вход';
    $options['user'] = $u;
    $options['error'] = $error;
 }
@@ -75,7 +72,6 @@ elseif ($in == 'login') {
 elseif ($in == 'game') {
    if (sessionExpired($s)) $redirect = 'login';
    else {
-      $options['title'] = 'Игра';
       $options['location_name'] = currentLocationTitle($s);
       $options['area_name'] = currentAreaTitle($s);
       $options['pic'] = '/img/Sasuke.jpeg';
