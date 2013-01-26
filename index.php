@@ -13,10 +13,10 @@ $twig = new Twig_Environment($loader, array('cache' => TWIG_CACHE));
 $redirect = false;
 
 $s = $_COOKIE['sessid']; refreshSession($s);
-$se = $_GET['instance']; if($se[strlen($se)-1] == '/') $se = substr($se, 0, strlen($se)-1);
+$in = $_GET['instance']; if($in[strlen($in)-1] == '/') $in = substr($in, 0, strlen($in)-1);
 
 $il = array('register', 'login', 'game', 'about');
-$in = in_array($se, $il) ? $se : DEFAULT_INSTANCE;
+$in = in_array($in, $il) ? $in : DEFAULT_INSTANCE;
 
 $options = array(
     'instance' => $in,
