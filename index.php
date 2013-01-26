@@ -78,7 +78,7 @@ elseif ($in == 'game') {
       $options['title'] = 'Игра';
       $options['location_name'] = currentLocationTitle($s);
       $options['area_name'] = currentAreaTitle($s);
-      $options['pic'] = '/img/sasuke.jpeg';
+      $options['pic'] = '/img/Sasuke.jpeg';
       $options['description'] = currentLocationDescription($s);
       $options['ways'] = allowedZones($s);
       $options['players_list'] = usersOnLocation($s);
