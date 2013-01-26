@@ -174,8 +174,8 @@ function setSession($u) {
    return $s;
 }
 
-function redirect($i) {
-   header('Location: index.php?instance='.($i?$i:DEFAULT_INSTANCE) );
+function redirect($i = DEFAULT_INSTANCE) {
+   header('Location: index.php?instance='.$i);
 }
 
 
@@ -238,7 +238,7 @@ function changeLocation($s, $lid) {
 
 function usersOnLocation($s) {
    $q = mysql_query( 'SELECT `user`, `id` FROM `uniusers` WHERE `sessexpire` > NOW() AND `location`='.userLocationId($s) );
-   for ($a=array(), $i=0; $r = mysql_fetch_assoc($q); $a[$i++]=array(id => $r['id'], name => $r['user']) );
+   for ($a=array(), $i=0; $q && $r = mysql_fetch_assoc($q); $a[$i++]=array(id => $r['id'], name => $r['user']) );
    return $a;
 }
 /************************* GAME ***************************/

@@ -16,7 +16,8 @@ $s = $_COOKIE['sessid']; refreshSession($s);
 $in = $_GET['instance']; if($in[strlen($in)-1] == '/') $in = substr($in, 0, strlen($in)-1);
 
 $il = array('register', 'login', 'game', 'about');
-$in = in_array($in, $il) ? $in : DEFAULT_INSTANCE;
+if (!$in) $redirect = DEFAULT_INSTANCE;
+$in = in_array($in, $il) ? $in : '404';
 
 $options = array(
     'instance' => $in,
@@ -67,7 +68,7 @@ elseif ($in == 'login') {
 
 /******************* game ***********************/
 elseif ($in == 'game') {
-   $redirect = 'login';
+   if (sessionExpired($s)) $redirect = 'login';
 
    $options['title'] = 'Игра';
    $options['location_name'] = currentLocationTitle($s);
