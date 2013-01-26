@@ -34,19 +34,20 @@ if ($in == 'register') {
    if ($_POST) {
       $u = $_POST['user']; $p = $_POST['pass'];
       if (correctUserName($u) && !userExists($u) && correctUserPassword($p)) {
-         $s = registerUser($u, $p); setcookie('sessid', $s); header('Location: index.php'); die;
+         $s = registerUser($u, $p); setcookie('sessid', $s); $redirect = DEFAULT_INSTANCE;
       }
       else {
          if ( !correctUserName($u) || !correctUserPassword($p) ) $error = true; elseif (userExists($u)) $error = true; else $error = true;
+
+         $options['title'] = 'Регистрация';
+         $options['invalidLogin'] = !correctUserName($u) && $_POST; // логин хуйня
+         $options['invalidPass'] = !correctUserPassword($p) && $_POST; // тут хуйня
+         $options['loginIsBusy'] = userExists($u) && $_POST; // логин занят
+         $options['user'] = $u;
+         $options['pass'] = $p;
+         $options['error'] = $error;
       }
    }
-   $options['title'] = 'Регистрация';
-   $options['invalidLogin'] = !correctUserName($u) && $_POST; // логин хуйня
-   $options['invalidPass'] = !correctUserPassword($p) && $_POST; // тут хуйня
-   $options['loginIsBusy'] = userExists($u) && $_POST; // логин занят
-   $options['user'] = $u;
-   $options['pass'] = $p;
-   $options['error'] = $error;
 }
 /******************* register ***********************/
 
