@@ -28,7 +28,7 @@ if (!$in) $redirect = DEFAULT_INSTANCE;
 if (!in_array($in, $il)) {
    $in = '404';
    header( $_SERVER[SERVER_PROTOCOL].' 404 Not Found' );
-   $options['title'] = 'Not Found';
+   $options['title'] = '404 Not Found';
 }
 
 
