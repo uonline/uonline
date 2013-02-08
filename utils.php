@@ -2,35 +2,76 @@
 
 require_once('config.php');
 
-
+/*********************** maintain base in topical state *********************************/
 function mysqlInit($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE)  {
    defined("MYSQL_CONN") || define ("MYSQL_CONN", mysql_connect($host, $user, $pass) );
    mysql_query('CREATE DATABASE IF NOT EXISTS `'.$base.'`');
    mysql_select_db($base);
-   mysql_query('CREATE TABLE IF NOT EXISTS `uniusers` (`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT DEFAULT 1, `permissions` INT DEFAULT 0, PRIMARY KEY  (`id`) )');
+}
 
-   /********** areas and locations **********/
-   mysql_query('CREATE TABLE IF NOT EXISTS `locations` (`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `super` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))');
-   mysql_query('CREATE TABLE IF NOT EXISTS `areas` (`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))');
-   /********** areas and locations **********/
+/***** table functions *****/
+function tableExists($t) {
+   mysqlConnect();
+   return mysqlFirstRes("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='".MYSQL_BASE."' AND TABLE_NAME='$t'");
+}
 
-   /********* add new columns ***********/
-   mysql_query("ALTER TABLE `uniusers` ADD COLUMN `location` INT DEFAULT 3 AFTER `id`");
-   mysql_query("ALTER TABLE `uniusers` ADD COLUMN `permissions` INT AFTER `location`");
-   /********* add new columns ***********/
+function addTable($t, $o) {
+   mysqlConnect();
+   if (tableExists($t)) return false;
+   else {
+      mysql_query("CREATE TABLE `$t` $o");
+      return !mysql_error();
+   }
+}
 
-   /********* filling areas and locations ***********/
-   mysql_query("REPLACE INTO `areas` (`title`, `id`) VALUES ('Лес', 1)");
-   mysql_query("REPLACE INTO `areas` (`title`, `id`) VALUES ('Замок', 2)");
-   
-   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Погреб', 'Выбраться на кухню=2', 'Большие бочки и запах плесени...', 1, 2, 1)");
-   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Кухня', 'Спуститься в погреб=1|Пройти в гостиную=3', 'Разрушенная печь и горшки...', 2, 2, 0)");
-   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Гостиная', 'Выбраться на кухню=2|Подняться на чердак=4|Убраться на опушку=6', 'Большой круглый стол, обставленный стульями, картины на стенах...', 3, 2, 0)");
-   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Чердак', 'Спуститься в гостиную=3', 'Много старинных вещей и пыли...', 4, 2, 0)");
-   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Берлога', 'Двигаться на опушку=6|Выбраться к реке=7', 'Много следов и обглоданные останки...', 5, 1, 0)");
-   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Опушка', 'Забраться в берлогу=5|Подняться к реке=7|Войти в замок=3', 'И тут мне надоело...', 6, 1, 0)");
-   mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Река', 'Забраться в берлогу=5|Выйти на опушку=6', 'Прозрачная вода и каменистый берег...', 7, 1, 0)");
-   /********* filling areas and locations ***********/
+function addTables($t) {
+   $a = array();
+   foreach ($t as $i => $v) $a[$i] = addTable ($i, $v);
+   return $a;
+}
+
+function createTables() {
+   return addTables(array(
+      'uniusers' => '(`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT DEFAULT 1, /*`permissions` INT DEFAULT 0,*/ PRIMARY KEY  (`id`) )',
+      'locations' => '(`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `super` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))',
+      'areas' => '(`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))',
+   ));
+}
+/***** table functions *****/
+
+/***** column functions *****/
+function columnExists($t, $c) {
+   mysqlConnect();
+   return mysqlFirstRes("SELECT count(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='".MYSQL_BASE."' AND TABLE_NAME='$t' AND COLUMN_NAME='$c'");
+}
+
+function addColumn($t, $c, $o) {
+   mysqlConnect();
+   if (columnExists($t, $c)) return false;
+   else {
+      mysql_query("ALTER TABLE `$t` ADD COLUMN `$c` $o");
+      return !mysql_error();
+   }
+}
+
+function addColumns($t, $c) {
+   $a = array();
+   foreach ($c as $i => $v) $a[$i] = addColumn ($t, $i, $v);
+   return $a;
+}
+
+function updateColumns() {
+   return addColumns('uniusers', array(
+       'permissions' => 'INT AFTER `location`',
+   ));
+}
+/***** column functions *****/
+
+/*********************** maintain base in topical state *********************************/
+
+function isAssoc($a) {
+   if (array_keys($a) === range(0, count($a) - 1)) return false;
+   return true;
 }
 
 function mysqlDelete() {
@@ -42,9 +83,9 @@ function mysqlConnect($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS
    defined("MYSQL_CONN") || (define ("MYSQL_CONN", mysql_connect($host, $user, $pass) ) && mysql_select_db($base));
 }
 
-function mysqlBool($query) {
+function mysqlFirstRes($query) {
    $a = mysql_fetch_array(mysql_query($query));
-   return !!$a[0];
+   return $a[0];
 }
 
 function userExists($user) {
@@ -64,7 +105,7 @@ function sessionExists($sess) {
 
 function sessionActive($sess) {
    mysqlConnect();
-   return mysqlBool('SELECT `sessexpire` > NOW() FROM `uniusers` WHERE `sessid`="'.$sess.'"');
+   return mysqlFirstRes('SELECT `sessexpire` > NOW() FROM `uniusers` WHERE `sessid`="'.$sess.'"');
 }
 
 function sessionExpired($sess) {
