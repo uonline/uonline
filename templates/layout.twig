@@ -34,7 +34,7 @@
 						<li {% if instance == 'game' %} class="active" {% endif %}><a href="index.php?instance=game">Игра</a></li>
 						<li><a href="#">Почта {% if mail_count > 0 %}<span class="badge badge-info">{{ mail_count }}</span>{% endif %}</a></li>
 						<li><a href="#">Кабинет</a></li>
-						<li><a href="logout.php">Выйти</a></li>
+						<li><a href="index.php?instance=logout">Выйти</a></li>
 						{% elseif loggedIn == false %}
 						<li {% if instance == 'login' %} class="active" {% endif %}><a href="index.php?instance=login">Войти</a></li>
 						<li{% if instance == 'register' %} class="active" {% endif %}><a href="index.php?instance=register">Зарегистрироваться</a></li>

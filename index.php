@@ -23,7 +23,7 @@ $options = array(
     'mail_count' => 0,
 );
 
-$il = array('register', 'login', 'game', 'about', 'go');
+$il = array('register', 'logout', 'login', 'game', 'about', 'go');
 if (!$in) $redirect = DEFAULT_INSTANCE;
 if (!in_array($in, $il)) {
    $in = '404';
@@ -65,6 +65,17 @@ elseif ($in == 'login') {
    }
    $options['user'] = $u;
    $options['error'] = $error;
+}
+/******************* login ***********************/
+
+/******************* login ***********************/
+elseif ($in == 'logout') {
+   $s = $_COOKIE['sessid'];
+   if (rightSess($s) && sessionActive($s)) {
+      closeSession($s);
+      $redirect = 'about';
+   }
+   else $redirect = 'about';
 }
 /******************* login ***********************/
 

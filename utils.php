@@ -88,6 +88,10 @@ function mysqlFirstRes($query) {
    return $a[0];
 }
 
+function rightSess($s) {
+   return $s && strlen($s) == SESSION_LENGTH;
+}
+
 function userExists($user) {
    mysqlConnect();
    return mysql_num_rows(mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$user.'"'));
@@ -98,14 +102,18 @@ function mailExists($mail) {
    return mysql_num_rows(mysql_query('SELECT * FROM `uniusers` WHERE `mail`="'.$mail.'"'));
 }
 
-function sessionExists($sess) {
-   mysqlConnect();
-   return mysql_num_rows(mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$sess.'"'));
+function sessionExists($s) {
+   if (rightSess($s)) {
+      mysqlConnect();
+      return mysql_num_rows(mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="' . $s . '"'));
+   }
 }
 
-function sessionActive($sess) {
-   mysqlConnect();
-   return mysqlFirstRes('SELECT `sessexpire` > NOW() FROM `uniusers` WHERE `sessid`="'.$sess.'"');
+function sessionActive($s) {
+   if (rightSess($s)) {
+      mysqlConnect();
+      return mysqlFirstRes('SELECT `sessexpire` > NOW() FROM `uniusers` WHERE `sessid`="' . $s . '"');
+   }
 }
 
 function sessionExpired($sess) {
@@ -119,33 +127,40 @@ function sessionExpire($sess) {
 
 function generateSessId() {
    mysqlConnect();
-   do $sessid = mySalt(64);
+   do $sessid = mySalt(SESSION_LENGTH);
    while ( mysql_fetch_array ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$sessid.'"') ) );
    return $sessid;
 }
 
-function userBySession($sess) {
-   mysqlConnect();
-   $a = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$sess.'"') );
-   return $a['user'];
+function userBySession($s) {
+   if (rightSess($s)) {
+      mysqlConnect();
+      $a = mysql_fetch_assoc(mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="' . $s . '"'));
+      return $a['user'];
+   }
 }
 
-function idBySession($sess) {
-   mysqlConnect();
-   $a = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$sess.'"') );
-   return $a['id'];
+function idBySession($s) {
+   if (rightSess($s)) {
+      mysqlConnect();
+      $a = mysql_fetch_assoc(mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="' . $s . '"'));
+      return $a['id'];
+   }
 }
 
 function refreshSession($s) {
-   mysqlConnect();
-   if ($s && strlen($s) == 64 && sessionActive($s))
-      mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL 10 MINUTE WHERE `sessid`="'.$s.'"');
-   else return;
+   if (rightSess($s)) {
+      mysqlConnect();
+      if (sessionActive($s)) mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL 10 MINUTE WHERE `sessid`="' . $s . '"');
+      else return;
+   }
 }
 
-function closeSession($sess) {
-   mysqlConnect();
-   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid`="'.$sess.'"');
+function closeSession($s) {
+   if (rightSess($s)) {
+      mysqlConnect();
+      mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid`="' . $s . '"');
+   }
 }
 
 
@@ -199,9 +214,11 @@ function validPassword($u, $p) {
 }
 
 function userPermissions($s) {
-   mysqlConnect();
-   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
-   return $q['permissions'];
+   if (rightSess($s)) {
+      mysqlConnect();
+      $q = mysql_fetch_assoc(mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="' . $s . '"'));
+      return $q['permissions'];
+   }
 }
 
 function fileFromPath($p) {
@@ -306,11 +323,11 @@ function b64UrlDecode($i) {
  return base64_decode(strtr($i, '-_,', '+/='));
 }
 
-function insertEncoding($e) {
+function insertEncoding($e = DEFAULT_CHARSET) {
    header('Content-Type: text/html; charset='.$e);
 }
 
-function makePage($head, $body, $enc) {
+function makePage($head, $body, $enc = DEFAULT_CHARSET) {
    return
    "<!DOCTYPE html>\n".
    "<html>\n".
