@@ -4,17 +4,64 @@ require_once('utils.php');
 
 $HEAD = $BODY = '';
 
+insertEncoding();
+
 if ($_POST) {
-   if ($_POST['pass'] == ADMIN_PASS) {
+   if ($_POST['pass'] === ADMIN_PASS) {
+      
+      echo '<style>h4, h5, h6 { margin: 0px; } h5 { margin-left: 10px; } h6 { margin-left: 20px; } .err { color: red; } .warn { color: yellow; } </style>';
+      
+      function ok() { return '<span>done</span>'; }
+      function err() { return '<span class="err">error</span>'; }
+      function warn() { return '<span class="warn">exists</span>'; }
 
-      mysqlInit();
+      if ($_POST['createbases']) {
+         echo '<h4>Создание баз данных ... ';
+         mysqlInit();
+         echo mysql_errno()===0?ok():err();
+         echo '</h4><br />';
+      }
+      else {
+         echo '<h4>Подключение к базам данных...';
+         mysqlConnect();
+         echo mysql_errno()===0?ok():err();
+         echo '</h4><br />';
+      }
 
-      if ($_POST['createbases'])
-      $at = createTables();
+      if ($_POST['createtables']) {
+          $t = array(
+             'uniusers' => '(`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT DEFAULT 1, /*`permissions` INT DEFAULT 0,*/ PRIMARY KEY  (`id`) )',
+             'locations' => '(`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `super` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))',
+             'areas' => '(`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))',
+          );
+          foreach ($t as $k => $v) {
+              echo '<h5>Создание таблицы `'.$k.'` ... ';
+              $res = addTable($k, $v);
+              echo $res === FALSE ? warn() : ($res === 0 ? ok() : err());
+              echo '</h5>';
+          }
+          echo '<br />';
+      }
 
-      if ($_POST['updatebases'])
-      $ac = updateColumns();
-
+      if ($_POST['updatetables']) {
+      //{ {table => tableName, columns => { columnNname => columnOptions, ... } }, ... }
+          $c = array(
+              array(
+                'table' => 'uniusers',
+                'columns' => array(
+                   'permissions' => 'INT AFTER `location`'
+              ),),
+          );
+          foreach ($c as $k => $v) {
+             echo '<h5>Обновление таблицы '.$v['table'].' ...<h5>';
+             foreach ($v['columns'] as $k1 => $v1) {
+                echo '<h6>Создание столбца `'.$k1.'` ... ';
+                $res = addColumn($v['table'], $k1, $v1);
+                echo $res === FALSE ? warn() : ($res === 0 ? ok() : err());
+                echo '</h6>';
+             }
+          }
+      }
       /********* filling areas and locations ***********/
       if($_POST['fillareas']) {
          mysql_query("REPLACE INTO `areas` (`title`, `id`) VALUES ('Лес', 1)");
@@ -29,8 +76,6 @@ if ($_POST) {
          mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Река', 'Забраться в берлогу=5|Выйти на опушку=6', 'Прозрачная вода и каменистый берег...', 7, 1, 0)");
       }
       /********* filling areas and locations ***********/
-
-      initResult();
    }
    else {
       wrongPass();
@@ -39,8 +84,8 @@ if ($_POST) {
 }
 else fofForm();
 
-insertEncoding('utf-8');
-echo makePage($HEAD, $BODY, 'utf-8');
+
+echo makePage($HEAD, $BODY);
 
 
 
@@ -81,12 +126,16 @@ function fofForm() {
    global $BODY;
    $BODY .=
    '<form method="post" action="init.php">'.
-   'Создание базы данных.<br/><br/>'.
-   'Создавать базы: <input type="checkbox" name="createbases"/><br/>'.
-   'Обновлять базы: <input checked type="checkbox" name="updatebases"/><br/>'.
-   'Заполнить таблицы тестовыми локациями: <input type="checkbox" name="fillareas"/><br/>'.
-   'Административный пароль: <input name="pass" type="password" value="'.(ADMIN_PASS=='clearpass'?ADMIN_PASS:'').'" /><br/><br/>'.
-   '<input type="submit" value="Создать" /><br/>';
+   '<table>'.
+   '<thead>Создание базы данных.</thead>'.
+   '<tr><td><input type="button" value="Отметить все" onclick="this.chk = this.chk?false:true; this.value=this.chk?\'Снять все\':\'Отметить все\'; ch = function(v) { Array.prototype.forEach.call(document.getElementsByTagName(\'input\'), function(e) { e.checked = v; }); }; if(this.chk) { ch(true); } else { ch(false); }"/></td><td></td>'.
+   '<tr><td>Создавать базы:</td><td><input type="checkbox" name="createbases"/></td>'.
+   '<tr><td>Создавать таблицы:</td><td><input type="checkbox" name="createtables"/></td>'.
+   '<tr><td>Обновлять таблицы:</td><td><input checked type="checkbox" name="updatetables"/></td>'.
+   '<tr><td>Заполнить тестовые локации:</td><td><input type="checkbox" name="fillareas"/></td>'.
+   '<tr><td>Административный пароль:</td><td><input name="pass" type="password" value="'.(ADMIN_PASS=='clearpass'?ADMIN_PASS:'').'" /></td>'.
+   '</table>'.
+   '<input type="submit" value="Создать" /><br />';
 }
 
 ?>

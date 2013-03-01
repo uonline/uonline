@@ -17,10 +17,10 @@ function tableExists($t) {
 
 function addTable($t, $o) {
    mysqlConnect();
-   if (tableExists($t)) return false;
+   if (tableExists($t)) return FALSE;
    else {
       mysql_query("CREATE TABLE `$t` $o");
-      return !mysql_error();
+      return mysql_errno();
    }
 }
 
@@ -47,24 +47,24 @@ function columnExists($t, $c) {
 
 function addColumn($t, $c, $o) {
    mysqlConnect();
-   if (columnExists($t, $c)) return false;
+   if (columnExists($t, $c)) return FALSE;
    else {
       mysql_query("ALTER TABLE `$t` ADD COLUMN `$c` $o");
-      return !mysql_error();
+      return mysql_errno();
    }
 }
 
-function addColumns($t, $c) {
-   $a = array();
-   foreach ($c as $i => $v) $a[$i] = addColumn ($t, $i, $v);
-   return $a;
-}
+//function addColumns($t, $c) {
+   //$a = array();
+   //foreach ($c as $i => $v) $a[$i] = addColumn ($t, $i, $v);
+   //return $a;
+//}
 
-function updateColumns() {
-   return addColumns('uniusers', array(
-       'permissions' => 'INT AFTER `location`',
-   ));
-}
+//function updateColumns() {
+   //return addColumns('uniusers', array(
+       //'permissions' => 'INT AFTER `location`',
+   //));
+//}
 /***** column functions *****/
 
 /*********************** maintain base in topical state *********************************/
