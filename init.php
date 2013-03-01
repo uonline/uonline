@@ -8,12 +8,12 @@ insertEncoding();
 
 if ($_POST) {
    if ($_POST['pass'] === ADMIN_PASS) {
-      
-      echo '<style>h4, h5, h6 { margin: 0px; } h5 { margin-left: 10px; } h6 { margin-left: 20px; } .err { color: red; } .warn { color: yellow; } </style>';
-      
+
+      echo '<style>h4, h5, h6 { margin: 0px; } h5 { margin-left: 10px; } h6 { margin-left: 20px; } .err { color: red; } .warn { color: #95CE58; } </style>';
+
       function ok() { return '<span>done</span>'; }
-      function err() { return '<span class="err">error</span>'; }
-      function warn() { return '<span class="warn">exists</span>'; }
+      function err() { global $err; $err++; return '<span class="err">error</span>'; }
+      function warn() { global $warn; $warn++; return '<span class="warn">exists</span>'; }
 
       if ($_POST['createbases']) {
          echo '<h4>Создание баз данных ... ';
@@ -66,7 +66,7 @@ if ($_POST) {
       if($_POST['fillareas']) {
          mysql_query("REPLACE INTO `areas` (`title`, `id`) VALUES ('Лес', 1)");
          mysql_query("REPLACE INTO `areas` (`title`, `id`) VALUES ('Замок', 2)");
-         
+
          mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Погреб', 'Выбраться на кухню=2', 'Большие бочки и запах плесени...', 1, 2, 1)");
          mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Кухня', 'Спуститься в погреб=1|Пройти в гостиную=3', 'Разрушенная печь и горшки...', 2, 2, 0)");
          mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Гостиная', 'Выбраться на кухню=2|Подняться на чердак=4|Убраться на опушку=6', 'Большой круглый стол, обставленный стульями, картины на стенах...', 3, 2, 0)");
@@ -76,14 +76,16 @@ if ($_POST) {
          mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Река', 'Забраться в берлогу=5|Выйти на опушку=6', 'Прозрачная вода и каменистый берег...', 7, 1, 0)");
       }
       /********* filling areas and locations ***********/
-   }
+
+      echo '<br /><br /><h3><pre>Ошибок: '.($err?('<span class="err">'.$err.'</span><style>body {background-color: #E6C5C5}</style>'):0)."  Предупреждений: ".($warn?$warn:0)."</pre></h3>";
+
+      }
    else {
       wrongPass();
       fofForm();
    }
 }
 else fofForm();
-
 
 echo makePage($HEAD, $BODY);
 
