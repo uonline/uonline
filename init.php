@@ -50,7 +50,7 @@ if ($_POST) {
                 'table' => 'uniusers',
                 'columns' => array(
                    'permissions' => 'INT AFTER `location`',
-                   'level' => 'INT',
+                   'level' => 'INT DEFAULT 1',
                    'experience' => 'INT DEFAULT 0',
                    'power' => 'INT DEFAULT 1',
                    'agility' => 'INT DEFAULT 1', //ловкость
