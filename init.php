@@ -49,7 +49,18 @@ if ($_POST) {
               array(
                 'table' => 'uniusers',
                 'columns' => array(
-                   'permissions' => 'INT AFTER `location`'
+                   'permissions' => 'INT AFTER `location`',
+                   'level' => 'INT',
+                   'experience' => 'INT DEFAULT 0',
+                   'power' => 'INT DEFAULT 1',
+                   'agility' => 'INT DEFAULT 1', //ловкость
+                   'endurance' => 'INT DEFAULT 1', //выносливость
+                   'intelligence' => 'INT DEFAULT 1', //интеллект
+                   'wisdom' => 'INT DEFAULT 1', //мудрость
+                   'volition' => 'INT DEFAULT 1', //воля
+                   'health' => 'INT DEFAULT 1',
+                   'mana' => 'INT DEFAULT 1',
+                   'effects' => 'TEXT',
               ),),
           );
           foreach ($c as $k => $v) {
