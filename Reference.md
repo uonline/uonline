@@ -66,3 +66,15 @@ None needed.
 * description (string)
 * ways (array; elements: ways\[i\].to, ways\[i\].name)
 * players\_list (array; elements: players\_list\[i\].id, players\_list\[i\].name)
+
+### profile
+
+* nickname (string)
+* id (string)
+* role (string; `user` or `admin`)
+* level, exp, exp_max (string)
+* power, agility, endurance (string)
+* intelligence, wisdom, volition (string)
+* health, health\_max, health\_percent (string)
+* mana, mana\_max, mana\_percent (string)
+* effects (array; elements: effects\[i\].name, effects\[i\].description, effects\[i\].time_left)
