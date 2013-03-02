@@ -72,7 +72,6 @@ elseif ($in == 'login') {
 elseif ($in == 'profile') {
    if (true) {
       $chrs = userCharacters($s);
-      var_dump($chrs);
       foreach ($chrs as $k => $v) {
          $options[$k] = $v;
       }
