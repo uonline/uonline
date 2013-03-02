@@ -59,7 +59,9 @@ if ($_POST) {
                    'wisdom' => 'INT DEFAULT 1', //мудрость
                    'volition' => 'INT DEFAULT 1', //воля
                    'health' => 'INT DEFAULT 1',
+                   'maxhealth' => 'INT DEFAULT 1',
                    'mana' => 'INT DEFAULT 1',
+                   'maxmana' => 'INT DEFAULT 1',
                    'effects' => 'TEXT',
               ),),
           );
