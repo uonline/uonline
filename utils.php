@@ -299,6 +299,34 @@ function usersOnLocation($s) {
    for ($a=array(), $i=0; $q && $r = mysql_fetch_assoc($q); $a[$i++]=array(id => $r['id'], name => $r['user']) );
    return $a;
 }
+
+function characters() {
+   return array(
+       'level',
+       'experience',
+       'power',
+       'agility',
+       'endurance',
+       'intelligence',
+       'wisdom', 
+       'volition', 
+       'health',
+       'maxhealth',
+       'mana',
+       'maxmana'
+    );
+}
+
+function userCharacters($s) {
+   mysqlConnect();
+   if(!rightSess($s)) return;
+   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
+   $cl = characters();
+   foreach ($cl as $v) {
+      $ar[$v] = $q[$v];
+   }
+   return $ar;
+}
 /************************* GAME ***************************/
 
 

@@ -23,7 +23,7 @@ $options = array(
     'mail_count' => 0,
 );
 
-$il = array('register', 'logout', 'login', 'game', 'about', 'go');
+$il = array('register', 'logout', 'login', 'game', 'about', 'go', 'profile');
 if (!$in) $redirect = DEFAULT_INSTANCE;
 if (!in_array($in, $il)) {
    $in = '404';
@@ -68,16 +68,27 @@ elseif ($in == 'login') {
 }
 /******************* login ***********************/
 
-/******************* login ***********************/
+/******************* profile ***********************/
+elseif ($in == 'profile') {
+   if (true) {
+      $chrs = userCharacters($s);
+      var_dump($chrs);
+      foreach ($chrs as $k => $v) {
+         $options[$k] = $v;
+      }
+   }
+}
+/******************* profile ***********************/
+
+/******************* logout ***********************/
 elseif ($in == 'logout') {
-   $s = $_COOKIE['sessid'];
-   if (rightSess($s) && sessionActive($s)) {
+   if (sessionActive($s)) {
       closeSession($s);
       $redirect = 'about';
    }
    else $redirect = 'about';
 }
-/******************* login ***********************/
+/******************* logout ***********************/
 
 /******************* game ***********************/
 elseif ($in == 'game') {
