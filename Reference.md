@@ -71,7 +71,6 @@ None needed.
 
 * nickname (string)
 * id (string)
-* role (string; `user` or `admin`)
 * level, exp, exp_max (string)
 * power, agility, endurance (string)
 * intelligence, wisdom, volition (string)
