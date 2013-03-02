@@ -90,7 +90,7 @@ if ($_POST) {
       }
       /********* filling areas and locations ***********/
 
-      echo '<br /><br /><h3><pre>Ошибок: '.($err?('<span class="err">'.$err.'</span><style>body {background-color: #E6C5C5}</style>'):0)."  Предупреждений: ".($warn?$warn:0)."</pre></h3>";
+      echo '<br /><br /><h3>Ошибок: '.($err?('<span class="err">'.$err.'</span><style>body {background-color: #E6C5C5}</style>'):0)."<br />Предупреждений: ".($warn?$warn:0)."</h3>";
 
       }
    else {
