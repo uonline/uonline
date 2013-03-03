@@ -11,9 +11,9 @@ $twig = new Twig_Environment($loader, array('cache' => TWIG_CACHE));
 
 
 $redirect = false;
-
+$args = $_GET;
 $s = $_COOKIE['sessid']; refreshSession($s);
-$in = $_GET['instance']; if($in[strlen($in)-1] == '/') $in = substr($in, 0, strlen($in)-1);
+$in = $args['instance']; if($in[strlen($in)-1] == '/') $in = substr($in, 0, strlen($in)-1);
 
 $options = array(
     'instance' => $in,
@@ -25,7 +25,9 @@ $options = array(
 
 $il = array('register', 'logout', 'login', 'game', 'about', 'go', 'profile');
 if (!$in) $redirect = DEFAULT_INSTANCE;
-if (!in_array($in, $il)) {
+if (!in_array($in, $il)) notFound();
+function notFound() {
+   global $in;
    $in = '404';
    header( $_SERVER[SERVER_PROTOCOL].' 404 Not Found' );
 }
@@ -70,10 +72,16 @@ elseif ($in == 'login') {
 
 /******************* profile ***********************/
 elseif ($in == 'profile') {
-   if (true) {
-      $chrs = userCharacters($s);
-      foreach ($chrs as $k => $v) {
-         $options[$k] = $v;
+   if(!sessionActive($s)) $redirect = 'login';
+   else {
+      if ($args['id']) $chrs = userCharacters($args['id'], 'id');
+      elseif ($args['nick']) $chrs = userCharacters($args['nick'], 'nick');
+      else $chrs = userCharacters($s);
+
+      if(!$chrs) notFound();
+      else {
+         $options += $chrs;
+         $options['exp_max'] = 'што_это?';
       }
    }
 }
@@ -105,7 +113,7 @@ elseif ($in == 'game') {
 
 /******************* moving ***********************/
 elseif ($in == 'go') {
-   if ($to = $_GET['to']) {
+   if ($to = $args['to']) {
       changeLocation($s, $to);
       $redirect = 'game';
    }

@@ -51,7 +51,7 @@ if ($_POST) {
                 'columns' => array(
                    'permissions' => 'INT AFTER `location`',
                    'level' => 'INT DEFAULT 1',
-                   'experience' => 'INT DEFAULT 0',
+                   'exp' => 'INT DEFAULT 0',
                    'power' => 'INT DEFAULT 1',
                    'agility' => 'INT DEFAULT 1', //ловкость
                    'endurance' => 'INT DEFAULT 1', //выносливость
@@ -59,9 +59,9 @@ if ($_POST) {
                    'wisdom' => 'INT DEFAULT 1', //мудрость
                    'volition' => 'INT DEFAULT 1', //воля
                    'health' => 'INT DEFAULT 1',
-                   'maxhealth' => 'INT DEFAULT 1',
+                   'health_max' => 'INT DEFAULT 1',
                    'mana' => 'INT DEFAULT 1',
-                   'maxmana' => 'INT DEFAULT 1',
+                   'mana_max' => 'INT DEFAULT 1',
                    'effects' => 'TEXT',
               ),),
           );

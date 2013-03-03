@@ -54,17 +54,6 @@ function addColumn($t, $c, $o) {
    }
 }
 
-//function addColumns($t, $c) {
-   //$a = array();
-   //foreach ($c as $i => $v) $a[$i] = addColumn ($t, $i, $v);
-   //return $a;
-//}
-
-//function updateColumns() {
-   //return addColumns('uniusers', array(
-       //'permissions' => 'INT AFTER `location`',
-   //));
-//}
 /***** column functions *****/
 
 /*********************** maintain base in topical state *********************************/
@@ -92,9 +81,18 @@ function rightSess($s) {
    return $s && strlen($s) == SESSION_LENGTH;
 }
 
+function idExists($id) {
+   if (correctId($id)) {
+      mysqlConnect();
+      return mysql_num_rows(mysql_query('SELECT * FROM `uniusers` WHERE `id`="' . fixId($id) . '"'));
+   }
+}
+
 function userExists($user) {
-   mysqlConnect();
-   return mysql_num_rows(mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$user.'"'));
+   if (correctUserName($user)) {
+      mysqlConnect();
+      return mysql_num_rows(mysql_query('SELECT * FROM `uniusers` WHERE `user`="' . $user . '"'));
+   }
 }
 
 function mailExists($mail) {
@@ -191,6 +189,14 @@ function correctUserPassword($pass) {
 function correctPassword($pass) {
    return preg_match( '/[\!\@\#\$\%\^\&\*\(\)\_\+A-Za-z0-9]+/', $pass, $res) &&
           $pass == $res[0];
+}
+
+function correctId($id) {
+   return $id+0 > 0;
+}
+
+function fixId($id) {
+   return $id+0;
 }
 
 function mySalt($n) {
@@ -303,7 +309,7 @@ function usersOnLocation($s) {
 function characters() {
    return array(
        'level',
-       'experience',
+       'exp',
        'power',
        'agility',
        'endurance',
@@ -311,20 +317,35 @@ function characters() {
        'wisdom', 
        'volition', 
        'health',
-       'maxhealth',
+       'health_max',
        'mana',
-       'maxmana'
+       'mana_max'
     );
 }
 
-function userCharacters($s) {
-   mysqlConnect();
-   if(!rightSess($s)) return;
-   $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
-   $cl = characters();
-   foreach ($cl as $v) {
-      $ar[$v] = $q[$v];
+function userCharacters($p, $t = 'sess') {
+   
+   switch ($t) {
+      case 'id':
+         if (!idExists($p)) return;
+         mysqlConnect();
+         $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `id`="'.$p.'"') );
+         break;
+      case 'nick':
+         if (!userExists($p)) return;
+         mysqlConnect();
+         $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$p.'"') );
+         break;
+      case 'sess':
+         if (!rightSess($p)) return;
+         mysqlConnect();
+         $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$p.'"') );
+         break;
    }
+   $cl = characters();
+   foreach ($cl as $v) $ar[$v] = $q[$v];
+   $ar['health_percent'] = $ar['health'] / $ar['health_max'] * 100;
+   $ar['mana_percent'] = $ar['mana'] / $ar['mana_max'] * 100;
    return $ar;
 }
 /************************* GAME ***************************/
