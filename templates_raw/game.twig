@@ -1,0 +1,27 @@
+{% extends "layout.twig" %}
+
+{% block title %}{{ location_name }}{% endblock title %}
+
+{% block content %}
+			<div class="page-header"><h1>{{ location_name }} <small>{{ area_name }}</small></h1></div>
+
+			{% if pic is defined %}<img src="{{ pic }}" style="float: right;" />{% endif %}
+
+			<p>{{ description }}</p>
+
+			<p>
+			{% for i in ways %}
+				<a class="btn" href="index.php?instance=go&to={{ i.to }}">{{ i.name }}</a>
+			{% endfor %}
+			</p>
+
+			<br />
+
+			<p><small>На этой локации находятся:
+			{% for i in players_list %}
+				<a href="#{{ i.id }}">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
+			{% endfor %}
+			</small></p>
+
+			<div style="clear: both;"></div>
+{% endblock content %}
