@@ -72,7 +72,7 @@ elseif ($in == 'login') {
 
 /******************* profile ***********************/
 elseif ($in == 'profile') {
-   if(!sessionActive($s)) $redirect = 'login';
+   if(!sessionActive($s) && !$args['id'] && !$args['nick']) $redirect = 'login';
    else {
       if ($args['id']) $chrs = userCharacters($args['id'], 'id');
       elseif ($args['nick']) $chrs = userCharacters($args['nick'], 'nick');
