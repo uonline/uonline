@@ -17,10 +17,15 @@
 
 			<br />
 
-			<p><small>На этой локации находятся:
+			<p><small>
+			{% if users|length > 0 %}
+			На этой локации находятся:
 			{% for i in players_list %}
-				<a href="#{{ i.id }}">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
+				<a href="index.php?instance=profile&id={{ i.id }}">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
 			{% endfor %}
+			{% else %}
+			На этой локации больше никого нет.
+			{% endif %}
 			</small></p>
 
 			<div style="clear: both;"></div>
