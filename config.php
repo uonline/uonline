@@ -15,7 +15,7 @@ define('SESSION_LENGTH', 64);
 define('DEFAULT_CHARSET', 'utf-8');
 
 // layout
-define('DEFAULT_INSTANCE', 'game');
+define('DEFAULT_INSTANCE', 'about');
 define('TWIG_CACHE', false); // './templates_cache'
 
 ?>
