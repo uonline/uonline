@@ -301,7 +301,7 @@ function changeLocation($s, $lid) {
 }
 
 function usersOnLocation($s) {
-   $q = mysql_query( 'SELECT `user`, `id` FROM `uniusers` WHERE `sessexpire` > NOW() AND `location`='.userLocationId($s) );
+   $q = mysql_query( 'SELECT `user`, `id` FROM `uniusers` WHERE `sessexpire` > NOW() AND `location`='.userLocationId($s).' AND `sessid` != "'.$s.'"' );
    for ($a=array(), $i=0; $q && $r = mysql_fetch_assoc($q); $a[$i++]=array(id => $r['id'], name => $r['user']) );
    return $a;
 }
