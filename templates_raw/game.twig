@@ -18,7 +18,7 @@
 			<br />
 
 			<p><small>
-			{% if users|length > 0 %}
+			{% if players_list|length > 0 %}
 			На этой локации находятся:
 			{% for i in players_list %}
 				<a href="index.php?instance=profile&id={{ i.id }}">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
