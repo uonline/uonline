@@ -12,6 +12,7 @@ define('MYSQL_PASS', $pass);
 define('MYSQL_BASE', $base);
 define('ADMIN_PASS', $admpass);
 define('SESSION_LENGTH', 64);
+define('SESSION_TIMEEXPIRE', 3600); //in seconds
 define('DEFAULT_CHARSET', 'utf-8');
 
 // layout

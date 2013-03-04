@@ -149,7 +149,7 @@ function idBySession($s) {
 function refreshSession($s) {
    if (rightSess($s)) {
       mysqlConnect();
-      if (sessionActive($s)) mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL 10 MINUTE WHERE `sessid`="' . $s . '"');
+      if (sessionActive($s)) mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL '.SESSION_TIMEEXPIRE.' SECOND WHERE `sessid`="' . $s . '"');
       else return;
    }
 }
@@ -209,7 +209,7 @@ function mySalt($n) {
 function registerUser($u, $p, $perm = 0) {
    $salt = mySalt(16);
    $session = generateSessId();
-   mysql_query('INSERT INTO `uniusers` (`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES ("'.$u.'", "'.$salt.'", "'.myCrypt($p, $salt).'", "'.$session.'", NOW(), NOW() + INTERVAL 10 MINUTE, '.defaultLocation().', '.$perm.')');
+   mysql_query('INSERT INTO `uniusers` (`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES ("'.$u.'", "'.$salt.'", "'.myCrypt($p, $salt).'", "'.$session.'", NOW(), NOW() + INTERVAL '.SESSION_TIMEEXPIRE.' SECOND, '.defaultLocation().', '.$perm.')');
    return $session;
 }
 
@@ -234,7 +234,7 @@ function fileFromPath($p) {
 function setSession($u) {
    mysqlConnect();
    $s = generateSessId();
-   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL 10 MINUTE, `sessid`="'.$s.'" WHERE `user`="'.$u.'"');
+   mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL '.SESSION_TIMEEXPIRE.' SECOND, `sessid`="'.$s.'" WHERE `user`="'.$u.'"');
    return $s;
 }
 
