@@ -3,17 +3,17 @@
 	<head>
 		<meta charset="utf-8" />
 		<title>{% block title %}uonline{% endblock title %}</title>
-		
+
 		<link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
 		<style type="text/css">
 			body { padding-top: 60px; }
 		</style>
 		<link href="/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen">
-		
+
 		<!--[if lt IE 9]>
 			<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 		<![endif]-->
-		
+
 		<script src="http://code.jquery.com/jquery-latest.js"></script>
 		<script src="/bootstrap/js/bootstrap.min.js"></script>
 	</head>
@@ -48,7 +48,7 @@
 				</div>
 			</div>
 		</div>
-    
+
 		<div class="container">
 			{% block content %}
 				Some default content.
@@ -59,7 +59,7 @@
 			<footer>
 				<p class="muted">&copy; m1kc и К<sup>о</sup>, 2012&ndash;{{ "now"|date("Y") }}</p>
 			</footer>
-			
+
 		</div>
 	</body>
 </html>
