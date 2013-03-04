@@ -30,7 +30,8 @@
 					</ul>
 					<ul class="nav pull-right">
 						{% if loggedIn == true %}
-						<li {% if instance == 'profile' %} class="active" {% endif %}><a href="index.php?instance=profile"><i class="{% if admin == true %}icon-certificate{% else %}icon-user{% endif %}"></i> <b>{{ login }}</b></a></li>
+						<li><a href="index.php?instance=profile"><i class="{% if admin == true %}icon-certificate{% else %}icon-user{% endif %}"></i> <b>{{ login }}</b></a></li>
+						<li {% if instance == 'profile' %} class="active" {% endif %}><a href="index.php?instance=profile">Профиль</a></li>
 						<li {% if instance == 'game' %} class="active" {% endif %}><a href="index.php?instance=game">Игра</a></li>
 						<li><a href="#">Почта {% if mail_count > 0 %}<span class="badge badge-info">{{ mail_count }}</span>{% endif %}</a></li>
 						<!-- <li><a href="#">Кабинет</a></li> -->
