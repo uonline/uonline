@@ -353,6 +353,14 @@ function userCharacters($p, $t = 'sess') {
 /************************* GAME ***************************/
 
 
+function tf($s) {
+   $s = preg_replace('/^-(?= )|(?<= )-(?= )|---/', '&mdash;', $s);
+   $s = preg_replace('/--/', '&ndash;', $s);
+   $s = preg_replace('/-(?=\\d)/', '&minus;', $s);
+   $s = preg_replace('/"(?=\\w)/', '&laquo;', $s);
+   $s = preg_replace('/(?<=\\w)"/', '&raquo;', $s);
+   return $s;
+}
 
 ##SHA-512
 function myCrypt($pass, $salt) {
