@@ -346,6 +346,8 @@ function userCharacters($p, $t = 'sess') {
    foreach ($cl as $v) $ar[$v] = $q[$v];
    $ar['health_percent'] = $ar['health'] / $ar['health_max'] * 100;
    $ar['mana_percent'] = $ar['mana'] / $ar['mana_max'] * 100;
+   $ar['nickname'] = $q['user'];
+   $ar['id'] = $q['id'];
    return $ar;
 }
 /************************* GAME ***************************/
