@@ -344,12 +344,19 @@ function userCharacters($p, $t = 'sess') {
    }
    $cl = characters();
    foreach ($cl as $v) $ar[$v] = $q[$v];
+   
    $ar['health_percent'] = $ar['health'] * 100 / $ar['health_max'];
    $ar['mana_percent'] = $ar['mana'] * 100 / $ar['mana_max'];
-   $ar['exp_percent'] = ($ar['exp'] % 1000) / 10;
-   $ar['exp_max'] = (2 * 1000 + ($q['level']-1) * 1000) / 2 * $q['level'];
+   
+   $exp_max_start = 1000; $exp_step = 1000;
+   $exp_prev_max = ap($exp_max_start, $ar['level']-1, $exp_step);
+   
+   $ar['exp_max'] = ap($exp_max_start, $ar['level'], $exp_step);
+   $ar['exp_percent'] = ($ar['exp']-$exp_prev_max) / ($ar['exp_max']-$exp_prev_max) * 100;
+   
    $ar['nickname'] = $q['user'];
    $ar['id'] = $q['id'];
+   
    return $ar;
 }
 /************************* GAME ***************************/
@@ -362,6 +369,10 @@ function tf($s) {
    $s = preg_replace('/"(?=\\w)/', '&laquo;', $s);
    $s = preg_replace('/(?<=\\w)"/', '&raquo;', $s);
    return $s;
+}
+
+function ap($a1, $n, $step) {
+   return (2 * $a1 + ($n-1) * $step) / 2 * $n;
 }
 
 ##SHA-512
