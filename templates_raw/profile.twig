@@ -3,12 +3,30 @@
 {% block title %}Профиль игрока {{ nickname }}{% endblock title %}
 
 {% block content %}
-			<div class="page-header"><h1>{{ nickname }} <small>id {{ id }}</small></h1></div>
+			<div class="page-header"><h1>{{ nickname }} <small>Уровень {{ level }}, #{{ id }}</small></h1></div>
 
-			<p>level {{ level }}, exp {{ exp }}/{{ exp_max }}</p>
+			<div class="row">
+				<div class="span4">
+					<h4>Здоровье</h4>
+					<div class="progress">
+						<div class="bar" style="width: {{ health_percent }}%;"></div>
+					</div>
+					{{ health }}/{{ health_max }}
+				</div>
+				<div class="span4">
+					<h4>Мана</h4>
+					<div class="progress">
+						<div class="bar" style="width: {{ mana_percent }}%;"></div>
+					</div>
+					{{ mana }}/{{ mana_max }}
+				</div>
+				<div class="span4">
+					<h4>Опыт</h4>
+				</div>
+			</div>
+
+			<p>exp {{ exp }}/{{ exp_max }} {{exp_percent}}%</p>
 			<p>power={{ power }}, agility={{ agility }}, endurance={{ endurance }}</p>
 			<p>intelligence={{ intelligence }}, wisdom={{ wisdom }}, volition={{ volition }}</p>
-			<p>health={{ health }}, health_max={{ health_max }}, health_percent={{ health_percent }}</p>
-			<p>mana={{ mana }}, mana_max={{ mana_max }}, mana_percent={{ mana_percent }}</p>
 			<p>effects: {{ effects }}</p>
 {% endblock content %}

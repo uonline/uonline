@@ -71,7 +71,7 @@ None needed.
 
 * nickname (string)
 * id (string)
-* level, exp, exp_max (string)
+* level, exp, exp_max, exp\_percent (string)
 * power, agility, endurance (string)
 * intelligence, wisdom, volition (string)
 * health, health\_max, health\_percent (string)
