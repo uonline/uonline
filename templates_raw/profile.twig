@@ -12,16 +12,27 @@
 						<div class="bar bar-success" style="width: {{ health_percent }}%;"></div>
 					</div>
 					{{ health }}/{{ health_max }}
+
 					<h3>Мана</h3>
 					<div class="progress">
 						<div class="bar" style="width: {{ mana_percent }}%;"></div>
 					</div>
 					{{ mana }}/{{ mana_max }}
+
 					<h3>Опыт</h3>
 					<div class="progress bar-warning">
 						<div class="bar" style="width: {{ exp_percent }}%;"></div>
 					</div>
 					{{ exp }}/{{ exp_max }}
+
+					<h3>Эффекты</h3>
+					{% if effects|length > 0 %}
+						{% for i in effects %}
+							{{ i.name }} ({{ i.description }}) &mdash; до {{ i.dismiss_time }}{% if not loop.last %}, {% endif %}
+						{% endfor %}
+					{% else %}
+						Не действует ни один эффект.
+					{% endif %}
 				</div>
 				<div class="span1">
 				</div>
@@ -55,6 +66,4 @@
 				</table>
 				</div>
 			</div>
-
-			<p>effects: {{ effects }}</p>
 {% endblock content %}

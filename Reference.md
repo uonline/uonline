@@ -76,4 +76,4 @@ None needed.
 * intelligence, wisdom, volition (string)
 * health, health\_max, health\_percent (string)
 * mana, mana\_max, mana\_percent (string)
-* effects (array; elements: effects\[i\].name, effects\[i\].description, effects\[i\].time_left)
+* effects (array; elements: effects\[i\].name, effects\[i\].description, effects\[i\].dismiss_time)
