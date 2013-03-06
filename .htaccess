@@ -16,6 +16,6 @@ RewriteRule (.+)[^/] %1/ [R=301,L]
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 RewriteRule ^index\.php$ - [L]
-RewriteRule .* index.php?instance=$0 [QSA,L]
+RewriteRule .* index.php?url=$0 [QSA,L]
 </IfModule>
 
