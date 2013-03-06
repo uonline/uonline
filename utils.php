@@ -91,7 +91,7 @@ function idExists($id) {
 function userExists($user) {
    if (correctUserName($user)) {
       mysqlConnect();
-      return mysql_num_rows(mysql_query('SELECT * FROM `uniusers` WHERE `user`="' . $user . '"'));
+      return (bool) mysql_num_rows(mysql_query('SELECT * FROM `uniusers` WHERE `user`="' . $user . '"'));
    }
 }
 
