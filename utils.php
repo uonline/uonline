@@ -347,7 +347,7 @@ function userCharacters($p, $t = 'sess') {
    $ar['health_percent'] = $ar['health'] * 100 / $ar['health_max'];
    $ar['mana_percent'] = $ar['mana'] * 100 / $ar['mana_max'];
    $ar['exp_percent'] = ($ar['exp'] % 1000) / 10;
-   $ar['exp_max'] = $q['level'] * 1000;
+   $ar['exp_max'] = (2 * 1000 + ($q['level']-1) * 1000) / 2 * $q['level'];
    $ar['nickname'] = $q['user'];
    $ar['id'] = $q['id'];
    return $ar;
