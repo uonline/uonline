@@ -81,7 +81,6 @@ elseif ($in == 'profile') {
       if(!$chrs) notFound();
       else {
          $options += $chrs;
-         $options['exp_max'] = 'што_это?';
       }
    }
 }
