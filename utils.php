@@ -314,8 +314,8 @@ function characters() {
        'agility',
        'endurance',
        'intelligence',
-       'wisdom', 
-       'volition', 
+       'wisdom',
+       'volition',
        'health',
        'health_max',
        'mana',
@@ -324,7 +324,7 @@ function characters() {
 }
 
 function userCharacters($p, $t = 'sess') {
-   
+
    switch ($t) {
       case 'id':
          if (!idExists($p)) return;
@@ -344,19 +344,18 @@ function userCharacters($p, $t = 'sess') {
    }
    $cl = characters();
    foreach ($cl as $v) $ar[$v] = $q[$v];
-   
+
    $ar['health_percent'] = $ar['health'] * 100 / $ar['health_max'];
    $ar['mana_percent'] = $ar['mana'] * 100 / $ar['mana_max'];
-   
-   $exp_max_start = 1000; $exp_step = 1000;
-   $exp_prev_max = ap($exp_max_start, $ar['level']-1, $exp_step);
-   
-   $ar['exp_max'] = ap($exp_max_start, $ar['level'], $exp_step);
-   $ar['exp_percent'] = ($ar['exp']-$exp_prev_max) / ($ar['exp_max']-$exp_prev_max) * 100;
-   
+
+   $exp_prev_max = ap(EXP_MAX_START, $ar['level']-1, EXP_STEP);
+
+   $ar['exp_max'] = ap(EXP_MAX_START, $ar['level'], EXP_STEP);
+   $ar['exp_percent'] = ($ar['exp']-$exp_prev_max) * 100 / ($ar['exp_max']-$exp_prev_max);
+
    $ar['nickname'] = $q['user'];
    $ar['id'] = $q['id'];
-   
+
    return $ar;
 }
 /************************* GAME ***************************/
@@ -372,7 +371,7 @@ function tf($s) {
 }
 
 function ap($a1, $n, $step) {
-   return (2 * $a1 + ($n-1) * $step) / 2 * $n;
+   return (2 * $a1 + ($n-1) * $step) * $n / 2;
 }
 
 ##SHA-512

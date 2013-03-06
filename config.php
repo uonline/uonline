@@ -19,4 +19,8 @@ define('DEFAULT_CHARSET', 'utf-8');
 define('DEFAULT_INSTANCE', 'about');
 define('TWIG_CACHE', false); // './templates_cache'
 
+//game
+define('EXP_MAX_START', 1000);
+define('EXP_STEP', 1000);
+
 ?>
