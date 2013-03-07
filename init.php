@@ -33,8 +33,8 @@ if ($_POST) {
              'uniusers' => '(`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT DEFAULT 1, /*`permissions` INT DEFAULT 0,*/ PRIMARY KEY  (`id`) )',
              'locations' => '(`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `super` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))',
              'areas' => '(`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))',
-             'monster_prototypes' => '(`id` INT AUTO_INCREMENT, `name` TINYTEXT, `level` INT, `power` INT, `agility` INT, `endurance` INT, `intelligence` INT, `wisdom` INT, `volition` INT, `health` INT, `health_max` INT, `mana` INT, `mana_max` INT, PRIMARY KEY (`id`))',
-             //'monsters' => '(``)',
+             'monster_prototypes' => '(`id` INT AUTO_INCREMENT, `name` TINYTEXT, `level` INT, `power` INT, `agility` INT, `endurance` INT, `intelligence` INT, `wisdom` INT, `volition` INT, `health_max` INT, `mana_max` INT, PRIMARY KEY (`id`))',
+             'monsters' => '(`id` INT, `location` INT, `health` INT, `mana` INT, `effects` TEXT, `attack_chance` INT)',
           );
           foreach ($t as $k => $v) {
               echo '<h5>Создание таблицы `'.$k.'` ... ';
@@ -92,13 +92,13 @@ if ($_POST) {
       }
       
       if($_POST['fillmonsters']) {
-         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health`, `health_max`, `mana`, `mana_max`) VALUES (1, 'Гигантская улитка', 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3)");
-         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health`, `health_max`, `mana`, `mana_max`) VALUES (2, 'Червь-хищник', 2, 1, 2, 2, 1, 1, 2, 1, 1, 1, 1)");
-         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health`, `health_max`, `mana`, `mana_max`) VALUES (3, 'Ядовитая многоножка', 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1)");
-         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health`, `health_max`, `mana`, `mana_max`) VALUES (4, 'Скорпион', 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1)");
-         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health`, `health_max`, `mana`, `mana_max`) VALUES (5, 'Кобра', 2, 1, 3, 1, 3, 2, 1, 2, 2, 1, 1)");
-         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health`, `health_max`, `mana`, `mana_max`) VALUES (6, 'Дикий кабан', 1, 2, 1, 2, 1, 1, 1, 2, 2, 1, 1)");
-         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health`, `health_max`, `mana`, `mana_max`) VALUES (7, 'Тарантул', 3, 1, 4, 2, 1, 2, 4, 1, 1, 1, 1)");
+         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health_max`, `mana_max`) VALUES (1, 'Гигантская улитка', 1, 1, 1, 1, 1, 1, 1, 1, 3)");
+         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health_max`, `mana_max`) VALUES (2, 'Червь-хищник', 2, 1, 2, 2, 1, 1, 2, 1, 1)");
+         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health_max`, `mana_max`) VALUES (3, 'Ядовитая многоножка', 1, 1, 2, 1, 1, 1, 1, 1, 1)");
+         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health_max`, `mana_max`) VALUES (4, 'Скорпион', 1, 2, 1, 1, 1, 1, 1, 1, 1)");
+         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health_max`, `mana_max`) VALUES (5, 'Кобра', 2, 1, 3, 1, 3, 2, 1, 2, 1)");
+         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health_max`, `mana_max`) VALUES (6, 'Дикий кабан', 1, 2, 1, 2, 1, 1, 1, 2, 1)");
+         mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health_max`, `mana_max`) VALUES (7, 'Тарантул', 3, 1, 4, 2, 1, 2, 4, 1, 1)");
       }
       /********* filling areas and locations ***********/
 
