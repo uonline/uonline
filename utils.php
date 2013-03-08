@@ -377,7 +377,7 @@ function tf($s) {
    $s = preg_replace('/-(?=\\d)/', json_decode('"\u2212"'), $s); //'&minus;'
    $s = preg_replace('/"(?=\\w)/', json_decode('"\u00AB"'), $s); //'&laquo;'
    $s = preg_replace('/(?<=\\w)"/', json_decode('"\u00BB"'), $s); //'&raquo;'
-   echo $s; return $s;
+   return $s;
 }
 
 function ap($a1, $n, $step) {
