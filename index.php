@@ -9,6 +9,7 @@ Twig_Autoloader::register();
 $loader = new Twig_Loader_Filesystem('./templates');
 $twig = new Twig_Environment($loader, array('cache' => TWIG_CACHE));
 $twig->addFilter(new Twig_SimpleFilter('tf', 'tf'));
+$twig->addFilter( new Twig_SimpleFilter('nl2p', 'nl2p', array('pre_escape' => 'html', 'is_safe' => array('html') ) ) );
 
 
 $redirect = false;

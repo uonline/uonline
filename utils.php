@@ -380,6 +380,12 @@ function tf($s) {
    return $s;
 }
 
+function nl2p($s) {
+   $ar = explode("\n\n", $s);
+   for ($s='', $i=0; $i<count($ar); $s.='<p>'.$ar[$i].'</p>', $i++);
+   return $s;
+}
+
 function ap($a1, $n, $step) {
    return (2 * $a1 + ($n-1) * $step) * $n / 2;
 }
