@@ -8,6 +8,7 @@ require_once './Twig/Autoloader.php';
 Twig_Autoloader::register();
 $loader = new Twig_Loader_Filesystem('./templates');
 $twig = new Twig_Environment($loader, array('cache' => TWIG_CACHE));
+$twig->addFilter(new Twig_SimpleFilter('tf', 'tf'));
 
 
 $redirect = false;

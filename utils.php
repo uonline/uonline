@@ -372,12 +372,12 @@ function userCharacters($p, $t = 'sess') {
 
 
 function tf($s) {
-   $s = preg_replace('/^-(?= )|(?<= )-(?= )|---/', '&mdash;', $s);
-   $s = preg_replace('/--/', '&ndash;', $s);
-   $s = preg_replace('/-(?=\\d)/', '&minus;', $s);
-   $s = preg_replace('/"(?=\\w)/', '&laquo;', $s);
-   $s = preg_replace('/(?<=\\w)"/', '&raquo;', $s);
-   return $s;
+   $s = preg_replace('/^-(?= )|(?<= )-(?= )|---/', json_decode('"\u2014"'), $s); //'&mdash;'
+   $s = preg_replace('/--/', json_decode('"\u2013"'), $s); //'&ndash;'
+   $s = preg_replace('/-(?=\\d)/', json_decode('"\u2212"'), $s); //'&minus;'
+   $s = preg_replace('/"(?=\\w)/', json_decode('"\u00AB"'), $s); //'&laquo;'
+   $s = preg_replace('/(?<=\\w)"/', json_decode('"\u00BB"'), $s); //'&raquo;'
+   echo $s; return $s;
 }
 
 function ap($a1, $n, $step) {
