@@ -34,7 +34,7 @@ if ($_POST) {
 				'locations' => '(`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `super` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))',
 				'areas' => '(`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))',
 				'monster_prototypes' => '(`id` INT AUTO_INCREMENT, `name` TINYTEXT, `level` INT, `power` INT, `agility` INT, `endurance` INT, `intelligence` INT, `wisdom` INT, `volition` INT, `health_max` INT, `mana_max` INT, PRIMARY KEY (`id`))',
-				'monsters' => '(`id` INT, `location` INT, `health` INT, `mana` INT, `effects` TEXT, `attack_chance` INT)',
+				'monsters' => '(`incarn_id` INT AUTO_INCREMENT, `id` INT, `location` INT, `health` INT, `mana` INT, `effects` TEXT, `attack_chance` INT, PRIMARY KEY (`incarn_id`))',
 			);
 			foreach ($t as $k => $v) {
 				echo '<h5>Создание таблицы `'.$k.'` ... ';
@@ -62,6 +62,11 @@ if ($_POST) {
 						'mana' => 'INT DEFAULT 1',
 						'mana_max' => 'INT DEFAULT 1',
 						'effects' => 'TEXT',
+				),),
+				array(
+					'table' => 'monsters',
+					'columns' => array(
+						'incarn_id' => 'INT AUTO_INCREMENT',
 				),),
 			);
 			foreach ($c as $k => $v) {
