@@ -106,6 +106,7 @@ elseif ($in == 'game') {
       $options['description'] = currentLocationDescription($s);
       $options['ways'] = allowedZones($s);
       $options['players_list'] = usersOnLocation($s);
+      $options['monsters_list'] = monstersOnLocation($s);
    }
 }
 /******************* game ***********************/

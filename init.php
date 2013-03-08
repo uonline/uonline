@@ -99,6 +99,16 @@ if ($_POST) {
          mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health_max`, `mana_max`) VALUES (5, 'Кобра', 2, 1, 3, 1, 3, 2, 1, 2, 1)");
          mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health_max`, `mana_max`) VALUES (6, 'Дикий кабан', 1, 2, 1, 2, 1, 1, 1, 2, 1)");
          mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health_max`, `mana_max`) VALUES (7, 'Тарантул', 3, 1, 4, 2, 1, 2, 4, 1, 1)");
+         
+         mysql_query("REPLACE INTO `monsters` (`id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (2, 1, 1, 1, NULL, 10)");
+         mysql_query("REPLACE INTO `monsters` (`id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (2, 6, 1, 1, NULL, 10)");
+         mysql_query("REPLACE INTO `monsters` (`id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (3, 2, 1, 1, NULL, 10)");
+         mysql_query("REPLACE INTO `monsters` (`id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (4, 5, 1, 1, NULL, 10)");
+         mysql_query("REPLACE INTO `monsters` (`id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (5, 5, 1, 1, NULL, 10)");
+         mysql_query("REPLACE INTO `monsters` (`id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (5, 1, 1, 1, NULL, 10)");
+         mysql_query("REPLACE INTO `monsters` (`id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (5, 6, 1, 1, NULL, 10)");
+         mysql_query("REPLACE INTO `monsters` (`id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (7, 3, 1, 1, NULL, 10)");
+         mysql_query("REPLACE INTO `monsters` (`id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (7, 4, 1, 1, NULL, 10)");
       }
       /********* filling areas and locations ***********/
 

@@ -28,5 +28,16 @@
 			{% endif %}
 			</small></p>
 
+			<p><small>
+			{% if monsters_list|length > 0 %}
+			Монстры на этой локации:
+			{% for i in monsters_list %}
+				<a href="#">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
+			{% endfor %}
+			{% else %}
+			На этой локации нет монстров.
+			{% endif %}
+			</small></p>
+
 			<div style="clear: both;"></div>
 {% endblock content %}
