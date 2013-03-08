@@ -7,7 +7,7 @@
 
 			{% if pic is defined %}<img src="{{ pic }}" class="img-polaroid" style="float: right;" />{% endif %}
 
-			<p>{{ description }}</p>
+			<p>{{ description|tf }}</p>
 
 			<p>
 			{% for i in ways %}
