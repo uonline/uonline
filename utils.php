@@ -45,8 +45,9 @@ function columnExists($t, $c) {
    return mysqlFirstRes("SELECT count(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='".MYSQL_BASE."' AND TABLE_NAME='$t' AND COLUMN_NAME='$c'");
 }
 
-function addColumn($t, $c, $o) {
+function addColumn($t, $o) {
    mysqlConnect();
+	list($c, $o) = explode('|', $o);
    if (columnExists($t, $c)) return FALSE;
    else {
       mysql_query("ALTER TABLE `$t` ADD COLUMN `$c` $o");
@@ -369,6 +370,23 @@ function userCharacters($p, $t = 'sess') {
    return $ar;
 }
 /************************* GAME ***************************/
+
+
+/************************* statistics ***************************/
+function stats($in, $gen_time) {
+	global $_SERVER;
+	$ua = addslashes($_SERVER[HTTP_USER_AGENT]);
+	$url = addslashes($_SERVER[REQUEST_URI]);
+	mysqlConnect();
+	mysql_query("INSERT INTO `stats` (`instance`, `gen_time`, `ip`, `uagent`, `url`) VALUES ('$in', $gen_time, '$_SERVER[REMOTE_ADDR]', '$ua', '$url')");
+	echo mysql_error();
+}
+/************************* statistics ***************************/
+
+
+
+
+
 
 
 function tf($s) {

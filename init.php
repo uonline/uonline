@@ -29,12 +29,14 @@ if ($_POST) {
 		}
 
 		if ($_POST['updatetables']) {
+			//creating tables
 			$t = array(
 				'uniusers' => '(`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT DEFAULT 1, /*`permissions` INT DEFAULT 0,*/ PRIMARY KEY  (`id`) )',
 				'locations' => '(`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `super` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))',
 				'areas' => '(`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))',
 				'monster_prototypes' => '(`id` INT AUTO_INCREMENT, `name` TINYTEXT, `level` INT, `power` INT, `agility` INT, `endurance` INT, `intelligence` INT, `wisdom` INT, `volition` INT, `health_max` INT, `mana_max` INT, PRIMARY KEY (`id`))',
 				'monsters' => '(`incarn_id` INT AUTO_INCREMENT, `id` INT, `location` INT, `health` INT, `mana` INT, `effects` TEXT, `attack_chance` INT, PRIMARY KEY (`incarn_id`))',
+				'stats' => '(`time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, `gen_time` DOUBLE, `instance` TINYTEXT, `ip` TINYTEXT, `uagent` TINYTEXT)',
 			);
 			foreach ($t as $k => $v) {
 				echo '<h5>Создание таблицы `'.$k.'` ... ';
@@ -43,38 +45,53 @@ if ($_POST) {
 				echo '</h5>';
 			}
 			echo '<br />';
-			//{ {table => tableName, columns => { columnNname => columnOptions, ... } }, ... }
+			
+			//adding new columns
+			//{ {table => 'tableName', columns => { 'columnNname|columnOptions', ... } }, ... }
 			$c = array(
 				array(
 					'table' => 'uniusers',
 					'columns' => array(
-						'permissions' => 'INT AFTER `location`',
-						'level' => 'INT DEFAULT 1',
-						'exp' => 'INT DEFAULT 0',
-						'power' => 'INT DEFAULT 1',
-						'agility' => 'INT DEFAULT 1', //ловкость
-						'endurance' => 'INT DEFAULT 1', //выносливость
-						'intelligence' => 'INT DEFAULT 1', //интеллект
-						'wisdom' => 'INT DEFAULT 1', //мудрость
-						'volition' => 'INT DEFAULT 1', //воля
-						'health' => 'INT DEFAULT 1',
-						'health_max' => 'INT DEFAULT 1',
-						'mana' => 'INT DEFAULT 1',
-						'mana_max' => 'INT DEFAULT 1',
-						'effects' => 'TEXT',
+						'permissions|INT AFTER `location`',
+						'level|INT DEFAULT 1',
+						'exp|INT DEFAULT 0',
+						'power|INT DEFAULT 1',
+						'agility|INT DEFAULT 1', //ловкость
+						'endurance|INT DEFAULT 1', //выносливость
+						'intelligence|INT DEFAULT 1', //интеллект
+						'wisdom|INT DEFAULT 1', //мудрость
+						'volition|INT DEFAULT 1', //воля
+						'health|INT DEFAULT 1',
+						'health_max|INT DEFAULT 1',
+						'mana|INT DEFAULT 1',
+						'mana_max|INT DEFAULT 1',
+						'effects|TEXT',
+				),),
+				array(
+					'table' => 'monsters',
+					'columns' => array(
+						'incarn_id|INT AUTO_INCREMENT FIRST, ADD PRIMARY KEY (`incarn_id`)'
+				),),
+				array(
+					'table' => 'stats',
+					'columns' => array(
+						'url|TEXT'
 				),),
 			);
 			foreach ($c as $k => $v) {
 				echo '<h5>Обновление таблицы '.$v['table'].' ...<h5>';
-				foreach ($v['columns'] as $k1 => $v1) {
-					echo '<h6>Создание столбца `'.$k1.'` ... ';
-					$res = addColumn($v['table'], $k1, $v1);
+				foreach ($v['columns'] as $v1) {
+				   $cn = explode("|", $v1);
+					echo '<h6>Создание столбца `'.$cn[0].'` ... ';
+					$res = addColumn($v['table'], $v1);
 					echo $res === FALSE ? warn() : ($res === 0 ? ok() : err());
 					echo '</h6>';
 				}
 			}
 			echo '<br />';
 		}
+		
+		
 		/********* filling areas and locations ***********/
 		if($_POST['fillareas']) {
 			echo '<h5>Создание локаций ... ';
