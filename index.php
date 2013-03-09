@@ -124,12 +124,16 @@ elseif ($in == 'go') {
 
 
 
+
+if ($redirect) {
 	$time_end = microtime(true);
 	stats($in, $time_end - $time_start);
-
-if ($redirect) { redirect($redirect); }
+	redirect($redirect);
+}
 else {
    echo $twig->render( $in.'.twig', $options );
+	$time_end = microtime(true);
+	stats($in, $time_end - $time_start);
    echo "\n<!-- Done in " . ( ($time_end - $time_start) * 1000) . ' milliseconds -->';
 }
 

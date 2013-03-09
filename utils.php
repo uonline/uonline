@@ -379,7 +379,6 @@ function stats($in, $gen_time) {
 	$url = addslashes($_SERVER[REQUEST_URI]);
 	mysqlConnect();
 	mysql_query("INSERT INTO `stats` (`instance`, `gen_time`, `ip`, `uagent`, `url`) VALUES ('$in', $gen_time, '$_SERVER[REMOTE_ADDR]', '$ua', '$url')");
-	echo mysql_error();
 }
 /************************* statistics ***************************/
 
