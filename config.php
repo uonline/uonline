@@ -17,7 +17,7 @@ define('DEFAULT_CHARSET', 'utf-8');
 
 // layout
 define('DEFAULT_INSTANCE', 'about');
-define('TWIG_CACHE', false); // './templates_cache'
+define('TWIG_CACHE', './templates_cache'); // false
 
 //game
 define('EXP_MAX_START', 1000);
