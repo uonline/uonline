@@ -294,7 +294,7 @@ function allowedZones($s, $idsonly = false) {
 
 function changeLocation($s, $lid) {
    mysqlConnect();
-   if (in_array( $lid, allowedZones($s, true) ) /*&& !mysqlFirstRes("SELECT `fight_mode` FROM `uniusers` WHERE `sessid` = '$s'" */) ) {
+   if (in_array( $lid, allowedZones($s, true) ) /*&& !mysqlFirstRes("SELECT `fight_mode` FROM `uniusers` WHERE `sessid` = '$s'" )*/ ) {
 		mysql_query("UPDATE `uniusers` ".
 						"SET `location` = '$lid' ".
 						"WHERE `sessid`='$s'");
