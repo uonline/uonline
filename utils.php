@@ -294,8 +294,16 @@ function allowedZones($s, $idsonly = false) {
 
 function changeLocation($s, $lid) {
    mysqlConnect();
-   if (in_array( $lid, allowedZones($s, true) ) ) {
-      mysql_query('UPDATE `uniusers` SET `location` = '.$lid.' WHERE `sessid`="'.$s.'"');
+   if (in_array( $lid, allowedZones($s, true) ) /*&& !mysqlFirstRes("SELECT `fight_mode` FROM `uniusers` WHERE `sessid` = '$s'" */) ) {
+		mysql_query("UPDATE `uniusers` ".
+						"SET `location` = '$lid' ".
+						"WHERE `sessid`='$s'");
+		$attack_chance = mysqlFirstRes("SELECT max(`attack_chance`) ".
+												"FROM `monsters`, `uniusers` ".
+												"WHERE `uniusers`.`sessid` = '$s' AND `uniusers`.`location` = `monsters`.`location`");
+		if (rand(1,100)<=$attack_chance) mysql_query("UPDATE `uniusers` ".
+																	"SET `fight_mode` = 1 ".
+																	"WHERE `sessid` = '$s'");
       return true;
    }
    else return false;

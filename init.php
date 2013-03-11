@@ -66,6 +66,7 @@ if ($_POST) {
 						'mana|INT DEFAULT 1',
 						'mana_max|INT DEFAULT 1',
 						'effects|TEXT',
+						'fight_mode|INT AFTER `permissions`'
 				),),
 				array(
 					'table' => 'monsters',
@@ -119,15 +120,16 @@ if ($_POST) {
 			mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health_max`, `mana_max`) VALUES (6, 'Дикий кабан', 1, 2, 1, 2, 1, 1, 1, 2, 1)");
 			mysql_query("REPLACE INTO `monster_prototypes` (`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, `wisdom`, `volition`, `health_max`, `mana_max`) VALUES (7, 'Тарантул', 3, 1, 4, 2, 1, 2, 4, 1, 1)");
 
-			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (1, 2, 1, 1, 1, NULL, 10)");
-			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (2, 2, 6, 1, 1, NULL, 10)");
-			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (3, 3, 2, 1, 1, NULL, 10)");
-			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (4, 4, 5, 1, 1, NULL, 10)");
-			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (5, 5, 5, 1, 1, NULL, 10)");
-			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (6, 5, 1, 1, 1, NULL, 10)");
-			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (7, 5, 6, 1, 1, NULL, 10)");
-			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (8, 7, 3, 1, 1, NULL, 10)");
-			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (9, 7, 4, 1, 1, NULL, 10)");
+			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (1, 2, 1, 1, 1, NULL, 5)");
+			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (2, 2, 6, 1, 1, NULL, 13)");
+			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (3, 3, 2, 1, 1, NULL, 7)");
+			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (4, 4, 5, 1, 1, NULL, 11)");
+			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (5, 5, 5, 1, 1, NULL, 12)");
+			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (6, 5, 1, 1, 1, NULL, 6)");
+			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (7, 5, 6, 1, 1, NULL, 14)");
+			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (8, 7, 3, 1, 1, NULL, 8)");
+			mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (9, 7, 4, 1, 1, NULL, 9)");
+
 			echo (mysql_errno()===0?ok():err()).'</h5>';
 			echo '<br />';
 		}
