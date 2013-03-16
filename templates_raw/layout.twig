@@ -14,7 +14,6 @@
 			<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 		<![endif]-->
 
-		{% if admin %}<script src="stcs.js"></script>{% endif %}
 		<script src="http://code.jquery.com/jquery-latest.js"></script>
 		<script src="/bootstrap/js/bootstrap.min.js"></script>
 	</head>
@@ -24,22 +23,22 @@
 				<div class="container">
 					<a class="brand" href="index.php">uonline</a>
 					<ul class="nav">
-						<li {% if instance == 'about' %} class="active" {% endif %}><a href="index.php?instance=about">Об игре</a></li>
+						<li {% if instance == 'about' %} class="active" {% endif %}><a href="/about/">Об игре</a></li>
 						<li><a href="#">Новости</a></li>
 						<li><a href="#">Форум</a></li>
 						<li><a href="#">Рейтинг</a></li>
 					</ul>
 					<ul class="nav pull-right">
 						{% if loggedIn == true %}
-						<li><a href="index.php?instance=profile"><i class="{% if admin == true %}icon-certificate{% else %}icon-user{% endif %}"></i> <b>{{ login }}</b></a></li>
-						<li {% if instance == 'profile' %} class="active" {% endif %}><a href="index.php?instance=profile">Профиль</a></li>
-						<li {% if instance == 'game' %} class="active" {% endif %}><a href="index.php?instance=game">Игра</a></li>
+						<li><a href="/profile/"><i class="{% if admin == true %}icon-certificate{% else %}icon-user{% endif %}"></i> <b>{{ login }}</b></a></li>
+						<li {% if instance == 'profile' %} class="active" {% endif %}><a href="/profile/">Профиль</a></li>
+						<li {% if instance == 'game' %} class="active" {% endif %}><a href="/game/">Игра</a></li>
 						<li><a href="#">Почта {% if mail_count > 0 %}<span class="badge badge-info">{{ mail_count }}</span>{% endif %}</a></li>
 						<!-- <li><a href="#">Кабинет</a></li> -->
-						<li><a href="index.php?instance=logout">Выйти</a></li>
+						<li><a href="/logout/">Выйти</a></li>
 						{% elseif loggedIn == false %}
-						<li {% if instance == 'login' %} class="active" {% endif %}><a href="index.php?instance=login">Войти</a></li>
-						<li {% if instance == 'register' %} class="active" {% endif %}><a href="index.php?instance=register">Зарегистрироваться</a></li>
+						<li {% if instance == 'login' %} class="active" {% endif %}><a href="/login/">Войти</a></li>
+						<li {% if instance == 'register' %} class="active" {% endif %}><a href="/register/">Зарегистрироваться</a></li>
 						{% else %}
 						{% endif %}
 						{% if admin == true %}

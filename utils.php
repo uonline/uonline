@@ -174,21 +174,10 @@ function correctMail($mail) {
           $mail == $res[0];
 }
 
-function correctAdminPassword($pass) {
-   return strlen($pass)<=32 &&
-          preg_match( '/[\!\@\#\$\%\^\&\*\(\)\_\+A-Za-z0-9]+/', $pass, $res) &&
-          $pass == $res[0];
-}
-
-function correctUserPassword($pass) {
+function correctPassword($pass) {
    return strlen($pass)>3 &&
           strlen($pass)<=32 &&
           preg_match( '/[\!\@\#\$\%\^\&\*\(\)\_\+A-Za-z0-9]+/', $pass, $res) &&
-          $pass == $res[0];
-}
-
-function correctPassword($pass) {
-   return preg_match( '/[\!\@\#\$\%\^\&\*\(\)\_\+A-Za-z0-9]+/', $pass, $res) &&
           $pass == $res[0];
 }
 
@@ -218,6 +207,19 @@ function validPassword($u, $p) {
    mysqlConnect();
    $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$u.'"') );
    return $q['hash'] == myCrypt($p, $q['salt']);
+}
+
+function accessGranted($u, $p) {
+	return correctUserName($u) && correctPassword($p) && userExists($u) && validPassword($u, $p);
+}
+
+function allowToRegister($u, $p) {
+	return correctUserName($u) && correctPassword($p) && !userExists($u);
+}
+
+function setMyCookie($n, $v, $exp = null, $path = '/', $domain = null, $secure = null, $httponly = null) {
+	if (!$exp) $exp = time() + SESSION_TIMEEXPIRE;
+	setcookie($n, $v, $exp, $path, $domain, $secure, $httponly);
 }
 
 function userPermissions($s) {
@@ -350,7 +352,7 @@ function userCharacters($p, $t = 'sess') {
          mysqlConnect();
          $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `id`="'.$p.'"') );
          break;
-      case 'nick':
+      case 'user':
          if (!userExists($p)) return;
          mysqlConnect();
          $q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$p.'"') );
@@ -381,12 +383,12 @@ function userCharacters($p, $t = 'sess') {
 
 
 /************************* statistics ***************************/
-function stats($in, $gen_time) {
+function stats($gen_time) {
 	global $_SERVER;
 	$ua = addslashes($_SERVER[HTTP_USER_AGENT]);
 	$url = addslashes($_SERVER[REQUEST_URI]);
 	mysqlConnect();
-	mysql_query("INSERT INTO `stats` (`instance`, `gen_time`, `ip`, `uagent`, `url`) VALUES ('$in', $gen_time, '$_SERVER[REMOTE_ADDR]', '$ua', '$url')");
+	mysql_query("INSERT INTO `stats` (`gen_time`, `ip`, `uagent`, `url`) VALUES ($gen_time, '$_SERVER[REMOTE_ADDR]', '$ua', '$url')");
 }
 /************************* statistics ***************************/
 

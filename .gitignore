@@ -2,3 +2,6 @@ keyring
 nbproject/
 templates_cache/
 source/
+htmlcompressor.jar
+yuicompressor.jar
+compress-templates.bat

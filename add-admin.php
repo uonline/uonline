@@ -6,7 +6,7 @@ $HEAD = $BODY = '';
 
 if ($_POST) {
    $u = $_POST['user']; $p = $_POST['pass']; //$e = $_POST['mail'];
-   if (correctUserName($u) && !userExists($u) && /*correctMail($e) && !mailExists($e) && */ correctAdminPassword($p) && $_POST['ad_pass'] == ADMIN_PASS) {
+   if (correctUserName($u) && !userExists($u) && /*correctMail($e) && !mailExists($e) && */ correctPassword($p) && $_POST['ad_pass'] == ADMIN_PASS) {
       $s = registerUser($u, $p, 65535);
       setcookie('sessid', $s);
       registerSuccess();
@@ -14,8 +14,8 @@ if ($_POST) {
    else {
       if ($_POST['ad_pass'] != ADMIN_PASS) wrongPass();
       else
-         if (!correctUserName($u) || /* correctMail($_POST['mail']) || */ !correctAdminPassword($p)) 
-            incorrectDatas( array( !correctUserName($u), /* correctMail($_POST['mail']), */ !correctAdminPassword($p) ) );
+         if (!correctUserName($u) || /* correctMail($_POST['mail']) || */ !correctPassword($p)) 
+            incorrectDatas( array( !correctUserName($u), /* correctMail($_POST['mail']), */ !correctPassword($p) ) );
          else alreadyExists( array (userExists($u) /*, mailExists($_POST['mail']) */ ) );
       regForm($u, $p /* , $e */ );
    }
