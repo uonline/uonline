@@ -5,6 +5,7 @@ $time_start = microtime(true);
 require_once 'utils.php';
 require_once './Twig/Autoloader.php';
 require_once './silex/vendor/autoload.php';
+use Symfony\Component\HttpFoundation\Request;
 
 Twig_Autoloader::register();
 $loader = new Twig_Loader_Filesystem('./templates');
@@ -14,7 +15,6 @@ $twig->addFilter(new Twig_SimpleFilter('nl2p', 'nl2p', array('pre_escape' => 'ht
 
 $app = new Silex\Application();
 $app['debug'] = true;
-use Symfony\Component\HttpFoundation\Request;
 
 $s = $_COOKIE['sessid']; refreshSession($s);
 $options = array(
@@ -104,13 +104,13 @@ $app->get('/profile/', function () use ($twig, $options, $s) {
 	return $twig->render( 'profile.twig', $options + $chrs + array('instance' => 'profile') );
 });
 
-$app->get('/profile/id/{id}', function ($id) use ($twig, $options) {
+$app->get('/profile/id/{id}/', function ($id) use ($twig, $options) {
 	$chrs = userCharacters($id, 'id');
 	return $twig->render( 'profile.twig', $options + $chrs + array('instance' => 'profile') );
 })
 ->assert('id', '\d+');
 
-$app->get('/profile/user/{user}', function ($user) use ($twig, $options) {
+$app->get('/profile/user/{user}/', function ($user) use ($twig, $options) {
 	$chrs = userCharacters($user, 'user');
 	return $twig->render( 'profile.twig', $options + $chrs + array('instance' => 'profile') );
 });
@@ -129,7 +129,7 @@ $app->get('/logout/', function () use ($app, $s) {
 
 /********************** game **********************/
 $app->get('/game/', function () use ($app, $twig, $options, $s) {
-	
+
 	if (sessionExpired($s)) return $app->redirect('/login/');
 	else {
 		$options['location_name'] = currentLocationTitle($s);
@@ -146,7 +146,7 @@ $app->get('/game/', function () use ($app, $twig, $options, $s) {
 
 
 /********************** moving **********************/
-$app->get('/go/{to}', function ($to) use ($app, $s) {
+$app->get('/game/go/{to}/', function ($to) use ($app, $s) {
 	changeLocation($s, $to);
 	return $app->redirect('/game/');
 });

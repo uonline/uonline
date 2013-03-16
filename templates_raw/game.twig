@@ -11,7 +11,7 @@
 
 			<p>
 			{% for i in ways %}
-				<a class="btn" href="/go/{{ i.to }}">{{ i.name }}</a>
+				<a class="btn" href="/game/go/{{ i.to }}/">{{ i.name }}</a>
 			{% endfor %}
 			</p>
 
@@ -21,7 +21,7 @@
 			{% if players_list|length > 0 %}
 			На этой локации находятся:
 			{% for i in players_list %}
-				<a href="/profile/id/{{ i.id }}">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
+				<a href="/profile/id/{{ i.id }}/">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
 			{% endfor %}
 			{% else %}
 			На этой локации больше никого нет.
