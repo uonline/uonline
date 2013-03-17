@@ -66,6 +66,8 @@ None needed.
 * description (string)
 * ways (array; elements: ways\[i\].to, ways\[i\].name)
 * players\_list (array; elements: players\_list\[i\].id, players\_list\[i\].name)
+* isInBattle (`true` or `false`)
+* autoStartedBattle (`true` or `false`)
 
 ### profile
 

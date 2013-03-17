@@ -19,23 +19,26 @@
 
 			<p><small>
 			{% if players_list|length > 0 %}
-			На этой локации находятся:
-			{% for i in players_list %}
-				<a href="/profile/id/{{ i.id }}/">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
-			{% endfor %}
+				На этой локации находятся:
+				{% for i in players_list %}
+					<a href="/profile/id/{{ i.id }}/">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
+				{% endfor %}
 			{% else %}
-			На этой локации больше никого нет.
+				На этой локации больше никого нет.
 			{% endif %}
 			</small></p>
 
 			<p><small>
 			{% if monsters_list|length > 0 %}
-			Монстры на этой локации:
-			{% for i in monsters_list %}
-				<a href="#">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
-			{% endfor %}
+				Монстры на этой локации:
+				{% for i in monsters_list %}
+					<a href="#">{{ i.name }}</a>{% if not loop.last %}, {% endif %}
+				{% endfor %}
+				<!-- dirty layout -->
+				<p>{% if autoStartedBattle %}<b>Вас атаковали!</b>{% endif %}</p>
+				<p>{% if isInBattle %}<a href="#">Свалить</a>{% else %}<a href="#">Атаковать</a>{% endif %}</p>
 			{% else %}
-			На этой локации нет монстров.
+				На этой локации нет монстров.
 			{% endif %}
 			</small></p>
 
