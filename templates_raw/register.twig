@@ -8,7 +8,11 @@
 			{% if (error == true) %}
 			<div class="alert alert-error">
 				<a href="#" class="close" data-dismiss="alert">&times;</a>
+				{% if (loginIsBusy == true) %}
+				<b>Извините! Это имя уже занято.</b> Придумайте какое-нибудь другое.
+				{% else %}
 				<b>Ой! Во введённых данных что-то не так.</b> Исправьте ошибки и попробуйте ещё раз.
+				{% endif %}
 			</div>
 			{% endif %}
 
@@ -29,7 +33,7 @@
 				</div>
 				<div class="control-group">
 					<div class="controls">
-						<button type="submit" class="btn">Зарегистрироваться</button>			
+						<button type="submit" class="btn">Зарегистрироваться</button>
 					</div>
 				</div>
 			</form>
