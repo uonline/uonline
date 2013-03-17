@@ -28,7 +28,10 @@
 					<label class="control-label" for="pass">Пароль</label>
 					<div class="controls">
 						<input type="password" id="pass" name="pass" maxlength="32">
-						<span class="help-inline"><small>От 4 до 32 символов, [a-zA-Z0-9!@#$%^&amp;*()_+]</small></span>
+						<span class="help-inline">
+							<a class="btn btn-small" id="revealpass"><i class="icon-eye-open"></i></a>
+							<small>От 4 до 32 символов, [a-zA-Z0-9!@#$%^&amp;*()_+]</small>
+						</span>
 					</div>
 				</div>
 				<div class="control-group">
@@ -39,6 +42,16 @@
 			</form>
 
 			<script type="text/javascript">
+				$("#revealpass").click(function(){
+					if ($("input[name=pass]").prop("type")=="password")
+					{
+						$("input[name=pass]").prop("type","text");
+					}
+					else
+					{
+						$("input[name=pass]").prop("type","password");
+					}
+				});
 				$("input[name=user]").change(function(){
 					$.getJSON("/ajax.php?isNickBusy="+encodeURIComponent($("input[name=user]").val()), function(data){
 						if (data.isNickBusy)
