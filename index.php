@@ -6,6 +6,7 @@ require_once 'utils.php';
 require_once './Twig/Autoloader.php';
 require_once './silex/vendor/autoload.php';
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 Twig_Autoloader::register();
 $loader = new Twig_Loader_Filesystem('./templates');
@@ -36,7 +37,8 @@ $app->get('/', function () use ($app) {
 
 /********************** about **********************/
 $app->get('/about/', function () use ($twig, $options) {
-	return $twig->render( 'about.twig', $options + array('instance' => 'about') );
+	$options['instance'] = 'about';
+	return $twig->render( 'about.twig', $options);
 });
 
 
@@ -44,29 +46,31 @@ $app->get('/about/', function () use ($twig, $options) {
 
 /********************** register **********************/
 $app->get('/register/', function () use ($twig, $options) {
-	return $twig->render( 'register.twig', $options + array('instance' => 'register')  );
+	$options['instance'] = 'register';
+	return $twig->render( 'register.twig', $options);
 });
 
 $app->post('/register/', function (Request $r) use ($app, $twig, $options) {
 	$u = $r->get('user'); $p = $r->get('pass');
-		if (allowToRegister($u, $p)) {
-			$s = registerUser($u, $p);
-			setMyCookie('sessid', $s);
-			return $app->redirect('/'.DEFAULT_INSTANCE.'/');
-		}
-		else {
-			$error = true;
-			//if ( !correctUserName($u) || !correctPassword($p) ) $error = true;
-			//elseif (userExists($u)) $error = true;
-			//else $error = true;
-			$options['invalidLogin'] = !correctUserName($u); // логин хуйня
-			$options['invalidPass'] = !correctPassword($p); // тут хуйня
-			$options['loginIsBusy'] = userExists($u); // логин занят
-			$options['user'] = $u;
-			$options['pass'] = $p;
-			$options['error'] = $error;
-		}
-	return $twig->render( 'register.twig', $options + array('instance' => 'register') );
+	if (allowToRegister($u, $p)) {
+		$s = registerUser($u, $p);
+		setMyCookie('sessid', $s);
+		return $app->redirect('/'.DEFAULT_INSTANCE.'/');
+	}
+	else {
+		$error = true;
+		//if ( !correctUserName($u) || !correctPassword($p) ) $error = true;
+		//elseif (userExists($u)) $error = true;
+		//else $error = true;
+		$options['invalidLogin'] = !correctUserName($u); // логин хуйня
+		$options['invalidPass'] = !correctPassword($p); // тут хуйня
+		$options['loginIsBusy'] = userExists($u); // логин занят
+		$options['user'] = $u;
+		$options['pass'] = $p;
+		$options['error'] = $error;
+		$options['instance'] = 'register';
+		return $twig->render( 'register.twig', $options);
+	}
 });
 
 
@@ -74,7 +78,8 @@ $app->post('/register/', function (Request $r) use ($app, $twig, $options) {
 
 /********************** login **********************/
 $app->get('/login/', function () use ($twig, $options) {
-	return $twig->render( 'login.twig', $options + array('instance' => 'login') );
+	$options['instance'] = 'login';
+	return $twig->render( 'login.twig', $options);
 });
 
 $app->post('/login/', function (Request $r) use ($app, $twig, $options) {
@@ -92,7 +97,8 @@ $app->post('/login/', function (Request $r) use ($app, $twig, $options) {
 	}
 	$options['user'] = $u;
 	$options['error'] = $error;
-	return $twig->render( 'login.twig', $options + array('instance' => 'login') );
+	$options['instance'] = 'login';
+	return $twig->render( 'login.twig', $options);
 });
 
 
@@ -101,18 +107,21 @@ $app->post('/login/', function (Request $r) use ($app, $twig, $options) {
 $app->get('/profile/', function () use ($twig, $options, $s) {
 	if (sessionExpired($s)) return $app->redirect('/login/');
 	$chrs = userCharacters($s);
-	return $twig->render( 'profile.twig', $options + $chrs + array('instance' => 'profile') );
+	$options['instance'] = 'profile';
+	return $twig->render( 'profile.twig', $options + $chrs);
 });
 
 $app->get('/profile/id/{id}/', function ($id) use ($twig, $options) {
 	$chrs = userCharacters($id, 'id');
-	return $twig->render( 'profile.twig', $options + $chrs + array('instance' => 'profile') );
+	$options['instance'] = 'profile';
+	return $twig->render( 'profile.twig', $options + $chrs);
 })
 ->assert('id', '\d+');
 
 $app->get('/profile/user/{user}/', function ($user) use ($twig, $options) {
 	$chrs = userCharacters($user, 'user');
-	return $twig->render( 'profile.twig', $options + $chrs + array('instance' => 'profile') );
+	$options['instance'] = 'profile';
+	return $twig->render( 'profile.twig', $options + $chrs);
 });
 
 
@@ -139,8 +148,9 @@ $app->get('/game/', function () use ($app, $twig, $options, $s) {
 		$options['ways'] = allowedZones($s);
 		$options['players_list'] = usersOnLocation($s);
 		$options['monsters_list'] = monstersOnLocation($s);
+		$options['instance'] = 'game';
+		return $twig->render( 'game.twig', $options);
 	}
-	return $twig->render( 'game.twig', $options + array('instance' => 'game') );
 });
 
 
@@ -151,6 +161,17 @@ $app->get('/game/go/{to}/', function ($to) use ($app, $s) {
 	return $app->redirect('/game/');
 });
 
+
+
+/********************** others **********************/
+$app->error(function (Exception $e, $с) use ($twig, $options) {
+	switch ($с) {
+		case 404: 
+			return $twig->render( '404.twig', $options);
+		default:
+			return $twig->render( '404.twig', $options);
+    }
+});
 
 
 $app->run();
