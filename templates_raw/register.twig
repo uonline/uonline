@@ -17,7 +17,7 @@
 			{% endif %}
 
 			<form class="form-horizontal" method="post" action="/register/">
-				<div class="control-group {% if (invalidLogin == true) or (loginIsBusy == true) %}error{% endif %}">
+				<div class="control-group {% if (invalidLogin == true) or (loginIsBusy == true) %}error{% endif %}" id="user-control-group">
 					<label class="control-label" for="user">Логин</label>
 					<div class="controls">
 						<input type="text" id="user" name="user" maxlength="32" value="{{ user }}">
@@ -37,4 +37,19 @@
 					</div>
 				</div>
 			</form>
+
+			<script type="text/javascript">
+				$("input[name=user]").change(function(){
+					$.getJSON("/ajax.php?isNickBusy="+encodeURIComponent($("input[name=user]").val()), function(data){
+						if (data.isNickBusy)
+						{
+							$("#user-control-group").addClass("error");
+						}
+						else
+						{
+							$("#user-control-group").removeClass("error");
+						}
+					});
+				});
+			</script>
 {% endblock content %}
