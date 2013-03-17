@@ -107,19 +107,22 @@ $app->post('/login/', function (Request $r) use ($app, $twig, $options) {
 $app->get('/profile/', function () use ($twig, $options, $s) {
 	if (sessionExpired($s)) return $app->redirect('/login/');
 	$chrs = userCharacters($s);
+	$options['profileIsMine'] = true;
 	$options['instance'] = 'profile';
 	return $twig->render( 'profile.twig', $options + $chrs);
 });
 
-$app->get('/profile/id/{id}/', function ($id) use ($twig, $options) {
+$app->get('/profile/id/{id}/', function ($id) use ($twig, $options, $s) {
 	$chrs = userCharacters($id, 'id');
+	$options['profileIsMine'] = idBySession($s) === $id;
 	$options['instance'] = 'profile';
 	return $twig->render( 'profile.twig', $options + $chrs);
 })
 ->assert('id', '\d+');
 
-$app->get('/profile/user/{user}/', function ($user) use ($twig, $options) {
+$app->get('/profile/user/{user}/', function ($user) use ($twig, $options, $s) {
 	$chrs = userCharacters($user, 'user');
+	$options['profileIsMine'] = userBySession($s) === $user;
 	$options['instance'] = 'profile';
 	return $twig->render( 'profile.twig', $options + $chrs);
 });
