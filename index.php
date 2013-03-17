@@ -128,7 +128,7 @@ $app->get('/profile/user/{user}/', function ($user) use ($twig, $options) {
 
 
 /********************** logout **********************/
-$app->get('/logout/', function () use ($app, $s) {
+$app->get('/action/logout', function () use ($app, $s) {
 	closeSession($s);
 	return $app->redirect('/'.DEFAULT_INSTANCE.'/');
 });
@@ -156,10 +156,11 @@ $app->get('/game/', function () use ($app, $twig, $options, $s) {
 
 
 /********************** moving **********************/
-$app->get('/game/go/{to}/', function ($to) use ($app, $s) {
+$app->get('/action/go/{to}', function ($to) use ($app, $s) {
 	changeLocation($s, $to);
 	return $app->redirect('/game/');
-});
+})
+->assert('to', '\d+');
 
 
 
