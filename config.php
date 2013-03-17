@@ -1,8 +1,8 @@
 <?php
 
 $keyring = file_exists('keyring') ? file_get_contents('keyring') : 0;
-if ($keyring) { $key = explode("|", trim($keyring)); list($host, $user, $pass, $base, $admpass) = $key; }
-else { $host = 'localhost'; $user = 'root'; $pass = ''; $base = 'universe'; $admpass = 'clearpass'; }
+if ($keyring) { $key = explode("|", trim($keyring)); list($host, $user, $pass, $base, $admpass, $cache) = $key; }
+else die('Keyring file missing.<br />Create file named "keyring" in the root with next content.<br />Format: host|user|pass|base|admpass|cache (on|off)');
 
 
 // server
@@ -17,7 +17,7 @@ define('DEFAULT_CHARSET', 'utf-8');
 
 // layout
 define('DEFAULT_INSTANCE', 'about');
-define('TWIG_CACHE', './templates_cache'); // false
+define('TWIG_CACHE', $cache === 'on' ? './templates_cache' : false);
 
 //game
 define('EXP_MAX_START', 1000);
