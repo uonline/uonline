@@ -29,14 +29,14 @@ $options = array(
 
 
 /********************** main page **********************/
-$app->get('/', function () use ($app) {
+$app->get('/', function () use ($app, $twig, $options, $s) {
 	return $app->redirect('/'.DEFAULT_INSTANCE.'/');
 });
 
 
 
 /********************** about **********************/
-$app->get('/about/', function () use ($twig, $options) {
+$app->get('/about/', function () use ($app, $twig, $options, $s) {
 	$options['instance'] = 'about';
 	return $twig->render( 'about.twig', $options);
 });
@@ -45,12 +45,12 @@ $app->get('/about/', function () use ($twig, $options) {
 
 
 /********************** register **********************/
-$app->get('/register/', function () use ($twig, $options) {
+$app->get('/register/', function () use ($app, $twig, $options, $s) {
 	$options['instance'] = 'register';
 	return $twig->render( 'register.twig', $options);
 });
 
-$app->post('/register/', function (Request $r) use ($app, $twig, $options) {
+$app->post('/register/', function (Request $r) use ($app, $twig, $options, $s) {
 	$u = $r->get('user'); $p = $r->get('pass');
 	if (allowToRegister($u, $p)) {
 		$s = registerUser($u, $p);
@@ -77,12 +77,12 @@ $app->post('/register/', function (Request $r) use ($app, $twig, $options) {
 
 
 /********************** login **********************/
-$app->get('/login/', function () use ($twig, $options) {
+$app->get('/login/', function () use ($app, $twig, $options, $s) {
 	$options['instance'] = 'login';
 	return $twig->render( 'login.twig', $options);
 });
 
-$app->post('/login/', function (Request $r) use ($app, $twig, $options) {
+$app->post('/login/', function (Request $r) use ($app, $twig, $options, $s) {
 	$u = $r->get('user'); $p = $r->get('pass');
 	if (accessGranted($u, $p)) {
 		$s = setSession($u);
@@ -112,7 +112,7 @@ $app->get('/profile/', function () use ($app, $twig, $options, $s) {
 	return $twig->render( 'profile.twig', $options + $chrs);
 });
 
-$app->get('/profile/id/{id}/', function ($id) use ($twig, $options, $s) {
+$app->get('/profile/id/{id}/', function ($id) use ($app, $twig, $options, $s) {
 	if (!idExists($id)) return $twig->render( '404.twig', $options);
 	$chrs = userCharacters($id, 'id');
 	$options['profileIsMine'] = idBySession($s) === $id;
@@ -121,7 +121,7 @@ $app->get('/profile/id/{id}/', function ($id) use ($twig, $options, $s) {
 })
 ->assert('id', '\d+');
 
-$app->get('/profile/user/{user}/', function ($user) use ($twig, $options, $s) {
+$app->get('/profile/user/{user}/', function ($user) use ($app, $twig, $options, $s) {
 	if (!userExists($user)) return $twig->render( '404.twig', $options);
 	$chrs = userCharacters($user, 'user');
 	$options['profileIsMine'] = userBySession($s) === $user;
@@ -133,7 +133,7 @@ $app->get('/profile/user/{user}/', function ($user) use ($twig, $options, $s) {
 
 
 /********************** logout **********************/
-$app->get('/action/logout', function () use ($app, $s) {
+$app->get('/action/logout', function () use ($app, $twig, $options, $s) {
 	closeSession($s);
 	return $app->redirect('/'.DEFAULT_INSTANCE.'/');
 });
@@ -163,25 +163,25 @@ $app->get('/game/', function () use ($app, $twig, $options, $s) {
 
 
 /********************** moving **********************/
-$app->get('/action/go/{to}', function ($to) use ($app, $s) {
+$app->get('/action/go/{to}', function ($to) use ($app, $twig, $options, $s) {
 	changeLocation($s, $to);
 	return $app->redirect('/game/');
 })
 ->assert('to', '\d+');
 
-$app->get('/action/go/attack', function () use ($app, $s) {
+$app->get('/action/go/attack', function () use ($app, $twig, $options, $s) {
 	goAttack($s);
 	return $app->redirect('/game/');
 });
 
-$app->get('/action/go/escape', function () use ($app, $s) {
+$app->get('/action/go/escape', function () use ($app, $twig, $options, $s) {
 	goEscape($s);
 	return $app->redirect('/game/');
 });
 
 
 /********************** others **********************/
-$app->error(function (Exception $e, $с) use ($twig, $options) {
+$app->error(function (Exception $e, $с) use ($app, $twig, $options, $s) {
 	switch ($с) {
 		case 404:
 			return $twig->render( '404.twig', $options);
