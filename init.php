@@ -83,7 +83,7 @@ if ($_POST) {
 			foreach ($c as $k => $v) {
 				echo '<h5>Обновление таблицы '.$v['table'].' ...<h5>';
 				foreach ($v['columns'] as $v1) {
-				   $cn = explode("|", $v1);
+					$cn = explode("|", $v1);
 					echo '<h6>Создание столбца `'.$cn[0].'` ... ';
 					$res = addColumn($v['table'], $v1);
 					echo $res === FALSE ? warn() : ($res === 0 ? ok() : err());

@@ -187,7 +187,7 @@ $app->error(function (Exception $e, $с) use ($twig, $options) {
 			return $twig->render( '404.twig', $options);
 		default:
 			return $twig->render( '404.twig', $options);
-    }
+	}
 });
 
 
