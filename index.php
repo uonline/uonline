@@ -113,6 +113,7 @@ $app->get('/profile/', function () use ($app, $twig, $options, $s) {
 });
 
 $app->get('/profile/id/{id}/', function ($id) use ($twig, $options, $s) {
+	if (!idExists($id)) return $twig->render( '404.twig', $options);
 	$chrs = userCharacters($id, 'id');
 	$options['profileIsMine'] = idBySession($s) === $id;
 	$options['instance'] = 'profile';
@@ -121,6 +122,7 @@ $app->get('/profile/id/{id}/', function ($id) use ($twig, $options, $s) {
 ->assert('id', '\d+');
 
 $app->get('/profile/user/{user}/', function ($user) use ($twig, $options, $s) {
+	if (!userExists($user)) return $twig->render( '404.twig', $options);
 	$chrs = userCharacters($user, 'user');
 	$options['profileIsMine'] = userBySession($s) === $user;
 	$options['instance'] = 'profile';
@@ -151,6 +153,8 @@ $app->get('/game/', function () use ($app, $twig, $options, $s) {
 		$options['ways'] = allowedZones($s);
 		$options['players_list'] = usersOnLocation($s);
 		$options['monsters_list'] = monstersOnLocation($s);
+		$options['fight_mode'] = fightMode($s, 'fight_mode');
+		$options['autoinvolved_fm'] = fightMode($s, 'autoinvolved_fm');
 		$options['instance'] = 'game';
 		return $twig->render( 'game.twig', $options);
 	}
@@ -165,6 +169,15 @@ $app->get('/action/go/{to}', function ($to) use ($app, $s) {
 })
 ->assert('to', '\d+');
 
+$app->get('/action/go/attack', function () use ($app, $s) {
+	goAttack($s);
+	return $app->redirect('/game/');
+});
+
+$app->get('/action/go/escape', function () use ($app, $s) {
+	goEscape($s);
+	return $app->redirect('/game/');
+});
 
 
 /********************** others **********************/

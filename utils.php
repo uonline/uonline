@@ -304,11 +304,25 @@ function changeLocation($s, $lid) {
 												"FROM `monsters`, `uniusers` ".
 												"WHERE `uniusers`.`sessid` = '$s' AND `uniusers`.`location` = `monsters`.`location`");
 		if (rand(1,100)<=$attack_chance) mysql_query("UPDATE `uniusers` ".
-																	"SET `fight_mode` = 1 ".
+																	"SET `autoinvolved_fm` = 1, `fight_mode` = 1 ".
 																	"WHERE `sessid` = '$s'");
       return true;
    }
    else return false;
+}
+
+function goAttack($s) {
+	mysql_query(
+		"UPDATE `uniusers` ".
+		"SET `fight_mode` = 1 ".
+		"WHERE `sessid`='$s'");
+}
+
+function goEscape($s) {
+	mysql_query(
+		"UPDATE `uniusers` ".
+		"SET `fight_mode` = 0, `autoinvolved_fm` = 0 ".
+		"WHERE `sessid`='$s'");
 }
 
 function usersOnLocation($s) {
@@ -325,6 +339,11 @@ function monstersOnLocation($s) {
               'AND `monster_prototypes`.`id` = `monsters`.`id`');
    for ($a=array(), $i=0; $q && $r = mysql_fetch_assoc($q); $a[$i++]=array(id => $r['id'], name => $r['name']) );
    return $a;
+}
+
+function fightMode($s, $e) {
+	$q = mysql_fetch_assoc(mysql_query('SELECT `fight_mode`, `autoinvolved_fm` FROM `uniusers` WHERE `sessid` = "'.$s.'"' ));
+	return $q[$e];
 }
 
 function characters() {

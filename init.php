@@ -66,7 +66,8 @@ if ($_POST) {
 						'mana|INT DEFAULT 1',
 						'mana_max|INT DEFAULT 1',
 						'effects|TEXT',
-						'fight_mode|INT AFTER `permissions`'
+						'fight_mode|INT AFTER `permissions`',
+						'autoinvolved_fm|INT AFTER `fight_mode`'
 				),),
 				array(
 					'table' => 'monsters',
