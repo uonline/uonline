@@ -104,7 +104,7 @@ $app->post('/login/', function (Request $r) use ($app, $twig, $options) {
 
 
 /********************** profile **********************/
-$app->get('/profile/', function () use ($twig, $options, $s) {
+$app->get('/profile/', function () use ($app, $twig, $options, $s) {
 	if (sessionExpired($s)) return $app->redirect('/login/');
 	$chrs = userCharacters($s);
 	$options['profileIsMine'] = true;
@@ -170,7 +170,7 @@ $app->get('/action/go/{to}', function ($to) use ($app, $s) {
 /********************** others **********************/
 $app->error(function (Exception $e, $с) use ($twig, $options) {
 	switch ($с) {
-		case 404: 
+		case 404:
 			return $twig->render( '404.twig', $options);
 		default:
 			return $twig->render( '404.twig', $options);
