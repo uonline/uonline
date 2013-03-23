@@ -10,9 +10,13 @@
 			{{ description | tf | nl2p | nl2br }}
 
 			<p>
-			{% for i in ways %}
-				<a class="btn" href="/action/go/{{ i.to }}">{{ i.name }}</a>
-			{% endfor %}
+			{% if ways|length > 0 %}
+				{% for i in ways %}
+					<a class="btn" href="/action/go/{{ i.to }}">{{ i.name }}</a>
+				{% endfor %}
+			{% else %}
+				Идти некуда!
+			{% endif %}
 			</p>
 
 			<br />
