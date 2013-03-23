@@ -84,9 +84,7 @@ function mysqlConnect($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS
 }
 
 function mysqlFirstRes($query) {
-	$q = mysql_query($query);
-	if (!$q) return false;
-	$a = mysql_fetch_array($q);
+	$a = mysql_fetch_array(mysql_query($query));
 	return $a[0];
 }
 
@@ -322,14 +320,12 @@ function currentLocationDescription($s) {
 }
 
 function allowedZones($s, $idsonly = false) {
+	mysqlConnect();
 	$goto = mysqlFirstRes(
-		'SELECT `locations`.`goto` '.
-		'FROM `locations`, `uniusers` '.
-		"WHERE `uniusers`.`sessid` = '$s'".
-		'AND `locations`.`id` = `uniusers`.`location` '.
-		'AND `uniusers`.`fight_mode` = 0');
+		'SELECT `goto` '.
+		'FROM `locations` '.
+		'WHERE `id`="'.userLocationId($s).'"');
 	$a = array(); $i = 0;
-	if (!$goto) return $a;
 	foreach (explode('|', $goto) as $v) {
 		$la = explode('=', $v);
 		$a[$i++] = $idsonly ? $la[1] : array (to => $la[1], name => $la[0]);

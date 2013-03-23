@@ -144,7 +144,7 @@ $app->get('/action/logout', function () use ($app, $twig, $options, $s) {
 /********************** game **********************/
 $app->get('/game/', function () use ($app, $twig, $options, $s) {
 
-	if (sessionExpired($s)) return $app->redirect('../login/');
+	if (sessionExpired($s)) return $app->redirect('/login/');
 	else {
 		$options['location_name'] = currentLocationTitle($s);
 		$options['area_name'] = currentAreaTitle($s);
@@ -156,7 +156,6 @@ $app->get('/game/', function () use ($app, $twig, $options, $s) {
 		$options['fight_mode'] = fightMode($s, 'fight_mode');
 		$options['autoinvolved_fm'] = fightMode($s, 'autoinvolved_fm');
 		$options['instance'] = 'game';
-//		echo htmlspecialchars($twig->render( 'game.twig', $options));
 		return $twig->render( 'game.twig', $options);
 	}
 });
