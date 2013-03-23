@@ -170,12 +170,12 @@ $app->get('/action/go/{to}', function ($to) use ($app, $twig, $options, $s) {
 })
 ->assert('to', '\d+');
 
-$app->get('/action/go/attack', function () use ($app, $twig, $options, $s) {
+$app->get('/action/attack', function () use ($app, $twig, $options, $s) {
 	goAttack($s);
 	return $app->redirect('/game/');
 });
 
-$app->get('/action/go/escape', function () use ($app, $twig, $options, $s) {
+$app->get('/action/escape', function () use ($app, $twig, $options, $s) {
 	goEscape($s);
 	return $app->redirect('/game/');
 });

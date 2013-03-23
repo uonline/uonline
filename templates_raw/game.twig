@@ -40,7 +40,7 @@
 				{% endfor %}
 				<!-- dirty layout -->
 				<p>{% if autoinvolved_fm %}<b>Вас атаковали!</b>{% endif %}</p>
-				<p>{% if fight_mode %}<a href="/action/go/escape">Свалить</a>{% else %}<a href="/action/go/attack">Атаковать</a>{% endif %}</p>
+				<p>{% if fight_mode %}<a href="/action/escape">Свалить</a>{% else %}<a href="/action/attack">Атаковать</a>{% endif %}</p>
 			{% else %}
 				На этой локации нет монстров.
 			{% endif %}
