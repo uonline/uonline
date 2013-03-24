@@ -1,27 +1,31 @@
-Options you pass
+Template options
 ----------------
+
+### Common
 
 * admin (`true` or `false`)
 * loggedIn (`true` or `false`)
 * login (string or `false`)
 * mail_count (number)
 
-### about
+### Specific
+
+#### about
 
 None needed.
 
-### register
+#### register
 
 * error (`true` or `false`)
 * invalidLogin (`true` or `false`)
 * loginIsBusy (`true` or `false`)
 * invalidPass (`true` or `false`)
 
-### login
+#### login
 
 * error (`true` or `false`)
 
-### game
+#### game
 
 * location\_name (string)
 * area\_name (string)
@@ -33,7 +37,7 @@ None needed.
 * fight\_mode (`true` or `false`)
 * autoinvolved\_fm (`true` or `false`)
 
-### profile
+#### profile
 
 * nickname (string)
 * id (string)
