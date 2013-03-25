@@ -34,14 +34,6 @@ function addTables($t) {
 	foreach ($t as $i => $v) $a[$i] = addTable ($i, $v);
 	return $a;
 }
-
-function createTables() {
-	return addTables(array(
-		'uniusers' => '(`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT DEFAULT 1, /*`permissions` INT DEFAULT 0,*/ PRIMARY KEY  (`id`) )',
-		'locations' => '(`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `super` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))',
-		'areas' => '(`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))',
-	));
-}
 /***** table functions *****/
 
 /***** column functions *****/
@@ -65,13 +57,28 @@ function addColumn($t, $o) {
 	}
 }
 
+function renameColumn($t, $o) {
+	mysqlConnect();
+	list($oc, $nc) = explode('|', $o);
+	if (!columnExists($t, $oc)) return FALSE;
+	else {
+		$type = mysqlFirstRes(
+			"SELECT COLUMN_TYPE ".
+			"FROM INFORMATION_SCHEMA.COLUMNS ".
+			"WHERE TABLE_SCHEMA='".MYSQL_BASE."' ".
+			"AND TABLE_NAME='$t' AND COLUMN_NAME='$oc'");
+		mysql_query("ALTER TABLE `$t` CHANGE COLUMN `$oc` `$nc` $type");
+		return mysql_errno();
+	}
+}
+
 /***** column functions *****/
 
 /***** contents *****/
 function getNewTables() {
 	return array(
 		'uniusers' => '(`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT DEFAULT 1, /*`permissions` INT DEFAULT 0,*/ PRIMARY KEY  (`id`) )',
-		'locations' => '(`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `super` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))',
+		'locations' => '(`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `area` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))',
 		'areas' => '(`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))',
 		'monster_prototypes' => '(`id` INT AUTO_INCREMENT, `name` TINYTEXT, `level` INT, `power` INT, `agility` INT, `endurance` INT, `intelligence` INT, `wisdom` INT, `volition` INT, `health_max` INT, `mana_max` INT, PRIMARY KEY (`id`))',
 		'monsters' => '(`incarn_id` INT AUTO_INCREMENT, `id` INT, `location` INT, `health` INT, `mana` INT, `effects` TEXT, `attack_chance` INT, PRIMARY KEY (`incarn_id`))',
@@ -110,6 +117,11 @@ function getNewColumns() {
 			'table' => 'stats',
 			'columns' => array(
 				'url|TEXT'
+		),),
+		array(
+			'table' => 'locations',
+			'rename' => array(
+				'super|area'
 		),),
 	);
 }
@@ -364,7 +376,7 @@ function userLocationId($s) {
 function userAreaId($s) {
 	mysqlConnect();
 	$q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.userLocationId($s).'"') );
-	return $q['super'];
+	return $q['area'];
 }
 
 function currentLocationTitle($s) {

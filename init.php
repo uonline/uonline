@@ -17,7 +17,7 @@ if ($_POST) {
 
 		function ok() { global $done; $done++; return '<span>done</span>'; }
 		function err() { global $err; $err++; return '<span class="err">error</span>'; }
-		function warn() { global $warn; $warn++; return '<span class="warn">exists</span>'; }
+		function warn($t = false) { global $warn; $warn++; return '<span class="warn">'.($t?$t:'exists').'</span>'; }
 
 		if ($_POST['createbases']) {
 			echo '<h4>Создание баз данных ... ';
@@ -45,14 +45,23 @@ if ($_POST) {
 				echo '</h5>';
 			}
 			echo '<br />';
-			//adding new columns
+			//updating tables
 			foreach ($c as $k => $v) {
 				echo '<h5>Обновление таблицы '.$v['table'].' ...<h5>';
-				foreach ($v['columns'] as $v1) {
+				//adding new columns
+				if ($v['columns']) foreach ($v['columns'] as $v1) {
 					$cn = explode("|", $v1);
 					echo '<h6>Создание столбца `'.$cn[0].'` ... ';
 					$res = addColumn($v['table'], $v1);
 					echo $res === FALSE ? warn() : ($res === 0 ? ok() : err());
+					echo '</h6>';
+				}
+				//renaming columns
+				if ($v['rename']) foreach ($v['rename'] as $v1) {
+					$cn = explode("|", $v1);
+					echo "<h6>Переименование столбца `$cn[0]` в `$cn[1]` ... ";
+					$res = renameColumn($v['table'], $v1);
+					echo $res === FALSE ? warn('not exists') : ($res === 0 ? ok() : err());
 					echo '</h6>';
 				}
 			}
@@ -68,13 +77,13 @@ if ($_POST) {
 			mysql_query("REPLACE INTO `areas` (`title`, `id`) VALUES ('Лес', 1)");
 			mysql_query("REPLACE INTO `areas` (`title`, `id`) VALUES ('Замок', 2)");
 
-			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Погреб', 'Выбраться на кухню=2', 'Большие бочки и запах плесени...', 1, 2, 1)");
-			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Кухня', 'Спуститься в погреб=1|Пройти в гостиную=3', 'Разрушенная печь и горшки...', 2, 2, 0)");
-			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Гостиная', 'Выбраться на кухню=2|Подняться на чердак=4|Убраться на опушку=6', 'Большой круглый стол, обставленный стульями, картины на стенах...', 3, 2, 0)");
-			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Чердак', 'Спуститься в гостиную=3', 'Много старинных вещей и пыли...', 4, 2, 0)");
-			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Берлога', 'Двигаться на опушку=6|Выбраться к реке=7', 'Много следов и обглоданные останки...', 5, 1, 0)");
-			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Опушка', 'Забраться в берлогу=5|Подняться к реке=7|Войти в замок=3', 'И тут мне надоело...', 6, 1, 0)");
-			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `super`, `default`) VALUES ('Река', 'Забраться в берлогу=5|Выйти на опушку=6', 'Прозрачная вода и каменистый берег...', 7, 1, 0)");
+			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `area`, `default`) VALUES ('Погреб', 'Выбраться на кухню=2', 'Большие бочки и запах плесени...', 1, 2, 1)");
+			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `area`, `default`) VALUES ('Кухня', 'Спуститься в погреб=1|Пройти в гостиную=3', 'Разрушенная печь и горшки...', 2, 2, 0)");
+			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `area`, `default`) VALUES ('Гостиная', 'Выбраться на кухню=2|Подняться на чердак=4|Убраться на опушку=6', 'Большой круглый стол, обставленный стульями, картины на стенах...', 3, 2, 0)");
+			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `area`, `default`) VALUES ('Чердак', 'Спуститься в гостиную=3', 'Много старинных вещей и пыли...', 4, 2, 0)");
+			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `area`, `default`) VALUES ('Берлога', 'Двигаться на опушку=6|Выбраться к реке=7', 'Много следов и обглоданные останки...', 5, 1, 0)");
+			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `area`, `default`) VALUES ('Опушка', 'Забраться в берлогу=5|Подняться к реке=7|Войти в замок=3', 'И тут мне надоело...', 6, 1, 0)");
+			mysql_query("REPLACE INTO `locations` (`title`, `goto`, `description`, `id`, `area`, `default`) VALUES ('Река', 'Забраться в берлогу=5|Выйти на опушку=6', 'Прозрачная вода и каменистый берег...', 7, 1, 0)");
 			echo (mysql_errno()===0?ok():err()).'</h5>';
 			echo '<br />';
 		}
