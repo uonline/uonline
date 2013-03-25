@@ -11,7 +11,7 @@ if ($_POST) {
 
 		if ($_POST['ignore']) {
 			writeNewHash();
-			header('Location: /');
+			header('Location: init.php');
 			die;
 		}
 
@@ -59,6 +59,7 @@ if ($_POST) {
 				}
 			}
 			echo '<br />';
+			if (!$err) writeNewHash();
 		}
 
 
@@ -129,7 +130,6 @@ if ($_POST) {
 		fofForm();
 	}
 }
-elseif (array_key_exists('needsupdate', $_GET)) fofForm (true);
 else fofForm();
 
 echo makePage($HEAD, $BODY);
@@ -160,13 +160,13 @@ function initResult() {
 	else $BODY .= 'Изменений не внесено';
 }
 
-function fofForm($nu = false) {
+function fofForm() {
 	global $BODY;
 	$BODY .=
 	'<form method="post" id="form" action="init.php">'.
 	'<table style="border: 1px grey solid; border-collapse: collapse;">'.
 	'<thead><tr><th colspan="2">Создание базы данных.</th></tr></thead>'.
-	($nu?'<thead><tr><th colspan="2">Таблицы должны быть обновлены <input type="button" onclick="ignore.value=\'on\'; form.submit()" value="Игнорировать" /></th></tr></thead>':'').
+	(BASE_OUTDATED?'<thead><tr><th colspan="2">Таблицы должны быть обновлены <input type="button" onclick="ignore.value=\'on\'; form.submit()" value="Игнорировать" /></th></tr></thead>':'').
 	'<tr><td><input type="button" value="Отметить все" onclick="this.chk = !this.chk; this.value=this.chk?\'Снять все\':\'Отметить все\'; ch = function(v) { Array.prototype.forEach.call(document.getElementsByTagName(\'input\'), function(e) { e.checked = v; }); }; ch(this.chk);"/></td><td></td>'.
 	'<tr><td>&nbsp;</td><td>&nbsp;</td>'.
 	'<tr><td>Создавать базы:</td><td><input type="checkbox" name="createbases"/></td>'.

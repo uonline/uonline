@@ -119,13 +119,13 @@ function getNewHash() {
 	return md5( serialize(getNewTables()).serialize(getNewColumns()) );
 }
 
+function getHash() {
+	return file_exists('tablestate') ? file_get_contents('tablestate') : false;
+}
+
 function writeNewHash() {
-	$fp = fopen ("keyring","a"); //открытие
-	flock ($fp, LOCK_EX); //блокировка файла
-	ftruncate ($fp, 0); //удаляем содержимое файла
-	fputs($fp , implode('|', array(MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_BASE, ADMIN_PASS, TWIG_CACHE?'on':'off', getNewHash()) ) ); //работа с файлом
-	fflush ($fp); //очищение файлового буфера и запись в файл
-	flock ($fp, LOCK_UN); //снятие блокировки
+	$fp = fopen ("tablestate","w+"); //открытие
+	fputs($fp , getNewHash() ); //работа с файлом
 	fclose ($fp); //закрытие
 }
 
@@ -214,8 +214,10 @@ function sessionExpired($sess) {
 
 function generateSessId() {
 	mysqlConnect();
-	do $sessid = mySalt();
-	while (mysqlFirstRes('SELECT count(*) FROM `uniusers` WHERE `sessid`="'.$sessid.'"') );
+	while (mysqlFirstRes(
+		'SELECT count(*) '.
+		'FROM `uniusers` '.
+		'WHERE `sessid`="'.($sessid = mySalt()).'"') ); //were very idiotic..
 	return $sessid;
 }
 

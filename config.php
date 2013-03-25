@@ -1,14 +1,8 @@
 <?php
 
 $keyring = file_exists('keyring') ? file_get_contents('keyring') : 0;
-if ($keyring) { $key = explode("|", trim($keyring)); list($host, $user, $pass, $base, $admpass, $cache, $thash) = $key; }
+if ($keyring) { $key = explode("|", trim($keyring)); list($host, $user, $pass, $base, $admpass, $cache) = $key; }
 else die('Keyring file missing.<br />Create file named "keyring" in the root with next content.<br />Format: host|user|pass|base|admpass|cache (on|off)');
-
-$newhash = getNewHash();
-if ($thash !== $newhash && strpos($_SERVER['REQUEST_URI'], '/init.php') === false ) {
-	header('Location: /init.php?needsupdate');
-	die;
-}
 
 // server
 define('MYSQL_HOST', $host);
@@ -19,6 +13,7 @@ define('ADMIN_PASS', $admpass);
 define('SESSION_LENGTH', 64);
 define('SESSION_TIMEEXPIRE', 3600); //in seconds
 define('DEFAULT_CHARSET', 'utf-8');
+define('BASE_OUTDATED', getNewHash() !== getHash());
 
 // layout
 define('DEFAULT_INSTANCE', 'about');
