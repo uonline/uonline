@@ -9,6 +9,12 @@ insertEncoding();
 if ($_POST) {
 	if ($_POST['pass'] === ADMIN_PASS) {
 
+		if ($_POST['ignore']) {
+			writeNewHash();
+			header('Location: /');
+			die;
+		}
+
 		echo '<style>h4, h5, h6 { margin: 0px; } h5 { margin-left: 10px; } h6 { margin-left: 20px; } .err { color: red; } .warn { color: #95CE58; } td { border: solid 1px grey; } </style>';
 
 		function ok() { global $done; $done++; return '<span>done</span>'; }
@@ -123,10 +129,6 @@ if ($_POST) {
 		fofForm();
 	}
 }
-elseif (array_key_exists('ignore', $_GET)) {
-	writeNewHash();
-	header('Location: /');
-}
 elseif (array_key_exists('needsupdate', $_GET)) fofForm (true);
 else fofForm();
 
@@ -161,10 +163,10 @@ function initResult() {
 function fofForm($nu = false) {
 	global $BODY;
 	$BODY .=
-	'<form method="post" action="init.php">'.
+	'<form method="post" id="form" action="init.php">'.
 	'<table style="border: 1px grey solid; border-collapse: collapse;">'.
 	'<thead><tr><th colspan="2">Создание базы данных.</th></tr></thead>'.
-	($nu?'<thead><tr><th colspan="2">Таблицы должны быть обновлены <a href="init.php?ignore">Игнорировать</a></th></tr></thead>':'').
+	($nu?'<thead><tr><th colspan="2">Таблицы должны быть обновлены <input type="button" onclick="ignore.value=\'on\'; form.submit()" value="Игнорировать" /></th></tr></thead>':'').
 	'<tr><td><input type="button" value="Отметить все" onclick="this.chk = !this.chk; this.value=this.chk?\'Снять все\':\'Отметить все\'; ch = function(v) { Array.prototype.forEach.call(document.getElementsByTagName(\'input\'), function(e) { e.checked = v; }); }; ch(this.chk);"/></td><td></td>'.
 	'<tr><td>&nbsp;</td><td>&nbsp;</td>'.
 	'<tr><td>Создавать базы:</td><td><input type="checkbox" name="createbases"/></td>'.
@@ -176,6 +178,7 @@ function fofForm($nu = false) {
 	'<tr><td>Оптимизация таблиц:</td><td><input type="checkbox" name="optimize"/></td>'.
 	'<tr><td>&nbsp;</td><td>&nbsp;</td>'.
 	'<tr><td>Административный пароль:</td><td><input name="pass" type="password" value="'.(ADMIN_PASS=='clearpass'?ADMIN_PASS:'').'" /></td>'.
+	'<input id="ignore" type="hidden" name="ignore"/>'.
 	'</table>'.
 	'<br /><input type="submit" value="Создать" /><br />';
 }
