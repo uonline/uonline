@@ -123,6 +123,11 @@ if ($_POST) {
 		fofForm();
 	}
 }
+elseif (array_key_exists('ignore', $_GET)) {
+	writeNewHash();
+	header('Location: /');
+}
+elseif (array_key_exists('needsupdate', $_GET)) fofForm (true);
 else fofForm();
 
 echo makePage($HEAD, $BODY);
@@ -153,12 +158,13 @@ function initResult() {
 	else $BODY .= 'Изменений не внесено';
 }
 
-function fofForm() {
+function fofForm($nu = false) {
 	global $BODY;
 	$BODY .=
 	'<form method="post" action="init.php">'.
 	'<table style="border: 1px grey solid; border-collapse: collapse;">'.
 	'<thead><tr><th colspan="2">Создание базы данных.</th></tr></thead>'.
+	($nu?'<thead><tr><th colspan="2">Таблицы должны быть обновлены <a href="init.php?ignore">Игнорировать</a></th></tr></thead>':'').
 	'<tr><td><input type="button" value="Отметить все" onclick="this.chk = !this.chk; this.value=this.chk?\'Снять все\':\'Отметить все\'; ch = function(v) { Array.prototype.forEach.call(document.getElementsByTagName(\'input\'), function(e) { e.checked = v; }); }; ch(this.chk);"/></td><td></td>'.
 	'<tr><td>&nbsp;</td><td>&nbsp;</td>'.
 	'<tr><td>Создавать базы:</td><td><input type="checkbox" name="createbases"/></td>'.

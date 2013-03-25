@@ -1,9 +1,16 @@
 <?php
 
 $keyring = file_exists('keyring') ? file_get_contents('keyring') : 0;
-if ($keyring) { $key = explode("|", trim($keyring)); list($host, $user, $pass, $base, $admpass, $cache) = $key; }
+if ($keyring) { $key = explode("|", trim($keyring)); list($host, $user, $pass, $base, $admpass, $cache, $thash) = $key; }
 else die('Keyring file missing.<br />Create file named "keyring" in the root with next content.<br />Format: host|user|pass|base|admpass|cache (on|off)');
 
+$newhash = getNewHash();
+//echo $thash.'<br/>';
+//echo $newhash;
+if ($thash !== $newhash && strpos($_SERVER['REQUEST_URI'], '/init.php') === false ) {
+	header('Location: /init.php?needsupdate');
+	die;
+}
 
 // server
 define('MYSQL_HOST', $host);

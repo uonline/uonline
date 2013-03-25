@@ -115,6 +115,19 @@ function getNewColumns() {
 }
 /***** contents *****/
 
+function getNewHash() {
+	return md5( serialize(getNewTables()).serialize(getNewColumns()) );
+}
+
+function writeNewHash() {
+	$fp = fopen ("keyring","a"); //открытие
+	flock ($fp, LOCK_EX); //блокировка файла
+	ftruncate ($fp, 0); //удаляем содержимое файла
+	fputs($fp , implode('|', array(MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_BASE, ADMIN_PASS, TWIG_CACHE?'on':'off', getNewHash()) ) ); //работа с файлом
+	fflush ($fp); //очищение файлового буфера и запись в файл
+	flock ($fp, LOCK_UN); //снятие блокировки
+	fclose ($fp); //закрытие
+}
 
 /*********************** maintain base in topical state *********************************/
 
