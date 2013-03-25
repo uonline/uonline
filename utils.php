@@ -124,7 +124,7 @@ function getHash() {
 }
 
 function writeNewHash() {
-	$fp = fopen ("tablestate","w+"); //открытие
+	$fp = fopen ("tablestate","w"); //открытие
 	fputs($fp , getNewHash() ); //работа с файлом
 	fclose ($fp); //закрытие
 }
