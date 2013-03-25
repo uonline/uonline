@@ -9,9 +9,9 @@ insertEncoding();
 if ($_POST) {
 	if ($_POST['pass'] === ADMIN_PASS) {
 
-		echo '<style>h4, h5, h6 { margin: 0px; } h5 { margin-left: 10px; } h6 { margin-left: 20px; } .err { color: red; } .warn { color: #95CE58; } </style>';
+		echo '<style>h4, h5, h6 { margin: 0px; } h5 { margin-left: 10px; } h6 { margin-left: 20px; } .err { color: red; } .warn { color: #95CE58; } td { border: solid 1px grey; } </style>';
 
-		function ok() { return '<span>done</span>'; }
+		function ok() { global $done; $done++; return '<span>done</span>'; }
 		function err() { global $err; $err++; return '<span class="err">error</span>'; }
 		function warn() { global $warn; $warn++; return '<span class="warn">exists</span>'; }
 
@@ -29,15 +29,11 @@ if ($_POST) {
 		}
 
 		if ($_POST['updatetables']) {
+
+			$t = getNewTables();
+			$c = getNewColumns();
+
 			//creating tables
-			$t = array(
-				'uniusers' => '(`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT DEFAULT 1, /*`permissions` INT DEFAULT 0,*/ PRIMARY KEY  (`id`) )',
-				'locations' => '(`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `super` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))',
-				'areas' => '(`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))',
-				'monster_prototypes' => '(`id` INT AUTO_INCREMENT, `name` TINYTEXT, `level` INT, `power` INT, `agility` INT, `endurance` INT, `intelligence` INT, `wisdom` INT, `volition` INT, `health_max` INT, `mana_max` INT, PRIMARY KEY (`id`))',
-				'monsters' => '(`incarn_id` INT AUTO_INCREMENT, `id` INT, `location` INT, `health` INT, `mana` INT, `effects` TEXT, `attack_chance` INT, PRIMARY KEY (`incarn_id`))',
-				'stats' => '(`time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, `gen_time` DOUBLE, `instance` TINYTEXT, `ip` TINYTEXT, `uagent` TINYTEXT)',
-			);
 			foreach ($t as $k => $v) {
 				echo '<h5>Создание таблицы `'.$k.'` ... ';
 				$res = addTable($k, $v);
@@ -45,41 +41,7 @@ if ($_POST) {
 				echo '</h5>';
 			}
 			echo '<br />';
-			
 			//adding new columns
-			//{ {table => 'tableName', columns => { 'columnNname|columnOptions', ... } }, ... }
-			$c = array(
-				array(
-					'table' => 'uniusers',
-					'columns' => array(
-						'permissions|INT AFTER `location`',
-						'level|INT DEFAULT 1',
-						'exp|INT DEFAULT 0',
-						'power|INT DEFAULT 1',
-						'agility|INT DEFAULT 1', //ловкость
-						'endurance|INT DEFAULT 1', //выносливость
-						'intelligence|INT DEFAULT 1', //интеллект
-						'wisdom|INT DEFAULT 1', //мудрость
-						'volition|INT DEFAULT 1', //воля
-						'health|INT DEFAULT 1',
-						'health_max|INT DEFAULT 1',
-						'mana|INT DEFAULT 1',
-						'mana_max|INT DEFAULT 1',
-						'effects|TEXT',
-						'fight_mode|INT AFTER `permissions`',
-						'autoinvolved_fm|INT AFTER `fight_mode`'
-				),),
-				array(
-					'table' => 'monsters',
-					'columns' => array(
-						'incarn_id|INT AUTO_INCREMENT FIRST, ADD PRIMARY KEY (`incarn_id`)'
-				),),
-				array(
-					'table' => 'stats',
-					'columns' => array(
-						'url|TEXT'
-				),),
-			);
 			foreach ($c as $k => $v) {
 				echo '<h5>Обновление таблицы '.$v['table'].' ...<h5>';
 				foreach ($v['columns'] as $v1) {
@@ -92,8 +54,9 @@ if ($_POST) {
 			}
 			echo '<br />';
 		}
-		
-		
+
+
+
 		/********* filling areas and locations ***********/
 		if($_POST['fillareas']) {
 			echo '<h5>Создание локаций ... ';
@@ -136,7 +99,23 @@ if ($_POST) {
 		}
 		/********* filling areas and locations ***********/
 
-		echo '<br /><br /><h3>Ошибок: '.($err?('<span class="err">'.$err.'</span><style>body {background-color: #E6C5C5}</style>'):0)."<br />Предупреждений: ".($warn?$warn:0)."</h3>";
+		if ($_POST['optimize']) {
+			mysqlConnect();
+			$q = mysql_query(
+				"SELECT `TABLE_NAME` ".
+				"FROM `information_schema`.`TABLES` ".
+				"WHERE `TABLE_SCHEMA`='".MYSQL_BASE."'");
+			while ($t = mysql_fetch_array($q)) {
+				echo '<h5>Оптимизация таблицы `'.$t[0].'` ... ';
+				mysql_query("OPTIMIZE TABLE `$t[0]`");
+				echo (mysql_errno()===0?ok():err()).'</h5>';
+			}
+		}
+
+		echo
+			'<br /><h3>Ошибок: '.($err?('<span class="err">'.$err.'</span><style>body {background-color: #E6C5C5}</style>'):0).
+			'<br />Предупреждений: '.($warn?$warn:0).
+			'<br />Готово: '.($done?$done:0).'</h3>';
 
 		}
 	else {
@@ -178,16 +157,21 @@ function fofForm() {
 	global $BODY;
 	$BODY .=
 	'<form method="post" action="init.php">'.
-	'<table>'.
-	'<thead>Создание базы данных.</thead>'.
-	'<tr><td><input type="button" value="Отметить все" onclick="this.chk = this.chk?false:true; this.value=this.chk?\'Снять все\':\'Отметить все\'; ch = function(v) { Array.prototype.forEach.call(document.getElementsByTagName(\'input\'), function(e) { e.checked = v; }); }; if(this.chk) { ch(true); } else { ch(false); }"/></td><td></td>'.
+	'<table style="border: 1px grey solid; border-collapse: collapse;">'.
+	'<thead><tr><th colspan="2">Создание базы данных.</th></tr></thead>'.
+	'<tr><td><input type="button" value="Отметить все" onclick="this.chk = !this.chk; this.value=this.chk?\'Снять все\':\'Отметить все\'; ch = function(v) { Array.prototype.forEach.call(document.getElementsByTagName(\'input\'), function(e) { e.checked = v; }); }; ch(this.chk);"/></td><td></td>'.
+	'<tr><td>&nbsp;</td><td>&nbsp;</td>'.
 	'<tr><td>Создавать базы:</td><td><input type="checkbox" name="createbases"/></td>'.
 	'<tr><td>Обновлять таблицы:</td><td><input checked type="checkbox" name="updatetables"/></td>'.
+	'<tr><td>&nbsp;</td><td>&nbsp;</td>'.
 	'<tr><td>Заполнить тестовые локации:</td><td><input type="checkbox" name="fillareas"/></td>'.
 	'<tr><td>Заполнить тестовых монстров:</td><td><input type="checkbox" name="fillmonsters"/></td>'.
+	'<tr><td>&nbsp;</td><td>&nbsp;</td>'.
+	'<tr><td>Оптимизация таблиц:</td><td><input type="checkbox" name="optimize"/></td>'.
+	'<tr><td>&nbsp;</td><td>&nbsp;</td>'.
 	'<tr><td>Административный пароль:</td><td><input name="pass" type="password" value="'.(ADMIN_PASS=='clearpass'?ADMIN_PASS:'').'" /></td>'.
 	'</table>'.
-	'<input type="submit" value="Создать" /><br />';
+	'<br /><input type="submit" value="Создать" /><br />';
 }
 
 ?>

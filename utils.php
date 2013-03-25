@@ -67,6 +67,55 @@ function addColumn($t, $o) {
 
 /***** column functions *****/
 
+/***** contents *****/
+function getNewTables() {
+	return array(
+		'uniusers' => '(`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT DEFAULT 1, /*`permissions` INT DEFAULT 0,*/ PRIMARY KEY  (`id`) )',
+		'locations' => '(`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `super` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))',
+		'areas' => '(`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))',
+		'monster_prototypes' => '(`id` INT AUTO_INCREMENT, `name` TINYTEXT, `level` INT, `power` INT, `agility` INT, `endurance` INT, `intelligence` INT, `wisdom` INT, `volition` INT, `health_max` INT, `mana_max` INT, PRIMARY KEY (`id`))',
+		'monsters' => '(`incarn_id` INT AUTO_INCREMENT, `id` INT, `location` INT, `health` INT, `mana` INT, `effects` TEXT, `attack_chance` INT, PRIMARY KEY (`incarn_id`))',
+		'stats' => '(`time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, `gen_time` DOUBLE, `instance` TINYTEXT, `ip` TINYTEXT, `uagent` TINYTEXT)',
+	);
+}
+function getNewColumns() {
+	//{ {table => 'tableName', columns => { 'columnNname|columnOptions', ... } }, ... }
+	return array(
+		array(
+			'table' => 'uniusers',
+			'columns' => array(
+				'permissions|INT AFTER `location`',
+				'level|INT DEFAULT 1',
+				'exp|INT DEFAULT 0',
+				'power|INT DEFAULT 1',
+				'agility|INT DEFAULT 1', //ловкость
+				'endurance|INT DEFAULT 1', //выносливость
+				'intelligence|INT DEFAULT 1', //интеллект
+				'wisdom|INT DEFAULT 1', //мудрость
+				'volition|INT DEFAULT 1', //воля
+				'health|INT DEFAULT 1',
+				'health_max|INT DEFAULT 1',
+				'mana|INT DEFAULT 1',
+				'mana_max|INT DEFAULT 1',
+				'effects|TEXT',
+				'fight_mode|INT AFTER `permissions`',
+				'autoinvolved_fm|INT AFTER `fight_mode`'
+		),),
+		array(
+			'table' => 'monsters',
+			'columns' => array(
+				'incarn_id|INT AUTO_INCREMENT FIRST, ADD PRIMARY KEY (`incarn_id`)'
+		),),
+		array(
+			'table' => 'stats',
+			'columns' => array(
+				'url|TEXT'
+		),),
+	);
+}
+/***** contents *****/
+
+
 /*********************** maintain base in topical state *********************************/
 
 function isAssoc($a) {
