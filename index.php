@@ -31,7 +31,10 @@ $options = array(
 
 /********************** main page **********************/
 $app->get('/', function () use ($app, $twig, $options, $s) {
-	return $app->redirect('/'.DEFAULT_INSTANCE.'/');
+	return
+		sessionActive($s) ?
+		$app->redirect('/game/') :
+		$app->redirect('/'.DEFAULT_INSTANCE.'/');
 });
 
 
@@ -88,7 +91,7 @@ $app->post('/login/', function (Request $r) use ($app, $twig, $options, $s) {
 	if (accessGranted($u, $p)) {
 		$s = setSession($u);
 		setMyCookie('sessid', $s);
-		return $app->redirect('/'.DEFAULT_INSTANCE.'/');
+		return $app->redirect('/');
 	}
 	else {
 		$error = true;
