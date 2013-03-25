@@ -11,8 +11,6 @@ if ($_POST) {
 
 		if ($_POST['ignore']) {
 			writeNewHash();
-			header('Location: init.php');
-			die;
 		}
 
 		echo '<style>h4, h5, h6 { margin: 0px; } h5 { margin-left: 10px; } h6 { margin-left: 20px; } .err { color: red; } .warn { color: #95CE58; } td { border: solid 1px grey; } </style>';
@@ -168,7 +166,7 @@ function fofForm() {
 	'<form method="post" id="form" action="init.php">'.
 	'<table style="border: 1px grey solid; border-collapse: collapse;">'.
 	'<thead><tr><th colspan="2">Создание базы данных.</th></tr></thead>'.
-	(BASE_OUTDATED?'<thead><tr><th colspan="2">Таблицы должны быть обновлены <input type="button" onclick="ignore.value=\'on\'; form.submit()" value="Игнорировать" /></th></tr></thead>':'').
+	(getNewHash() !== getHash()?'<thead><tr><th colspan="2">Таблицы должны быть обновлены <input type="button" onclick="ignore.value=\'on\'; form.submit()" value="Игнорировать" /></th></tr></thead>':'').
 	'<tr><td><input type="button" value="Отметить все" onclick="this.chk = !this.chk; this.value=this.chk?\'Снять все\':\'Отметить все\'; ch = function(v) { Array.prototype.forEach.call(document.getElementsByTagName(\'input\'), function(e) { e.checked = v; }); }; ch(this.chk);"/></td><td></td>'.
 	'<tr><td>&nbsp;</td><td>&nbsp;</td>'.
 	'<tr><td>Создавать базы:</td><td><input type="checkbox" name="createbases"/></td>'.
