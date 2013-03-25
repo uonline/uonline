@@ -114,8 +114,10 @@ if ($_POST) {
 				"WHERE `TABLE_SCHEMA`='".MYSQL_BASE."'");
 			while ($t = mysql_fetch_array($q)) {
 				echo '<h5>Оптимизация таблицы `'.$t[0].'` ... ';
-				mysql_query("OPTIMIZE TABLE `$t[0]`");
-				echo (mysql_errno()===0?ok():err()).'</h5>';
+				$q1 = mysql_query("OPTIMIZE TABLE `$t[0]`");
+				do $a = mysql_fetch_array($q1);
+				while ($a && $a['Msg_type'] != 'status');
+				echo $a['Msg_text'].'</h5>';
 			}
 		}
 
