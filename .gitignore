@@ -2,6 +2,7 @@ keyring
 tablestate
 nbproject/
 templates_cache/
+templates/
 source/
 htmlcompressor.jar
 yuicompressor.jar
