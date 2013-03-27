@@ -43,7 +43,12 @@
 						{% endif %}
 						{% if admin == true %}
 							<li class="divider-vertical"></li>
-							<li><a href="#">Бункер</a></li>
+							<li><a href="/init.php">init</a></li>
+							{% if databaseIsOutdated %}
+								<li>
+									<a href="/init.php"><i class="icon-warning-sign"></i> Нужно обновить БД</a>
+								</li>
+							{% endif %}
 						{% endif %}
 					</ul>
 				</div>
