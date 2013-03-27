@@ -9,7 +9,11 @@ pull:
 	git pull origin master
 
 recache:
+	# we cannot delete templates_cache, so we just move it to /tmp
+	mkdir /tmp/killme/
+	mv templates_cache /tmp/killme/`mcookie`
+	# create new one
 	mkdir -p templates_cache
-	sudo rm -rf templates_cache/*
+	chmod 777 -R templates_cache
 
 deploy: pull compress recache
