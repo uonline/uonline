@@ -8,7 +8,7 @@ compress:
 pull:
 	git pull origin master
 
-recache:
+killcache:
 	# we cannot delete templates_cache, so we just move it to /tmp
 	mkdir -p /tmp/killme
 	mv templates_cache /tmp/killme/`mcookie`
@@ -18,4 +18,4 @@ dirs:
 	chmod 777 -R templates_cache
 	mkdir -p templates
 
-deploy: pull compress recache dirs
+deploy: pull killcache dirs compress
