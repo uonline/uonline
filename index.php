@@ -184,6 +184,13 @@ $app->get('/action/escape', function () use ($app, $twig, $options, $s) {
 });
 
 
+/********************** stats **********************/
+$app->get('/stats/', function () use ($app, $twig, $options, $s) {
+	goAttack($s);
+	return $twig->render( 'stats.twig', $options);
+});
+
+
 /********************** others **********************/
 $app->error(function (Exception $e, $с) use ($app, $twig, $options, $s) {
 	switch ($с) {
