@@ -10,7 +10,7 @@ pull:
 
 recache:
 	# we cannot delete templates_cache, so we just move it to /tmp
-	mkdir /tmp/killme/
+	mkdir -p /tmp/killme
 	mv templates_cache /tmp/killme/`mcookie`
 	# create new one
 	mkdir -p templates_cache
