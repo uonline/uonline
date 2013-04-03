@@ -164,6 +164,13 @@ function mysqlFirstRes($query) {
 	return $a[0];
 }
 
+function mysqlFirstRow($query) {
+	$q = mysql_query($query);
+	if (!$q) return false;
+	$a = mysql_fetch_assoc($q);
+	return $a;
+}
+
 function rightSess($s) {
 	return $s && strlen($s) == SESSION_LENGTH;
 }
@@ -269,7 +276,10 @@ function refreshSession($s) {
 function closeSession($s) {
 	if (rightSess($s)) {
 		mysqlConnect();
-		mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid`="' . $s . '"');
+		mysql_query(
+			'UPDATE `uniusers` '.
+			'SET `sessexpire` = NOW() - INTERVAL 1 SECOND '.
+			'WHERE `sessid`="' . $s . '"');
 	}
 }
 
@@ -313,13 +323,16 @@ function mySalt($l = SESSION_LENGTH) {
 function registerUser($u, $p, $perm = 0) {
 	$salt = mySalt(16);
 	$session = generateSessId();
-	mysql_query('INSERT INTO `uniusers` (`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES ("'.$u.'", "'.$salt.'", "'.myCrypt($p, $salt).'", "'.$session.'", NOW(), NOW() + INTERVAL '.SESSION_TIMEEXPIRE.' SECOND, '.defaultLocation().', '.$perm.')');
+	mysql_query(
+		'INSERT INTO `uniusers` '.
+		'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES '.
+		'("'.$u.'", "'.$salt.'", "'.myCrypt($p, $salt).'", "'.$session.'", NOW(), NOW() + INTERVAL '.SESSION_TIMEEXPIRE.' SECOND, '.defaultLocation().', '.$perm.')');
 	return $session;
 }
 
 function validPassword($u, $p) {
 	mysqlConnect();
-	$q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$u.'"') );
+	$q = mysqlFirstRow('SELECT `hash`, `salt` FROM `uniusers` WHERE `user`="'.$u.'"');
 	return $q['hash'] == myCrypt($p, $q['salt']);
 }
 
@@ -339,8 +352,10 @@ function setMyCookie($n, $v, $exp = null, $path = '/', $domain = null, $secure =
 function userPermissions($s) {
 	if (rightSess($s)) {
 		mysqlConnect();
-		$q = mysql_fetch_assoc(mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="' . $s . '"'));
-		return $q['permissions'];
+		return mysqlFirstRes(
+			'SELECT `permissions` '.
+			'FROM `uniusers` '.
+			"WHERE `sessid`='$s'");
 	}
 }
 
@@ -351,7 +366,11 @@ function fileFromPath($p) {
 function setSession($u) {
 	mysqlConnect();
 	$s = generateSessId();
-	mysql_query('UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL '.SESSION_TIMEEXPIRE.' SECOND, `sessid`="'.$s.'" WHERE `user`="'.$u.'"');
+	mysql_query(
+		'UPDATE `uniusers` '.
+		'SET `sessexpire` = NOW() + INTERVAL '.SESSION_TIMEEXPIRE.' SECOND, '.
+		'`sessid`="'.$s.'" '.
+		'WHERE `user`="'.$u.'"');
 	return $s;
 }
 
@@ -363,38 +382,56 @@ function redirect($i = DEFAULT_INSTANCE) {
 /************************* GAME ***************************/
 function defaultLocation() {
 	mysqlConnect();
-	$q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `default`=1') );
-	return $q['id'];
+	return mysqlFirstRes(
+		'SELECT `id` '.
+		'FROM `locations` '.
+		'WHERE `default`=1');
 }
 
 function userLocationId($s) {
 	mysqlConnect();
-	$q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$s.'"') );
-	return $q['location'];
+	return mysqlFirstRes(
+		'SELECT `location` '.
+		'FROM `uniusers` '.
+		'WHERE `sessid`="'.$s.'"');
 }
 
 function userAreaId($s) {
 	mysqlConnect();
-	$q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.userLocationId($s).'"') );
-	return $q['area'];
+	return mysqlFirstRes(
+		'SELECT `locations`.`area` '.
+		'FROM `locations`,`uniusers` '.
+		"WHERE `uniusers`.`sessid` = '$s'".
+		'AND `locations`.`id`= `uniusers`.`location`');
+
 }
 
 function currentLocationTitle($s) {
 	mysqlConnect();
-	$q = mysql_fetch_assoc (mysql_query('SELECT * FROM `locations` WHERE `id`="'.userLocationId($s).'"'));
-	return $q['title'];
+	return mysqlFirstRes(
+		'SELECT `locations`.`title` '.
+		'FROM `locations`,`uniusers` '.
+		"WHERE `uniusers`.`sessid` = '$s'".
+		'AND `locations`.`id`= `uniusers`.`location`');
 }
 
 function currentAreaTitle($s) {
 	mysqlConnect();
-	$q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `areas` WHERE `id`="'.userAreaId($s).'"') );
-	return $q['title'];
+	return mysqlFirstRes(
+		'SELECT `areas`.`title` '.
+		'FROM `areas`,`locations`,`uniusers` '.
+		"WHERE `uniusers`.`sessid` = '$s'".
+		'AND `locations`.`id`= `uniusers`.`location`'.
+		'AND `areas`.`id` = `locations`.`area`');
 }
 
 function currentLocationDescription($s) {
 	mysqlConnect();
-	$q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `locations` WHERE `id`="'.userLocationId($s).'"') );
-	return $q['description'];
+	return mysqlFirstRes(
+		'SELECT `description` '.
+		'FROM `locations`, `uniusers` '.
+		"WHERE `uniusers`.`sessid` = '$s'".
+		'AND `locations`.`id` = `uniusers`.`location`');
 }
 
 function allowedZones($s, $idsonly = false) {
@@ -425,12 +462,11 @@ function changeLocation($s, $lid) {
 			"FROM `monsters`, `uniusers` ".
 			"WHERE `uniusers`.`sessid` = '$s' ".
 			"AND `uniusers`.`location` = `monsters`.`location`");
-		if (rand(1,100)<=$attack_chance)
-			mysql_query(
-				"UPDATE `uniusers` ".
-				"SET `autoinvolved_fm` = 1, ".
-				"`fight_mode` = 1 ".
-				"WHERE `sessid` = '$s'");
+		if (rand(1,100)<=$attack_chance) mysql_query(
+			"UPDATE `uniusers` ".
+			"SET `autoinvolved_fm` = 1, ".
+			"`fight_mode` = 1 ".
+			"WHERE `sessid` = '$s'");
 		return true;
 	}
 	else return false;
@@ -505,17 +541,17 @@ function userCharacters($p, $t = 'sess') {
 		case 'id':
 			if (!idExists($p)) return;
 			mysqlConnect();
-			$q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `id`="'.$p.'"') );
+			$q = mysqlFirstRow('SELECT * FROM `uniusers` WHERE `id`="'.$p.'"');
 			break;
 		case 'user':
 			if (!userExists($p)) return;
 			mysqlConnect();
-			$q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `user`="'.$p.'"') );
+			$q = mysqlFirstRow('SELECT * FROM `uniusers` WHERE `user`="'.$p.'"');
 			break;
 		case 'sess':
 			if (!rightSess($p)) return;
 			mysqlConnect();
-			$q = mysql_fetch_assoc ( mysql_query('SELECT * FROM `uniusers` WHERE `sessid`="'.$p.'"') );
+			$q = mysqlFirstRow('SELECT * FROM `uniusers` WHERE `sessid`="'.$p.'"');
 			break;
 	}
 	$cl = characters();
