@@ -2,7 +2,7 @@
 
 
 {% block title %}Stats{% endblock %}
-{% block head %}
+{% block content %}
 	{{ parent() }}
 	<!--Load the AJAX API-->
 	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
@@ -42,9 +42,7 @@
 		chart.draw(data, options);
 	}
 	</script>
-{% endblock %}
 
-{% block content %}
 	<!--Div that will hold the pie chart-->
 	<div id="chart_div"></div>
 {% endblock %}
