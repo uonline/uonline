@@ -92,21 +92,22 @@ function getNewColumns() {
 			'table' => 'uniusers',
 			'columns' => array(
 				'permissions|INT AFTER `location`',
-				'level|INT DEFAULT 1',
-				'exp|INT DEFAULT 0',
-				'power|INT DEFAULT 1',
-				'agility|INT DEFAULT 1', //ловкость
-				'endurance|INT DEFAULT 1', //выносливость
-				'intelligence|INT DEFAULT 1', //интеллект
-				'wisdom|INT DEFAULT 1', //мудрость
-				'volition|INT DEFAULT 1', //воля
-				'health|INT DEFAULT 1',
-				'health_max|INT DEFAULT 1',
-				'mana|INT DEFAULT 1',
-				'mana_max|INT DEFAULT 1',
-				'effects|TEXT',
 				'fight_mode|INT AFTER `permissions`',
-				'autoinvolved_fm|INT AFTER `fight_mode`'
+				'autoinvolved_fm|INT AFTER `fight_mode`',
+				'level|INT DEFAULT 1',
+				'health|INT DEFAULT 200',
+				'health_max|INT DEFAULT 200',
+				'mana|INT DEFAULT 100',
+				'mana_max|INT DEFAULT 100',
+				'energy|INT DEFAULT 50',
+				'power|INT DEFAULT 3',
+				'defense|INT DEFAULT 3',
+				'agility|INT DEFAULT 3', //ловкость
+				'accuracy|INT DEFAULT 3', //точность
+				'intelligence|INT DEFAULT 5', //интеллект
+				'initiative|INT DEFAULT 5', //инициатива
+				'exp|INT DEFAULT 0',
+				'effects|TEXT',
 		),),
 		array(
 			'table' => 'monsters',
@@ -372,10 +373,6 @@ function setSession($u) {
 		'`sessid`="'.$s.'" '.
 		'WHERE `user`="'.$u.'"');
 	return $s;
-}
-
-function redirect($i = DEFAULT_INSTANCE) {
-	header('Location: index.php?instance='.$i);
 }
 
 
