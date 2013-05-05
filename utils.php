@@ -517,19 +517,20 @@ function fightMode($s, $e) {
 
 function characters() {
 	return array(
-		'level',
-		'exp',
-		'power',
-		'agility',
-		'endurance',
-		'intelligence',
-		'wisdom',
-		'volition',
 		'health',
 		'health_max',
 		'mana',
-		'mana_max'
-	);
+		'mana_max',
+		'energy',
+		'power',
+		'defense',
+		'agility',
+		'accuracy',
+		'intelligence',
+		'initiative',
+		'exp',
+		'level',
+		);
 }
 
 function userCharacters($p, $t = 'sess') {
