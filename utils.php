@@ -77,12 +77,16 @@ function changeColumn($t, $o) {
 	list($oc, $nc) = explode('|', $o);
 	if (!columnExists($t, $oc)) return FALSE;
 	else {
-		$type = mysqlFirstRes(
-			"SELECT COLUMN_TYPE ".
-			"FROM INFORMATION_SCHEMA.COLUMNS ".
-			"WHERE TABLE_SCHEMA='".MYSQL_BASE."' ".
-			"AND TABLE_NAME='$t' AND COLUMN_NAME='$oc'");
 		mysql_query("ALTER TABLE `$t` CHANGE COLUMN `$oc` `$oc` $nc");
+		return mysql_errno();
+	}
+}
+
+function dropColumn($t, $o) {
+	mysqlConnect();
+	if (!columnExists($t, $o)) return FALSE;
+	else {
+		mysql_query("ALTER TABLE `$t` DROP COLUMN `$o`");
 		return mysql_errno();
 	}
 }
@@ -133,6 +137,9 @@ function getNewColumns() {
 				'agility|INT DEFAULT 3', //ловкость
 				'intelligence|INT DEFAULT 5', //интеллект
 				'initiative|INT DEFAULT 5', //инициатива
+			),
+			'drop' => array(
+				'wisdom'
 			),
 		),
 		array(

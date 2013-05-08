@@ -72,6 +72,13 @@ if ($_POST) {
 					echo $res === FALSE ? warn('not exists') : ($res === 0 ? ok() : err());
 					echo '</h6>';
 				}
+				//drop columns
+				if ($v['drop']) foreach ($v['drop'] as $v1) {
+					echo "<h6>Удаление столбца `$v1` ... ";
+					$res = dropColumn($v['table'], $v1);
+					echo $res === FALSE ? warn('not exists') : ($res === 0 ? ok() : err());
+					echo '</h6>';
+				}
 
 			}
 			echo '<br />';
