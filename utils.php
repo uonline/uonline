@@ -72,6 +72,21 @@ function renameColumn($t, $o) {
 	}
 }
 
+function changeColumn($t, $o) {
+	mysqlConnect();
+	list($oc, $nc) = explode('|', $o);
+	if (!columnExists($t, $oc)) return FALSE;
+	else {
+		$type = mysqlFirstRes(
+			"SELECT COLUMN_TYPE ".
+			"FROM INFORMATION_SCHEMA.COLUMNS ".
+			"WHERE TABLE_SCHEMA='".MYSQL_BASE."' ".
+			"AND TABLE_NAME='$t' AND COLUMN_NAME='$oc'");
+		mysql_query("ALTER TABLE `$t` CHANGE COLUMN `$oc` `$oc` $nc");
+		return mysql_errno();
+	}
+}
+
 /***** column functions *****/
 
 /***** contents *****/
@@ -108,7 +123,18 @@ function getNewColumns() {
 				'initiative|INT DEFAULT 5', //инициатива
 				'exp|INT DEFAULT 0',
 				'effects|TEXT',
-		),),
+			),
+			'change' => array (
+				'health|INT DEFAULT 200',
+				'health_max|INT DEFAULT 200',
+				'mana|INT DEFAULT 100',
+				'mana_max|INT DEFAULT 100',
+				'power|INT DEFAULT 3',
+				'agility|INT DEFAULT 3', //ловкость
+				'intelligence|INT DEFAULT 5', //интеллект
+				'initiative|INT DEFAULT 5', //инициатива
+			),
+		),
 		array(
 			'table' => 'monsters',
 			'columns' => array(

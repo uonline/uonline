@@ -64,6 +64,15 @@ if ($_POST) {
 					echo $res === FALSE ? warn('not exists') : ($res === 0 ? ok() : err());
 					echo '</h6>';
 				}
+				//change columns
+				if ($v['change']) foreach ($v['change'] as $v1) {
+					$cn = explode("|", $v1);
+					echo "<h6>Изменение столбца `$cn[0]` ... ";
+					$res = changeColumn($v['table'], $v1);
+					echo $res === FALSE ? warn('not exists') : ($res === 0 ? ok() : err());
+					echo '</h6>';
+				}
+
 			}
 			echo '<br />';
 			if (!$err) writeNewHash();
