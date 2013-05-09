@@ -137,6 +137,8 @@ function getNewColumns() {
 				'agility|INT DEFAULT 3', //ловкость
 				'intelligence|INT DEFAULT 5', //интеллект
 				'initiative|INT DEFAULT 5', //инициатива
+				'fight_mode|INT DEFAULT 0 AFTER `permissions`',
+				'autoinvolved_fm|INT DEFAULT 0 AFTER `fight_mode`',
 			),
 			'drop' => array(
 				'wisdom'
