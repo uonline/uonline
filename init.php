@@ -140,7 +140,7 @@ if ($_POST) {
 				$q1 = mysql_query("OPTIMIZE TABLE `$t[0]`");
 				do $a = mysql_fetch_array($q1);
 				while ($a && $a['Msg_type'] !== 'status');
-				echo ($a && ($a['Msg_text'] === "OK") ? ok() : err() ).'</h5>';
+				echo ($a && ($a['Msg_text'] === "OK" || !strcasecmp($a['Msg_text'],"up to date")) ? ok() : err() ).'</h5>';
 			}
 		}
 
