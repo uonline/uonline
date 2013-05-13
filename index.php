@@ -190,6 +190,17 @@ $app->get('/stats/', function () use ($app, $twig, $options, $s) {
 	return $twig->render( 'stats.twig', $options);
 });
 
+/********************** world **********************/
+$app->get('/world/', function () use ($app, $twig, $options, $s) {
+	goAttack($s);
+	return $twig->render( 'world.twig', $options);
+});
+
+/********************** guidelines **********************/
+$app->get('/develop/', function () use ($app, $twig, $options, $s) {
+	goAttack($s);
+	return $twig->render( 'develop.twig', $options);
+});
 
 /********************** others **********************/
 $app->error(function (Exception $e, $с) use ($app, $twig, $options, $s) {
