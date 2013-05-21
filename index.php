@@ -186,7 +186,8 @@ $app->get('/action/escape', function () use ($app, $twig, $options, $s) {
 
 /********************** stats **********************/
 $app->get('/stats/', function () use ($app, $twig, $options, $s) {
-	goAttack($s);
+	$options['stats'] = getStatistics();
+	$options['instance'] = 'stats';
 	return $twig->render( 'stats.twig', $options);
 });
 

@@ -618,7 +618,15 @@ function stats($gen_time) {
 		"VALUES ($gen_time, '$_SERVER[REMOTE_ADDR]', '$ua', '$url')");
 }
 /************************* statistics ***************************/
-
+function getStatistics() {
+	mysqlConnect();
+	$q = mysql_query(
+		"SELECT `gen_time` ".
+		"FROM `stats` ".
+		"WHERE `time` > NOW() - INTERVAL 24 HOUR");
+	for ($a=array(), $i=0; $q && $r = mysql_fetch_assoc($q); $a[$i++] = $r['gen_time'] );
+	return $a;
+}
 
 
 
