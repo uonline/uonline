@@ -1,7 +1,7 @@
 <?php
 
 //require_once './PHPUnit/Framework.php';
-require_once './PHPUnit/vendor/autoload.php';
+require_once './phpunit/vendor/autoload.php';
 require_once './locparse.php';
 
 class ParserTest extends PHPUnit_Framework_TestCase {
