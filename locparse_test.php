@@ -35,6 +35,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 * Пойти на Голубую улицу - bluestreet
 
 ");
+		fclose($fp);
 		$my->processMap("./test/test.ht.md", "kront", "Кронт");
 		$this->assertEquals($my->locations[0]->name, "Голубая улица");
 		$this->assertEquals($my->locations[0]->label, "kront/bluestreet");
@@ -78,6 +79,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 * Пойти на другую Голубую улицу - bluestreet
 
 ");
+		fclose($fp);
 		$my->processDir("./test", null, true);
 		$this->assertEquals(2, count($my->areas));
 		$this->assertEquals($my->areas[0]->name, "Кронт");

@@ -15,8 +15,8 @@ class Parser {
 	function processDir($dir, $previousLabel, $root) {
 		if ($root === false) {
 			$a = new Area();
-			$splittedDir = split("/", $dir);
-			$splittedStr = split(" - ", $splittedDir[count($splittedDir)-1]);
+			$splittedDir = explode("/", $dir);
+			$splittedStr = explode(" - ", $splittedDir[count($splittedDir)-1]);
 			$a->label = $splittedStr[1];
 			if ($previousLabel != null) $a->label = $previousLabel."-".$a->label;
 			$a->name = $splittedStr[0];
@@ -25,7 +25,7 @@ class Parser {
 			$this->processMap($dir."/map.ht.md", $a->label, $a->name);
 		}
 		$myDirectory=opendir($dir);
-        while($name=readdir($myDirectory)) {
+			while($name=readdir($myDirectory)) {
 			if (is_dir($dir.'/'.$name) && ($name != ".") && ($name != "..")) {
 				if ($root) {
 					$this->processDir($dir.'/'.$name, null, false);
@@ -38,20 +38,20 @@ class Parser {
 	}
 
 	function processMap($filename, $areaLabel, $areaName) {
-		foreach(split("\n", str_replace("\r\n", "\n", file_get_contents($filename))) as $s) {
+		foreach(explode("\n", str_replace("\r\n", "\n", file_get_contents($filename))) as $s) {
 			if (startsWith($s, "# ")) {
 				assert(substr($s, 2) == $areaName);
 			}
 			else if (startsWith($s, "### ")) {
 				$this->locations[] = new Location();
 				$tmp = substr($s, 4);
-				end($this->locations)->name = mysplit(" - ", $tmp, 0);
-				end($this->locations)->label = $areaLabel . "/" . mysplit(" - ", $tmp, 1);
+				end($this->locations)->name = myexplode(" - ", $tmp, 0);
+				end($this->locations)->label = $areaLabel . "/" . myexplode(" - ", $tmp, 1);
 			}
 			else if (startsWith($s, "* ")) {
 				$tmp = substr($s, 2);
-				$tmpAction = mysplit(" - ", $tmp, 0);
-				$tmpTarget = mysplit(" - ", $tmp, 1);
+				$tmpAction = myexplode(" - ", $tmp, 0);
+				$tmpTarget = myexplode(" - ", $tmp, 1);
 				if (strpos($tmpTarget, '/') === false) $tmpTarget = $areaLabel . "/" . $tmpTarget;
 				end($this->locations)->actions[$tmpAction] = $tmpTarget;
 			}
@@ -81,8 +81,8 @@ function endsWith($haystack, $needle) {
 	return (substr($haystack, -$length) === $needle);
 }
 
-function mysplit($pattern , $string, $index) {
-	$tmp = split($pattern, $string);
+function myexplode($pattern , $string, $index) {
+	$tmp = explode($pattern, $string);
 	return $tmp[$index];
 }
 
