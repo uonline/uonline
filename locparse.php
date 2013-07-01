@@ -45,13 +45,13 @@ class Parser {
 			else if (startsWith($s, "### ")) {
 				$this->locations[] = new Location();
 				$tmp = substr($s, 4);
-				end($this->locations)->name = split(" - ",$tmp)[0];
-				end($this->locations)->label = $areaLabel . "/" . split(" - ",$tmp)[1];
+				end($this->locations)->name = mysplit(" - ", $tmp, 0);
+				end($this->locations)->label = $areaLabel . "/" . mysplit(" - ", $tmp, 1);
 			}
 			else if (startsWith($s, "* ")) {
 				$tmp = substr($s, 2);
-				$tmpAction = split(" - ",$tmp)[0];
-				$tmpTarget = split(" - ",$tmp)[1];
+				$tmpAction = mysplit(" - ", $tmp, 0);
+				$tmpTarget = mysplit(" - ", $tmp, 1);
 				if (strpos($tmpTarget, '/') === false) $tmpTarget = $areaLabel . "/" . $tmpTarget;
 				end($this->locations)->actions[$tmpAction] = $tmpTarget;
 			}
@@ -79,6 +79,11 @@ function endsWith($haystack, $needle) {
 		return true;
 	}
 	return (substr($haystack, -$length) === $needle);
+}
+
+function mysplit($pattern , $string, $index) {
+	$tmp = split($pattern, $string);
+	return $tmp[$index];
 }
 
 ?>
