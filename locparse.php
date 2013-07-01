@@ -1,7 +1,7 @@
 <?php
 
 class Area {
-	public $label, $name, $id;
+	public $label, $name, $description = "", $id;
 }
 
 class Location {
@@ -38,11 +38,13 @@ class Parser {
 	}
 
 	function processMap($filename, $areaLabel, $areaName) {
+		$inLocation = false;
 		foreach(explode("\n", str_replace("\r\n", "\n", file_get_contents($filename))) as $s) {
 			if (startsWith($s, "# ")) {
 				assert(substr($s, 2) == $areaName);
 			}
 			else if (startsWith($s, "### ")) {
+				$inLocation = true;
 				$this->locations[] = new Location();
 				$tmp = substr($s, 4);
 				end($this->locations)->name = myexplode(" - ", $tmp, 0);
@@ -55,16 +57,20 @@ class Parser {
 				if (strpos($tmpTarget, '/') === false) $tmpTarget = $areaLabel . "/" . $tmpTarget;
 				end($this->locations)->actions[$tmpAction] = $tmpTarget;
 			}
-			else if ((count($this->locations) == 0) && (strlen($s)==0)) {
-				// do nothing
-			}
-			else {
+			else if ($inLocation) {
 				end($this->locations)->description .= $s;
 				end($this->locations)->description .= "\n";
+			}
+			else {
+				end($this->areas)->description .= $s;
+				end($this->areas)->description .= "\n";
 			}
 		}
 		foreach ($this->locations as $l) {
 			$l->description = trim($l->description);
+		}
+		foreach ($this->areas as $a) {
+			$a->description = trim($a->description);
 		}
 	}
 }

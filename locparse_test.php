@@ -18,6 +18,10 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 # Кронт
 
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
 ### Голубая улица - bluestreet
 
 Здесь сидят гомосеки.
@@ -37,6 +41,9 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 ");
 		fclose($fp);
 		$my->processMap("./test/test.ht.md", "kront", "Кронт");
+		$this->assertEquals($my->areas[0]->description, "Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.");
 		$this->assertEquals($my->locations[0]->name, "Голубая улица");
 		$this->assertEquals($my->locations[0]->label, "kront/bluestreet");
 		$this->assertEquals($my->locations[0]->description, "Здесь сидят гомосеки.");
@@ -54,12 +61,22 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		mkdir("./test");
 		mkdir("./test/Кронт - kront");
 		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
-		fwrite($fp, "# Кронт");
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
 		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
 		fwrite($fp, "
 
 # Окрестности Кронта
+
+Здесь темно.
 
 ### Голубая улица - bluestreet
 
@@ -84,8 +101,12 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(2, count($my->areas));
 		$this->assertEquals($my->areas[0]->name, "Кронт");
 		$this->assertEquals($my->areas[0]->label, "kront");
+		$this->assertEquals($my->areas[0]->description, "Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.");
 		$this->assertEquals($my->areas[1]->name, "Окрестности Кронта");
 		$this->assertEquals($my->areas[1]->label, "kront-outer");
+		$this->assertEquals($my->areas[1]->description, "Здесь темно.");
 		$this->assertEquals(2, count($my->locations));
 		$this->assertEquals($my->locations[0]->label, "kront-outer/bluestreet");
 		$this->assertEquals($my->locations[0]->description, "Здесь сидят гомосеки.");
