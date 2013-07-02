@@ -57,13 +57,15 @@ class Parser {
 				if (strpos($tmpTarget, '/') === false) $tmpTarget = $areaLabel . "/" . $tmpTarget;
 				end($this->locations)->actions[$tmpAction] = $tmpTarget;
 			}
-			else if ($inLocation) {
-				end($this->locations)->description .= $s;
-				end($this->locations)->description .= "\n";
-			}
 			else {
-				end($this->areas)->description .= $s;
-				end($this->areas)->description .= "\n";
+				if ($inLocation) {
+					end($this->locations)->description .= $s;
+					end($this->locations)->description .= "\n";
+				}
+				else {
+					end($this->areas)->description .= $s;
+					end($this->areas)->description .= "\n";
+				}
 			}
 		}
 		foreach ($this->locations as $l) {

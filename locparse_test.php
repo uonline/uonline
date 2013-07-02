@@ -40,6 +40,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 ");
 		fclose($fp);
+		$my->areas[] = new Area();
 		$my->processMap("./test/test.ht.md", "kront", "Кронт");
 		$this->assertEquals($my->areas[0]->description, "Большой и ленивый город.
 
@@ -71,6 +72,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
 		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
 		fwrite($fp, "
 
