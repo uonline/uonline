@@ -1,0 +1,17 @@
+{% extends "layout.twig" %}
+
+{% block title %}
+	{% if code == 404 %}404 &mdash; Страница не найдена
+	{% else %}Error
+	{% endif %}
+{% endblock title %}
+
+{% block content %}
+			<div class="page-header">
+			{% if code == 404 %}<h1>404 <small>Страница не найдена</small></h1>
+			{% else %}<h1>{{ code }} <small>some error</small></h1>
+			{% endif %}
+			</div>
+
+			<a href="/">Перейти на главную</a>
+{% endblock content %}

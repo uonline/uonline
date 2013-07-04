@@ -208,12 +208,8 @@ $app->get('/development/', function () use ($app, $twig, $options, $s) {
 
 /********************** others **********************/
 $app->error(function (Exception $e, $с) use ($app, $twig, $options, $s) {
-	switch ($с) {
-		case 404:
-			return $twig->render( '404.twig', $options);
-		default:
-			return $twig->render( '404.twig', $options);
-	}
+	$options['code'] = $c;
+	return $twig->render( 'error.twig', $options);
 });
 
 
