@@ -12,8 +12,8 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 	public function testFirst() {
 		$my = new Parser();
 		$this->cleanup();
-		mkdir("./test");
-		$fp = fopen('./test/test.ht.md', 'w');
+		mymkdir("./test");
+		$fp = myfopen('./test/test.ht.md', 'w');
 		fwrite($fp, "
 
 # Кронт
@@ -40,8 +40,8 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 ");
 		fclose($fp);
-		$my->areas[] = new Area();
-		$my->processMap("./test/test.ht.md", "kront", "Кронт");
+		$my->areas[] = $a = new Area("kront", "Кронт");
+		$my->processMap("./test/test.ht.md", $a);
 		$this->assertEquals($my->areas[0]->description, "Большой и ленивый город.
 
 Здесь убивают слоников и разыгрывают туристов.");
@@ -59,9 +59,9 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 	public function testSecond() {
 		$my = new Parser();
 		$this->cleanup();
-		mkdir("./test");
-		mkdir("./test/Кронт - kront");
-		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		mymkdir("./test");
+		mymkdir("./test/Кронт - kront");
+		$fp = myfopen("./test/Кронт - kront/map.ht.md", 'w');
 		fwrite($fp, "
 
 # Кронт
@@ -71,9 +71,9 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 Здесь убивают слоников и разыгрывают туристов.
 
 ");
-		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		mymkdir("./test/Кронт - kront/Окрестности Кронта - outer");
 		fclose($fp);
-		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		$fp = myfopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
 		fwrite($fp, "
 
 # Окрестности Кронта
@@ -122,8 +122,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 	}
 }
 
-function rmdirr($dirname)
-{
+function rmdirr($dirname) {
 	// Sanity check
 	if (!file_exists($dirname)) {
 		return false;
@@ -149,6 +148,14 @@ function rmdirr($dirname)
 	// Clean up
 	$dir->close();
 	return rmdir($dirname);
+}
+
+function mymkdir($p) {
+	return mkdir(iconv('utf-8', 'cp1251', $p));
+}
+
+function myfopen($f, $m) {
+	return fopen(iconv('utf-8', 'cp1251', $f), $m);
 }
 
 ?>
