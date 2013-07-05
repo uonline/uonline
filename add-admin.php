@@ -1,5 +1,23 @@
 <?php
 
+
+/*
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+
 require_once('utils.php');
 
 $HEAD = $BODY = '';
@@ -14,7 +32,7 @@ if ($_POST) {
 	else {
 		if ($_POST['ad_pass'] != ADMIN_PASS) wrongPass();
 		else
-			if (!correctUserName($u) || /* correctMail($_POST['mail']) || */ !correctPassword($p)) 
+			if (!correctUserName($u) || /* correctMail($_POST['mail']) || */ !correctPassword($p))
 				incorrectDatas( array( !correctUserName($u), /* correctMail($_POST['mail']), */ !correctPassword($p) ) );
 			else alreadyExists( array (userExists($u) /*, mailExists($_POST['mail']) */ ) );
 		regForm($u, $p /* , $e */ );
