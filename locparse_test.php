@@ -19,7 +19,6 @@
 
 
 require_once './locparse.php';
-require_once './vendor/autoload.php';
 
 class ParserTest extends PHPUnit_Framework_TestCase
 {
