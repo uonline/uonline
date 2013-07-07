@@ -20,44 +20,27 @@
 
 class Area {
 	public $label, $name, $description = "", $id;
-
-	public function &__construct($label, $name, $description = "") {
-		$this->label = $label;
-		$this->name = $name;
-		$this->description = $description;
-		$this->id = crc32($label);
-		return $this;
-	}
 }
 
 class Location {
-	public $label, $name, $description = "", $actions, $area, $id;
-
-	public function &__construct($label, $name, $description = "", $actions = "", $area = null) {
-		$this->label = $label;
-		$this->name = $name;
-		$this->description = $description;
-		$this->actions = $actions;
-		$this->area = $area;
-		$this->id = crc32($label);
-		return $this;
-	}
+	public $label, $name, $description = "", $actions, $id;
 }
 
 class Parser {
 
-	public $areas = array(), $locations = array(), $hashes = array();
+	public $areas = array(), $locations = array();
 
 	function processDir($dir, $previousLabel, $root) {
 		if ($root === false) {
+			$a = new Area();
 			$splittedDir = explode("/", $dir);
 			$splittedStr = explode(" - ", $splittedDir[count($splittedDir)-1]);
-			$label = $splittedStr[1];
-			if ($previousLabel != null) $label = $previousLabel."-".$label;
-			$name = $splittedStr[0];
-			$this->areas[] = new Area($label, $name);
+			$a->label = $splittedStr[1];
+			if ($previousLabel != null) $a->label = $previousLabel."-".$a->label;
+			$a->name = $splittedStr[0];
+			$this->areas[] = $a;
 
-			$this->processMap($dir."/map.ht.md", $a);
+			$this->processMap($dir."/map.ht.md", $a->label, $a->name);
 		}
 		$myDirectory=opendir($dir);
 			while($name=readdir($myDirectory)) {
@@ -72,34 +55,34 @@ class Parser {
 		}
 	}
 
-	function processMap($filename, &$area) {
+	function processMap($filename, $areaLabel, $areaName) {
 		$inLocation = false;
 		foreach(explode("\n", str_replace("\r\n", "\n", file_get_contents($filename))) as $s) {
 			if (startsWith($s, "# ")) {
-				echo iconv("utf-8", "cp866",$area->name)."\n";
-				echo substr($s, 2);
-				echo($area->name);
-//				assert(substr($s, 2), $area->name); //???
+				assert(substr($s, 2) == $areaName);
 			}
 			else if (startsWith($s, "### ")) {
 				$inLocation = true;
+				$this->locations[] = new Location();
 				$tmp = substr($s, 4);
-				$l = new Location($area->label . "/" . myexplode(" - ", $tmp, 1), myexplode(" - ", $tmp, 0));
-				$this->locations[] = $l;
+				end($this->locations)->name = myexplode(" - ", $tmp, 0);
+				end($this->locations)->label = $areaLabel . "/" . myexplode(" - ", $tmp, 1);
 			}
 			else if (startsWith($s, "* ")) {
 				$tmp = substr($s, 2);
 				$tmpAction = myexplode(" - ", $tmp, 0);
 				$tmpTarget = myexplode(" - ", $tmp, 1);
-				if (strpos($tmpTarget, '/') === false) $tmpTarget = $area->label . "/" . $tmpTarget;
+				if (strpos($tmpTarget, '/') === false) $tmpTarget = $areaLabel . "/" . $tmpTarget;
 				end($this->locations)->actions[$tmpAction] = $tmpTarget;
 			}
 			else {
 				if ($inLocation) {
-					end($this->locations)->description .= $s."\n";
+					end($this->locations)->description .= $s;
+					end($this->locations)->description .= "\n";
 				}
 				else {
-					end($this->areas)->description .= $s."\n";
+					end($this->areas)->description .= $s;
+					end($this->areas)->description .= "\n";
 				}
 			}
 		}
