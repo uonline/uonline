@@ -184,9 +184,11 @@ class PHP_CodeCoverage_Util
                                   $classes[$token->getName()]['methods']
                                 );
 
-                                $lastMethod = array_pop(
-                                  $classes[$token->getName()]['methods']
-                                );
+                                do {
+                                    $lastMethod = array_pop(
+                                      $classes[$token->getName()]['methods']
+                                    );
+                                } while ($lastMethod !== NULL && substr($lastMethod['signature'], 0, 18) == 'anonymous function');
 
                                 if ($lastMethod === NULL) {
                                     $lastMethod = $firstMethod;
@@ -204,15 +206,6 @@ class PHP_CodeCoverage_Util
                                     self::$ignoredLines[$filename][$i] = TRUE;
                                 }
                             }
-                        }
-                    }
-                    break;
-
-                    case 'PHP_Token_INTERFACE': {
-                        $endLine = $token->getEndLine();
-
-                        for ($i = $token->getLine(); $i <= $endLine; $i++) {
-                            self::$ignoredLines[$filename][$i] = TRUE;
                         }
                     }
                     break;

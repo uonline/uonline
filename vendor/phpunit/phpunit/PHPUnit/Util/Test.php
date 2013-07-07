@@ -122,6 +122,10 @@ class PHPUnit_Util_Test
                 $requires[$matches['name'][$i]] = $matches['value'][$i];
             }
         }
+
+        // https://bugs.php.net/bug.php?id=63055
+        $matches = array();
+
         if ($count = preg_match_all(self::REGEX_REQUIRES, $docComment, $matches)) {
             for ($i = 0; $i < $count; $i++) {
                 $name = $matches['name'][$i] . 's';
@@ -267,6 +271,10 @@ class PHPUnit_Util_Test
         }
 
         if ($data !== NULL) {
+            if (is_object($data)) {
+                $data = iterator_to_array($data);
+            }
+
             foreach ($data as $key => $value) {
                 if (!is_array($value)) {
                     throw new PHPUnit_Framework_Exception(
