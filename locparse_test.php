@@ -18,10 +18,27 @@
  */
 
 
-require_once './phpunit/vendor/autoload.php';
 require_once './locparse.php';
+require_once './vendor/autoload.php';
 
-class ParserTest extends PHPUnit_Framework_TestCase {
+class ParserTest extends PHPUnit_Framework_TestCase
+{
+
+	public $coverage;
+
+	public function setUp()
+	{
+		$this->coverage = new PHP_CodeCoverage;
+		$this->coverage->start('<name of test>');
+	}
+
+	public function tearDown()
+	{
+		$this->coverage->stop();
+
+		$writer = new PHP_CodeCoverage_Report_HTML;
+		$writer->process($this->coverage, './code-coverage-report');
+	}
 
 	function cleanup() {
 		if (file_exists("./test")) rmdirr("./test");
