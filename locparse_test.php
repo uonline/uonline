@@ -26,53 +26,6 @@ class ParserTest extends PHPUnit_Framework_TestCase
 		if (file_exists("./test")) rmdirr("./test");
 	}
 
-	public function testFirst() {
-		$my = new Parser();
-		$this->cleanup();
-		mkdir("./test");
-		$fp = fopen('./test/test.ht.md', 'w');
-		fwrite($fp, "
-
-# Кронт
-
-Большой и ленивый город.
-
-Здесь убивают слоников и разыгрывают туристов.
-
-### Голубая улица - bluestreet
-
-Здесь сидят гомосеки.
-
-* Пойти на Зелёную улицу - greenstreet
-
-### Зелёная улица - greenstreet
-
-Здесь посажены деревья.
-
-И грибы.
-
-И животноводство.
-
-* Пойти на Голубую улицу - bluestreet
-
-");
-		fclose($fp);
-		$my->areas[] = new Area();
-		$my->processMap("./test/test.ht.md", "kront", "Кронт");
-		$this->assertEquals($my->areas[0]->description, "Большой и ленивый город.
-
-Здесь убивают слоников и разыгрывают туристов.");
-		$this->assertEquals($my->locations[0]->name, "Голубая улица");
-		$this->assertEquals($my->locations[0]->label, "kront/bluestreet");
-		$this->assertEquals($my->locations[0]->description, "Здесь сидят гомосеки.");
-		$this->assertEquals($my->locations[0]->actions["Пойти на Зелёную улицу"], "kront/greenstreet");
-		$this->assertEquals($my->locations[1]->name, "Зелёная улица");
-		$this->assertEquals($my->locations[1]->label, "kront/greenstreet");
-		$this->assertEquals($my->locations[1]->description, "Здесь посажены деревья.\n\nИ грибы.\n\nИ животноводство.");
-		$this->assertEquals($my->locations[1]->actions["Пойти на Голубую улицу"], "kront/bluestreet");
-		$this->cleanup();
-	}
-
 	public function testSecond() {
 		$my = new Parser();
 		$this->cleanup();
