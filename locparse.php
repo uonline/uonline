@@ -33,7 +33,7 @@ class Area {
 class Location {
 	public $label, $name, $description = "", $actions, $area, $id;
 
-	public function &__construct($label, $name, $description = "", $actions = "", $area = null) {
+	public function &__construct($label, $name, $area = null, $description = "", $actions = "") {
 		$this->label = $label;
 		$this->name = $name;
 		$this->description = $description;
@@ -81,7 +81,7 @@ class Parser {
 			else if (startsWith($s, "### ")) {
 				$inLocation = true;
 				$tmp = substr($s, 4);
-				$l = new Location($area->label . "/" . myexplode(" - ", $tmp, 1), myexplode(" - ", $tmp, 0));
+				$l = new Location($area->label . "/" . myexplode(" - ", $tmp, 1), myexplode(" - ", $tmp, 0), $area);
 				$this->locations[] = $l;
 			}
 			else if (startsWith($s, "* ")) {

@@ -1,6 +1,5 @@
 <?php
 
-
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,17 +19,20 @@
 
 require_once './locparse.php';
 
-class ParserTest extends PHPUnit_Framework_TestCase
-{
+class ParserTest extends PHPUnit_Framework_TestCase {
+
 	function cleanup() {
-		if (file_exists("./test")) rmdirr("./test");
+		if (file_exists("./test"))
+			rmdirr("./test");
 	}
 
 	public function testSecond() {
 		$my = new Parser();
 		$this->cleanup();
+
 		mkdir("./test");
 		mkdir("./test/Кронт - kront");
+
 		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
 		fwrite($fp, "
 
@@ -43,6 +45,7 @@ class ParserTest extends PHPUnit_Framework_TestCase
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
 		fclose($fp);
+
 		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
 		fwrite($fp, "
 
@@ -69,7 +72,9 @@ class ParserTest extends PHPUnit_Framework_TestCase
 
 ");
 		fclose($fp);
+
 		$my->processDir("./test", null, true);
+
 		$this->assertEquals(2, count($my->areas));
 		$this->assertEquals($my->areas[0]->name, "Кронт");
 		$this->assertEquals($my->areas[0]->label, "kront");
@@ -79,6 +84,7 @@ class ParserTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($my->areas[1]->name, "Окрестности Кронта");
 		$this->assertEquals($my->areas[1]->label, "kront-outer");
 		$this->assertEquals($my->areas[1]->description, "Здесь темно.");
+
 		$this->assertEquals(2, count($my->locations));
 		$this->assertEquals($my->locations[0]->label, "kront-outer/bluestreet");
 		$this->assertEquals($my->locations[0]->description, "Здесь сидят гомосеки.");
@@ -88,12 +94,16 @@ class ParserTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($my->locations[1]->description, "Здесь посажены деревья.\n\nИ грибы.\n\nИ животноводство.");
 		$this->assertEquals($my->locations[1]->actions["Пойти на Голубую улицу"], "kront/bluestreet");
 		$this->assertEquals($my->locations[1]->actions["Пойти на другую Голубую улицу"], "kront-outer/bluestreet");
+
+		$this->assertEquals($my->areas[1], $my->locations[0]->area);
+		$this->assertEquals($my->areas[1], $my->locations[1]->area);
+
 		$this->cleanup();
 	}
+
 }
 
-function rmdirr($dirname)
-{
+function rmdirr($dirname) {
 	// Sanity check
 	if (!file_exists($dirname)) {
 		return false;
