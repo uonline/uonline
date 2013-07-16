@@ -31,7 +31,7 @@ define('ADMIN_PASS', $admpass);
 define('SESSION_LENGTH', 64);
 define('SESSION_TIMEEXPIRE', 3600); //in seconds
 define('DEFAULT_CHARSET', 'utf-8');
-define('BASE_OUTDATED', getNewHash() !== getHash());
+//define('BASE_OUTDATED', getNewHash() !== getHash());
 
 // layout
 define('DEFAULT_INSTANCE', 'about');

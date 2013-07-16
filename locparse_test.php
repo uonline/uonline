@@ -18,6 +18,7 @@
 
 
 require_once './locparse.php';
+require_once './config.php';
 
 class ParserTest extends PHPUnit_Framework_TestCase {
 
@@ -41,6 +42,13 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 Большой и ленивый город.
 
 Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -85,18 +93,35 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($my->areas[1]->label, "kront-outer");
 		$this->assertEquals($my->areas[1]->description, "Здесь темно.");
 
-		$this->assertEquals(2, count($my->locations));
-		$this->assertEquals($my->locations[0]->label, "kront-outer/bluestreet");
-		$this->assertEquals($my->locations[0]->description, "Здесь сидят гомосеки.");
-		$this->assertEquals($my->locations[0]->actions["Пойти на Зелёную улицу"], "kront-outer/greenstreet");
-		$this->assertEquals($my->locations[1]->name, "Зелёная улица");
-		$this->assertEquals($my->locations[1]->label, "kront-outer/greenstreet");
-		$this->assertEquals($my->locations[1]->description, "Здесь посажены деревья.\n\nИ грибы.\n\nИ животноводство.");
-		$this->assertEquals($my->locations[1]->actions["Пойти на Голубую улицу"], "kront/bluestreet");
-		$this->assertEquals($my->locations[1]->actions["Пойти на другую Голубую улицу"], "kront-outer/bluestreet");
+		$this->assertEquals(3, $my->locations->count());
+		$this->assertEquals($my->locations->get(0)->label, "kront/bluestreet");
+		$this->assertEquals($my->locations->get(0)->description, "Здесь стоят гомосеки и немного пидарасов.");
+		$this->assertEquals($my->locations->get(0)->actions["Пойти на Зелёную улицу"], "kront-outer/greenstreet");
+		$this->assertEquals($my->locations->get(0)->actions["Пойти на Голубую улицу"], "kront-outer/bluestreet");
+		$this->assertEquals($my->locations->get(1)->label, "kront-outer/bluestreet");
+		$this->assertEquals($my->locations->get(1)->description, "Здесь сидят гомосеки.");
+		$this->assertEquals($my->locations->get(1)->actions["Пойти на Зелёную улицу"], "kront-outer/greenstreet");
+		$this->assertEquals($my->locations->get(2)->name, "Зелёная улица");
+		$this->assertEquals($my->locations->get(2)->label, "kront-outer/greenstreet");
+		$this->assertEquals($my->locations->get(2)->description, "Здесь посажены деревья.\n\nИ грибы.\n\nИ животноводство.");
+		$this->assertEquals($my->locations->get(2)->actions["Пойти на Голубую улицу"], "kront/bluestreet");
+		$this->assertEquals($my->locations->get(2)->actions["Пойти на другую Голубую улицу"], "kront-outer/bluestreet");
 
-		$this->assertEquals($my->areas[1], $my->locations[0]->area);
-		$this->assertEquals($my->areas[1], $my->locations[1]->area);
+		$this->assertEquals($my->areas[0], $my->locations->get(0)->area);
+		$this->assertEquals($my->areas[1], $my->locations->get(1)->area);
+		$this->assertEquals($my->areas[1], $my->locations->get(2)->area);
+
+//		ini_set('error_reporting', E_ALL ^ E_DEPRECATED);
+		$base = "test_".MYSQL_BASE;
+
+		$conn = mysqli_connect(MYSQL_HOST, MYSQL_USER, MYSQL_PASS);
+		mysqli_query($conn, 'CREATE DATABASE IF NOT EXISTS `'.$base.'`');
+		mysqli_select_db($conn, $base);
+		mysqli_query($conn, 'CREATE TABLE `areas` (`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))');
+		mysqli_query($conn, 'CREATE TABLE `locations` (`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `area` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))');
+
+		$injector = (new Injector($my->areas, $my->locations));
+		$injector->inject(MYSQL_HOST, MYSQL_USER, MYSQL_PASS, $base);
 
 		$this->cleanup();
 	}

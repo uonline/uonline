@@ -17,6 +17,7 @@
  *
  */
 
+require_once './config.php';
 
 class Area {
 	public $label, $name, $description = "", $id;
@@ -44,9 +45,45 @@ class Location {
 	}
 }
 
+class Locations {
+	public $locations = array();
+	public $links = array();
+
+	public function count() {
+		return count($this->locations);
+	}
+
+	public function push($loc) {
+		$this->links[$loc->label] = $loc->id;
+		$this->locations[] = $loc;
+	}
+
+	public function get($ind) {
+		return $this->locations[$ind];
+	}
+
+	public function last() {
+		return end($this->locations);
+	}
+
+	public function unlink($label) {
+		return $this->links[$label];
+	}
+
+	public function trimDesc() {
+		foreach ($this->locations as $l) {
+			$l->description = trim($l->description);
+		}
+	}
+
+	public function &__construct() {
+		return $this;
+	}
+}
+
 class Parser {
 
-	public $areas = array(), $locations = array(), $hashes = array();
+	public $areas = array(), $locations;
 
 	function processDir($dir, $previousLabel, $root) {
 		if ($root === false) {
@@ -82,29 +119,70 @@ class Parser {
 				$inLocation = true;
 				$tmp = substr($s, 4);
 				$l = new Location($area->label . "/" . myexplode(" - ", $tmp, 1), myexplode(" - ", $tmp, 0), $area);
-				$this->locations[] = $l;
+				$this->locations->push($l);
 			}
 			else if (startsWith($s, "* ")) {
 				$tmp = substr($s, 2);
 				$tmpAction = myexplode(" - ", $tmp, 0);
 				$tmpTarget = myexplode(" - ", $tmp, 1);
 				if (strpos($tmpTarget, '/') === false) $tmpTarget = $area->label . "/" . $tmpTarget;
-				end($this->locations)->actions[$tmpAction] = $tmpTarget;
+				$this->locations->last()->actions[$tmpAction] = $tmpTarget;
 			}
 			else {
 				if ($inLocation) {
-					end($this->locations)->description .= $s."\n";
+					$this->locations->last()->description .= $s."\n";
 				}
 				else {
 					end($this->areas)->description .= $s."\n";
 				}
 			}
 		}
-		foreach ($this->locations as $l) {
-			$l->description = trim($l->description);
-		}
+		$this->locations->trimDesc();
 		foreach ($this->areas as $a) {
 			$a->description = trim($a->description);
+		}
+	}
+
+	public function &__construct() {
+		$this->locations = new Locations();
+		return $this;
+	}
+}
+
+class Injector {
+
+	public $areas, $locations;
+
+	public function &__construct($areas, $locations) {
+		$this->areas = $areas;
+		$this->locations = $locations;
+		return $this;
+	}
+
+	public function inject($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE) {
+		$conn = mysqli_connect($host, $user, $pass);
+		mysqli_select_db($conn, $base);
+
+		foreach ($this->areas as $v) {
+			mysqli_query($conn,
+							"REPLACE `areas`".
+							"(`title`, `id`)".
+							"VALUES ('$v->name', $v->id)");
+		}
+		foreach ($this->locations->locations as $v) {
+			$goto = array();
+			foreach ($v->actions as $k1 => $v1) {
+				$goto[] = $k1."=".$this->locations->unlink($v1);
+			}
+			mysqli_query($conn,
+							'REPLACE `locations`'.
+							'(`title`, `goto`, `description`, `id`, `area`, `default`)'.
+							'VALUES ("'.
+								$v->name.'", "'.
+								implode($goto, "|").'", "'.
+								$v->description.'", "'.
+								$v->id.'", '.
+								$v->area->id.', 0)');
 		}
 	}
 }
