@@ -166,16 +166,27 @@ function getNewColumns() {
 			'table' => 'monsters',
 			'columns' => array(
 				'incarn_id|INT AUTO_INCREMENT FIRST, ADD PRIMARY KEY (`incarn_id`)'
-		),),
+			),
+		),
 		array(
 			'table' => 'stats',
 			'columns' => array(
 				'url|TEXT'
-		),),
+			),
+		),
 		array(
 			'table' => 'locations',
 			'rename' => array(
 				'super|area'
+			),
+			'change' => array(
+				'description|TEXT'
+			),
+		),
+		array(
+			'table' => 'areas',
+			'columns' => array(
+				'description|TEXT'
 		),),
 	);
 }

@@ -19,6 +19,14 @@
 
 require_once './config.php';
 
+if (isset($argv) && array_key_exists(1, $argv)) {
+	$p = new Parser();
+	$p->processDir(__DIR__."/".$argv[1], null, true);
+
+	$i = new Injector($p->areas, $p->locations);
+	$i->inject();
+}
+
 class Area {
 	public $label, $name, $description, $id;
 
@@ -26,7 +34,7 @@ class Area {
 		if (!$this->label) $this->label = $label;
 		if (!$this->name) $this->name = $name;
 		if (!$this->description) $this->description = $description;
-		if (!$this->id) $this->id = crc32($label);
+		if (!$this->id) $this->id = abs(crc32($label));
 		return $this;
 	}
 }
@@ -40,7 +48,7 @@ class Location {
 		if (!$this->description) $this->description = $description;
 		if (!$this->actions) $this->actions = $actions;
 		if (!$this->area) $this->area = $area;
-		if (!$this->id) $this->id = crc32($label);
+		if (!$this->id) $this->id = abs(crc32($label));
 		return $this;
 	}
 }
@@ -98,13 +106,13 @@ class Parser {
 			$label = $splittedStr[1];
 			if ($previousLabel != null) $label = $previousLabel."-".$label;
 			$name = $splittedStr[0];
-			$this->areas[] = new Area($label, $name);
+			$this->areas[] = new Area(iconv(mb_detect_encoding($label, "utf-8, cp1251"), 'utf-8', $label), iconv(mb_detect_encoding($name, "utf-8, cp1251"), 'utf-8', $name));
 
 			$this->processMap($dir."/map.ht.md", end($this->areas));
 		}
 		$myDirectory=opendir($dir);
 			while($name=readdir($myDirectory)) {
-			if (is_dir($dir.'/'.$name) && ($name != ".") && ($name != "..")) {
+			if (is_dir($dir.'/'.$name) && ($name != ".") && ($name != "..") && !startsWith($name, ".")) {
 				if ($root) {
 					$this->processDir($dir.'/'.$name, null, false);
 				}
@@ -173,7 +181,10 @@ class Injector {
 			mysqli_query($conn,
 							"REPLACE `areas`".
 							"(`title`, `description`, `id`)".
-							"VALUES ('$v->name', '$v->description', $v->id)");
+							"VALUES ('".
+								mysqli_real_escape_string($conn, $v->name)."', '".
+								mysqli_real_escape_string($conn, $v->description)."', ".
+								mysqli_real_escape_string($conn, $v->id).")");
 		}
 		foreach ($this->locations->locations as $v) {
 			$goto = array();
@@ -184,11 +195,11 @@ class Injector {
 							'REPLACE `locations`'.
 							'(`title`, `goto`, `description`, `id`, `area`, `default`)'.
 							'VALUES ("'.
-								$v->name.'", "'.
-								implode($goto, "|").'", "'.
-								$v->description.'", "'.
-								$v->id.'", '.
-								$v->area->id.', 0)');
+								mysqli_real_escape_string($conn, $v->name).'", "'.
+								mysqli_real_escape_string($conn, implode($goto, "|")).'", "'.
+								mysqli_real_escape_string($conn, $v->description).'", "'.
+								mysqli_real_escape_string($conn, $v->id).'", '.
+								mysqli_real_escape_string($conn, $v->area->id).', 0)');
 		}
 	}
 }
