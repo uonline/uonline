@@ -1,7 +1,7 @@
 {
     "name": "m1kc/uonline",
     "description": "A browser-based MMORPG game in a fantasy world.",
-    "license": "GNU AGPL",
+    "license": "AGPL-3.0",
     "authors": [
         {
             "name": "m1kc",
