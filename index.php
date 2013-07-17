@@ -21,8 +21,7 @@
 $time_start = microtime(true);
 
 require_once 'utils.php';
-require_once './Twig/Autoloader.php';
-require_once './Silex/autoload.php';
+require_once './vendor/autoload.php';
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 

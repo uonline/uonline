@@ -2,6 +2,7 @@
 keyring
 tablestate
 maintenance
+vendor/
 
 # Compressed templates and their cache
 templates_cache/
