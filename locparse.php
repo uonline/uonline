@@ -20,13 +20,13 @@
 require_once './config.php';
 
 class Area {
-	public $label, $name, $description = "", $id;
+	public $label, $name, $description, $id;
 
-	public function &__construct($label, $name, $description = "") {
-		$this->label = $label;
-		$this->name = $name;
-		$this->description = $description;
-		$this->id = crc32($label);
+	public function &__construct($label = "", $name = "", $description = "") {
+		if (!$this->label) $this->label = $label;
+		if (!$this->name) $this->name = $name;
+		if (!$this->description) $this->description = $description;
+		if (!$this->id) $this->id = crc32($label);
 		return $this;
 	}
 }
@@ -34,13 +34,13 @@ class Area {
 class Location {
 	public $label, $name, $description = "", $actions, $area, $id;
 
-	public function &__construct($label, $name, $area = null, $description = "", $actions = "") {
-		$this->label = $label;
-		$this->name = $name;
-		$this->description = $description;
-		$this->actions = $actions;
-		$this->area = $area;
-		$this->id = crc32($label);
+	public function &__construct($label = "", $name = "", $area = null, $description = "", $actions = "") {
+		if (!$this->label) $this->label = $label;
+		if (!$this->name) $this->name = $name;
+		if (!$this->description) $this->description = $description;
+		if (!$this->actions) $this->actions = $actions;
+		if (!$this->area) $this->area = $area;
+		if (!$this->id) $this->id = crc32($label);
 		return $this;
 	}
 }
@@ -48,6 +48,7 @@ class Location {
 class Locations {
 	public $locations = array();
 	public $links = array();
+	public $ids = array();
 
 	public function count() {
 		return count($this->locations);
@@ -55,11 +56,16 @@ class Locations {
 
 	public function push($loc) {
 		$this->links[$loc->label] = $loc->id;
+		$this->ids[$loc->id] = $loc;
 		$this->locations[] = $loc;
 	}
 
 	public function get($ind) {
 		return $this->locations[$ind];
+	}
+
+	public function getById($id) {
+		return $this->ids[$id];
 	}
 
 	public function last() {
@@ -166,8 +172,8 @@ class Injector {
 		foreach ($this->areas as $v) {
 			mysqli_query($conn,
 							"REPLACE `areas`".
-							"(`title`, `id`)".
-							"VALUES ('$v->name', $v->id)");
+							"(`title`, `description`, `id`)".
+							"VALUES ('$v->name', '$v->description', $v->id)");
 		}
 		foreach ($this->locations->locations as $v) {
 			$goto = array();

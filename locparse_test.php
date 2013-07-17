@@ -117,11 +117,36 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		$conn = mysqli_connect(MYSQL_HOST, MYSQL_USER, MYSQL_PASS);
 		mysqli_query($conn, 'CREATE DATABASE IF NOT EXISTS `'.$base.'`');
 		mysqli_select_db($conn, $base);
-		mysqli_query($conn, 'CREATE TABLE `areas` (`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))');
+		mysqli_query($conn, 'CREATE TABLE `areas` (`title` TINYTEXT, `description` TEXT, `id` INT, PRIMARY KEY (`id`))');
 		mysqli_query($conn, 'CREATE TABLE `locations` (`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `area` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))');
 
 		$injector = (new Injector($my->areas, $my->locations));
 		$injector->inject(MYSQL_HOST, MYSQL_USER, MYSQL_PASS, $base);
+
+		$qareas = $conn->query("SELECT `title` AS `name`, `id` AS `id`, `description` AS `description`  FROM `areas`");
+		for (;$a = $qareas->fetch_object("Area");) {
+			foreach($my->areas as $oa) if($oa->id == $a->id) break;
+			$this->assertEquals($oa->name, $a->name);
+			$this->assertEquals($oa->description, $a->description);
+		}
+
+		$qlocs = $conn->query("SELECT `title` AS `name`, `description` AS `description`, `goto` AS `actions`, `id` AS `id`, `area` AS `area` FROM `locations`");
+		for (;$l = $qlocs->fetch_object("Location");) {
+			$ol = $my->locations->getById($l->id);
+			$this->assertEquals($ol->name, $l->name);
+			$this->assertEquals($ol->description, $l->description);
+			$actions = array();
+			foreach(explode("|", $l->actions) as $v) {
+				$ar = explode("=", $v);
+				$actions[$ar[0]] = $my->locations->getById($ar[1])->label;
+			}
+			$this->assertEquals($ol->actions, $actions);
+			foreach($my->areas as $i) if($i->id == $l->area) break;
+			$this->assertEquals($ol->area, $i);
+		}
+
+		$conn->query("DROP DATABASE $base");
+		$conn->close();
 
 		$this->cleanup();
 	}
