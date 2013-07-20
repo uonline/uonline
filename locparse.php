@@ -19,12 +19,33 @@
 
 require_once './config.php';
 
-if (isset($argv) && array_key_exists(1, $argv)) {
-	$p = new Parser();
-	$p->processDir(__DIR__."/".$argv[1], null, true);
+if (isset($argv)) {
+	if (array_key_exists(1, $argv) && $argv[1] == "--validate") {
+		$p = new Parser();
+		if (!(array_key_exists(2, $argv) && get_path($argv[2]))) die("Path not exists.");
+		$p->processDir(get_path($argv[2]), null, true);
+	}
+	else if (array_key_exists(1, $argv) && $argv[1] == "--export") {
+		$p = new Parser();
+		if (!(array_key_exists(2, $argv) && get_path($argv[2]))) die("Path not exists.");
+		$p->processDir(get_path($argv[2]), null, true);
 
-	$i = new Injector($p->areas, $p->locations);
-	$i->inject();
+		$i = new Injector($p->areas, $p->locations);
+		$i->inject();
+	}
+	else if (array_key_exists(1, $argv) && $argv[1] == "--help") die(help());
+}
+
+function get_path($p) {
+	if (is_dir($p) && is_dir(__DIR__."/".$p)) return $p;
+	else if (is_dir(__DIR__."/".$p)) return __DIR__."/".$p;
+	else if (is_dir($p)) return $p;
+	else return false;
+}
+
+function help() {
+	return
+	"[ --validate | --export ] path";
 }
 
 class Area {
@@ -81,6 +102,8 @@ class Locations {
 	}
 
 	public function unlink($label) {
+		// fatal error #1
+		if (!array_key_exists($label, $this->links)) die("required location not exists");
 		return $this->links[$label];
 	}
 
@@ -101,8 +124,9 @@ class Parser {
 
 	function processDir($dir, $previousLabel, $root) {
 		if ($root === false) {
-			$splittedDir = explode("/", $dir);
-			$splittedStr = explode(" - ", $splittedDir[count($splittedDir)-1]);
+			$splittedStr = explode(" - ", myexplode("/", $dir, -1));
+			// fatal error #4
+			if (!$splittedStr[1]) die("can't find label of area");
 			$label = $splittedStr[1];
 			if ($previousLabel != null) $label = $previousLabel."-".$label;
 			$name = $splittedStr[0];
@@ -125,13 +149,34 @@ class Parser {
 
 	function processMap($filename, $area) {
 		$inLocation = false;
-		foreach(explode("\n", str_replace("\r\n", "\n", file_get_contents($filename))) as $s) {
+		foreach(explode("\n", str_replace("\r\n", "\n", file_get_contents($filename))) as $k => $s) {
+			$k++;
+			// warning #1
+			if (preg_match('/^#[^# ].+/', $s)) echo "\n warning: after '#' space missing at line $k";
+			// warning #2
+			if (preg_match('/^###[^ ].+/', $s)) echo "\n warning: after '###' space missing at line $k";
+			// warning #3
+			if (preg_match('/^\\*[^ \\*].+/', $s)) echo "\n warning: after '###' space missing at line $k";
+			// warning #4
+			if (preg_match('/^\\s+$/', $s)) echo "\n warning: string whith spaces only at line $k";
+			// warning #5
+			if (preg_match('/[^\\s]\\s+$/', $s)) echo "\n warning: string ends whith spaces at line $k";
+			// warning #6
+			if (preg_match('/^\\s+[^\\s]/', $s)) echo "\n warning: string ends whith spaces at line $k";
+			// warning #7
+			if (preg_match('/^\\s+[^\\s]/', $s)) echo "\n warning: string begins whith spaces at line $k";
+
 			if (startsWith($s, "# ")) {
-				assert(substr($s, 2) == $area->name);
+				// fatal error #6
+				if (substr($s, 2) != $area->name) die("area's names from directory and file not equals");
 			}
 			else if (startsWith($s, "### ")) {
 				$inLocation = true;
 				$tmp = substr($s, 4);
+				// fatal error #3
+				if (!myexplode(" - ", $tmp, 1)) die("can't find label of location");
+				// fatal error #5
+				if (count(explode("/", myexplode(" - ", $tmp, 1)))>1) die("more than one slash at location label");
 				$l = new Location($area->label . "/" . myexplode(" - ", $tmp, 1), myexplode(" - ", $tmp, 0), $area);
 				$this->locations->push($l);
 			}
@@ -139,6 +184,8 @@ class Parser {
 				$tmp = substr($s, 2);
 				$tmpAction = myexplode(" - ", $tmp, 0);
 				$tmpTarget = myexplode(" - ", $tmp, 1);
+				// fatal error #2
+				if (!$tmpTarget) die("can't find target of transition");
 				if (strpos($tmpTarget, '/') === false) $tmpTarget = $area->label . "/" . $tmpTarget;
 				$this->locations->last()->actions[$tmpAction] = $tmpTarget;
 			}
@@ -218,7 +265,8 @@ function endsWith($haystack, $needle) {
 
 function myexplode($pattern , $string, $index) {
 	$tmp = explode($pattern, $string);
-	return $tmp[$index];
+	if ($index == -1) $index = count($tmp) - 1;
+	return array_key_exists($index, $tmp) ? $tmp[$index] : false;
 }
 
 ?>
