@@ -147,24 +147,60 @@ class Parser {
 		}
 	}
 
+	function fileWarning($warning, $filename, $line, $str = null)
+	{
+		echo "Warning: ${warning}\n";
+		if ($str !== null) echo "    ${str}\n";
+		echo "    line ${line} in ${filename}\n";
+	}
+
+	function fileFatal($warning, $filename, $line, $str = null)
+	{
+		echo "Fatal: ${warning}\n";
+		if ($str !== null) echo "    ${str}\n";
+		echo "    line ${line} in ${filename}\n";
+		die();
+	}
+
 	function processMap($filename, $area) {
 		$inLocation = false;
 		foreach(explode("\n", str_replace("\r\n", "\n", file_get_contents($filename))) as $k => $s) {
 			$k++;
 			// warning #1
-			if (preg_match('/^#[^# ].+/', $s)) echo "\n warning: after '#' space missing at line $k";
+			if (preg_match('/^#[^# ].+/', $s))
+			{
+				$this->fileWarning("missing space after '#'",$filename,$k,$s);
+			}
 			// warning #2
-			if (preg_match('/^###[^ ].+/', $s)) echo "\n warning: after '###' space missing at line $k";
+			if (preg_match('/^###[^ ].+/', $s))
+			{
+				$this->fileWarning("missing space after '###'",$filename,$k,$s);
+			}
 			// warning #3
-			if (preg_match('/^\\*[^ \\*].+/', $s)) echo "\n warning: after '###' space missing at line $k";
+			if (preg_match('/^\\*[^ \\*].+/', $s))
+			{
+				$this->fileWarning("missing space after '*'",$filename,$k,$s);
+			}
 			// warning #4
-			if (preg_match('/^\\s+$/', $s)) echo "\n warning: string whith spaces only at line $k";
+			if (preg_match('/^\\s+$/', $s))
+			{
+				$this->fileWarning("string with spaces only",$filename,$k);
+			}
 			// warning #5
-			if (preg_match('/[^\\s]\\s+$/', $s)) echo "\n warning: string ends whith spaces at line $k";
+			if (preg_match('/[^\\s]\\s+$/', $s))
+			{
+				$this->fileWarning("string ends with spaces",$filename,$k,$s);
+			}
 			// warning #6
-			if (preg_match('/^\\s+[^\\s]/', $s)) echo "\n warning: string ends whith spaces at line $k";
+			if (preg_match('/^\\s+[^\\s]/', $s))
+			{
+				$this->fileWarning("string starts with spaces",$filename,$k,$s);
+			}
 			// warning #7
-			if (preg_match('/^\\s+[^\\s]/', $s)) echo "\n warning: string begins whith spaces at line $k";
+			if (preg_match('/^\\s+[^\\s]/', $s))
+			{
+				$this->fileWarning("non-empty string before area header",$filename,$k,$s);
+			}
 
 			if (startsWith($s, "# ")) {
 				// fatal error #6

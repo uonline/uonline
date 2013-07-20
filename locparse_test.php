@@ -151,6 +151,446 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		$this->cleanup();
 	}
 
+	public function testWarning1() {
+		$my = new Parser();
+		$this->cleanup();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестности Кронта
+#Место встречи изменить нельзя
+Здесь темно.
+
+### Голубая улица - bluestreet
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу - greenstreet
+
+### Зелёная улица - greenstreet
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу - kront/bluestreet
+* Пойти на другую Голубую улицу - bluestreet
+
+");
+		fclose($fp);
+
+		$my->processDir("./test", null, true);
+
+		$this->expectOutputString("Warning: missing space after '#'\n    #Место встречи изменить нельзя\n    line 4 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md\n");
+
+		$this->cleanup();
+	}
+
+	public function testWarning2() {
+		$my = new Parser();
+		$this->cleanup();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестности Кронта
+###Место встречи изменить нельзя
+Здесь темно.
+
+### Голубая улица - bluestreet
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу - greenstreet
+
+### Зелёная улица - greenstreet
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу - kront/bluestreet
+* Пойти на другую Голубую улицу - bluestreet
+
+");
+		fclose($fp);
+
+		$my->processDir("./test", null, true);
+
+		$this->expectOutputString("Warning: missing space after '###'\n    ###Место встречи изменить нельзя\n    line 4 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md\n");
+
+		$this->cleanup();
+	}
+
+	public function testWarning3() {
+		$my = new Parser();
+		$this->cleanup();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестности Кронта
+*Место встречи изменить нельзя
+Здесь темно.
+
+### Голубая улица - bluestreet
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу - greenstreet
+
+### Зелёная улица - greenstreet
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу - kront/bluestreet
+* Пойти на другую Голубую улицу - bluestreet
+
+");
+		fclose($fp);
+
+		$my->processDir("./test", null, true);
+
+		$this->expectOutputString("Warning: missing space after '*'\n    *Место встречи изменить нельзя\n    line 4 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md\n");
+
+		$this->cleanup();
+	}
+
+	public function testWarning4() {
+		$my = new Parser();
+		$this->cleanup();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестности Кронта
+"."    "."
+Здесь темно.
+"."\t"."
+### Голубая улица - bluestreet
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу - greenstreet
+
+### Зелёная улица - greenstreet
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу - kront/bluestreet
+* Пойти на другую Голубую улицу - bluestreet
+
+");
+		fclose($fp);
+
+		$my->processDir("./test", null, true);
+
+		$this->expectOutputString("Warning: string with spaces only
+    line 4 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
+Warning: string with spaces only
+    line 6 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
+");
+
+		$this->cleanup();
+	}
+
+	public function testWarning5() {
+		$my = new Parser();
+		$this->cleanup();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестности Кронта
+
+Здесь темно."." "."
+
+### Голубая улица - bluestreet
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу - greenstreet
+
+### Зелёная улица - greenstreet
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу - kront/bluestreet
+* Пойти на другую Голубую улицу - bluestreet
+
+");
+		fclose($fp);
+
+		$my->processDir("./test", null, true);
+
+		$this->expectOutputString("Warning: string ends with spaces
+    Здесь темно. "."
+    line 5 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
+");
+
+		$this->cleanup();
+	}
+
+	public function testWarning6() {
+		$my = new Parser();
+		$this->cleanup();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестности Кронта
+
+"." Здесь темно.
+
+### Голубая улица - bluestreet
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу - greenstreet
+
+### Зелёная улица - greenstreet
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу - kront/bluestreet
+* Пойти на другую Голубую улицу - bluestreet
+
+");
+		fclose($fp);
+
+		$my->processDir("./test", null, true);
+
+		$this->expectOutputString("Warning: string starts with spaces
+     Здесь темно.
+    line 5 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
+");
+
+		$this->cleanup();
+	}
+
+	public function testWarning7() {
+		$my = new Parser();
+		$this->cleanup();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+Ня.
+# Окрестности Кронта
+
+Здесь темно.
+
+### Голубая улица - bluestreet
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу - greenstreet
+
+### Зелёная улица - greenstreet
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу - kront/bluestreet
+* Пойти на другую Голубую улицу - bluestreet
+
+");
+		fclose($fp);
+
+		$my->processDir("./test", null, true);
+
+		$this->expectOutputString("Warning: non-empty string before area header
+    Ня.
+    line 2 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
+");
+
+		$this->cleanup();
+	}
+
 }
 
 function rmdirr($dirname) {
