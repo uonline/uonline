@@ -18,3 +18,5 @@ Deployment
 9. Something is still wrong? 404? `.htaccess` problem. Enable `mod_rewrite`, edit your apache config and tell it the magic phrase `AllowOverride All`.
 10. Now it must be up and running. One more thing! Navigate to `http://your_project_url/init.php` and create some tables. It cannot connect to database? Make sure `mysql` and `mysqli` extensions are enabled. In Debian, you will need a package named `php5-mysql`.
 11. Tables are created and filled with some test data. Gooooood. Well, now you probably want to fill it with real data. `git submodule update --init` (maybe change its path to `https://github.com/m1kc/unify.git` in `.gitmodules` first), `php locparse.php --validate unify`, `php locparse.php --export unify`.
+12. Add an admin. Navigate to `http://your_project_url/add-admin.php` and do the thing.
+13. OH, A NASTY BUG! Default location is not set. We will fix it, honestly. But for now... Run mysql client and say `update uniusers set location=2147483647` in your database.
