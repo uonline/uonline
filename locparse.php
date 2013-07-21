@@ -63,7 +63,7 @@ class Area {
 		if (!$this->label) $this->label = $label;
 		if (!$this->name) $this->name = $name;
 		if (!$this->description) $this->description = $description;
-		if (!$this->id) $this->id = abs(crc32($label))/2;
+		if (!$this->id) $this->id = round(abs(crc32($label))/2);
 		return $this;
 	}
 }
@@ -77,7 +77,7 @@ class Location {
 		if (!$this->description) $this->description = $description;
 		if (!$this->actions) $this->actions = $actions;
 		if (!$this->area) $this->area = $area;
-		if (!$this->id) $this->id = abs(crc32($label))/2;
+		if (!$this->id) $this->id = round(abs(crc32($label))/2);
 		return $this;
 	}
 }
