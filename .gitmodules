@@ -1,3 +1,3 @@
 [submodule "unify"]
 	path = unify
-	url = git@github.com:m1kc/unify.git
+	url = https://github.com/m1kc/unify.git
