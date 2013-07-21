@@ -63,7 +63,7 @@ class Area {
 		if (!$this->label) $this->label = $label;
 		if (!$this->name) $this->name = $name;
 		if (!$this->description) $this->description = $description;
-		if (!$this->id) $this->id = abs(crc32($label));
+		if (!$this->id) $this->id = abs(crc32($label))/2;
 		return $this;
 	}
 }
@@ -77,7 +77,7 @@ class Location {
 		if (!$this->description) $this->description = $description;
 		if (!$this->actions) $this->actions = $actions;
 		if (!$this->area) $this->area = $area;
-		if (!$this->id) $this->id = abs(crc32($label));
+		if (!$this->id) $this->id = abs(crc32($label))/2;
 		return $this;
 	}
 }
@@ -293,6 +293,8 @@ class Injector {
 								mysqli_real_escape_string($conn, $v->id).'", '.
 								mysqli_real_escape_string($conn, $v->area->id).', 0)');
 			if (!$r) echo($conn->error);
+			$r = $conn->query("SELECT * FROM `locations` WHERE `id` = $v->id");
+			if (!$r) echo("export location \"$v->name - $v->label\" failed");
 		}
 	}
 }
