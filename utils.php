@@ -638,8 +638,8 @@ function userCharacters($p, $t = 'sess') {
 /************************* statistics ***************************/
 function stats($gen_time) {
 	global $_SERVER;
-	$ua = addslashes($_SERVER[HTTP_USER_AGENT]);
-	$url = addslashes($_SERVER[REQUEST_URI]);
+	$ua = addslashes($_SERVER['HTTP_USER_AGENT']);
+	$url = addslashes($_SERVER['REQUEST_URI']);
 	mysqlConnect();
 	mysql_query(
 		"INSERT INTO `stats` ".
