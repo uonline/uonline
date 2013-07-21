@@ -24,16 +24,24 @@ if (isset($argv)) {
 		$p = new Parser();
 		if (!(array_key_exists(2, $argv) && get_path($argv[2]))) die("Path not exists.");
 		$p->processDir(get_path($argv[2]), null, true);
+		echo "\n".report($p)."\n";
 	}
 	else if (array_key_exists(1, $argv) && $argv[1] == "--export") {
 		$p = new Parser();
 		if (!(array_key_exists(2, $argv) && get_path($argv[2]))) die("Path not exists.");
 		$p->processDir(get_path($argv[2]), null, true);
+		echo "\n".report($p)."\n";
 
 		$i = new Injector($p->areas, $p->locations);
 		$i->inject();
 	}
 	else if (array_key_exists(1, $argv) && $argv[1] == "--help") die(help());
+}
+
+function report($p) {
+	return
+		"found areas: ".count($p->areas)."\n".
+		"found locations: ".count($p->locations->locations);
 }
 
 function get_path($p) {
