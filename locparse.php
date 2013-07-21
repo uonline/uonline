@@ -269,20 +269,21 @@ class Injector {
 		mysqli_select_db($conn, $base);
 
 		foreach ($this->areas as $v) {
-			mysqli_query($conn,
+			$r = mysqli_query($conn,
 							"REPLACE `areas`".
 							"(`title`, `description`, `id`)".
 							"VALUES ('".
 								mysqli_real_escape_string($conn, $v->name)."', '".
 								mysqli_real_escape_string($conn, $v->description)."', ".
 								mysqli_real_escape_string($conn, $v->id).")");
+			if (!$r) echo($conn->error);
 		}
 		foreach ($this->locations->locations as $v) {
 			$goto = array();
 			foreach ($v->actions as $k1 => $v1) {
 				$goto[] = $k1."=".$this->locations->unlink($v1);
 			}
-			mysqli_query($conn,
+			$r = mysqli_query($conn,
 							'REPLACE `locations`'.
 							'(`title`, `goto`, `description`, `id`, `area`, `default`)'.
 							'VALUES ("'.
@@ -291,6 +292,7 @@ class Injector {
 								mysqli_real_escape_string($conn, $v->description).'", "'.
 								mysqli_real_escape_string($conn, $v->id).'", '.
 								mysqli_real_escape_string($conn, $v->area->id).', 0)');
+			if (!$r) echo($conn->error);
 		}
 	}
 }
