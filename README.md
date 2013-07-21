@@ -20,3 +20,4 @@ Deployment
 11. Tables are created and filled with some test data. Gooooood. Well, now you probably want to fill it with real data. `git submodule update --init` (maybe change its path to `https://github.com/m1kc/unify.git` in `.gitmodules` first), `php locparse.php --validate unify`, `php locparse.php --export unify`.
 12. Add an admin. Navigate to `http://your_project_url/add-admin.php` and do the thing.
 13. OH, A NASTY BUG! Default location is not set. We will fix it, honestly. But for now... Run mysql client and say `update uniusers set location=2147483647` in your database.
+14. And the last. To make it even faster, install the Twig extension. In Debian, you will need package `php5-dev`. Install it, chdir to `vendor/twig/twig/ext/twig` and [build, install and activate](http://twig.sensiolabs.org/doc/intro.html#installing-the-c-extension) the extension. Turn caching on in keyring. Here we go.
