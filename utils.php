@@ -226,7 +226,7 @@ function mysqlFirstRes($query) {
 	$q = mysql_query($query);
 	if (!$q) return false;
 	$a = mysql_fetch_array($q);
-	return $a[0];
+	return ($v = $a[0]) ? $v : false;
 }
 
 function mysqlFirstRow($query) {
@@ -254,7 +254,7 @@ function userExists($user) {
 	if (correctUserName($user)) {
 		mysqlConnect();
 		return
-			mysqlFirstRes(
+			!!mysqlFirstRes(
 				'SELECT count(*) '.
 				'FROM `uniusers` '.
 				'WHERE `user`="'.$user.'"');
@@ -443,7 +443,7 @@ function setSession($u) {
 /************************* GAME ***************************/
 function defaultLocation() {
 	mysqlConnect();
-	return mysqlFirstRes(
+	return (int) mysqlFirstRes(
 		'SELECT `id` '.
 		'FROM `locations` '.
 		'WHERE `default`=1');
