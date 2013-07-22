@@ -54,7 +54,7 @@
 				});
 				$("input[name=user]").change(function(){
 					$.getJSON("/ajax.php?isNickBusy="+encodeURIComponent($("input[name=user]").val()), function(data){
-						if (data.isNickBusy)
+						if (parseInt(data.isNickBusy))
 						{
 							$("#user-control-group").addClass("error");
 						}
