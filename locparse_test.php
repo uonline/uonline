@@ -117,41 +117,67 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($my->areas[1], $my->locations->get(2)->area);
 
 //		ini_set('error_reporting', E_ALL ^ E_DEPRECATED);
-//		$base = "test_".MYSQL_BASE;
-//
-//		$conn = mysqli_connect(MYSQL_HOST, MYSQL_USER, MYSQL_PASS);
-//		mysqli_query($conn, 'CREATE DATABASE IF NOT EXISTS `'.$base.'`');
-//		mysqli_select_db($conn, $base);
-//		mysqli_query($conn, 'CREATE TABLE `areas` (`title` TINYTEXT, `description` TEXT, `id` INT, PRIMARY KEY (`id`))');
-//		mysqli_query($conn, 'CREATE TABLE `locations` (`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `area` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))');
-//
-//		$injector = (new Injector($my->areas, $my->locations));
-//		$injector->inject(MYSQL_HOST, MYSQL_USER, MYSQL_PASS, $base);
-//
-//		$qareas = $conn->query("SELECT `title` AS `name`, `id` AS `id`, `description` AS `description`  FROM `areas`");
-//		for (;$a = $qareas->fetch_object("Area");) {
-//			foreach($my->areas as $oa) if($oa->id == $a->id) break;
-//			$this->assertEquals($oa->name, $a->name);
-//			$this->assertEquals($oa->description, $a->description);
-//		}
-//
-//		$qlocs = $conn->query("SELECT `title` AS `name`, `description` AS `description`, `goto` AS `actions`, `id` AS `id`, `area` AS `area` FROM `locations`");
-//		for (;$l = $qlocs->fetch_object("Location");) {
-//			$ol = $my->locations->getById($l->id);
-//			$this->assertEquals($ol->name, $l->name);
-//			$this->assertEquals($ol->description, $l->description);
-//			$actions = array();
-//			foreach(explode("|", $l->actions) as $v) {
-//				$ar = explode("=", $v);
-//				$actions[$ar[0]] = $my->locations->getById($ar[1])->label;
-//			}
-//			$this->assertEquals($ol->actions, $actions);
-//			foreach($my->areas as $i) if($i->id == $l->area) break;
-//			$this->assertEquals($ol->area, $i);
-//		}
-//
-//		$conn->query("DROP DATABASE $base");
-//		$conn->close();
+		$base = "test_".MYSQL_BASE;
+
+		$conn = mysqli_connect(MYSQL_HOST, MYSQL_USER, MYSQL_PASS);
+		mysqli_query($conn, 'CREATE DATABASE IF NOT EXISTS `'.$base.'`');
+		mysqli_select_db($conn, $base);
+		mysqli_query($conn, 'CREATE TABLE `areas` (`title` TINYTEXT, `description` TEXT, `id` INT, PRIMARY KEY (`id`))');
+		mysqli_query($conn, 'CREATE TABLE `locations` (`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `area` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))');
+
+		$injector = (new Injector($my->areas, $my->locations));
+		$injector->inject(MYSQL_HOST, MYSQL_USER, MYSQL_PASS, $base);
+
+		// database areas assertion
+		$this->assertEquals(2, $conn->query("SELECT count(*) FROM `areas`")->fetch_array()[0]);
+
+		$qareas = $conn->query("SELECT `title` AS `name`, `id` AS `id`, `description` AS `description` FROM `areas` ORDER BY `id`");
+
+		$a = $qareas->fetch_object("Area");
+		$this->assertEquals("Кронт", $a->name);
+		$this->assertEquals(53859108, $a->id);
+		$this->assertEquals("Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.", $a->description);
+
+		$a = $qareas->fetch_object("Area");
+		$this->assertEquals("Окрестности Кронта", $a->name);
+		$this->assertEquals(556987862, $a->id);
+		$this->assertEquals("Здесь темно.", $a->description);
+
+
+		// database locations assertion
+		$this->assertEquals(3, $conn->query("SELECT count(*) FROM `locations`")->fetch_array()[0]);
+
+		$qlocs = $conn->query("SELECT `title` AS `name`, `description` AS `description`, `goto` AS `goto`, `id` AS `id`, `area` AS `area` FROM `locations` ORDER BY `id`");
+
+		$l = $qlocs->fetch_object("Location");
+		$this->assertEquals("Другая голубая улица", $l->name);
+		$this->assertEquals("Пойти на Зелёную улицу=764833624|Пойти на Голубую улицу=740842744", $l->goto);
+		$this->assertEquals("Здесь стоят гомосеки и немного пидарасов.", $l->description);
+		$this->assertEquals(392970597, $l->id);
+		$this->assertEquals(53859108, $l->area);
+
+		$l = $qlocs->fetch_object("Location");
+		$this->assertEquals("Голубая улица", $l->name);
+		$this->assertEquals("Пойти на Зелёную улицу=764833624", $l->goto);
+		$this->assertEquals("Здесь сидят гомосеки.", $l->description);
+		$this->assertEquals(740842744, $l->id);
+		$this->assertEquals(556987862, $l->area);
+
+		$l = $qlocs->fetch_object("Location");
+		$this->assertEquals("Зелёная улица", $l->name);
+		$this->assertEquals("Пойти на Голубую улицу=392970597|Пойти на другую Голубую улицу=740842744", $l->goto);
+		$this->assertEquals("Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.", $l->description);
+		$this->assertEquals(764833624, $l->id);
+		$this->assertEquals(556987862, $l->area);
+
+		$conn->query("DROP DATABASE $base");
+		$conn->close();
 
 		$this->cleanup();
 	}

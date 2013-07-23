@@ -78,7 +78,7 @@ class Location {
 		if (!$this->actions) $this->actions = $actions;
 		if (!$this->area) $this->area = $area;
 		if (!$this->id) $this->id = round(abs(crc32($label))/2);
-		$this->file = $area->file;
+		if ($this->area && isset($this->area->file)) $this->file = $area->file;
 		return $this;
 	}
 }
