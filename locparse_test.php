@@ -714,12 +714,14 @@ Warning: string with spaces only
 ");
 		fclose($fp);
 
-		$my->processDir("./test", null, true);
+		$this->setExpectedException("InvalidArgumentException", "required location not exists");
 
-		$this->setExpectedException("Fatal: required location not exists
+		$this->expectOutputString("Fatal: required location not exists
     * Пойти на Зелёную улицу - kront/greenstreet
     line 13 in ./test/Кронт - kront/map.ht.md
 ");
+
+		$my->processDir("./test", null, true);
 
 		$this->cleanup();
 	}
