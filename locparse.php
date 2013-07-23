@@ -222,6 +222,10 @@ class Parser {
 				$tmpTarget = myexplode(" - ", $tmp, 1);
 				// fatal error #2
 				if (!$tmpTarget) die("can't find target of transition");
+				// warning #8
+				if (endsWith($tmpAction, ".")) {
+					$this->fileWarning("dot after transition",$filename,$k,$s);
+				}
 				if (strpos($tmpTarget, '/') === false) $tmpTarget = $area->label . "/" . $tmpTarget;
 				$this->locations->last()->actions[$tmpAction] = $tmpTarget;
 			}
