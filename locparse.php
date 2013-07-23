@@ -146,12 +146,11 @@ class Locations {
 	}
 
 	function fileFatal($warning, $filename, $line, $str = null) {
-//		var_dump($warning);
-		throw new Exception(
+		throw new InvalidArgumentException($warning);
+		echo
 			"Fatal: {$warning}\n".
 			(($str !== null) ? "    {$str}\n" : "").
-			"    line {$line} in {$filename}\n"
-		);
+			"    line {$line} in {$filename}\n";
 	}
 
 class Parser {
