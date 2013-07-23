@@ -133,17 +133,23 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 		$qareas = $conn->query("SELECT `title` AS `name`, `id` AS `id`, `description` AS `description` FROM `areas` ORDER BY `id`");
 
-		$a = $qareas->fetch_object("Area");
-		$this->assertEquals("Кронт", $a->name);
-		$this->assertEquals(53859108, $a->id);
+		$a1 = $qareas->fetch_object("Area");
+		$this->assertEquals("Кронт", $a1->name);
+		$this->assertEquals(53859108, $a1->id);
 		$this->assertEquals("Большой и ленивый город.
 
-Здесь убивают слоников и разыгрывают туристов.", $a->description);
+Здесь убивают слоников и разыгрывают туристов.", $a1->description);
+		$this->assertNotEquals(null, $a1->id);
+		$this->assertNotEquals(0, $a1->id);
 
-		$a = $qareas->fetch_object("Area");
-		$this->assertEquals("Окрестности Кронта", $a->name);
-		$this->assertEquals(556987862, $a->id);
-		$this->assertEquals("Здесь темно.", $a->description);
+		$a2 = $qareas->fetch_object("Area");
+		$this->assertEquals("Окрестности Кронта", $a2->name);
+		$this->assertEquals(556987862, $a2->id);
+		$this->assertEquals("Здесь темно.", $a2->description);
+		$this->assertNotEquals(null, $a2->id);
+		$this->assertNotEquals(0, $a2->id);
+
+		$this->assertNotEquals($a1->id, $a2->id);
 
 
 		// database locations assertion
@@ -151,30 +157,40 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 		$qlocs = $conn->query("SELECT `title` AS `name`, `description` AS `description`, `goto` AS `goto`, `id` AS `id`, `area` AS `area` FROM `locations` ORDER BY `id`");
 
-		$l = $qlocs->fetch_object("Location");
-		$this->assertEquals("Другая голубая улица", $l->name);
-		$this->assertEquals("Пойти на Зелёную улицу=764833624|Пойти на Голубую улицу=740842744", $l->goto);
-		$this->assertEquals("Здесь стоят гомосеки и немного пидарасов.", $l->description);
-		$this->assertEquals(392970597, $l->id);
-		$this->assertEquals(53859108, $l->area);
+		$l1 = $qlocs->fetch_object("Location");
+		$this->assertEquals("Другая голубая улица", $l1->name);
+		$this->assertEquals("Пойти на Зелёную улицу=764833624|Пойти на Голубую улицу=740842744", $l1->goto);
+		$this->assertEquals("Здесь стоят гомосеки и немного пидарасов.", $l1->description);
+		$this->assertEquals(392970597, $l1->id);
+		$this->assertEquals(53859108, $l1->area);
+		$this->assertNotEquals(null, $l1->id);
+		$this->assertNotEquals(0, $l1->id);
 
-		$l = $qlocs->fetch_object("Location");
-		$this->assertEquals("Голубая улица", $l->name);
-		$this->assertEquals("Пойти на Зелёную улицу=764833624", $l->goto);
-		$this->assertEquals("Здесь сидят гомосеки.", $l->description);
-		$this->assertEquals(740842744, $l->id);
-		$this->assertEquals(556987862, $l->area);
+		$l2 = $qlocs->fetch_object("Location");
+		$this->assertEquals("Голубая улица", $l2->name);
+		$this->assertEquals("Пойти на Зелёную улицу=764833624", $l2->goto);
+		$this->assertEquals("Здесь сидят гомосеки.", $l2->description);
+		$this->assertEquals(740842744, $l2->id);
+		$this->assertEquals(556987862, $l2->area);
+		$this->assertNotEquals(null, $l2->id);
+		$this->assertNotEquals(0, $l2->id);
 
-		$l = $qlocs->fetch_object("Location");
-		$this->assertEquals("Зелёная улица", $l->name);
-		$this->assertEquals("Пойти на Голубую улицу=392970597|Пойти на другую Голубую улицу=740842744", $l->goto);
+		$l3 = $qlocs->fetch_object("Location");
+		$this->assertEquals("Зелёная улица", $l3->name);
+		$this->assertEquals("Пойти на Голубую улицу=392970597|Пойти на другую Голубую улицу=740842744", $l3->goto);
 		$this->assertEquals("Здесь посажены деревья.
 
 И грибы.
 
-И животноводство.", $l->description);
-		$this->assertEquals(764833624, $l->id);
-		$this->assertEquals(556987862, $l->area);
+И животноводство.", $l3->description);
+		$this->assertEquals(764833624, $l3->id);
+		$this->assertEquals(556987862, $l3->area);
+		$this->assertNotEquals(null, $l3->id);
+		$this->assertNotEquals(0, $l3->id);
+
+		$this->assertNotEquals($l1->id, $l2->id);
+		$this->assertNotEquals($l2->id, $l3->id);
+		$this->assertNotEquals($l3->id, $l1->id);
 
 		$conn->query("DROP DATABASE $base");
 		$conn->close();
