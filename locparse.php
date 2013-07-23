@@ -155,15 +155,13 @@ class Parser {
 		}
 	}
 
-	function fileWarning($warning, $filename, $line, $str = null)
-	{
+	function fileWarning($warning, $filename, $line, $str = null) {
 		echo "Warning: ${warning}\n";
 		if ($str !== null) echo "    ${str}\n";
 		echo "    line ${line} in ${filename}\n";
 	}
 
-	function fileFatal($warning, $filename, $line, $str = null)
-	{
+	function fileFatal($warning, $filename, $line, $str = null) {
 		echo "Fatal: ${warning}\n";
 		if ($str !== null) echo "    ${str}\n";
 		echo "    line ${line} in ${filename}\n";
@@ -171,48 +169,42 @@ class Parser {
 	}
 
 	function processMap($filename, $area) {
-		$inLocation = false;
+		$inLocation = false; $areaParsed = null;
 		foreach(explode("\n", str_replace("\r\n", "\n", file_get_contents($filename))) as $k => $s) {
 			$k++;
 			// warning #1
-			if (preg_match('/^#[^# ].+/', $s))
-			{
+			if (preg_match('/^#[^# ].+/', $s)) {
 				$this->fileWarning("missing space after '#'",$filename,$k,$s);
 			}
 			// warning #2
-			if (preg_match('/^###[^ ].+/', $s))
-			{
+			if (preg_match('/^###[^ ].+/', $s)) {
 				$this->fileWarning("missing space after '###'",$filename,$k,$s);
 			}
 			// warning #3
-			if (preg_match('/^\\*[^ \\*].+/', $s))
-			{
+			if (preg_match('/^\\*[^ \\*].+/', $s)) {
 				$this->fileWarning("missing space after '*'",$filename,$k,$s);
 			}
 			// warning #4
-			if (preg_match('/^\\s+$/', $s))
-			{
+			if (preg_match('/^\\s+$/', $s)) {
 				$this->fileWarning("string with spaces only",$filename,$k);
 			}
 			// warning #5
-			if (preg_match('/[^\\s]\\s+$/', $s))
-			{
+			if (preg_match('/[^\\s]\\s+$/', $s)) {
 				$this->fileWarning("string ends with spaces",$filename,$k,$s);
 			}
 			// warning #6
-			if (preg_match('/^\\s+[^\\s]/', $s))
-			{
+			if (preg_match('/^\\s+[^\\s]/', $s)) {
 				$this->fileWarning("string starts with spaces",$filename,$k,$s);
 			}
 			// warning #7
-			if (preg_match('/^\\s+[^\\s]/', $s))
-			{
+			if (!$areaParsed && !startsWith($s, "# ") && strlen($s)) {
 				$this->fileWarning("non-empty string before area header",$filename,$k,$s);
 			}
 
 			if (startsWith($s, "# ")) {
 				// fatal error #6
-				if (substr($s, 2) != $area->name) die("area's names from directory and file not equals");
+				$areaParsed = substr($s, 2);
+				if ($areaParsed != $area->name) die("area's names from directory and file not equals");
 			}
 			else if (startsWith($s, "### ")) {
 				$inLocation = true;
