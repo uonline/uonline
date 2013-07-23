@@ -159,7 +159,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 		$l1 = $qlocs->fetch_object("Location");
 		$this->assertEquals("Другая голубая улица", $l1->name);
-		$this->assertEquals("Пойти на Зелёную улицу=764833624|Пойти на Голубую улицу=740842744", $l1->goto);
+		$this->assertStringMatchesFormat("Пойти на Зелёную улицу=%d|Пойти на Голубую улицу=%d", $l1->goto);
 		$this->assertEquals("Здесь стоят гомосеки и немного пидарасов.", $l1->description);
 		//$this->assertEquals(392970597, $l1->id);
 		//$this->assertEquals(53859108, $l1->area);
@@ -168,7 +168,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 		$l2 = $qlocs->fetch_object("Location");
 		$this->assertEquals("Голубая улица", $l2->name);
-		$this->assertEquals("Пойти на Зелёную улицу=764833624", $l2->goto);
+		$this->assertStringMatchesFormat("Пойти на Зелёную улицу=%d", $l2->goto);
 		$this->assertEquals("Здесь сидят гомосеки.", $l2->description);
 		//$this->assertEquals(740842744, $l2->id);
 		//$this->assertEquals(556987862, $l2->area);
@@ -177,7 +177,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 		$l3 = $qlocs->fetch_object("Location");
 		$this->assertEquals("Зелёная улица", $l3->name);
-		$this->assertEquals("Пойти на Голубую улицу=392970597|Пойти на другую Голубую улицу=740842744", $l3->goto);
+		$this->assertStringMatchesFormat("Пойти на Голубую улицу=%d|Пойти на другую Голубую улицу=%d", $l3->goto);
 		$this->assertEquals("Здесь посажены деревья.
 
 И грибы.
