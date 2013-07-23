@@ -144,7 +144,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 		$a2 = $qareas->fetch_object("Area");
 		$this->assertEquals("Окрестности Кронта", $a2->name);
-		$this->assertEquals(556987862, $a2->id);
+		//$this->assertEquals(556987862, $a2->id);
 		$this->assertEquals("Здесь темно.", $a2->description);
 		$this->assertNotEquals(null, $a2->id);
 		$this->assertNotEquals(0, $a2->id);
