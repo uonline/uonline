@@ -57,7 +57,7 @@ function help() {
 }
 
 class Area {
-	public $label, $name, $description, $id;
+	public $label, $name, $description, $id, $file;
 
 	public function &__construct($label = "", $name = "", $description = "") {
 		if (!$this->label) $this->label = $label;
@@ -69,7 +69,7 @@ class Area {
 }
 
 class Location {
-	public $label, $name, $description = "", $actions, $area, $id;
+	public $label, $name, $description = "", $actions = array(), $area, $id, $goto, $file;
 
 	public function &__construct($label = "", $name = "", $area = null, $description = "", $actions = "") {
 		if (!$this->label) $this->label = $label;
@@ -78,6 +78,7 @@ class Location {
 		if (!$this->actions) $this->actions = $actions;
 		if (!$this->area) $this->area = $area;
 		if (!$this->id) $this->id = round(abs(crc32($label))/2);
+		$this->file = $area->file;
 		return $this;
 	}
 }
@@ -109,10 +110,21 @@ class Locations {
 		return end($this->locations);
 	}
 
-	public function unlink($label) {
-		// fatal error #1
-		if (!array_key_exists($label, $this->links)) die("required location not exists");
-		return $this->links[$label];
+	public function finInit() {
+		$this->trimDesc();
+		$this->linkage();
+	}
+
+	public function linkage() {
+		foreach ($this->locations as $loc) {
+			$goto = array();
+			foreach ($loc->actions as $v) {
+				// fatal error #1
+				if (!array_key_exists($v['target'], $this->links)) fileFatal("required location not exists", $loc->file, $v['line'], $v['string']);
+				$goto[] = $v['action'] . "=" . $this->links[$v['target']];
+			}
+			$loc->goto = implode($goto, "|");
+		}
 	}
 
 	public function trimDesc() {
@@ -127,16 +139,19 @@ class Locations {
 }
 
 	function fileWarning($warning, $filename, $line, $str = null) {
-		echo "Warning: ${warning}\n";
-		if ($str !== null) echo "    ${str}\n";
-		echo "    line ${line} in ${filename}\n";
+		echo
+			"Warning: {$warning}\n".
+			(($str !== null) ? "    {$str}\n" : "").
+			"    line {$line} in {$filename}\n";
 	}
 
 	function fileFatal($warning, $filename, $line, $str = null) {
-		echo "Fatal: ${warning}\n";
-		if ($str !== null) echo "    ${str}\n";
-		echo "    line ${line} in ${filename}\n";
-		die();
+//		var_dump($warning);
+		throw new Exception(
+			"Fatal: {$warning}\n".
+			(($str !== null) ? "    {$str}\n" : "").
+			"    line {$line} in {$filename}\n"
+		);
 	}
 
 class Parser {
@@ -152,6 +167,7 @@ class Parser {
 			if ($previousLabel != null) $label = $previousLabel."-".$label;
 			$name = $splittedStr[0];
 			$this->areas[] = new Area(iconv(mb_detect_encoding($label, "utf-8, cp1251"), 'utf-8', $label), iconv(mb_detect_encoding($name, "utf-8, cp1251"), 'utf-8', $name));
+			end($this->areas)->file = $dir."/map.ht.md";
 
 			$this->processMap($dir."/map.ht.md", end($this->areas));
 		}
@@ -166,6 +182,7 @@ class Parser {
 				}
 			}
 		}
+		$this->locations->finInit();
 	}
 
 	function processMap($filename, $area) {
@@ -227,7 +244,12 @@ class Parser {
 					fileWarning("dot after transition",$filename,$k,$s);
 				}
 				if (strpos($tmpTarget, '/') === false) $tmpTarget = $area->label . "/" . $tmpTarget;
-				$this->locations->last()->actions[$tmpAction] = $tmpTarget;
+				$this->locations->last()->actions[] = array(
+					'action' => $tmpAction,
+					'target' => $tmpTarget,
+					'string' => $s,
+					'line' => $k,
+				);
 			}
 			else {
 				if ($inLocation) {
@@ -238,7 +260,6 @@ class Parser {
 				}
 			}
 		}
-		$this->locations->trimDesc();
 		foreach ($this->areas as $a) {
 			$a->description = trim($a->description);
 		}
@@ -275,16 +296,12 @@ class Injector {
 			if (!$r) echo($conn->error);
 		}
 		foreach ($this->locations->locations as $v) {
-			$goto = array();
-			foreach ($v->actions as $k1 => $v1) {
-				$goto[] = $k1."=".$this->locations->unlink($v1);
-			}
 			$r = mysqli_query($conn,
 							'REPLACE `locations`'.
 							'(`title`, `goto`, `description`, `id`, `area`, `default`)'.
 							'VALUES ("'.
 								mysqli_real_escape_string($conn, $v->name).'", "'.
-								mysqli_real_escape_string($conn, implode($goto, "|")).'", "'.
+								mysqli_real_escape_string($conn, $v->goto).'", "'.
 								mysqli_real_escape_string($conn, $v->description).'", "'.
 								mysqli_real_escape_string($conn, $v->id).'", '.
 								mysqli_real_escape_string($conn, $v->area->id).', 0)');
