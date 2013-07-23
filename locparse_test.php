@@ -22,14 +22,8 @@ require_once './config.php';
 
 class ParserTest extends PHPUnit_Framework_TestCase {
 
-	function cleanup() {
-		if (file_exists("./test"))
-			rmdirr("./test");
-	}
-
 	public function testSecond() {
 		$my = new Parser();
-		$this->cleanup();
 
 		mkdir("./test");
 		mkdir("./test/Кронт - kront");
@@ -194,13 +188,10 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 		$conn->query("DROP DATABASE $base");
 		$conn->close();
-
-		$this->cleanup();
 	}
 
 	public function testWarning1() {
 		$my = new Parser();
-		$this->cleanup();
 
 		mkdir("./test");
 		mkdir("./test/Кронт - kront");
@@ -255,13 +246,10 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		$my->processDir("./test", null, true);
 
 		$this->expectOutputString("Warning: missing space after '#'\n    #Место встречи изменить нельзя\n    line 4 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md\n");
-
-		$this->cleanup();
 	}
 
 	public function testWarning2() {
 		$my = new Parser();
-		$this->cleanup();
 
 		mkdir("./test");
 		mkdir("./test/Кронт - kront");
@@ -316,13 +304,10 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		$my->processDir("./test", null, true);
 
 		$this->expectOutputString("Warning: missing space after '###'\n    ###Место встречи изменить нельзя\n    line 4 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md\n");
-
-		$this->cleanup();
 	}
 
 	public function testWarning3() {
 		$my = new Parser();
-		$this->cleanup();
 
 		mkdir("./test");
 		mkdir("./test/Кронт - kront");
@@ -377,13 +362,10 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		$my->processDir("./test", null, true);
 
 		$this->expectOutputString("Warning: missing space after '*'\n    *Место встречи изменить нельзя\n    line 4 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md\n");
-
-		$this->cleanup();
 	}
 
 	public function testWarning4() {
 		$my = new Parser();
-		$this->cleanup();
 
 		mkdir("./test");
 		mkdir("./test/Кронт - kront");
@@ -442,13 +424,10 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 Warning: string with spaces only
     line 6 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
 ");
-
-		$this->cleanup();
 	}
 
 	public function testWarning5() {
 		$my = new Parser();
-		$this->cleanup();
 
 		mkdir("./test");
 		mkdir("./test/Кронт - kront");
@@ -506,13 +485,10 @@ Warning: string with spaces only
     Здесь темно. "."
     line 5 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
 ");
-
-		$this->cleanup();
 	}
 
 	public function testWarning6() {
 		$my = new Parser();
-		$this->cleanup();
 
 		mkdir("./test");
 		mkdir("./test/Кронт - kront");
@@ -570,13 +546,10 @@ Warning: string with spaces only
      Здесь темно.
     line 5 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
 ");
-
-		$this->cleanup();
 	}
 
 	public function testWarning7() {
 		$my = new Parser();
-		$this->cleanup();
 
 		mkdir("./test");
 		mkdir("./test/Кронт - kront");
@@ -634,13 +607,10 @@ Warning: string with spaces only
     Ня.
     line 2 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
 ");
-
-		$this->cleanup();
 	}
 
 	public function testWarning8() {
 		$my = new Parser();
-		$this->cleanup();
 
 		mkdir("./test");
 		mkdir("./test/Кронт - kront");
@@ -698,13 +668,10 @@ Warning: string with spaces only
     * Пойти на Голубую улицу. - kront-outer/bluestreet
     line 14 in ./test/Кронт - kront/map.ht.md
 ");
-
-		$this->cleanup();
 	}
 
 	public function testError1() {
 		$my = new Parser();
-		$this->cleanup();
 
 		mkdir("./test");
 		mkdir("./test/Кронт - kront");
@@ -764,10 +731,17 @@ Warning: string with spaces only
 ");
 
 		$my->processDir("./test", null, true);
-
-		$this->cleanup();
 	}
-/**/
+
+	public function setUp()
+	{
+		if (file_exists("./test")) rmdirr("./test");
+	}
+
+	public function tearDown()
+	{
+		if (file_exists("./test")) rmdirr("./test");
+	}
 }
 
 function rmdirr($dirname) {
