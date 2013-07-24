@@ -145,7 +145,7 @@ class Locations {
 			"    line {$line} in {$filename}\n";
 	}
 
-	function fileFatal($warning, $filename, $line, $str = null) {
+	function fileFatal($warning, $filename, $line = 0, $str = null) {
 		echo
 			"Fatal: {$warning}\n".
 			(($str !== null) ? "    {$str}\n" : "").
@@ -161,7 +161,7 @@ class Parser {
 		if ($root === false) {
 			$splittedStr = explode(" - ", myexplode("/", $dir, -1));
 			// fatal error #4
-			if (!$splittedStr[1]) die("can't find label of area");
+			if (!array_key_exists(1, $splittedStr)) fileFatal("can't find label of area", $dir);
 			$label = $splittedStr[1];
 			if ($previousLabel != null) $label = $previousLabel."-".$label;
 			$name = $splittedStr[0];
@@ -220,15 +220,15 @@ class Parser {
 			if (startsWith($s, "# ")) {
 				// fatal error #6
 				$areaParsed = substr($s, 2);
-				if ($areaParsed != $area->name) die("area's names from directory and file not equals");
+				if ($areaParsed != $area->name) fileFatal("area's names from directory and file not equals",$filename,$k,$s);
 			}
 			else if (startsWith($s, "### ")) {
 				$inLocation = true;
 				$tmp = substr($s, 4);
-				// fatal error #3
-				if (!myexplode(" - ", $tmp, 1)) die("can't find label of location");
 				// fatal error #5
-				if (count(explode("/", myexplode(" - ", $tmp, 1)))>1) die("more than one slash at location label");
+				if (count(explode("/", myexplode(" - ", $tmp, 1)))>1) fileFatal("more than one slash at location label",$filename,$k,$s);
+				// fatal error #3
+				if (!myexplode(" - ", $tmp, 1)) fileFatal("can't find label of location",$filename,$k,$s);
 				$l = new Location($area->label . "/" . myexplode(" - ", $tmp, 1), myexplode(" - ", $tmp, 0), $area);
 				$this->locations->push($l);
 			}
@@ -237,7 +237,7 @@ class Parser {
 				$tmpAction = myexplode(" - ", $tmp, 0);
 				$tmpTarget = myexplode(" - ", $tmp, 1);
 				// fatal error #2
-				if (!$tmpTarget) die("can't find target of transition");
+				if (!$tmpTarget) fileFatal("can't find target of transition",$filename,$k,$s);
 				// warning #8
 				if (endsWith($tmpAction, ".")) {
 					fileWarning("dot after transition",$filename,$k,$s);

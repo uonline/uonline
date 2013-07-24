@@ -732,6 +732,320 @@ Warning: string with spaces only
 
 		$my->processDir("./test", null, true);
 	}
+	public function testError2() {
+		$my = new Parser();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестности Кронта
+
+Здесь темно.
+
+### Голубая улица - bluestreet
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу - greenstreet
+
+### Зелёная улица - greenstreet
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу - kront/bluestreet
+* Пойти на другую Голубую улицу
+
+");
+		fclose($fp);
+
+		$this->setExpectedException("InvalidArgumentException", "can't find target of transition");
+
+		$this->expectOutputString("Fatal: can't find target of transition
+    * Пойти на другую Голубую улицу
+    line 22 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
+");
+
+		$my->processDir("./test", null, true);
+	}
+
+	public function testError4() {
+		$my = new Parser();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестности Кронта
+
+Здесь темно.
+
+### Голубая улица - bluestreet
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу - greenstreet
+
+### Зелёная улица - greenstreet
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу - kront/bluestreet
+* Пойти на другую Голубую улицу - bluestreet
+
+");
+		fclose($fp);
+
+		$this->setExpectedException("InvalidArgumentException", "can't find label of area");
+
+		$this->expectOutputString("Fatal: can't find label of area
+    line 0 in ./test/Кронт - kront/Окрестности Кронта
+");
+
+		$my->processDir("./test", null, true);
+	}
+
+		public function testError3() {
+		$my = new Parser();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестности Кронта
+
+Здесь темно.
+
+### Голубая улица - bluestreet
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу - greenstreet
+
+### Зелёная улица
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу - kront/bluestreet
+* Пойти на другую Голубую улицу - bluestreet
+
+");
+		fclose($fp);
+
+		$this->setExpectedException("InvalidArgumentException", "can't find label of location");
+
+		$this->expectOutputString("Fatal: can't find label of location
+    ### Зелёная улица
+    line 13 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
+");
+
+		$my->processDir("./test", null, true);
+	}
+
+	public function testError5() {
+		$this->fail();
+		$my = new Parser();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестности Кронта
+
+Здесь темно.
+
+### Голубая улица - bluestreet
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу - greenstreet
+
+### Зелёная улица - greenstreet
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу - kront//bluestreet
+* Пойти на другую Голубую улицу - bluestreet
+
+");
+		fclose($fp);
+
+		$this->setExpectedException("InvalidArgumentException", "more than one slash at location label");
+
+		$this->expectOutputString("Fatal: more than one slash at location label
+    * Пойти на Голубую улицу - kront//bluestreet
+    line 21 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
+");
+
+		$my->processDir("./test", null, true);
+	}
+
+	public function testError6() {
+		$my = new Parser();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица - bluestreet
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу - kront-outer/greenstreet
+* Пойти на Голубую улицу - kront-outer/bluestreet
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестность Кронта
+
+Здесь темно.
+
+### Голубая улица - bluestreet
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу - greenstreet
+
+### Зелёная улица - greenstreet
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу - kront/bluestreet
+* Пойти на другую Голубую улицу - bluestreet
+
+");
+		fclose($fp);
+
+		$this->setExpectedException("InvalidArgumentException", "area's names from directory and file not equals");
+
+		$this->expectOutputString("Fatal: area's names from directory and file not equals
+    # Окрестность Кронта
+    line 3 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
+");
+
+		$my->processDir("./test", null, true);
+	}
 
 	public function setUp()
 	{
