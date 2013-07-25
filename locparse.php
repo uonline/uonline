@@ -218,15 +218,13 @@ class Parser {
 			}
 
 			if (startsWith($s, "# ")) {
-				// fatal error #6
+				// fatal error #5
 				$areaParsed = substr($s, 2);
 				if ($areaParsed != $area->name) fileFatal("area's names from directory and file not equals",$filename,$k,$s);
 			}
 			else if (startsWith($s, "### ")) {
 				$inLocation = true;
 				$tmp = substr($s, 4);
-				// fatal error #5
-				if (count(explode("/", myexplode(" - ", $tmp, 1)))>1) fileFatal("more than one slash at location label",$filename,$k,$s);
 				// fatal error #3
 				if (!myexplode(" - ", $tmp, 1)) fileFatal("can't find label of location",$filename,$k,$s);
 				$l = new Location($area->label . "/" . myexplode(" - ", $tmp, 1), myexplode(" - ", $tmp, 0), $area);
