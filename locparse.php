@@ -225,15 +225,17 @@ class Parser {
 			else if (startsWith($s, "### ")) {
 				$inLocation = true;
 				$tmp = substr($s, 4);
+				preg_match('/^(.+)(?: `)(.+)?(?=`)/', $tmp, $matches);
 				// fatal error #3
-				if (!myexplode(" - ", $tmp, 1)) fileFatal("can't find label of location",$filename,$k,$s);
-				$l = new Location($area->label . "/" . myexplode(" - ", $tmp, 1), myexplode(" - ", $tmp, 0), $area);
+				if (!array_key_exists(2, $matches)) fileFatal("can't find label of location",$filename,$k,$s);
+				$l = new Location($area->label . "/" . $matches[2], $matches[1], $area);
 				$this->locations->push($l);
 			}
 			else if (startsWith($s, "* ")) {
 				$tmp = substr($s, 2);
-				$tmpAction = myexplode(" - ", $tmp, 0);
-				$tmpTarget = myexplode(" - ", $tmp, 1);
+				preg_match('/^(.+)(?: `)(.+)?(?=`)/', $tmp, $matches);
+				$tmpAction = array_key_exists(1, $matches) ? $matches[1] : null;
+				$tmpTarget = array_key_exists(2, $matches) ? $matches[2] : null;
 				// fatal error #2
 				if (!$tmpTarget) fileFatal("can't find target of transition",$filename,$k,$s);
 				// warning #8

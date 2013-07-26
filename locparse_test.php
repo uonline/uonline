@@ -37,12 +37,12 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -55,13 +55,13 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 Здесь темно.
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -69,8 +69,8 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
@@ -205,12 +205,12 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -223,13 +223,13 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 #Место встречи изменить нельзя
 Здесь темно.
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -237,8 +237,8 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
@@ -263,12 +263,12 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -281,13 +281,13 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 ###Место встречи изменить нельзя
 Здесь темно.
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -295,8 +295,8 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
@@ -321,12 +321,12 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -339,13 +339,13 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 *Место встречи изменить нельзя
 Здесь темно.
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -353,8 +353,8 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
@@ -379,12 +379,12 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -397,13 +397,13 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 "."    "."
 Здесь темно.
 "."\t"."
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -411,8 +411,8 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
@@ -441,12 +441,12 @@ Warning: string with spaces only
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -459,13 +459,13 @@ Warning: string with spaces only
 
 Здесь темно."." "."
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -473,8 +473,8 @@ Warning: string with spaces only
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
@@ -502,12 +502,12 @@ Warning: string with spaces only
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -520,13 +520,13 @@ Warning: string with spaces only
 
 "." Здесь темно.
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -534,8 +534,8 @@ Warning: string with spaces only
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
@@ -563,12 +563,12 @@ Warning: string with spaces only
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -581,13 +581,13 @@ Warning: string with spaces only
 
 Здесь темно.
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -595,8 +595,8 @@ Warning: string with spaces only
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
@@ -624,12 +624,12 @@ Warning: string with spaces only
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу. - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу. `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -642,13 +642,13 @@ Warning: string with spaces only
 
 Здесь темно.
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -656,8 +656,8 @@ Warning: string with spaces only
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
@@ -665,7 +665,7 @@ Warning: string with spaces only
 		$my->processDir("./test", null, true);
 
 		$this->expectOutputString("Warning: dot after transition
-    * Пойти на Голубую улицу. - kront-outer/bluestreet
+    * Пойти на Голубую улицу. `kront-outer/bluestreet`
     line 14 in ./test/Кронт - kront/map.ht.md
 ");
 	}
@@ -685,12 +685,12 @@ Warning: string with spaces only
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -703,13 +703,13 @@ Warning: string with spaces only
 
 Здесь темно.
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -717,8 +717,8 @@ Warning: string with spaces only
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
@@ -726,7 +726,7 @@ Warning: string with spaces only
 		$this->setExpectedException("InvalidArgumentException", "required location not exists");
 
 		$this->expectOutputString("Fatal: required location not exists
-    * Пойти на Зелёную улицу - kront/greenstreet
+    * Пойти на Зелёную улицу `kront/greenstreet`
     line 13 in ./test/Кронт - kront/map.ht.md
 ");
 
@@ -747,12 +747,12 @@ Warning: string with spaces only
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -765,13 +765,13 @@ Warning: string with spaces only
 
 Здесь темно.
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -779,7 +779,7 @@ Warning: string with spaces only
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
 * Пойти на другую Голубую улицу
 
 ");
@@ -810,12 +810,12 @@ Warning: string with spaces only
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта");
@@ -828,13 +828,13 @@ Warning: string with spaces only
 
 Здесь темно.
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -842,8 +842,8 @@ Warning: string with spaces only
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
@@ -872,12 +872,12 @@ Warning: string with spaces only
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -890,11 +890,11 @@ Warning: string with spaces only
 
 Здесь темно.
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
 ### Зелёная улица
 
@@ -904,8 +904,8 @@ Warning: string with spaces only
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
@@ -935,12 +935,12 @@ Warning: string with spaces only
 
 Здесь убивают слоников и разыгрывают туристов.
 
-### Другая голубая улица - bluestreet
+### Другая голубая улица `bluestreet`
 
 Здесь стоят гомосеки и немного пидарасов.
 
-* Пойти на Зелёную улицу - kront-outer/greenstreet
-* Пойти на Голубую улицу - kront-outer/bluestreet
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
 
 ");
 		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
@@ -953,13 +953,13 @@ Warning: string with spaces only
 
 Здесь темно.
 
-### Голубая улица - bluestreet
+### Голубая улица `bluestreet`
 
 Здесь сидят гомосеки.
 
-* Пойти на Зелёную улицу - greenstreet
+* Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица - greenstreet
+### Зелёная улица `greenstreet`
 
 Здесь посажены деревья.
 
@@ -967,8 +967,8 @@ Warning: string with spaces only
 
 И животноводство.
 
-* Пойти на Голубую улицу - kront/bluestreet
-* Пойти на другую Голубую улицу - bluestreet
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
 
 ");
 		fclose($fp);
