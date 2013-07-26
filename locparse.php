@@ -20,13 +20,13 @@
 require_once './config.php';
 
 if (isset($argv)) {
-	if (array_key_exists(1, $argv) && $argv[1] == "--validate") {
+	if (array_key_exists(1, $argv) && ($argv[1] == "--validate" || $argv[1] == "-v")) {
 		$p = new Parser();
 		if (!(array_key_exists(2, $argv) && get_path($argv[2]))) die("Path not exists.");
 		$p->processDir(get_path($argv[2]), null, true);
 		echo "\n".report($p)."\n";
 	}
-	else if (array_key_exists(1, $argv) && $argv[1] == "--export") {
+	else if (array_key_exists(1, $argv) && ($argv[1] == "--export" || $argv[1] == "-e")) {
 		$p = new Parser();
 		if (!(array_key_exists(2, $argv) && get_path($argv[2]))) die("Path not exists.");
 		$p->processDir(get_path($argv[2]), null, true);
@@ -69,7 +69,7 @@ class Area {
 }
 
 class Location {
-	public $label, $name, $description = "", $actions = array(), $area, $id, $goto, $file;
+	public $label, $name, $description = "", $actions = array(), $area, $id, $goto, $file, $isDefault;
 
 	public function &__construct($label = "", $name = "", $area = null, $description = "", $actions = "") {
 		if (!$this->label) $this->label = $label;
@@ -116,6 +116,7 @@ class Locations {
 	}
 
 	public function linkage() {
+		$hasDefault = false;
 		foreach ($this->locations as $loc) {
 			$goto = array();
 			foreach ($loc->actions as $v) {
@@ -124,7 +125,10 @@ class Locations {
 				$goto[] = $v['action'] . "=" . $this->links[$v['target']];
 			}
 			$loc->goto = implode($goto, "|");
+			$hasDefault = $loc->isDefault || $hasDefault;
 		}
+		// fatal error #6
+		if (!$hasDefault) fileFatal ("default location is not set");
 	}
 
 	public function trimDesc() {
@@ -145,11 +149,11 @@ class Locations {
 			"    line {$line} in {$filename}\n";
 	}
 
-	function fileFatal($warning, $filename, $line = 0, $str = null) {
+	function fileFatal($warning, $filename = null, $line = 0, $str = null) {
 		echo
 			"Fatal: {$warning}\n".
 			(($str !== null) ? "    {$str}\n" : "").
-			"    line {$line} in {$filename}\n";
+			(($filename !== null) ? "    line {$line} in {$filename}\n" : "");
 		throw new InvalidArgumentException($warning);
 	}
 
@@ -229,6 +233,7 @@ class Parser {
 				// fatal error #3
 				if (!array_key_exists(2, $matches)) fileFatal("can't find label of location",$filename,$k,$s);
 				$l = new Location($area->label . "/" . $matches[2], $matches[1], $area);
+				$l->isDefault = preg_match('/` \\(default\\)/', $tmp);
 				$this->locations->push($l);
 			}
 			else if (startsWith($s, "* ")) {
@@ -303,7 +308,8 @@ class Injector {
 								mysqli_real_escape_string($conn, $v->goto).'", "'.
 								mysqli_real_escape_string($conn, $v->description).'", "'.
 								mysqli_real_escape_string($conn, $v->id).'", '.
-								mysqli_real_escape_string($conn, $v->area->id).', 0)');
+								mysqli_real_escape_string($conn, $v->area->id).', '.
+								( (int) $v->isDefault ).')');
 			if (!$r) echo($conn->error);
 			$r = $conn->query("SELECT * FROM `locations` WHERE `id` = $v->id");
 			if (!$r) echo("export location \"$v->name - $v->label\" failed");
