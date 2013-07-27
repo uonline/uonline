@@ -88,16 +88,19 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($my->areas[1]->description, "Здесь темно.");
 
 		$this->assertEquals(3, $my->locations->count());
+		$this->assertEquals($my->locations->get(0)->isDefault, false);
 		$this->assertEquals($my->locations->get(0)->label, "kront/bluestreet");
 		$this->assertEquals($my->locations->get(0)->description, "Здесь стоят гомосеки и немного пидарасов.");
 		$this->assertEquals($my->locations->get(0)->actions[0]['action'], "Пойти на Зелёную улицу");
 		$this->assertEquals($my->locations->get(0)->actions[0]['target'], "kront-outer/greenstreet");
 		$this->assertEquals($my->locations->get(0)->actions[1]['action'], "Пойти на Голубую улицу");
 		$this->assertEquals($my->locations->get(0)->actions[1]['target'], "kront-outer/bluestreet");
+		$this->assertEquals($my->locations->get(1)->isDefault, false);
 		$this->assertEquals($my->locations->get(1)->label, "kront-outer/bluestreet");
 		$this->assertEquals($my->locations->get(1)->description, "Здесь сидят гомосеки.");
 		$this->assertEquals($my->locations->get(1)->actions[0]['action'], "Пойти на Зелёную улицу");
 		$this->assertEquals($my->locations->get(1)->actions[0]['target'], "kront-outer/greenstreet");
+		$this->assertEquals($my->locations->get(2)->isDefault, true);
 		$this->assertEquals($my->locations->get(2)->name, "Зелёная улица");
 		$this->assertEquals($my->locations->get(2)->label, "kront-outer/greenstreet");
 		$this->assertEquals($my->locations->get(2)->description, "Здесь посажены деревья.\n\nИ грибы.\n\nИ животноводство.");
@@ -149,9 +152,10 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		// database locations assertion
 		$this->assertEquals(3, $conn->query("SELECT count(*) FROM `locations`")->fetch_array()[0]);
 
-		$qlocs = $conn->query("SELECT `title` AS `name`, `description` AS `description`, `goto` AS `goto`, `id` AS `id`, `area` AS `area` FROM `locations` ORDER BY `id`");
+		$qlocs = $conn->query("SELECT `title` AS `name`, `description` AS `description`, `goto` AS `goto`, `id` AS `id`, `area` AS `area`, `default` AS `isDefault` FROM `locations` ORDER BY `id`");
 
 		$l1 = $qlocs->fetch_object("Location");
+		$this->assertEquals(false, !!$l1->isDefault);
 		$this->assertEquals("Другая голубая улица", $l1->name);
 		$this->assertStringMatchesFormat("Пойти на Зелёную улицу=%d|Пойти на Голубую улицу=%d", $l1->goto);
 		$this->assertEquals("Здесь стоят гомосеки и немного пидарасов.", $l1->description);
@@ -161,6 +165,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		$this->assertNotEquals(0, $l1->id);
 
 		$l2 = $qlocs->fetch_object("Location");
+		$this->assertEquals(false, !!$l2->isDefault);
 		$this->assertEquals("Голубая улица", $l2->name);
 		$this->assertStringMatchesFormat("Пойти на Зелёную улицу=%d", $l2->goto);
 		$this->assertEquals("Здесь сидят гомосеки.", $l2->description);
@@ -170,6 +175,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		$this->assertNotEquals(0, $l2->id);
 
 		$l3 = $qlocs->fetch_object("Location");
+		$this->assertEquals(true, !!$l3->isDefault);
 		$this->assertEquals("Зелёная улица", $l3->name);
 		$this->assertStringMatchesFormat("Пойти на Голубую улицу=%d|Пойти на другую Голубую улицу=%d", $l3->goto);
 		$this->assertEquals("Здесь посажены деревья.
