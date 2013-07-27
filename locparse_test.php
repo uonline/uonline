@@ -670,6 +670,68 @@ Warning: string with spaces only
 ");
 	}
 
+	public function testWarning9() {
+		$my = new Parser();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица `bluestreet`
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестности Кронта
+
+Здесь темно.
+
+### Голубая улица `bluestreet`
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу `greenstreet`
+* Сходить на Зелёную улицу `greenstreet`
+
+### Зелёная улица `greenstreet` (default)
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
+
+");
+		fclose($fp);
+
+		$my->processDir("./test", null, true);
+
+		$this->expectOutputString("Warning: such target already exists
+    * Сходить на Зелёную улицу `greenstreet`
+    line 12 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
+");
+	}
+
 	public function testError1() {
 		$my = new Parser();
 
@@ -1039,6 +1101,71 @@ Warning: string with spaces only
 		$this->setExpectedException("InvalidArgumentException", "default location is not set");
 
 		$this->expectOutputString("Fatal: default location is not set
+");
+
+		$my->processDir("./test", null, true);
+	}
+
+	public function testError7() {
+		$my = new Parser();
+
+		mkdir("./test");
+		mkdir("./test/Кронт - kront");
+
+		$fp = fopen("./test/Кронт - kront/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Кронт
+
+Большой и ленивый город.
+
+Здесь убивают слоников и разыгрывают туристов.
+
+### Другая голубая улица `bluestreet`
+
+Здесь стоят гомосеки и немного пидарасов.
+
+* Пойти на Зелёную улицу `kront-outer/greenstreet`
+* Пойти на Голубую улицу `kront-outer/bluestreet`
+
+");
+		mkdir("./test/Кронт - kront/Окрестности Кронта - outer");
+		fclose($fp);
+
+		$fp = fopen("./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md", 'w');
+		fwrite($fp, "
+
+# Окрестности Кронта
+
+Здесь темно.
+
+### Голубая улица `bluestreet`
+
+Здесь сидят гомосеки.
+
+* Пойти на Зелёную улицу `greenstreet`
+
+### Зелёная улица `greenstreet` (default)
+
+Здесь посажены деревья.
+
+И грибы.
+
+И животноводство.
+
+* Пойти на Голубую улицу `kront/bluestreet`
+* Пойти на другую Голубую улицу `bluestreet`
+
+### Лишняя зелёная улица `greenstreet`
+
+");
+		fclose($fp);
+
+		$this->setExpectedException("InvalidArgumentException", "such location already exists");
+
+		$this->expectOutputString("Fatal: such location already exists
+    ### Лишняя зелёная улица `greenstreet`
+    line 24 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
 ");
 
 		$my->processDir("./test", null, true);

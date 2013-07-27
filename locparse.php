@@ -69,7 +69,7 @@ class Area {
 }
 
 class Location {
-	public $label, $name, $description = "", $actions = array(), $area, $id, $goto, $file, $isDefault;
+	public $label, $name, $description = "", $actions = array(), $area, $id, $goto, $file, $isDefault, $line, $string;
 
 	public function &__construct($label = "", $name = "", $area = null, $description = "", $actions = "") {
 		if (!$this->label) $this->label = $label;
@@ -93,6 +93,8 @@ class Locations {
 	}
 
 	public function push($loc) {
+		// fatal error #7
+		if (array_key_exists($loc->label, $this->links)) fileFatal ("such location already exists", $loc->file, $loc->line, $loc->string);
 		$this->links[$loc->label] = $loc->id;
 		$this->ids[$loc->id] = $loc;
 		$this->locations[] = $loc;
@@ -118,12 +120,16 @@ class Locations {
 	public function linkage() {
 		$hasDefault = false;
 		foreach ($this->locations as $loc) {
-			$goto = array();
+			$goto = array(); $tmp = array(); $warn9 = false;
 			foreach ($loc->actions as $v) {
 				// fatal error #1
 				if (!array_key_exists($v['target'], $this->links)) fileFatal("required location not exists", $loc->file, $v['line'], $v['string']);
 				$goto[] = $v['action'] . "=" . $this->links[$v['target']];
+				if (in_array($this->links[$v['target']], $tmp)) $warn9 = true;
+				$tmp[] = $this->links[$v['target']];
 			}
+			// warning #9
+			if ($warn9) fileWarning("such target already exists", $loc->file, $v['line'], $v['string']);
 			$loc->goto = implode($goto, "|");
 			$hasDefault = $loc->isDefault || $hasDefault;
 		}
@@ -185,7 +191,7 @@ class Parser {
 				}
 			}
 		}
-		$this->locations->finInit();
+		if ($root) $this->locations->finInit();
 	}
 
 	function processMap($filename, $area) {
@@ -234,6 +240,8 @@ class Parser {
 				if (!array_key_exists(2, $matches)) fileFatal("can't find label of location",$filename,$k,$s);
 				$l = new Location($area->label . "/" . $matches[2], $matches[1], $area);
 				$l->isDefault = preg_match('/` \\(default\\)/', $tmp);
+				$l->string = $s;
+				$l->line = $k;
 				$this->locations->push($l);
 			}
 			else if (startsWith($s, "* ")) {
