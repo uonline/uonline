@@ -666,8 +666,8 @@ function tf($s) {
 	$s = preg_replace('/^-(?= )|(?<= )-(?= )|---/', '&mdash;', $s);
 	$s = preg_replace('/--/', '&ndash;', $s);
 	$s = preg_replace('/-(?=\\d)/', '&minus;', $s);
-	$s = preg_replace('/"(?=\\w|[йЙёЁ])/', '&laquo;', $s);
-	$s = preg_replace('/(?<=\\w|[йЙёЁ])"/', '&raquo;', $s);
+	$s = preg_replace('/("|\&quot\;)(?=\\w|[йЙёЁ])/', '&laquo;', $s);
+	$s = preg_replace('/(?<=\\w|[йЙёЁ])("|\&quot\;)/', '&raquo;', $s);
 	return $s;
 }
 

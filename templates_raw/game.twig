@@ -3,15 +3,15 @@
 {% block title %}{{ location_name }}{% endblock title %}
 
 {% block content %}
-			<div class="page-header"><h1>{{ location_name | raw | tf }} <small>{{ area_name | raw | tf }}</small></h1></div>
+			<div class="page-header"><h1>{{ location_name | tf }} <small>{{ area_name | tf }}</small></h1></div>
 
 			{% if pic is defined %}<img src="{{ pic }}" class="img-polaroid" style="float: right;" />{% endif %}
 
-			{{ description  | raw | tf | nl2p | nl2br }}
+			{{ description | tf | nl2p | nl2br }}
 
 			<p>
 			{% for i in ways %}
-				<a class="btn" href="/action/go/{{ i.to }}">{{ i.name | raw | tf }}</a>
+				<a class="btn" href="/action/go/{{ i.to }}">{{ i.name | tf }}</a>
 			{% endfor %}
 			</p>
 
