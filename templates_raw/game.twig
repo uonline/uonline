@@ -3,7 +3,7 @@
 {% block title %}{{ location_name }}{% endblock title %}
 
 {% block content %}
-			<div class="page-header"><h1>{{ location_name }} <small>{{ area_name }}</small></h1></div>
+			<div class="page-header"><h1>{{ location_name | tf }} <small>{{ area_name | tf }}</small></h1></div>
 
 			{% if pic is defined %}<img src="{{ pic }}" class="img-polaroid" style="float: right;" />{% endif %}
 
