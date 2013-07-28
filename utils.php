@@ -353,7 +353,7 @@ function correctUserName($nick) {
 	return
 		strlen($nick)>1 &&
 		strlen($nick)<=32 &&
-		!preg_match('/[^a-zA-Z0-9а-яА-ЯёЁйЙр_\\- ]/', $nick);
+		!preg_match('/[^a-zA-Z0-9а-яА-ЯёЁйЙру_\\- ]/', $nick);
 }
 
 function correctMail($mail) {
@@ -666,8 +666,8 @@ function tf($s) {
 	$s = preg_replace('/^-(?= )|(?<= )-(?= )|---/', '&mdash;', $s);
 	$s = preg_replace('/--/', '&ndash;', $s);
 	$s = preg_replace('/-(?=\\d)/', '&minus;', $s);
-	$s = preg_replace('/("|\&quot\;)(?=[a-zA-Zа-яА-ЯйЙёЁр])/', '&laquo;', $s);
-	$s = preg_replace('/(?<=[a-zA-Zа-яА-ЯйЙёЁр])("|\&quot\;)/', '&raquo;', $s);
+	$s = preg_replace('/("|\&quot\;)(?=[a-zA-Zа-яА-ЯйЙёЁру])/', '&laquo;', $s);
+	$s = preg_replace('/(?<=[a-zA-Zа-яА-ЯйЙёЁру])("|\&quot\;)/', '&raquo;', $s);
 	return $s;
 }
 
