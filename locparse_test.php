@@ -19,8 +19,14 @@
 
 require_once './locparse.php';
 require_once './config.php';
+require_once './utils.php';
 
 class ParserTest extends PHPUnit_Framework_TestCase {
+
+	public function testTf() {
+		$this->assertEquals("Переход в &laquo;Чумный двор&raquo;", tf("Переход в \"Чумный двор\""));
+		$this->assertEquals("Переход в &laquo;Чумный двор&raquo;", tf("Переход в &quot;Чумный двор&quot;"));
+	}
 
 	public function testSecond() {
 		$my = new Parser();
