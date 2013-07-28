@@ -30,6 +30,13 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals("Переход в &laquo;Чумный двор&raquo;", tf("Переход в &quot;Чумный двор&quot;"));
 		$this->assertEquals("к &laquo;Чёрному ходу&raquo;.", tf('к "Чёрному ходу".'));
 		$this->assertEquals("к &laquo;Чёрному ходу&raquo;.", tf('к &quot;Чёрному ходу&quot;.'));
+		$this->assertEquals('&mdash; Ебу ли я гусей? Само собой.', tf('- Ебу ли я гусей? Само собой.'));
+		$this->assertEquals('Хованский &mdash; пидорас и хуесос.', tf('Хованский - пидорас и хуесос.'));
+		$this->assertEquals('Серп и молот&mdash;Карачарово', tf('Серп и молот---Карачарово'));
+		$this->assertEquals('Серп и молот &mdash; Карачарово', tf('Серп и молот --- Карачарово'));
+		$this->assertEquals('1941&ndash;1945', tf('1941--1945'));
+		$this->assertEquals('4&minus;2=2', tf('4-2=2'));
+		$this->assertEquals('&minus;2', tf('-2'));
 	}
 
 	public function testSecond() {
