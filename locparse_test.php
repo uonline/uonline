@@ -24,8 +24,12 @@ require_once './utils.php';
 class ParserTest extends PHPUnit_Framework_TestCase {
 
 	public function testTf() {
+		$this->assertEquals("&laquo;Чумный двор&raquo;", tf('"Чумный двор"'));
+		$this->assertEquals("&laquo;Чумный двор&raquo;", tf('&quot;Чумный двор&quot;'));
 		$this->assertEquals("Переход в &laquo;Чумный двор&raquo;", tf("Переход в \"Чумный двор\""));
 		$this->assertEquals("Переход в &laquo;Чумный двор&raquo;", tf("Переход в &quot;Чумный двор&quot;"));
+		$this->assertEquals("к &laquo;Чёрному ходу&raquo;.", tf('к "Чёрному ходу".'));
+		$this->assertEquals("к &laquo;Чёрному ходу&raquo;.", tf('к &quot;Чёрному ходу&quot;.'));
 	}
 
 	public function testSecond() {
