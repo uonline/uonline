@@ -665,9 +665,9 @@ function getStatistics() {
 function tf($s) {
 	$s = preg_replace('/^-(?= )|(?<= )-(?= )|---/', '&mdash;', $s);
 	$s = preg_replace('/--/', '&ndash;', $s);
-	$s = preg_replace('/-(?=\\d)/', '&minus;', $s);
-	$s = preg_replace('/("|\&quot\;)(?=[a-zA-Zа-яА-ЯйЙёЁру])/', '&laquo;', $s);
-	$s = preg_replace('/(?<=[a-zA-Zа-яА-ЯйЙёЁру])("|\&quot\;)/', '&raquo;', $s);
+	$s = preg_replace('/(\\d+(?:(?:\\.|\\,)\\d+)?\\s*|^)(-)(\\s*\\d+(?:(?:\\.|\\,)\\d+)?)/', "\$1&minus;\$3", $s);
+	$s = preg_replace('/("|\&quot\;)(?=[a-zA-Zа-яА-ЯйЙёЁру0-9])/', '&laquo;', $s);
+	$s = preg_replace('/(?<=[a-zA-Zа-яА-ЯйЙёЁру0-9])("|\&quot\;)/', '&raquo;', $s);
 	return $s;
 }
 
