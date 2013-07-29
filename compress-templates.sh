@@ -12,7 +12,7 @@ for i in `ls templates_raw/`; do
 			echo OK, but failed to compress JS
 		else
 			echo FAIL
-			exit
+			exit 1
 		fi
 	fi
 done

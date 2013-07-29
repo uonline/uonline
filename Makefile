@@ -17,5 +17,8 @@ dirs:
 	mkdir -p templates_cache
 	chmod 777 -R templates_cache
 	mkdir -p templates
+	
+test:
+	php vendor/bin/phpunit --strict --verbose --colors --coverage-html ./code-coverage-report tests/
 
-deploy: pull killcache dirs compress
+deploy: pull killcache dirs compress test
