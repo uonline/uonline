@@ -22,3 +22,6 @@ test:
 	php vendor/bin/phpunit --strict --verbose --colors --coverage-html ./code-coverage-report tests/
 
 deploy: pull killcache dirs compress test
+
+serve:
+	php -S localhost:8080 -t .
