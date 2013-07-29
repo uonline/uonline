@@ -20,3 +20,4 @@ Deployment
 11. Tables are created and filled with some test data. Gooooood. Well, now you probably want to fill it with real data. `git submodule update --init`, `php locparse.php --validate unify`, `php locparse.php --export unify`.
 12. Add an admin. Navigate to `http://your_project_url/add-admin.php` and do the thing.
 13. And the last. To make it even faster, install the Twig extension. In Debian, you will need package `php5-dev`. Install it, chdir to `vendor/twig/twig/ext/twig` and [build, install and activate](http://twig.sensiolabs.org/doc/intro.html#installing-the-c-extension) the extension. Turn caching on in keyring. Here we go.
+14. And... If you want to see code coverage reports, install xdebug (package `php5-xdebug` in Debian).
