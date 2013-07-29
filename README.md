@@ -21,3 +21,7 @@ Deployment
 12. Add an admin. Navigate to `http://your_project_url/add-admin.php` and do the thing.
 13. And the last. To make it even faster, install the Twig extension. In Debian, you will need package `php5-dev`. Install it, chdir to `vendor/twig/twig/ext/twig` and [build, install and activate](http://twig.sensiolabs.org/doc/intro.html#installing-the-c-extension) the extension. Turn caching on in keyring. Here we go.
 14. And... If you want to see code coverage reports, install xdebug (package `php5-xdebug` in Debian).
+
+If you experience problems, try to run `make diagnose` to diagnose the most common problems.
+
+To correctly update uonline, run `make deploy`. To update Composer, run `php composer.phar selfupdate`. To update third-party libraries, run `php composer.phar update`.
