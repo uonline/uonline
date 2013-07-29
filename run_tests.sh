@@ -1,1 +1,1 @@
-php vendor/bin/phpunit --coverage-html ./code-coverage-report locparse_test.php
+php vendor/bin/phpunit --strict --verbose --colors --coverage-html ./code-coverage-report tests/
