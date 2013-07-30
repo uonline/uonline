@@ -45,7 +45,7 @@ $options = array(
 	'loggedIn' => sessionActive($s),
 	'login' => userBySession($s),
 	'mail_count' => 0,
-	'databaseIsOutdated' => getNewHash() !== getHash(),
+	'databaseIsOutdated' => getNewestRevision() !== getCurrentRevision(),
 );
 
 
