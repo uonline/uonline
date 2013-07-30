@@ -17,7 +17,12 @@ Deployment
 8. Let's prepare our templates. Run `./compress-templates.sh`. It tries to run `/bin/java`? Congratulations, your `JAVA_HOME` is not set. Edit your `/usr/bin/htmlcompressor` and tell it to just run `/usr/bin/java`.
 9. Something is still wrong? 404? `.htaccess` problem. Enable `mod_rewrite`, edit your apache config and tell it the magic phrase `AllowOverride All`.
 10. Now it must be up and running. One more thing! Navigate to `http://your_project_url/init.php` and create some tables. It cannot connect to database? Make sure `mysql` and `mysqli` extensions are enabled. In Debian, you will need a package named `php5-mysql`.
-11. Tables are created and filled with some test data. Gooooood. Well, now you probably want to fill it with real data. `git submodule update --init` (maybe change its path to `https://github.com/m1kc/unify.git` in `.gitmodules` first), `php locparse.php --validate unify`, `php locparse.php --export unify`.
+11. Tables are created and filled with some test data. Gooooood. Well, now you probably want to fill it with real data. `git submodule update --init`, `php locparse.php --validate unify`, `php locparse.php --export unify`.
 12. Add an admin. Navigate to `http://your_project_url/add-admin.php` and do the thing.
-13. OH, A NASTY BUG! Default location is not set. We will fix it, honestly. But for now... Run mysql client and say `update uniusers set location=2147483647` in your database.
-14. And the last. To make it even faster, install the Twig extension. In Debian, you will need package `php5-dev`. Install it, chdir to `vendor/twig/twig/ext/twig` and [build, install and activate](http://twig.sensiolabs.org/doc/intro.html#installing-the-c-extension) the extension. Turn caching on in keyring. Here we go.
+13. To make it even faster, install xcache (package `php5-xcache` in Debian).
+13. To make it _even_ faster, install the Twig extension. In Debian, you will need package `php5-dev`. Install it, chdir to `vendor/twig/twig/ext/twig` and [build, install and activate](http://twig.sensiolabs.org/doc/intro.html#installing-the-c-extension) the extension. Turn caching on in keyring. Here we go.
+14. And the last. If you want to see code coverage reports, install xdebug (package `php5-xdebug` in Debian).
+
+If you experience problems, try to run `make diagnose` to diagnose the most common problems.
+
+To correctly update uonline, run `make deploy`. To update Composer, run `php composer.phar selfupdate`. To update third-party libraries, run `php composer.phar update`.

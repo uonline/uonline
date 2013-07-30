@@ -18,4 +18,14 @@ dirs:
 	chmod 777 -R templates_cache
 	mkdir -p templates
 
-deploy: pull killcache dirs compress
+diagnose:
+	php composer.phar diagnose
+	php composer.phar validate
+
+test:
+	php vendor/bin/phpunit --strict --verbose --colors --coverage-html ./code-coverage-report tests/
+
+deploy: pull killcache dirs compress diagnose test
+
+serve:
+	php -S localhost:8080 -t .
