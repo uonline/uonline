@@ -20,11 +20,12 @@
 
 require_once('config.php');
 
+$MYSQLI_CONN = null;
 /*********************** maintain base in topical state *********************************/
 function mysqlInit($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE)  {
-	defined("MYSQL_CONN") || define ("MYSQL_CONN", mysql_connect($host, $user, $pass) );
-	mysql_query('CREATE DATABASE IF NOT EXISTS `'.$base.'`');
-	mysql_select_db($base);
+	if (!isset($MYSQLI_CONN)) $MYSQLI_CONN = mysqli_connect($host, $user, $pass);
+	$MYSQLI_CONN->query('CREATE DATABASE IF NOT EXISTS `'.$base.'`');
+	$MYSQLI_CONN->select_db($base);
 }
 
 /***** table functions *****/
@@ -192,19 +193,42 @@ function getNewColumns() {
 }
 /***** contents *****/
 
-function getNewHash() {
-	return md5( serialize(getNewTables()).serialize(getNewColumns()) );
+function getNewestRevision() {
+	global $migrate;
+	return max(array_keys($migrate));
 }
 
-function getHash() {
-	return file_exists('tablestate') ? file_get_contents('tablestate') : false;
+function getCurrentRevision() {
+	$r = file_exists('tablestate') ? file_get_contents('tablestate') : false;
+	return (is_numeric($r) ? (int) $r : 0);
 }
 
-function writeNewHash() {
+function setRevision($r) {
 	$fp = fopen ("tablestate","w"); //открытие
-	fputs($fp , getNewHash() ); //работа с файлом
+	fputs($fp , $r ); //работа с файлом
 	fclose ($fp); //закрытие
 }
+
+function migrate($revision) {
+	global $migrate;
+	$currentRevision = getCurrentRevision(); // если база чистая, то 0
+	if ($currentRevision < $revision) {
+		echo "Migrating from revision {$currentRevision} to {$revision}...\n";
+		for($i = $currentRevision; $i < $revision; $i++) {
+			if ($migrate[$i+1]()) {
+				setRevision($revision);
+			}
+		}
+	}
+	else {
+		echo "Refused to migrate from revision {$currentRevision} to {$revision}.\n";
+		return true;
+	}
+}
+
+$migrate = array (
+	0 => function() { return true; }, //do nothing
+);
 
 /*********************** maintain base in topical state *********************************/
 
@@ -219,20 +243,25 @@ function mysqlDelete() {
 }
 
 function mysqlConnect($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE) {
-	defined("MYSQL_CONN") || (define ("MYSQL_CONN", mysql_connect($host, $user, $pass) ) && mysql_select_db($base));
+	global $MYSQLI_CONN;
+	if (!isset($MYSQLI_CONN)) $MYSQLI_CONN = mysqli_connect($host, $user, $pass);
+	$MYSQLI_CONN->select_db($base);
+	return $MYSQLI_CONN;
 }
 
 function mysqlFirstRes($query) {
-	$q = mysql_query($query);
+	global $MYSQLI_CONN;
+	$q = $MYSQLI_CONN->query($query);
 	if (!$q) return false;
-	$a = mysql_fetch_array($q);
+	$a = $q->fetch_array();
 	return ($v = $a[0]) ? $v : false;
 }
 
 function mysqlFirstRow($query) {
-	$q = mysql_query($query);
+	global $MYSQLI_CONN;
+	$q = $MYSQLI_CONN->query($query);
 	if (!$q) return false;
-	$a = mysql_fetch_assoc($q);
+	$a = $q->fetch_assoc();
 	return $a;
 }
 
@@ -339,9 +368,10 @@ function refreshSession($s) {
 }
 
 function closeSession($s) {
+	global $MYSQLI_CONN;
 	if (rightSess($s)) {
 		mysqlConnect();
-		mysql_query(
+		$MYSQLI_CONN->query(
 			'UPDATE `uniusers` '.
 			'SET `sessexpire` = NOW() - INTERVAL 1 SECOND '.
 			'WHERE `sessid`="' . $s . '"');
@@ -386,9 +416,10 @@ function mySalt($l = SESSION_LENGTH) {
 }
 
 function registerUser($u, $p, $perm = 0) {
+	global $MYSQLI_CONN;
 	$salt = mySalt(16);
 	$session = generateSessId();
-	mysql_query(
+	$MYSQLI_CONN->query(
 		'INSERT INTO `uniusers` '.
 		'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES '.
 		'("'.$u.'", "'.$salt.'", "'.myCrypt($p, $salt).'", "'.$session.'", NOW(), NOW() + INTERVAL '.SESSION_TIMEEXPIRE.' SECOND, '.defaultLocation().', '.$perm.')');
@@ -429,9 +460,10 @@ function fileFromPath($p) {
 }
 
 function setSession($u) {
+	global $MYSQLI_CONN;
 	mysqlConnect();
 	$s = generateSessId();
-	mysql_query(
+	$MYSQLI_CONN->query(
 		'UPDATE `uniusers` '.
 		'SET `sessexpire` = NOW() + INTERVAL '.SESSION_TIMEEXPIRE.' SECOND, '.
 		'`sessid`="'.$s.'" '.
@@ -512,9 +544,10 @@ function allowedZones($s, $idsonly = false) {
 }
 
 function changeLocation($s, $lid) {
+	global $MYSQLI_CONN;
 	mysqlConnect();
 	if (in_array( $lid, allowedZones($s, true) ) ) {
-		mysql_query(
+		$MYSQLI_CONN->query(
 			"UPDATE `uniusers` ".
 			"SET `location` = '$lid' ".
 			"WHERE `sessid`='$s'");
@@ -523,7 +556,7 @@ function changeLocation($s, $lid) {
 			"FROM `monsters`, `uniusers` ".
 			"WHERE `uniusers`.`sessid` = '$s' ".
 			"AND `uniusers`.`location` = `monsters`.`location`");
-		if (rand(1,100)<=$attack_chance) mysql_query(
+		if (rand(1,100)<=$attack_chance) $MYSQLI_CONN->query(
 			"UPDATE `uniusers` ".
 			"SET `autoinvolved_fm` = 1, ".
 			"`fight_mode` = 1 ".
@@ -534,45 +567,50 @@ function changeLocation($s, $lid) {
 }
 
 function goAttack($s) {
-	mysql_query(
+	global $MYSQLI_CONN;
+	$MYSQLI_CONN->query(
 		"UPDATE `uniusers` ".
 		"SET `fight_mode` = 1 ".
 		"WHERE `sessid`='$s'");
 }
 
 function goEscape($s) {
-	mysql_query(
+	global $MYSQLI_CONN;
+	$MYSQLI_CONN->query(
 		"UPDATE `uniusers` ".
 		"SET `fight_mode` = 0, `autoinvolved_fm` = 0 ".
 		"WHERE `sessid`='$s'");
 }
 
 function usersOnLocation($s) {
-	$q = mysql_query(
+	global $MYSQLI_CONN;
+	$q = $MYSQLI_CONN->query(
 		'SELECT `user`, `id` '.
 		'FROM `uniusers` '.
 		'WHERE `sessexpire` > NOW() '.
 		'AND `location`='.userLocationId($s).' AND `sessid` != "'.$s.'"' );
-	for ($a=array(), $i=0; $q && $r = mysql_fetch_assoc($q); $a[$i++]=array(id => $r['id'], name => $r['user']) );
+	for ($a=array(), $i=0; $q && $r = $q->fetch_assoc(); $a[$i++]=array(id => $r['id'], name => $r['user']) );
 	return $a;
 }
 
 function monstersOnLocation($s) {
-	$q = mysql_query(
+	global $MYSQLI_CONN;
+	$q = $MYSQLI_CONN->query(
 		'SELECT `monster_prototypes`.*, `monsters`.*'.
 		'FROM `monster_prototypes`, `monsters`'.
 		'WHERE `monsters`.`location`=(select `uniusers`.`location` from `uniusers` where `sessexpire` > NOW() AND `uniusers`.`sessid`="'.$s.'")'.
 		'AND `monster_prototypes`.`id` = `monsters`.`id`');
-	for ($a=array(), $i=0; $q && $r = mysql_fetch_assoc($q); $a[$i++]=array(id => $r['id'], name => $r['name']) );
+	for ($a=array(), $i=0; $q && $r = $q->fetch_assoc(); $a[$i++]=array(id => $r['id'], name => $r['name']) );
 	return $a;
 }
 
 function fightMode($s, $e) {
+	global $MYSQLI_CONN;
 	$q = mysqlFirstRes(
 		"SELECT `$e` ".
 		'FROM `uniusers` '.
 		"WHERE `sessid` = '$s'" );
-	if ($e === 'autoinvolved_fm') mysql_query(
+	if ($e === 'autoinvolved_fm') $MYSQLI_CONN->query(
 		"UPDATE `uniusers` ".
 		"SET `autoinvolved_fm` = 0 ".
 		"WHERE `sessid`='$s'");
@@ -637,19 +675,20 @@ function userCharacters($p, $t = 'sess') {
 
 /************************* statistics ***************************/
 function stats($gen_time) {
-	global $_SERVER;
+	global $_SERVER, $MYSQLI_CONN;
 	$ua = addslashes($_SERVER['HTTP_USER_AGENT']);
 	$url = addslashes($_SERVER['REQUEST_URI']);
 	mysqlConnect();
-	mysql_query(
+	$MYSQLI_CONN->query(
 		"INSERT INTO `stats` ".
 		"(`gen_time`, `ip`, `uagent`, `url`) ".
 		"VALUES ($gen_time, '$_SERVER[REMOTE_ADDR]', '$ua', '$url')");
 }
 /************************* statistics ***************************/
 function getStatistics() {
+	global $MYSQLI_CONN;
 	mysqlConnect();
-	$q = mysql_query(
+	$q = $MYSQLI_CONN->query(
 		"SELECT `gen_time` ".
 		"FROM `stats` ".
 		"WHERE `time` > NOW() - INTERVAL 24 HOUR");
