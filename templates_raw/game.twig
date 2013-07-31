@@ -11,7 +11,7 @@
 
 			{{ description | tf | nl2p | nl2br }}
 
-			<p>
+			<p style="line-height: 2.5em;">
 			{% for i in ways %}
 				<a class="btn" href="/action/go/{{ i.to }}">{{ i.name | tf }}</a>
 			{% endfor %}
