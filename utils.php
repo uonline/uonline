@@ -693,7 +693,7 @@ function getStatistics() {
 		"SELECT `gen_time` ".
 		"FROM `stats` ".
 		"WHERE `time` > NOW() - INTERVAL 24 HOUR");
-	for ($a=array(), $i=0; $q && $r = mysql_fetch_assoc($q); $a[$i++] = $r['gen_time'] );
+	for ($a=array(), $i=0; $q && $r = $q->fetch_assoc(); $a[$i++] = $r['gen_time'] );
 	return $a;
 }
 

@@ -20,18 +20,20 @@
 
 		// Create the data table.
 		var data = google.visualization.arrayToDataTable([
+			['Date and time', 'Time elapsed, ms'],
 			{% for i in stats %}
-				['', {{ i }}],
+				['', {{ i * 1000 }}],
 			{% endfor %}
-		], true);
+		]);
 
 		// Create and draw the visualization.
 		var options = {
 			curveType: "function",
 			height: 350, //width: 800,
 			vAxis: {
-				maxValue: null
-			}
+				viewWindowMode: 'maximized'
+			},
+			title: 'Response time chart'
 		}
 
 		new google.visualization.LineChart(document.getElementById('chart_div')).
