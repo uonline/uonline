@@ -22,15 +22,16 @@ require_once('config.php');
 
 $MYSQLI_CONN = null;
 /*********************** maintain base in topical state *********************************/
-function mysqlInit($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE)  {
+function mysqliInit($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE)  {
 	if (!isset($MYSQLI_CONN)) $MYSQLI_CONN = mysqli_connect($host, $user, $pass);
 	$MYSQLI_CONN->query('CREATE DATABASE IF NOT EXISTS `'.$base.'`');
 	$MYSQLI_CONN->select_db($base);
+	return $MYSQLI_CONN;
 }
 
 /***** table functions *****/
 function tableExists($t) {
-	mysqlConnect();
+	mysqliConnect();
 	return
 		mysqlFirstRes(
 			"SELECT count(*) ".
@@ -40,7 +41,7 @@ function tableExists($t) {
 }
 
 function addTable($t, $o) {
-	mysqlConnect();
+	mysqliConnect();
 	if (tableExists($t)) return FALSE;
 	else {
 		mysql_query("CREATE TABLE `$t` $o");
@@ -57,7 +58,7 @@ function addTables($t) {
 
 /***** column functions *****/
 function columnExists($t, $c) {
-	mysqlConnect();
+	mysqliConnect();
 	return
 		mysqlFirstRes(
 			"SELECT count(*) ".
@@ -67,7 +68,7 @@ function columnExists($t, $c) {
 }
 
 function addColumn($t, $o) {
-	mysqlConnect();
+	mysqliConnect();
 	list($c, $o) = explode('|', $o);
 	if (columnExists($t, $c)) return FALSE;
 	else {
@@ -77,7 +78,7 @@ function addColumn($t, $o) {
 }
 
 function renameColumn($t, $o) {
-	mysqlConnect();
+	mysqliConnect();
 	list($oc, $nc) = explode('|', $o);
 	if (!columnExists($t, $oc)) return FALSE;
 	else {
@@ -92,7 +93,7 @@ function renameColumn($t, $o) {
 }
 
 function changeColumn($t, $o) {
-	mysqlConnect();
+	mysqliConnect();
 	list($oc, $nc) = explode('|', $o);
 	if (!columnExists($t, $oc)) return FALSE;
 	else {
@@ -102,7 +103,7 @@ function changeColumn($t, $o) {
 }
 
 function dropColumn($t, $o) {
-	mysqlConnect();
+	mysqliConnect();
 	if (!columnExists($t, $o)) return FALSE;
 	else {
 		mysql_query("ALTER TABLE `$t` DROP COLUMN `$o`");
@@ -238,11 +239,11 @@ function isAssoc($a) {
 }
 
 function mysqlDelete() {
-	mysqlConnect();
+	mysqliConnect();
 	mysql_query('DROP DATABASE '.MYSQL_BASE);
 }
 
-function mysqlConnect($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE) {
+function mysqliConnect($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE) {
 	global $MYSQLI_CONN;
 	if (!isset($MYSQLI_CONN)) $MYSQLI_CONN = mysqli_connect($host, $user, $pass);
 	$MYSQLI_CONN->select_db($base);
@@ -271,7 +272,7 @@ function rightSess($s) {
 
 function idExists($id) {
 	if (correctId($id)) {
-		mysqlConnect();
+		mysqliConnect();
 		return mysqlFirstRes(
 			'SELECT count(*) '.
 			'FROM `uniusers` '.
@@ -281,7 +282,7 @@ function idExists($id) {
 
 function userExists($user) {
 	if (correctUserName($user)) {
-		mysqlConnect();
+		mysqliConnect();
 		return
 			!!mysqlFirstRes(
 				'SELECT count(*) '.
@@ -291,7 +292,7 @@ function userExists($user) {
 }
 
 function mailExists($mail) {
-	mysqlConnect();
+	mysqliConnect();
 	return
 		mysqlFirstRes(
 			'SELECT * '.
@@ -301,7 +302,7 @@ function mailExists($mail) {
 
 function sessionExists($s) {
 	if (rightSess($s)) {
-		mysqlConnect();
+		mysqliConnect();
 		return
 			mysqlFirstRes(
 				'SELECT count(*) '.
@@ -312,7 +313,7 @@ function sessionExists($s) {
 
 function sessionActive($s) {
 	if (rightSess($s)) {
-		mysqlConnect();
+		mysqliConnect();
 		return
 			mysqlFirstRes(
 				'SELECT `sessexpire` > NOW() '.
@@ -326,7 +327,7 @@ function sessionExpired($sess) {
 }
 
 function generateSessId() {
-	mysqlConnect();
+	mysqliConnect();
 	while (mysqlFirstRes(
 		'SELECT count(*) '.
 		'FROM `uniusers` '.
@@ -336,7 +337,7 @@ function generateSessId() {
 
 function userBySession($s) {
 	if (rightSess($s)) {
-		mysqlConnect();
+		mysqliConnect();
 		return
 			mysqlFirstRes(
 				'SELECT `user` '.
@@ -347,7 +348,7 @@ function userBySession($s) {
 
 function idBySession($s) {
 	if (rightSess($s)) {
-		mysqlConnect();
+		mysqliConnect();
 		return
 			mysqlFirstRes(
 				'SELECT `id` '.
@@ -358,7 +359,7 @@ function idBySession($s) {
 
 function refreshSession($s) {
 	if (rightSess($s)) {
-		mysqlConnect();
+		mysqliConnect();
 		if (sessionActive($s))
 			mysql_query(
 				'UPDATE `uniusers` '.
@@ -370,7 +371,7 @@ function refreshSession($s) {
 function closeSession($s) {
 	global $MYSQLI_CONN;
 	if (rightSess($s)) {
-		mysqlConnect();
+		mysqliConnect();
 		$MYSQLI_CONN->query(
 			'UPDATE `uniusers` '.
 			'SET `sessexpire` = NOW() - INTERVAL 1 SECOND '.
@@ -427,7 +428,7 @@ function registerUser($u, $p, $perm = 0) {
 }
 
 function validPassword($u, $p) {
-	mysqlConnect();
+	mysqliConnect();
 	$q = mysqlFirstRow('SELECT `hash`, `salt` FROM `uniusers` WHERE `user`="'.$u.'"');
 	return $q['hash'] == myCrypt($p, $q['salt']);
 }
@@ -447,7 +448,7 @@ function setMyCookie($n, $v, $exp = null, $path = '/', $domain = null, $secure =
 
 function userPermissions($s) {
 	if (rightSess($s)) {
-		mysqlConnect();
+		mysqliConnect();
 		return mysqlFirstRes(
 			'SELECT `permissions` '.
 			'FROM `uniusers` '.
@@ -461,7 +462,7 @@ function fileFromPath($p) {
 
 function setSession($u) {
 	global $MYSQLI_CONN;
-	mysqlConnect();
+	mysqliConnect();
 	$s = generateSessId();
 	$MYSQLI_CONN->query(
 		'UPDATE `uniusers` '.
@@ -474,7 +475,7 @@ function setSession($u) {
 
 /************************* GAME ***************************/
 function defaultLocation() {
-	mysqlConnect();
+	mysqliConnect();
 	return (int) mysqlFirstRes(
 		'SELECT `id` '.
 		'FROM `locations` '.
@@ -482,7 +483,7 @@ function defaultLocation() {
 }
 
 function userLocationId($s) {
-	mysqlConnect();
+	mysqliConnect();
 	return mysqlFirstRes(
 		'SELECT `location` '.
 		'FROM `uniusers` '.
@@ -490,7 +491,7 @@ function userLocationId($s) {
 }
 
 function userAreaId($s) {
-	mysqlConnect();
+	mysqliConnect();
 	return mysqlFirstRes(
 		'SELECT `locations`.`area` '.
 		'FROM `locations`,`uniusers` '.
@@ -500,7 +501,7 @@ function userAreaId($s) {
 }
 
 function currentLocationTitle($s) {
-	mysqlConnect();
+	mysqliConnect();
 	return mysqlFirstRes(
 		'SELECT `locations`.`title` '.
 		'FROM `locations`,`uniusers` '.
@@ -509,7 +510,7 @@ function currentLocationTitle($s) {
 }
 
 function currentAreaTitle($s) {
-	mysqlConnect();
+	mysqliConnect();
 	return mysqlFirstRes(
 		'SELECT `areas`.`title` '.
 		'FROM `areas`,`locations`,`uniusers` '.
@@ -519,7 +520,7 @@ function currentAreaTitle($s) {
 }
 
 function currentLocationDescription($s) {
-	mysqlConnect();
+	mysqliConnect();
 	return mysqlFirstRes(
 		'SELECT `description` '.
 		'FROM `locations`, `uniusers` '.
@@ -545,7 +546,7 @@ function allowedZones($s, $idsonly = false) {
 
 function changeLocation($s, $lid) {
 	global $MYSQLI_CONN;
-	mysqlConnect();
+	mysqliConnect();
 	if (in_array( $lid, allowedZones($s, true) ) ) {
 		$MYSQLI_CONN->query(
 			"UPDATE `uniusers` ".
@@ -640,17 +641,17 @@ function userCharacters($p, $t = 'sess') {
 	switch ($t) {
 		case 'id':
 			if (!idExists($p)) return;
-			mysqlConnect();
+			mysqliConnect();
 			$q = mysqlFirstRow('SELECT * FROM `uniusers` WHERE `id`="'.$p.'"');
 			break;
 		case 'user':
 			if (!userExists($p)) return;
-			mysqlConnect();
+			mysqliConnect();
 			$q = mysqlFirstRow('SELECT * FROM `uniusers` WHERE `user`="'.$p.'"');
 			break;
 		case 'sess':
 			if (!rightSess($p)) return;
-			mysqlConnect();
+			mysqliConnect();
 			$q = mysqlFirstRow('SELECT * FROM `uniusers` WHERE `sessid`="'.$p.'"');
 			break;
 	}
@@ -678,7 +679,7 @@ function stats($gen_time) {
 	global $_SERVER, $MYSQLI_CONN;
 	$ua = addslashes($_SERVER['HTTP_USER_AGENT']);
 	$url = addslashes($_SERVER['REQUEST_URI']);
-	mysqlConnect();
+	mysqliConnect();
 	$MYSQLI_CONN->query(
 		"INSERT INTO `stats` ".
 		"(`gen_time`, `ip`, `uagent`, `url`) ".
@@ -687,7 +688,7 @@ function stats($gen_time) {
 /************************* statistics ***************************/
 function getStatistics() {
 	global $MYSQLI_CONN;
-	mysqlConnect();
+	mysqliConnect();
 	$q = $MYSQLI_CONN->query(
 		"SELECT `gen_time` ".
 		"FROM `stats` ".

@@ -31,14 +31,14 @@ else echo help();
 
 function database() {
 	echo "Creating database `uonline`... ";
-		mysqlInit();
-		echo mysql_errno()===0?ok():err();
+		$mysqli = mysqliInit();
+		echo $mysqli && $mysqli->errno === 0 ? ok() : err();
 		echo "\n";
 	}
 	if (in_array("--tables", $argv)) {
 		echo 'Подключение к базам данных...';
-		mysqlConnect();
-		echo mysql_errno()===0?ok():err();
+		$mysqli = mysqliConnect();
+		echo $mysqli && $mysqli->errno === 0 ? ok() : err();
 		echo "\n";
 
 		migrate(getNewestRevision());
@@ -54,8 +54,8 @@ function unify() {
 
 function optimize() {
 	echo 'Подключение к базам данных...';
-	mysqlConnect();
-	echo mysql_errno()===0?ok():err();
+	$mysqli = mysqliConnect();
+	echo $mysqli && $mysqli->errno === 0 ? ok() : err();
 	echo "\n";
 
 	$q = mysql_query(
@@ -74,8 +74,8 @@ function optimize() {
 
 function testMonsters() {
 	echo 'Подключение к базам данных...';
-	mysqlConnect();
-	echo mysql_errno()===0?ok():err();
+	$mysqli = mysqliConnect();
+	echo $mysqli && $mysqli->errno === 0 ? ok() : err();
 	echo "\n";
 
 	echo 'Создание монстров ... ';
@@ -97,7 +97,7 @@ function testMonsters() {
 	mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (8, 7, 3, 1, 1, NULL, 8)");
 	mysql_query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (9, 7, 4, 1, 1, NULL, 9)");
 
-	echo (mysql_errno()===0?ok():err());
+	echo $mysqli && $mysqli->errno === 0 ? ok() : err();
 	echo "\n";
 }
 
