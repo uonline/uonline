@@ -41,11 +41,11 @@ function tableExists($t) {
 }
 
 function addTable($t, $o) {
-	mysqliConnect();
+	$mysqli = mysqliConnect();
 	if (tableExists($t)) return FALSE;
 	else {
-		mysql_query("CREATE TABLE `$t` $o");
-		return mysql_errno();
+		$mysqli->query("CREATE TABLE `$t` $o");
+		return $mysqli->errno;
 	}
 }
 
@@ -68,17 +68,17 @@ function columnExists($t, $c) {
 }
 
 function addColumn($t, $o) {
-	mysqliConnect();
+	$mysqli = mysqliConnect();
 	list($c, $o) = explode('|', $o);
 	if (columnExists($t, $c)) return FALSE;
 	else {
-		mysql_query("ALTER TABLE `$t` ADD COLUMN `$c` $o");
-		return mysql_errno();
+		$mysqli->query("ALTER TABLE `$t` ADD COLUMN `$c` $o");
+		return $mysqli->errno;
 	}
 }
 
 function renameColumn($t, $o) {
-	mysqliConnect();
+	$mysqli = mysqliConnect();
 	list($oc, $nc) = explode('|', $o);
 	if (!columnExists($t, $oc)) return FALSE;
 	else {
@@ -87,27 +87,27 @@ function renameColumn($t, $o) {
 			"FROM INFORMATION_SCHEMA.COLUMNS ".
 			"WHERE TABLE_SCHEMA='".MYSQL_BASE."' ".
 			"AND TABLE_NAME='$t' AND COLUMN_NAME='$oc'");
-		mysql_query("ALTER TABLE `$t` CHANGE COLUMN `$oc` `$nc` $type");
-		return mysql_errno();
+		$mysqli->query("ALTER TABLE `$t` CHANGE COLUMN `$oc` `$nc` $type");
+		return $mysqli->errno;
 	}
 }
 
 function changeColumn($t, $o) {
-	mysqliConnect();
+	$mysqli = mysqliConnect();
 	list($oc, $nc) = explode('|', $o);
 	if (!columnExists($t, $oc)) return FALSE;
 	else {
-		mysql_query("ALTER TABLE `$t` CHANGE COLUMN `$oc` `$oc` $nc");
-		return mysql_errno();
+		$mysqli->query("ALTER TABLE `$t` CHANGE COLUMN `$oc` `$oc` $nc");
+		return $mysqli->errno;
 	}
 }
 
 function dropColumn($t, $o) {
-	mysqliConnect();
+	$mysqli = mysqliConnect();
 	if (!columnExists($t, $o)) return FALSE;
 	else {
-		mysql_query("ALTER TABLE `$t` DROP COLUMN `$o`");
-		return mysql_errno();
+		$mysqli->query("ALTER TABLE `$t` DROP COLUMN `$o`");
+		return $mysqli->errno;
 	}
 }
 
@@ -239,8 +239,7 @@ function isAssoc($a) {
 }
 
 function mysqlDelete() {
-	mysqliConnect();
-	mysql_query('DROP DATABASE '.MYSQL_BASE);
+	mysqliConnect()->query('DROP DATABASE '.MYSQL_BASE);
 }
 
 function mysqliConnect($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE) {
@@ -358,10 +357,11 @@ function idBySession($s) {
 }
 
 function refreshSession($s) {
+	global $MYSQLI_CONN;
 	if (rightSess($s)) {
 		mysqliConnect();
 		if (sessionActive($s))
-			mysql_query(
+			$MYSQLI_CONN->query(
 				'UPDATE `uniusers` '.
 				'SET `sessexpire` = NOW() + INTERVAL '.SESSION_TIMEEXPIRE.' SECOND '.
 				'WHERE `sessid`="' . $s . '"');
