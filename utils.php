@@ -701,6 +701,15 @@ function getStatistics() {
 
 
 
+require_once './yoficator/ReflectionTypeHint.php';
+require_once './yoficator/UTF8.php';
+require_once './yoficator/Text/Yoficator.php';
+function yof($s)
+{
+	$t = new Text_Yoficator();
+	return $t->parse($s);
+}
+
 
 function tf($s) {
 	$s = preg_replace('/^-(?= )|(?<= )-(?= )|---/', '&mdash;', $s);
