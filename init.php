@@ -20,7 +20,7 @@
 
 require_once 'utils.php';
 
-if(isset($argv)) {
+if($argc !== 1) {
 	if (in_array("--database", $argv)) database ();
 	if (in_array("--unify", $argv)) unify ();
 	if (in_array("--optimize", $argv)) optimize ();

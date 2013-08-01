@@ -19,7 +19,7 @@
 
 require_once './config.php';
 
-if (isset($argv)) {
+if ($argc !== 1) {
 	if (array_key_exists(1, $argv) && ($argv[1] == "--validate" || $argv[1] == "-v")) {
 		$p = new Parser();
 		if (!(array_key_exists(2, $argv) && get_path($argv[2]))) die("Path not exists.");
