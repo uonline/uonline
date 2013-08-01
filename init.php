@@ -18,16 +18,18 @@
  */
 
 
-require_once 'utils.php';
+require_once './utils.php';
+require_once './locparse.php';
 
 if($argc !== 1) {
 	if (in_array("--database", $argv)) database ();
-	if (in_array("--unify", $argv)) unify ();
+	if (in_array("--unify-validate", $argv)) unifyValidate ();
+	if (in_array("--unify-export", $argv)) unifyExport ();
 	if (in_array("--optimize", $argv)) optimize ();
 	if (in_array("--test-monsters", $argv)) testMonsters();
-	if (in_array("--help", $argv)) echo help();
+	if (in_array("--help", $argv)) echo init_help();
 }
-else echo help();
+else echo init_help();
 
 function database() {
 	echo "Creating database `uonline`... ";
@@ -48,8 +50,20 @@ function tables() {
 	migrate(getNewestRevision());
 }
 
-function unify() {
-	//
+function unifyValidate() {
+	echo "Validating unify...\n";
+	$p = new Parser();
+	if (!get_path("unify")) die("Path not exists.");
+	$p->processDir(get_path("unify"), null, true);
+}
+
+function unifyExport() {
+	echo "Exporting unify...\n";
+	$p = new Parser();
+	if (!get_path("unify")) die("Path not exists.");
+	$p->processDir(get_path("unify"), null, true);
+
+	(new Injector($p->areas, $p->locations))->inject();
 }
 
 function optimize() {
@@ -135,9 +149,9 @@ function testMonsters() {
 }
 
 
-function help() {
+function init_help() {
 	return
-		" [--database] [--tables] [--unify] [--optimize] [--test-monsters]";
+		" [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters]";
 }
 
 function ok() { global $done; $done++; return 'done'; }

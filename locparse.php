@@ -24,34 +24,29 @@ if ($argc !== 1) {
 		$p = new Parser();
 		if (!(array_key_exists(2, $argv) && get_path($argv[2]))) die("Path not exists.");
 		$p->processDir(get_path($argv[2]), null, true);
-		echo "\n".report($p)."\n";
+		echo $p->report()."\n";
 	}
 	else if (array_key_exists(1, $argv) && ($argv[1] == "--export" || $argv[1] == "-e")) {
 		$p = new Parser();
 		if (!(array_key_exists(2, $argv) && get_path($argv[2]))) die("Path not exists.");
 		$p->processDir(get_path($argv[2]), null, true);
-		echo "\n".report($p)."\n";
+		echo $p->report()."\n";
 
 		$i = new Injector($p->areas, $p->locations);
 		$i->inject();
 	}
-	else if (array_key_exists(1, $argv) && $argv[1] == "--help") die(help());
-}
-
-function report($p) {
-	return
-		"found areas: ".count($p->areas)."\n".
-		"found locations: ".count($p->locations->locations);
+	else if (array_key_exists(1, $argv) && $argv[1] == "--help") die(locparse_help());
 }
 
 function get_path($p) {
+	preg_replace('/[\\\\\\/]$/', "", $p);
 	if (is_dir($p) && is_dir(__DIR__."/".$p)) return $p;
 	else if (is_dir(__DIR__."/".$p)) return __DIR__."/".$p;
 	else if (is_dir($p)) return $p;
 	else return false;
 }
 
-function help() {
+function locparse_help() {
 	return
 	"[ --validate | --export ] path";
 }
@@ -280,6 +275,12 @@ class Parser {
 	public function &__construct() {
 		$this->locations = new Locations();
 		return $this;
+	}
+
+	function report() {
+		return
+			"found areas: ".count($this->areas)."\n".
+			"found locations: ".count($this->locations->locations);
 	}
 }
 
