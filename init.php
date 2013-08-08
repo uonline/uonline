@@ -22,140 +22,156 @@ require_once './utils.php';
 require_once './locparse.php';
 
 if($argc !== 1) {
-	if (in_array("--database", $argv)) database ();
-	if (in_array("--unify-validate", $argv)) unifyValidate ();
-	if (in_array("--unify-export", $argv)) unifyExport ();
-	if (in_array("--optimize", $argv)) optimize ();
-	if (in_array("--test-monsters", $argv)) testMonsters();
-	if (in_array("--help", $argv)) echo init_help();
+	$init = new Init();
+	if (in_array("--database", $argv) || in_array("-d", $argv)) $init->database();
+	else if (in_array("--tables", $argv) || in_array("-t", $argv)) $init->tables();
+	else if (in_array("--unify-validate", $argv) || in_array("-uv", $argv)) $init->unifyValidate();
+	else if (in_array("--unify-export", $argv) || in_array("-ue", $argv)) $init->unifyExport();
+	else if (in_array("--optimize", $argv) || in_array("-o", $argv)) $init->optimize();
+	else if (in_array("--test-monsters", $argv) || in_array("-tm", $argv)) $init->testMonsters();
+	else if (in_array("--help", $argv) || in_array("-h", $argv)) echo $init->init_help();
 }
 else echo init_help();
 
-function database() {
-	echo "Creating database `uonline`... ";
-		$mysqli = mysqliInit();
-		echo $mysqli && $mysqli->errno === 0 ? ok() : err();
-		echo "\n";
-	}
-	if (in_array("--tables", $argv)) {
-		echo 'Подключение к базам данных...';
-		$mysqli = mysqliConnect();
-		echo $mysqli && $mysqli->errno === 0 ? ok() : err();
-		echo "\n";
 
-		migrate(getNewestRevision());
-}
-
-function tables() {
-	migrate(getNewestRevision());
-}
-
-function unifyValidate() {
-	echo "Validating unify...\n";
-	$p = new Parser();
-	if (!get_path("unify")) die("Path not exists.");
-	$p->processDir(get_path("unify"), null, true);
-}
-
-function unifyExport() {
-	echo "Exporting unify...\n";
-	$p = new Parser();
-	if (!get_path("unify")) die("Path not exists.");
-	$p->processDir(get_path("unify"), null, true);
-
-	(new Injector($p->areas, $p->locations))->inject();
-}
-
-function optimize() {
-	echo 'Подключение к базам данных...';
-	$mysqli = mysqliConnect();
-	echo $mysqli && $mysqli->errno === 0 ? ok() : err();
-	echo "\n";
-
-	$q = mysql_query(
-			"SELECT `TABLE_NAME` ".
-			"FROM `information_schema`.`TABLES` ".
-			"WHERE `TABLE_SCHEMA`='".MYSQL_BASE."'");
-	while ($t = mysql_fetch_array($q)) {
-		echo 'Оптимизация таблицы `'.$t[0].'` ... ';
-		$q1 = mysql_query("OPTIMIZE TABLE `$t[0]`");
-		do $a = mysql_fetch_array($q1);
-		while ($a && $a['Msg_type'] !== 'status');
-		echo ($a && ($a['Msg_text'] === "OK" || !strcasecmp($a['Msg_text'],"up to date")) ? ok() : err() );
-		echo "\n";
-	}
-}
-
-function testMonsters() {
-	echo 'Подключение к базам данных...';
-	$mysqli = mysqliConnect();
-	echo $mysqli && $mysqli->errno === 0 ? ok() : err();
-	echo "\n";
-
-	echo 'Создание монстров ... ';
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (1, 3, 723001325, 1, 1, NULL, 23)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (2, 2, 1054697917, 1, 1, NULL, 11)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (3, 3, 648737395, 1, 1, NULL, 22)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (4, 7, 845588419, 1, 1, NULL, 5)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (5, 5, 77716864, 1, 1, NULL, 16)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (6, 7, 889033849, 1, 1, NULL, 16)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (7, 4, 772635195, 1, 1, NULL, 13)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (8, 2, 77716864, 1, 1, NULL, 14)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (9, 3, 889033849, 1, 1, NULL, 14)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (10, 3, 578736465, 1, 1, NULL, 10)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (11, 2, 774449300, 1, 1, NULL, 9)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (12, 2, 701741103, 1, 1, NULL, 18)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (13, 1, 288482442, 1, 1, NULL, 18)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (14, 4, 845588419, 1, 1, NULL, 6)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (15, 2, 451777421, 1, 1, NULL, 5)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (16, 5, 772635195, 1, 1, NULL, 14)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (17, 3, 851644277, 1, 1, NULL, 14)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (18, 3, 29958182, 1, 1, NULL, 15)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (19, 4, 889033849, 1, 1, NULL, 23)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (20, 5, 772635195, 1, 1, NULL, 17)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (21, 6, 648737395, 1, 1, NULL, 18)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (22, 4, 29958182, 1, 1, NULL, 8)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (23, 7, 29958182, 1, 1, NULL, 18)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (24, 4, 571597042, 1, 1, NULL, 22)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (25, 6, 904434466, 1, 1, NULL, 22)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (26, 4, 904434466, 1, 1, NULL, 14)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (27, 1, 1054697917, 1, 1, NULL, 21)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (28, 5, 833637588, 1, 1, NULL, 16)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (29, 3, 569902394, 1, 1, NULL, 25)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (30, 7, 701741103, 1, 1, NULL, 20)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (31, 4, 172926385, 1, 1, NULL, 6)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (32, 2, 851644277, 1, 1, NULL, 19)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (33, 7, 569902394, 1, 1, NULL, 13)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (34, 3, 889033849, 1, 1, NULL, 6)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (35, 1, 723001325, 1, 1, NULL, 24)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (36, 2, 288482442, 1, 1, NULL, 10)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (37, 2, 77716864, 1, 1, NULL, 25)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (38, 2, 889033849, 1, 1, NULL, 14)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (39, 3, 889033849, 1, 1, NULL, 7)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (40, 1, 648737395, 1, 1, NULL, 5)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (41, 5, 569902394, 1, 1, NULL, 24)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (42, 4, 744906885, 1, 1, NULL, 22)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (43, 3, 29958182, 1, 1, NULL, 13)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (44, 5, 77716864, 1, 1, NULL, 24)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (45, 3, 77716864, 1, 1, NULL, 6)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (46, 1, 772635195, 1, 1, NULL, 13)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (47, 2, 889033849, 1, 1, NULL, 5)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (48, 5, 571597042, 1, 1, NULL, 11)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (49, 5, 569902394, 1, 1, NULL, 18)");
-	$mysqli->query("REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (50, 1, 772635195, 1, 1, NULL, 13)");
+class Init {
+	public $mysqli;
 	
-	echo $mysqli && $mysqli->errno === 0 ? ok() : err();
-	echo "\n";
+	function connect() {
+		echo "Connecting to database ... ";
+		$this->mysqli = mysqliConnect();
+		echo $this->mysqli && $this->mysqli->errno === 0 ? $this->ok() : $this->err();
+		echo "\n";
+	}
+
+	function database() {
+		echo "Creating database `uonline` ... ";
+		$this->mysqli = mysqliInit();
+		echo $this->mysqli && $this->mysqli->errno === 0 ? $this->ok() : $this->err();
+		echo "\n";
+	}
+
+	function tables() {
+		$this->connect();
+		echo "Migrating tables ...\n".
+		"Current revision is ".getCurrentRevision().".\n";
+		if (getCurrentRevision() <= getNewestRevision()) {
+			echo "Already up to date.\n";
+			return;
+		}
+		"Skipping migrations to: 1 ... ".(getCurrentRevision()-1).".\n";
+		migrate(getNewestRevision());
+	}
+
+	function unifyValidate() {
+		echo "Validating unify ...\n";
+		$p = new Parser();
+		if (!get_path("unify")) die("Path not exists.");
+		$p->processDir(get_path("unify"), null, true);
+		echo "Validating unify finished.\n";
+	}
+
+	function unifyExport() {
+		echo "Exporting unify ...\n";
+		$p = new Parser();
+		if (!get_path("unify")) die("Path not exists.");
+		$p->processDir(get_path("unify"), null, true);
+
+		(new Injector($p->areas, $p->locations))->inject();
+		echo "Exporting unify finished.\n";
+	}
+
+	function optimize() {
+		$this->connect();
+		$q = $this->mysqli->query(
+				"SELECT `TABLE_NAME` ".
+				"FROM `information_schema`.`TABLES` ".
+				"WHERE `TABLE_SCHEMA`='".MYSQL_BASE."'");
+		while ($t = $q->fetch_array()) {
+			echo 'Optimize table `'.$t[0].'` ... ';
+			$q1 = $this->mysqli->query("OPTIMIZE TABLE `$t[0]`");
+			for (;$r = $q1->fetch_assoc();) {
+				if ($r["Msg_type"] === "note") $note = $r["Msg_text"];
+				if ($r["Msg_type"] === "status") $status = $r["Msg_text"];
+			}
+			echo implode(" ... ", array_filter(array($status, $note)))."\n";
+		}
+	}
+
+	function testMonsters() {
+		$monsters = array(
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (1, 6, 774449300, 1, 1, NULL, 16)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (2, 5, 648737395, 1, 1, NULL, 5)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (3, 6, 580475724, 1, 1, NULL, 25)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (4, 3, 571597042, 1, 1, NULL, 22)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (5, 4, 845588419, 1, 1, NULL, 11)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (6, 3, 446105458, 1, 1, NULL, 19)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (7, 1, 4642136, 1, 1, NULL, 10)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (8, 5, 29958182, 1, 1, NULL, 9)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (9, 7, 904434466, 1, 1, NULL, 13)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (10, 7, 288482442, 1, 1, NULL, 25)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (11, 1, 77716864, 1, 1, NULL, 6)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (12, 2, 701741103, 1, 1, NULL, 17)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (13, 5, 744906885, 1, 1, NULL, 22)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (14, 4, 744906885, 1, 1, NULL, 6)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (15, 7, 4642136, 1, 1, NULL, 8)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (16, 2, 1054697917, 1, 1, NULL, 7)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (17, 6, 833637588, 1, 1, NULL, 10)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (18, 6, 29958182, 1, 1, NULL, 25)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (19, 6, 774449300, 1, 1, NULL, 12)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (20, 4, 744906885, 1, 1, NULL, 8)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (21, 5, 446105458, 1, 1, NULL, 22)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (22, 5, 288482442, 1, 1, NULL, 17)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (23, 1, 4642136, 1, 1, NULL, 8)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (24, 7, 29958182, 1, 1, NULL, 16)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (25, 5, 774449300, 1, 1, NULL, 15)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (26, 7, 1054697917, 1, 1, NULL, 20)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (27, 5, 723001325, 1, 1, NULL, 16)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (28, 4, 571597042, 1, 1, NULL, 23)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (29, 3, 845588419, 1, 1, NULL, 14)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (30, 5, 288482442, 1, 1, NULL, 25)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (31, 4, 701741103, 1, 1, NULL, 6)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (32, 2, 77716864, 1, 1, NULL, 15)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (33, 7, 701741103, 1, 1, NULL, 17)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (34, 7, 701741103, 1, 1, NULL, 22)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (35, 5, 772635195, 1, 1, NULL, 7)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (36, 6, 29958182, 1, 1, NULL, 21)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (37, 4, 29958182, 1, 1, NULL, 18)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (38, 1, 578736465, 1, 1, NULL, 25)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (39, 4, 172926385, 1, 1, NULL, 25)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (40, 2, 744906885, 1, 1, NULL, 21)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (41, 5, 29958182, 1, 1, NULL, 21)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (42, 4, 723001325, 1, 1, NULL, 9)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (43, 1, 451777421, 1, 1, NULL, 8)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (44, 4, 29958182, 1, 1, NULL, 5)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (45, 4, 648737395, 1, 1, NULL, 24)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (46, 2, 723001325, 1, 1, NULL, 21)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (47, 2, 571597042, 1, 1, NULL, 24)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (48, 2, 288482442, 1, 1, NULL, 13)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (49, 2, 774449300, 1, 1, NULL, 8)",
+			"REPLACE INTO `monsters` (`incarn_id`, `id`, `location`, `health`, `mana`, `effects`, `attack_chance`) VALUES (50, 6, 446105458, 1, 1, NULL, 19)"
+		);
+		$this->connect();
+
+		echo "Mosters creation ... ";
+		foreach ($monsters as $v) {
+			$this->mysqli->query($v);
+			if ($this->mysqli->errno !== 0) {
+				echo $this->err()."\n";
+				return;
+			}
+		}
+		echo $this->ok()."\n";
+	}
+	
+	function init_help() {
+		return
+			" [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters]";
+	}
+
+	function ok() { global $done; $done++; return 'done'; }
+	function err() { global $err; $err++; return 'error'; }
+	function warn($t = false) { global $warn; $warn++; return ($t?$t:'exists'); }
 }
-
-
-function init_help() {
-	return
-		" [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters]";
-}
-
-function ok() { global $done; $done++; return 'done'; }
-function err() { global $err; $err++; return 'error'; }
-function warn($t = false) { global $warn; $warn++; return ($t?$t:'exists'); }
 
 ?>
