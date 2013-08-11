@@ -29,6 +29,7 @@ if($argc !== 1) {
 	else if (in_array("--unify-export", $argv) || in_array("-ue", $argv)) $init->unifyExport();
 	else if (in_array("--optimize", $argv) || in_array("-o", $argv)) $init->optimize();
 	else if (in_array("--test-monsters", $argv) || in_array("-tm", $argv)) $init->testMonsters();
+	else if (in_array("--drop", $argv) || in_array("-dr", $argv)) $init->drop();
 	else if (in_array("--help", $argv) || in_array("-h", $argv)) echo $init->init_help();
 }
 else echo init_help();
@@ -168,9 +169,16 @@ class Init {
 		echo $this->ok()."\n";
 	}
 	
+	function drop() {
+		$this->connect();
+		"Dropping database ... ";
+		mysqlDelete();
+		echo $this->mysqli && $this->mysqli->errno === 0 ? $this->ok() : $this->err();
+	}
+
 	function init_help() {
 		return
-			" [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters]";
+			" [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]";
 	}
 
 	function ok($t = false) { global $done; $done++; return ($t?$t:'done'); }
