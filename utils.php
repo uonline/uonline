@@ -539,7 +539,7 @@ function allowedZones($s, $idsonly = false) {
 	if (!$goto) return $a;
 	foreach (explode('|', $goto) as $v) {
 		$la = explode('=', $v);
-		$a[$i++] = $idsonly ? $la[1] : array (to => $la[1], name => $la[0]);
+		$a[$i++] = $idsonly ? $la[1] : array ('to' => $la[1], 'name' => $la[0]);
 	}
 	return $a;
 }
