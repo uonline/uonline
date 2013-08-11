@@ -90,11 +90,15 @@ class Init {
 		while ($t = $q->fetch_array()) {
 			echo 'Optimize table `'.$t[0].'` ... ';
 			$q1 = $this->mysqli->query("OPTIMIZE TABLE `$t[0]`");
+			$other = array();
 			for (;$r = $q1->fetch_assoc();) {
-				if ($r["Msg_type"] === "note") $note = $r["Msg_text"];
-				if ($r["Msg_type"] === "status") $status = $r["Msg_text"];
+				if ($r["Msg_type"] === "status") {
+					$status = $r["Msg_text"];
+					continue;
+				}
+				if ($r["Msg_text"]) $other[] = $r["Msg_type"].": ".$r["Msg_text"];
 			}
-			echo implode(" ... ", array_filter(array($status, $note)))."\n";
+			echo $this->ok(implode("; ", array_filter(array($status) + $other))."\n");
 		}
 	}
 
@@ -169,8 +173,8 @@ class Init {
 			" [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters]";
 	}
 
-	function ok() { global $done; $done++; return 'done'; }
-	function err() { global $err; $err++; return 'error'; }
+	function ok($t = false) { global $done; $done++; return ($t?$t:'done'); }
+	function err($t = false) { global $err; $err++; return ($t?$t:'error'); }
 	function warn($t = false) { global $warn; $warn++; return ($t?$t:'exists'); }
 }
 
