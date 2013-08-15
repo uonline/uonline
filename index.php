@@ -40,7 +40,7 @@ if (file_exists('maintenance')) {
 $app = new Silex\Application();
 $app['debug'] = true;
 
-$s = $_COOKIE['sessid']; refreshSession($s);
+$s = array_key_exists("sessid", $_COOKIE) ? $_COOKIE["sessid"] : null; refreshSession($s);
 $options = array(
 	'admin' => userPermissions($s) && sessionActive($s),
 	'loggedIn' => sessionActive($s),
