@@ -318,8 +318,9 @@ class Injector {
 		foreach ($this->locations->locations as $v) {
 			$r = mysqli_query($conn,
 							'REPLACE `locations`'.
-							'(`title`, `goto`, `description`, `id`, `area`, `default`)'.
+							'(`picture`, `title`, `goto`, `description`, `id`, `area`, `default`)'.
 							'VALUES ("'.
+								mysqli_real_escape_string($conn, $v->picture).'", "'.
 								mysqli_real_escape_string($conn, $v->name).'", "'.
 								mysqli_real_escape_string($conn, $v->goto).'", "'.
 								mysqli_real_escape_string($conn, $v->description).'", "'.
