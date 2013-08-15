@@ -64,7 +64,7 @@ class Area {
 }
 
 class Location {
-	public $label, $name, $description = "", $actions = array(), $area, $id, $goto, $file, $isDefault, $line, $string;
+	public $label, $name, $description = "", $actions = array(), $area, $id, $goto, $file, $isDefault, $line, $string, $picture;
 
 	public function &__construct($label = "", $name = "", $area = null, $description = "", $actions = "") {
 		if (!$this->label) $this->label = $label;
@@ -222,6 +222,13 @@ class Parser {
 				fileWarning("non-empty string before area header",$filename,$k,$s);
 			}
 
+			if (preg_match("/^\\[(.+)\\]\\((.+)\\)$/", $s, $matches) && isset($l)) {
+				// fatal error
+				if ($l->picture) fileFatal("more than one picture at location",$filename,$k,$s);
+				// fatal error
+				if ($matches[1] !== $matches[2]) fileFatal("picture url and desription are not equals",$filename,$k,$s);
+				$l->picture = $matches[1];
+			}
 			if (startsWith($s, "# ")) {
 				// fatal error #5
 				$areaParsed = substr($s, 2);
