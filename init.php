@@ -176,14 +176,14 @@ class Init {
 		echo $this->mysqli && $this->mysqli->errno === 0 ? $this->ok() : $this->err();
 	}
 
-	function init_help() {
-		return
-			" [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]";
-	}
-
 	function ok($t = false) { global $done; $done++; return ($t?$t:'done'); }
 	function err($t = false) { global $err; $err++; return ($t?$t:'error'); }
 	function warn($t = false) { global $warn; $warn++; return ($t?$t:'exists'); }
+}
+
+function init_help() {
+	return
+		" [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]";
 }
 
 ?>
