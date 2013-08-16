@@ -211,7 +211,9 @@ function setRevision($r) {
 }
 
 function migrate($revision) {
-	global $migrate;
+	$migrate = array (
+		0 => function() { return true; }, //do nothing
+	);
 	$currentRevision = getCurrentRevision(); // если база чистая, то 0
 	if ($currentRevision < $revision) {
 		echo "Migrating from revision {$currentRevision} to {$revision}...\n";
@@ -226,10 +228,6 @@ function migrate($revision) {
 		return true;
 	}
 }
-
-$migrate = array (
-	0 => function() { return true; }, //do nothing
-);
 
 /*********************** maintain base in topical state *********************************/
 

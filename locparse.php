@@ -19,36 +19,12 @@
 
 require_once './config.php';
 
-if ($argc !== 1) {
-	if (array_key_exists(1, $argv) && ($argv[1] == "--validate" || $argv[1] == "-v")) {
-		$p = new Parser();
-		if (!(array_key_exists(2, $argv) && get_path($argv[2]))) die("Path not exists.");
-		$p->processDir(get_path($argv[2]), null, true);
-		echo $p->report()."\n";
-	}
-	else if (array_key_exists(1, $argv) && ($argv[1] == "--export" || $argv[1] == "-e")) {
-		$p = new Parser();
-		if (!(array_key_exists(2, $argv) && get_path($argv[2]))) die("Path not exists.");
-		$p->processDir(get_path($argv[2]), null, true);
-		echo $p->report()."\n";
-
-		$i = new Injector($p->areas, $p->locations);
-		$i->inject();
-	}
-	else if (array_key_exists(1, $argv) && $argv[1] == "--help") die(locparse_help());
-}
-
 function get_path($p) {
 	preg_replace('/[\\\\\\/]$/', "", $p);
 	if (is_dir($p) && is_dir(__DIR__."/".$p)) return $p;
 	else if (is_dir(__DIR__."/".$p)) return __DIR__."/".$p;
 	else if (is_dir($p)) return $p;
 	else return false;
-}
-
-function locparse_help() {
-	return
-	"[ --validate | --export ] path";
 }
 
 class Area {
