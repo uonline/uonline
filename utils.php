@@ -702,10 +702,11 @@ function getStatistics() {
 require_once './yoficator/ReflectionTypeHint.php';
 require_once './yoficator/UTF8.php';
 require_once './yoficator/Text/Yoficator.php';
+$yoficator = new Text_Yoficator();
 function yof($s)
 {
-	$t = new Text_Yoficator();
-	return $t->parse($s);
+	global $yoficator;
+	return $yoficator->parse($s);
 }
 
 
