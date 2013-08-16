@@ -1,8 +1,11 @@
 language: php
 php:
   - 5.5
+services:
+  - mysql
 before_script:
+  - echo "localhost|travis||uonline_test|travis|off" > keyring
+  - mysql -e 'create database uonline_test;'
   - php composer.phar install
 script:
   - make test
-
