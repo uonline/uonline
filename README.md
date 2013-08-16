@@ -1,4 +1,4 @@
-uonline
+uonline [![Build Status](https://travis-ci.org/uonline/uonline.png?branch=travis)](https://travis-ci.org/uonline/uonline)
 =======
 
 A browser-based MMORPG game in a fantasy world.
