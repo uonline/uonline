@@ -1,13 +1,21 @@
-{% extends "layout.twig" %}
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Технические работы</title>
+	</head>
+	<body>
+		<div style="max-width: 60em; margin: 0 auto; text-align: center;">
+			<h1>Извините!</h1>
 
-{% block title %}Технические работы{% endblock title %}
+			<p style="margin-bottom: 2.5em;">Запрос не может быть выполнен, потому что на сервере идут технические работы.</p>
 
-{% block content %}
-			<p>Извините! Запрос не может быть выполнен, потому что на сервере идут технические работы.</p>
 			{% if not message %}
 				<p>Администратор, включивший этот режим, никак не прокомментировал своё решение &mdash; возможно, случилось что-то непредвиденное.</p>
 			{% else %}
 				<p>Вот что сказал администратор, включивший этот режим:</p>
-				<p>&laquo;{{ message }}&raquo;</p>
+				<p><span style="color: gray; font-size: 125%;">&laquo;</span>{{ message }}<span style="color: gray; font-size: 125%;">&raquo;</span></p>
 			{% endif %}
-{% endblock content %}
+		</div>
+	</body>
+</html>
