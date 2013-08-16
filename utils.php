@@ -194,8 +194,15 @@ function getNewColumns() {
 }
 /***** contents *****/
 
+function getMigrationFunctions()
+{
+	return array (
+		0 => function() { return true; }, //do nothing
+	);
+}
+
 function getNewestRevision() {
-	global $migrate;
+	$migrate = getMigrationFunctions();
 	return max(array_keys($migrate));
 }
 
@@ -211,9 +218,7 @@ function setRevision($r) {
 }
 
 function migrate($revision) {
-	$migrate = array (
-		0 => function() { return true; }, //do nothing
-	);
+	$migrate = getMigrationFunctions();
 	$currentRevision = getCurrentRevision(); // если база чистая, то 0
 	if ($currentRevision < $revision) {
 		echo "Migrating from revision {$currentRevision} to {$revision}...\n";
