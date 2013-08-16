@@ -6,7 +6,7 @@ services:
 before_script:
   - echo "localhost|travis||uonline_test|travis|off" > keyring
   - mysql -e 'create database uonline_test;'
+install:
   - php composer.phar install
 script:
   - make test
-
