@@ -20,6 +20,13 @@
 
 $time_start = microtime(true);
 
+/****************** maintenance mode******************/
+if (file_exists('maintenance')) {
+	$maintenance_message = trim(file_get_contents('maintenance'));
+	include 'maintenance.php';
+	die;
+}
+
 require_once 'utils.php';
 require_once './vendor/autoload.php';
 use Symfony\Component\HttpFoundation\Request;
@@ -31,11 +38,6 @@ $twig = new Twig_Environment($loader, array('cache' => TWIG_CACHE));
 $twig->addFilter(new Twig_SimpleFilter('yof', 'yof', array() ) );
 $twig->addFilter(new Twig_SimpleFilter('tf', 'tf', array('pre_escape' => 'html', 'is_safe' => array('html') ) ) );
 $twig->addFilter(new Twig_SimpleFilter('nl2p', 'nl2p', array('pre_escape' => 'html', 'is_safe' => array('html') ) ) );
-
-/****************** maintenance mode******************/
-if (file_exists('maintenance')) {
-	die($twig->render("maintenance.twig", array('message' => trim(file_get_contents('maintenance')) ) ) );
-}
 
 $app = new Silex\Application();
 $app['debug'] = true;
