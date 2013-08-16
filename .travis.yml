@@ -4,4 +4,7 @@ php:
   - 5.4
   - 5.3
   - 5.2
-script: "make test"
+before_script:
+  - php composer.phar install
+script:
+  - make test
