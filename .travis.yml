@@ -8,5 +8,6 @@ before_script:
   - echo "localhost|travis||uonline_test|travis|off" > keyring
   - php composer.phar install
   - php init.php --tables --unify-validate --unify-export --test-monsters --optimize
+  - make diagnose
 script:
   - make test
