@@ -11,4 +11,4 @@ before_script:
   - echo "localhost|travis||uonline_test|travis|off" > keyring
   - php init.php --tables --unify-validate --unify-export --test-monsters --optimize
 script:
-  - make test
+  - make testl
