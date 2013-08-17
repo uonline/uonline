@@ -41,5 +41,8 @@ class UtilsTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals("&laquo;Гагарин-14&raquo;", tf('&quot;Гагарин-14&quot;'));
 		$this->assertEquals("&laquo;3 поросёнка&raquo;", tf('"3 поросёнка"'));
 		$this->assertEquals("&laquo;3 поросёнка&raquo;", tf('&quot;3 поросёнка&quot;'));
+		$this->assertEquals('Я бы назвал 1941&ndash;1945 годы.', tf('Я бы назвал 1941-1945 годы.'));
+		$this->assertEquals('Сколько будет 1941&minus;19455?', tf('Сколько будет 1941-19455?'));
+		$this->assertEquals('Сколько будет 19415&minus;1945?', tf('Сколько будет 19415-1945?'));
 	}
 }
