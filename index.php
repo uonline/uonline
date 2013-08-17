@@ -227,9 +227,9 @@ $app->get('/development/', function () use ($app, $twig, $options, $s) {
 });
 
 /********************** others **********************/
-$app->error(function (Exception $e, $с) use ($app, $twig, $options, $s) {
-	$options['code'] = $c;
-	return $twig->render( 'error.twig', $options);
+$app->error(function (Exception $e, $code) use ($app, $twig, $options, $s) {
+	$options['code'] = $code;
+	return $twig->render('error.twig', $options);
 });
 
 
