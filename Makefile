@@ -25,6 +25,9 @@ diagnose:
 test:
 	php vendor/bin/phpunit --strict --verbose --colors --coverage-html ./code-coverage-report tests/
 
+testl:
+	php vendor/bin/phpunit --strict --verbose tests/
+
 deploy: pull killcache dirs compress diagnose test
 
 serve:
