@@ -22,6 +22,20 @@ require_once './utils.php';
 
 class UtilsTest extends PHPUnit_Framework_TestCase {
 
+	public function testLazyYofInit()
+	{
+		global $yoficator;
+		$this->assertEquals(null, $yoficator);
+
+		yof('something');
+		$this->assertNotEquals(null, $yoficator);
+		$tmpYof = $yoficator;
+
+		yof('something else');
+		$this->assertNotEquals(null, $yoficator);
+		$this->assertEquals($tmpYof, $yoficator);
+	}
+
 	public function testTf() {
 		$this->assertEquals("&laquo;Чумный двор&raquo;", tf('"Чумный двор"'));
 		$this->assertEquals("&laquo;Чумный двор&raquo;", tf('&quot;Чумный двор&quot;'));
@@ -48,17 +62,9 @@ class UtilsTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals('Я думаю, 1941&ndash;1945', tf('Я думаю, 1941-1945'));
 	}
 
-	public function testLazyYofInit()
+	public function testNl2p()
 	{
-		global $yoficator;
-		$this->assertEquals(null, $yoficator);
-
-		yof('something');
-		$this->assertNotEquals(null, $yoficator);
-		$tmpYof = $yoficator;
-
-		yof('something else');
-		$this->assertNotEquals(null, $yoficator);
-		$this->assertEquals($tmpYof, $yoficator);
+		$this->assertEquals('<p>fuck</p>', nl2p('fuck'));
+		$this->assertEquals('<p>fuck</p><p>duck</p>', nl2p("fuck\n\nduck"));
 	}
 }

@@ -1178,6 +1178,12 @@ Warning: string with spaces only
 		$my->processDir("./test", null, true);
 	}
 
+	public function testEndsWith()
+	{
+		$this->assertTrue(endsWith("make","ke"));
+		$this->assertTrue(endsWith("make",""));
+	}
+
 	public function setUp()
 	{
 		if (file_exists("./test")) rmdirr("./test");
