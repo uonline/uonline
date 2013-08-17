@@ -719,9 +719,9 @@ function tf($s) {
 	$s = preg_replace('/^-(?= )|(?<= )-(?= )|---/', '&mdash;', $s); // em dash is "---" or " - "
 	$s = preg_replace('/--/', '&ndash;', $s); // en dash is "--"
 	$s = preg_replace('/(?:(?<=\D\d\d\d\d)|(?<=^\d\d\d\d))-(?:(?=\d\d\d\d\D)|(?=\d\d\d\d$))/', '&ndash;', $s); // en dash in year ranges, like "1941-1945"
-	$s = preg_replace('/(^|(?<=(\d|\s)))-(?=\d)/', "&minus;", $s); // minus in negative numbers like "-2" and math expressions like "24-11=13"
-	$s = preg_replace('/("|\&quot\;)(?=[a-zA-Zа-яА-ЯйЙёЁру0-9])/', '&laquo;', $s);
-	$s = preg_replace('/(?<=[a-zA-Zа-яА-ЯйЙёЁру0-9])("|\&quot\;)/', '&raquo;', $s);
+	$s = preg_replace('/(?:^|(?<=(?:\d|\s)))-(?=\d)/', "&minus;", $s); // minus in negative numbers like "-2" and math expressions like "24-11=13"
+	$s = preg_replace('/(?:"|\&quot\;)(?=[a-zA-Zа-яА-ЯйЙёЁру0-9])/', '&laquo;', $s);
+	$s = preg_replace('/(?<=[a-zA-Zа-яА-ЯйЙёЁру0-9])(?:"|\&quot\;)/', '&raquo;', $s);
 	return $s;
 }
 
