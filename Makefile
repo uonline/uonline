@@ -23,7 +23,7 @@ diagnose:
 	php composer.phar validate
 
 test:
-	php vendor/bin/phpunit --strict --verbose tests/
+	php vendor/bin/phpunit --strict --verbose --colors --coverage-html ./code-coverage-report tests/
 
 testl:
 	php vendor/bin/phpunit --strict --verbose tests/
