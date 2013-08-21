@@ -24,20 +24,20 @@ require_once './locparse.php';
 if($argc !== 1) {
 	$init = new Init();
 	if (in_array("--database", $argv) || in_array("-d", $argv)) $init->database();
-	else if (in_array("--tables", $argv) || in_array("-t", $argv)) $init->tables();
-	else if (in_array("--unify-validate", $argv) || in_array("-uv", $argv)) $init->unifyValidate();
-	else if (in_array("--unify-export", $argv) || in_array("-ue", $argv)) $init->unifyExport();
-	else if (in_array("--optimize", $argv) || in_array("-o", $argv)) $init->optimize();
-	else if (in_array("--test-monsters", $argv) || in_array("-tm", $argv)) $init->testMonsters();
-	else if (in_array("--drop", $argv) || in_array("-dr", $argv)) $init->drop();
-	else if (in_array("--help", $argv) || in_array("-h", $argv)) echo $init->init_help();
+	if (in_array("--tables", $argv) || in_array("-t", $argv)) $init->tables();
+	if (in_array("--unify-validate", $argv) || in_array("-uv", $argv)) $init->unifyValidate();
+	if (in_array("--unify-export", $argv) || in_array("-ue", $argv)) $init->unifyExport();
+	if (in_array("--test-monsters", $argv) || in_array("-tm", $argv)) $init->testMonsters();
+	if (in_array("--optimize", $argv) || in_array("-o", $argv)) $init->optimize();
+	if (in_array("--drop", $argv) || in_array("-dr", $argv)) $init->drop();
+	if (in_array("--help", $argv) || in_array("-h", $argv)) echo $init->init_help();
 }
 else echo init_help();
 
 
 class Init {
 	public $mysqli;
-	
+
 	function connect() {
 		echo "Connecting to database ... ";
 		$this->mysqli = mysqliConnect();
@@ -168,7 +168,7 @@ class Init {
 		}
 		echo $this->ok()."\n";
 	}
-	
+
 	function drop() {
 		$this->connect();
 		"Dropping database ... ";
