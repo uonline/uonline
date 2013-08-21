@@ -18,16 +18,17 @@
  */
 
 
-$keyring = file_exists('keyring') ? file_get_contents('keyring') : 0;
-if ($keyring) { $key = explode("|", trim($keyring)); list($host, $user, $pass, $base, $admpass, $cache) = $key; }
-else die('Keyring file missing.<br />Create file named "keyring" in the root with next content.<br />Format: host|user|pass|base|admpass|cache (on|off)');
+if (!file_exists('keyring')) die("Fatal error: keyring is missing.<br />\nCreate a file named 'keyring' in the project root using following format:<br />\nhost|username|password|database|cache (on/off)\n");
+$keyring = trim(file_get_contents('keyring'));
+$keyring_array = explode("|", $keyring);
+if (count($keyring_array)===6) die("Fatal error: keyring uses old format. Please remove admin password from it.\n");
+list($host, $user, $pass, $base, $cache) = $keyring_array;
 
 // server
 define('MYSQL_HOST', $host);
 define('MYSQL_USER', $user);
 define('MYSQL_PASS', $pass);
 define('MYSQL_BASE', $base);
-define('ADMIN_PASS', $admpass);
 define('SESSION_LENGTH', 64);
 define('SESSION_TIMEEXPIRE', 3600); //in seconds
 define('DEFAULT_CHARSET', 'utf-8');
