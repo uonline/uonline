@@ -34,7 +34,8 @@ define('DEFAULT_CHARSET', 'utf-8');
 //define('BASE_OUTDATED', getNewHash() !== getHash());
 
 // layout
-define('DEFAULT_INSTANCE', 'about');
+define('DEFAULT_INSTANCE_FOR_GUESTS', '/about/');
+define('DEFAULT_INSTANCE_FOR_USERS', '/game/');
 define('TWIG_CACHE', $cache === 'on' ? './templates_cache' : false);
 
 //game

@@ -58,8 +58,8 @@ $options = array(
 $app->get('/', function () use ($app, $twig, $options, $s) {
 	return
 		sessionActive($s) ?
-		$app->redirect('/game/') :
-		$app->redirect('/'.DEFAULT_INSTANCE.'/');
+			$app->redirect(DEFAULT_INSTANCE_FOR_USERS) :
+			$app->redirect(DEFAULT_INSTANCE_FOR_GUESTS);
 });
 
 
