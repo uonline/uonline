@@ -47,7 +47,6 @@ $options = array(
 	'admin' => userPermissions($s) && sessionActive($s),
 	'loggedIn' => sessionActive($s),
 	'login' => userBySession($s),
-	'mail_count' => 0,
 	'databaseIsOutdated' => getNewestRevision() !== getCurrentRevision(),
 );
 
