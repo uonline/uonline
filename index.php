@@ -19,6 +19,7 @@
 
 
 $time_start = microtime(true);
+$measure = true;
 
 /****************** maintenance mode******************/
 if (file_exists('maintenance')) {
@@ -208,6 +209,17 @@ $app->get('/action/escape', function () use ($app, $twig, $options, $s) {
 });
 
 
+/********************** ajax **********************/
+$app->get('/ajax/isNickBusy/{nick}', function ($nick) use ($app, $twig, $options, $s) {
+	global $measure; $measure = false; // or else JSON will be invalid
+	$answer = array(
+		'nick' => $nick,
+		'isNickBusy' => userExists($nick)
+	);
+	return $app->json($answer);
+});
+
+
 /********************** stats **********************/
 $app->get('/stats/', function () use ($app, $twig, $options, $s) {
 	$options['stats'] = getStatistics();
@@ -238,7 +250,7 @@ $app->run();
 
 $time_end = microtime(true);
 stats($time_end - $time_start);
-echo "\n<!-- Done in " . ( ($time_end - $time_start) * 1000) . ' milliseconds -->';
+if ($measure) echo "\n<!-- Done in " . ( ($time_end - $time_start) * 1000) . ' milliseconds -->';
 
 
 
