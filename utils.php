@@ -756,23 +756,4 @@ function b64UrlDecode($i) {
  return base64_decode(strtr($i, '-_,', '+/='));
 }
 
-function insertEncoding($e = DEFAULT_CHARSET) {
-	header('Content-Type: text/html; charset='.$e);
-}
-
-function makePage($head, $body, $enc = DEFAULT_CHARSET) {
-	return
-	"<!DOCTYPE html>\n".
-	"<html>\n".
-	"<head>\n".
-	$head.
-	'<meta charset="'.$enc.'" />'.
-	"\n</head>\n".
-	"<body>\n".
-	$body.
-	"\n</body>\n".
-	"</html>";
-}
-
-
 ?>
