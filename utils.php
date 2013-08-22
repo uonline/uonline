@@ -201,7 +201,7 @@ function getNewestRevision() {
 }
 
 function getCurrentRevision() {
-	$r = file_exists('tablestate') ? file_get_contents('tablestate') : false;
+	$r = file_exists('tablestate') ? trim(file_get_contents('tablestate')) : false;
 	return (is_numeric($r) ? (int) $r : 0);
 }
 
@@ -214,18 +214,21 @@ function setRevision($r) {
 function migrate($revision) {
 	$migrate = getMigrationFunctions();
 	$currentRevision = getCurrentRevision(); // если файла-индекса не существует или в нём нет единственного числа, то 0
-	if ($currentRevision < $revision) {
-		section("Migrating from revision {$currentRevision} to {$revision}");
-		foreach($migrate as $k => $v) {
-			if ($k > $currentRevision) {
-				if ($v()) {
-					setRevision($revision);
-				}
+	if ($currentRevision < $revision)
+	{
+		foreach($migrate as $k => $v)
+		{
+			section("Migrating from revision ${currentRevision} to ${k}");
+			if ($k > $currentRevision)
+			{
+				$v();
+				setRevision($revision);
 			}
+			endSection();
 		}
-		endSection();
 	}
-	else {
+	else
+	{
 		writeln("Refused to migrate from revision {$currentRevision} to {$revision}.");
 		return true;
 	}
