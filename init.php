@@ -25,6 +25,15 @@ require_once './locparse.php';
 if ($argc === 1 || in_array("--help", $argv) || in_array("-h", $argv))
 	die("Usage: [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]\n");
 
+if (in_array("--info", $argv) || in_array("-i", $argv))
+{
+	$count = count(getMigrationFunctions());
+	writeln('init.php with '.$count.' revision'.((($count % 10 === 1)&&($count !== 11))?'':'s').' on board.');
+	writeln('Current revision is '.getCurrentRevision().
+		' ('.(getNewestRevision() <= getCurrentRevision() ? 'up to date':'needs update').').');
+	die;
+}
+
 writeln('Starting init.');
 $init = new Init();
 if (in_array("--database", $argv) || in_array("-d", $argv)) $init->database();
