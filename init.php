@@ -189,8 +189,4 @@ class Init {
 		mysqlDelete();
 		result($this->mysqli && $this->mysqli->errno === 0 ? 'ok' : 'error');
 	}
-
-	function ok($t = false) { global $done; $done++; return ($t?$t:'done'); }
-	function err($t = false) { global $err; $err++; return ($t?$t:'error'); }
-	function warn($t = false) { global $warn; $warn++; return ($t?$t:'exists'); }
 }
