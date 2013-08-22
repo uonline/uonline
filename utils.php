@@ -42,18 +42,17 @@ function tableExists($t) {
 
 function addTable($t, $o) {
 	$mysqli = mysqliConnect();
-	if (tableExists($t)) return FALSE;
-	else {
+	echo "   Creating table `$t` ... ";
+	if (!tableExists($t)) {
 		$mysqli->query("CREATE TABLE `$t` $o");
-		return $mysqli->errno;
+		if ($mysqli->errno !== 0) {
+				echo "error\n";
+		}
+		else "OK\n";
 	}
+	else echo "exists\n";
 }
 
-function addTables($t) {
-	$a = array();
-	foreach ($t as $i => $v) $a[$i] = addTable ($i, $v);
-	return $a;
-}
 /***** table functions *****/
 
 /***** column functions *****/
@@ -70,11 +69,15 @@ function columnExists($t, $c) {
 function addColumn($t, $o) {
 	$mysqli = mysqliConnect();
 	list($c, $o) = explode('|', $o);
-	if (columnExists($t, $c)) return FALSE;
-	else {
+	echo "      Creating column `$c` at table `$t` ... ";
+	if (!columnExists($t, $c)) {
 		$mysqli->query("ALTER TABLE `$t` ADD COLUMN `$c` $o");
-		return $mysqli->errno;
+		if ($mysqli->errno !== 0) {
+				echo "error\n";
+		}
+		else "OK\n";
 	}
+	else echo "exists\n";
 }
 
 function renameColumn($t, $o) {
@@ -151,6 +154,7 @@ function getMigrationFunctions() {
 			addColumn("locations", "goto|TINYTEXT");
 			addColumn("locations", "description|TEXT");
 			addColumn("locations", "area|INT");
+			addColumn("locations", "picture|TINYTEXT");
 			addColumn("locations", "default|TINYINT(1) DEFAULT 0");
 
 			/************** areas ****************/
