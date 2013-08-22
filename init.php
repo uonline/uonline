@@ -97,9 +97,9 @@ class Init {
 					$status = $r["Msg_text"];
 					continue;
 				}
-				if ($r["Msg_text"]) $other[] = $r["Msg_type"].": ".$r["Msg_text"];
+				if ($r["Msg_type"] && $r["Msg_text"]) $other[] = $r["Msg_type"].": ".$r["Msg_text"];
 			}
-			echo $this->ok(implode("; ", array_filter(array($status) + $other))."\n");
+			echo $this->ok(implode("; ", array_merge(array($status), $other))."\n");
 		}
 	}
 
