@@ -30,7 +30,7 @@ if($argc !== 1) {
 	if (in_array("--test-monsters", $argv) || in_array("-tm", $argv)) $init->testMonsters();
 	if (in_array("--optimize", $argv) || in_array("-o", $argv)) $init->optimize();
 	if (in_array("--drop", $argv) || in_array("-dr", $argv)) $init->drop();
-	if (in_array("--help", $argv) || in_array("-h", $argv)) echo $init->init_help();
+	if (in_array("--help", $argv) || in_array("-h", $argv)) echo init_help();
 }
 else echo init_help();
 
@@ -56,11 +56,10 @@ class Init {
 		$this->connect();
 		echo "Migrating tables ...\n".
 		"Current revision is ".getCurrentRevision().".\n";
-		if (getCurrentRevision() <= getNewestRevision()) {
+		if (getNewestRevision() <= getCurrentRevision()) {
 			echo "Already up to date.\n";
 			return;
 		}
-		"Skipping migrations to: 1 ... ".(getCurrentRevision()-1).".\n";
 		migrate(getNewestRevision());
 	}
 

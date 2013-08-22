@@ -113,91 +113,81 @@ function dropColumn($t, $o) {
 
 /***** column functions *****/
 
-/***** contents *****/
-function getNewTables() {
-	return array(
-		'uniusers' => '(`user` TINYTEXT, `mail` TINYTEXT, `salt` TINYTEXT, `hash` TINYTEXT, `sessid` TINYTEXT, `sessexpire` DATETIME, `reg_time` DATETIME, `id` INT AUTO_INCREMENT, `location` INT DEFAULT 1, /*`permissions` INT DEFAULT 0,*/ PRIMARY KEY  (`id`) )',
-		'locations' => '(`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `area` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))',
-		'areas' => '(`title` TINYTEXT, `id` INT, PRIMARY KEY (`id`))',
-		'monster_prototypes' => '(`id` INT AUTO_INCREMENT, `name` TINYTEXT, `level` INT, `power` INT, `agility` INT, `endurance` INT, `intelligence` INT, `wisdom` INT, `volition` INT, `health_max` INT, `mana_max` INT, PRIMARY KEY (`id`))',
-		'monsters' => '(`incarn_id` INT AUTO_INCREMENT, `id` INT, `location` INT, `health` INT, `mana` INT, `effects` TEXT, `attack_chance` INT, PRIMARY KEY (`incarn_id`))',
-		'stats' => '(`time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, `gen_time` DOUBLE, `instance` TINYTEXT, `ip` TINYTEXT, `uagent` TINYTEXT)',
-	);
-}
-function getNewColumns() {
-	//{ {table => 'tableName', columns => { 'columnNname|columnOptions', ... } }, ... }
-	return array(
-		array(
-			'table' => 'uniusers',
-			'columns' => array(
-				'permissions|INT AFTER `location`',
-				'fight_mode|INT AFTER `permissions`',
-				'autoinvolved_fm|INT AFTER `fight_mode`',
-				'level|INT DEFAULT 1',
-				'health|INT DEFAULT 200',
-				'health_max|INT DEFAULT 200',
-				'mana|INT DEFAULT 100',
-				'mana_max|INT DEFAULT 100',
-				'energy|INT DEFAULT 50',
-				'power|INT DEFAULT 3',
-				'defense|INT DEFAULT 3',
-				'agility|INT DEFAULT 3', //ловкость
-				'accuracy|INT DEFAULT 3', //точность
-				'intelligence|INT DEFAULT 5', //интеллект
-				'initiative|INT DEFAULT 5', //инициатива
-				'exp|INT DEFAULT 0',
-				'effects|TEXT',
-			),
-			'change' => array (
-				'health|INT DEFAULT 200',
-				'health_max|INT DEFAULT 200',
-				'mana|INT DEFAULT 100',
-				'mana_max|INT DEFAULT 100',
-				'power|INT DEFAULT 3',
-				'agility|INT DEFAULT 3', //ловкость
-				'intelligence|INT DEFAULT 5', //интеллект
-				'initiative|INT DEFAULT 5', //инициатива
-				'fight_mode|INT DEFAULT 0 AFTER `permissions`',
-				'autoinvolved_fm|INT DEFAULT 0 AFTER `fight_mode`',
-			),
-			'drop' => array(
-				'wisdom'
-			),
-		),
-		array(
-			'table' => 'monsters',
-			'columns' => array(
-				'incarn_id|INT AUTO_INCREMENT FIRST, ADD PRIMARY KEY (`incarn_id`)'
-			),
-		),
-		array(
-			'table' => 'stats',
-			'columns' => array(
-				'url|TEXT'
-			),
-		),
-		array(
-			'table' => 'locations',
-			'rename' => array(
-				'super|area'
-			),
-			'change' => array(
-				'description|TEXT'
-			),
-		),
-		array(
-			'table' => 'areas',
-			'columns' => array(
-				'description|TEXT'
-		),),
-	);
-}
-/***** contents *****/
-
-function getMigrationFunctions()
-{
+function getMigrationFunctions() {
 	return array (
-		0 => function() { return true; }, //do nothing
+		1 => function() {
+			/************** uniusers ****************/
+			addTable('uniusers', '(`id` INT AUTO_INCREMENT, PRIMARY KEY (`id`))');
+			addColumn("uniusers", "location|INT DEFAULT 1");
+			addColumn("uniusers", "permissions|INT DEFAULT 0");
+			addColumn("uniusers", "user|TINYTEXT");
+			addColumn("uniusers", "mail|TINYTEXT");
+			addColumn("uniusers", "salt|TINYTEXT");
+			addColumn("uniusers", "hash|TINYTEXT");
+			addColumn("uniusers", "sessid|TINYTEXT");
+			addColumn("uniusers", "sessexpire|DATETIME");
+			addColumn("uniusers", "reg_time|DATETIME");
+			
+			addColumn("uniusers", "fight_mode|INT DEFAULT 0");
+			addColumn("uniusers", "autoinvolved_fm|INT DEFAULT 0");
+			addColumn("uniusers", "level|INT DEFAULT 1");
+			addColumn("uniusers", "health|INT DEFAULT 200");
+			addColumn("uniusers", "health_max|INT DEFAULT 200");
+			addColumn("uniusers", "mana|INT DEFAULT 100");
+			addColumn("uniusers", "mana_max|INT DEFAULT 100");
+			addColumn("uniusers", "energy|INT DEFAULT 50");
+			addColumn("uniusers", "power|INT DEFAULT 3");
+			addColumn("uniusers", "defense|INT DEFAULT 3");
+			addColumn("uniusers", "agility|INT DEFAULT 3"); //ловкость
+			addColumn("uniusers", "accuracy|INT DEFAULT 3"); //точность
+			addColumn("uniusers", "intelligence|INT DEFAULT 5"); //интеллект
+			addColumn("uniusers", "initiative|INT DEFAULT 5"); //инициатива
+			addColumn("uniusers", "exp|INT DEFAULT 0");
+			addColumn("uniusers", "effects|TEXT");
+			
+			/************** locations ****************/
+			addTable('locations', '(`id` INT, PRIMARY KEY (`id`))');
+			addColumn("locations", "title|TINYTEXT");
+			addColumn("locations", "goto|TINYTEXT");
+			addColumn("locations", "description|TEXT");
+			addColumn("locations", "area|INT");
+			addColumn("locations", "default|TINYINT(1) DEFAULT 0");
+
+			/************** areas ****************/
+			addTable('areas', '(`id` INT, PRIMARY KEY (`id`))');
+			addColumn("areas", "title|TINYTEXT");
+			addColumn("areas", "description|TEXT");
+
+			/************** monster_prototypes ****************/
+			addTable('monster_prototypes', '(`id` INT AUTO_INCREMENT, PRIMARY KEY (`id`))');
+			addColumn("monster_prototypes", "name|TINYTEXT");
+			addColumn("monster_prototypes", "level|INT");
+			addColumn("monster_prototypes", "power|INT");
+			addColumn("monster_prototypes", "agility|INT");
+			addColumn("monster_prototypes", "endurance|INT");
+			addColumn("monster_prototypes", "intelligence|INT");
+			addColumn("monster_prototypes", "wisdom|INT");
+			addColumn("monster_prototypes", "volition|INT");
+			addColumn("monster_prototypes", "health_max|INT");
+			addColumn("monster_prototypes", "mana_max|INT");
+
+			/************** monsters ****************/
+			addTable('monsters', '(`incarn_id` INT AUTO_INCREMENT, PRIMARY KEY (`incarn_id`))');
+			addColumn("monsters", "id|INT");
+			addColumn("monsters", "location|INT");
+			addColumn("monsters", "health|INT");
+			addColumn("monsters", "mana|INT");
+			addColumn("monsters", "effects|TEXT");
+			addColumn("monsters", "attack_chance|INT");
+
+			/************** stats ****************/
+			addTable('stats', '(`time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
+			addColumn("stats", "gen_time|DOUBLE");
+			addColumn("stats", "instance|TINYTEXT");
+			addColumn("stats", "ip|TINYTEXT");
+			addColumn("stats", "uagent|TINYTEXT");
+			addColumn("stats", "url|TEXT");
+		},
 	);
 }
 
@@ -219,12 +209,14 @@ function setRevision($r) {
 
 function migrate($revision) {
 	$migrate = getMigrationFunctions();
-	$currentRevision = getCurrentRevision(); // если база чистая, то 0
+	$currentRevision = getCurrentRevision(); // если файла-индекса не существует или в нём нет единственного числа, то 0
 	if ($currentRevision < $revision) {
 		echo "Migrating from revision {$currentRevision} to {$revision}...\n";
-		for($i = $currentRevision; $i < $revision; $i++) {
-			if ($migrate[$i+1]()) {
-				setRevision($revision);
+		foreach($migrate as $k => $v) {
+			if ($k > $currentRevision) {
+				if ($v()) {
+					setRevision($revision);
+				}
 			}
 		}
 	}
