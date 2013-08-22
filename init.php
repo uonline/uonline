@@ -187,6 +187,14 @@ class Init {
 		$this->connect();
 		action('Dropping database `'.MYSQL_BASE.'`');
 		mysqlDelete();
-		result($this->mysqli && $this->mysqli->errno === 0 ? 'ok' : 'error');
+		if ($this->mysqli && $this->mysqli->errno === 0)
+		{
+			setRevision(0);
+			result('ok');
+		}
+		else
+		{
+			result('error');
+		}
 	}
 }
