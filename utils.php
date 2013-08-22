@@ -42,15 +42,15 @@ function tableExists($t) {
 
 function addTable($t, $o) {
 	$mysqli = mysqliConnect();
-	echo "   Creating table `$t` ... ";
+	action('Creating table `'.$t.'` '.$o);
 	if (!tableExists($t)) {
 		$mysqli->query("CREATE TABLE `$t` $o");
 		if ($mysqli->errno !== 0) {
-				echo "error\n";
+			echo result('error');
 		}
-		else "OK\n";
+		else result('ok');
 	}
-	else echo "exists\n";
+	else result('exists');
 }
 
 /***** table functions *****/
@@ -69,15 +69,15 @@ function columnExists($t, $c) {
 function addColumn($t, $o) {
 	$mysqli = mysqliConnect();
 	list($c, $o) = explode('|', $o);
-	echo "      Creating column `$c` at table `$t` ... ";
+	action('Creating column `'.$c.'` in table `'.$t.'`');
 	if (!columnExists($t, $c)) {
 		$mysqli->query("ALTER TABLE `$t` ADD COLUMN `$c` $o");
 		if ($mysqli->errno !== 0) {
-				echo "error\n";
+			result('error');
 		}
-		else "OK\n";
+		else result('ok');
 	}
-	else echo "exists\n";
+	else result('exists');
 }
 
 function renameColumn($t, $o) {
@@ -130,7 +130,7 @@ function getMigrationFunctions() {
 			addColumn("uniusers", "sessid|TINYTEXT");
 			addColumn("uniusers", "sessexpire|DATETIME");
 			addColumn("uniusers", "reg_time|DATETIME");
-			
+
 			addColumn("uniusers", "fight_mode|INT DEFAULT 0");
 			addColumn("uniusers", "autoinvolved_fm|INT DEFAULT 0");
 			addColumn("uniusers", "level|INT DEFAULT 1");
@@ -147,7 +147,7 @@ function getMigrationFunctions() {
 			addColumn("uniusers", "initiative|INT DEFAULT 5"); //инициатива
 			addColumn("uniusers", "exp|INT DEFAULT 0");
 			addColumn("uniusers", "effects|TEXT");
-			
+
 			/************** locations ****************/
 			addTable('locations', '(`id` INT, PRIMARY KEY (`id`))');
 			addColumn("locations", "title|TINYTEXT");
@@ -215,7 +215,7 @@ function migrate($revision) {
 	$migrate = getMigrationFunctions();
 	$currentRevision = getCurrentRevision(); // если файла-индекса не существует или в нём нет единственного числа, то 0
 	if ($currentRevision < $revision) {
-		echo "Migrating from revision {$currentRevision} to {$revision}...\n";
+		section("Migrating from revision {$currentRevision} to {$revision}");
 		foreach($migrate as $k => $v) {
 			if ($k > $currentRevision) {
 				if ($v()) {
@@ -223,9 +223,10 @@ function migrate($revision) {
 				}
 			}
 		}
+		endSection();
 	}
 	else {
-		echo "Refused to migrate from revision {$currentRevision} to {$revision}.\n";
+		writeln("Refused to migrate from revision {$currentRevision} to {$revision}.");
 		return true;
 	}
 }
@@ -750,6 +751,46 @@ function b64UrlEncode($i) {
 
 function b64UrlDecode($i) {
  return base64_decode(strtr($i, '-_,', '+/='));
+}
+
+/********************** Text functions **********************/
+$offset = 0;
+
+function spaces($count)
+{
+	$s = '';
+	for ($i=0; $i<$count; $i++) $s .= ' ';
+	return $s;
+}
+
+function writeln($text)
+{
+	global $offset;
+	echo spaces($offset).$text."\n";
+}
+
+function section($name)
+{
+	writeln($name.'...');
+	global $offset;
+	$offset += 2;
+}
+
+function endSection()
+{
+	global $offset;
+	$offset -= 2;
+}
+
+function action($name)
+{
+	global $offset;
+	echo spaces($offset).$name.'...';
+}
+
+function result($result)
+{
+	echo ' '.$result."\n";
 }
 
 ?>

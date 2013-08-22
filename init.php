@@ -22,6 +22,7 @@ require_once './utils.php';
 require_once './locparse.php';
 
 if($argc !== 1) {
+	writeln('Starting init.');
 	$init = new Init();
 	if (in_array("--database", $argv) || in_array("-d", $argv)) $init->database();
 	if (in_array("--tables", $argv) || in_array("-t", $argv)) $init->tables();
@@ -30,6 +31,7 @@ if($argc !== 1) {
 	if (in_array("--test-monsters", $argv) || in_array("-tm", $argv)) $init->testMonsters();
 	if (in_array("--optimize", $argv) || in_array("-o", $argv)) $init->optimize();
 	if (in_array("--drop", $argv) || in_array("-dr", $argv)) $init->drop();
+	writeln('Done.');
 	if (in_array("--help", $argv) || in_array("-h", $argv)) echo init_help();
 }
 else echo init_help();
@@ -39,56 +41,59 @@ class Init {
 	public $mysqli;
 
 	function connect() {
-		echo "Connecting to database ... ";
+		action('Connecting to database');
 		$this->mysqli = mysqliConnect();
-		echo $this->mysqli && $this->mysqli->errno === 0 ? $this->ok() : $this->err();
-		echo "\n";
+		result($this->mysqli && $this->mysqli->errno === 0 ? 'ok' : 'error');
 	}
 
 	function database() {
-		echo "Creating database `uonline` ... ";
+		action('Creating database `'.MYSQL_BASE.'`');
 		$this->mysqli = mysqliInit();
-		echo $this->mysqli && $this->mysqli->errno === 0 ? $this->ok() : $this->err();
-		echo "\n";
+		result($this->mysqli && $this->mysqli->errno === 0 ? 'ok' : 'error');
 	}
 
 	function tables() {
 		$this->connect();
-		echo "Migrating tables ...\n".
-		"Current revision is ".getCurrentRevision().".\n";
-		if (getNewestRevision() <= getCurrentRevision()) {
-			echo "Already up to date.\n";
-			return;
+		section('Migrating tables');
+		writeln('Current revision is '.getCurrentRevision().'.');
+		if (getNewestRevision() <= getCurrentRevision())
+		{
+			writeln('Already up to date.');
 		}
-		migrate(getNewestRevision());
+		else
+		{
+			migrate(getNewestRevision());
+		}
+		endSection();
 	}
 
 	function unifyValidate() {
-		echo "Validating unify ...\n";
+		section('Validating unify');
 		$p = new Parser();
 		if (!get_path("unify")) die("Path not exists.");
 		$p->processDir(get_path("unify"), null, true);
-		echo "Validating unify finished.\n";
+		endSection();
 	}
 
 	function unifyExport() {
-		echo "Exporting unify ...\n";
+		section('Exporting unify');
 		$p = new Parser();
 		if (!get_path("unify")) die("Path not exists.");
 		$p->processDir(get_path("unify"), null, true);
 
 		(new Injector($p->areas, $p->locations))->inject();
-		echo "Exporting unify finished.\n";
+		endSection();
 	}
 
 	function optimize() {
+		section('Optimizing tables');
 		$this->connect();
 		$q = $this->mysqli->query(
 				"SELECT `TABLE_NAME` ".
 				"FROM `information_schema`.`TABLES` ".
 				"WHERE `TABLE_SCHEMA`='".MYSQL_BASE."'");
 		while ($t = $q->fetch_array()) {
-			echo 'Optimize table `'.$t[0].'` ... ';
+			action('Optimizing table `'.$t[0].'`');
 			$q1 = $this->mysqli->query("OPTIMIZE TABLE `$t[0]`");
 			$other = array();
 			for (;$r = $q1->fetch_assoc();) {
@@ -98,8 +103,9 @@ class Init {
 				}
 				if ($r["Msg_type"] && $r["Msg_text"]) $other[] = $r["Msg_type"].": ".$r["Msg_text"];
 			}
-			echo $this->ok(implode("; ", array_merge(array($status), $other))."\n");
+			result(implode('; ', array_merge(array($status), $other)));
 		}
+		endSection();
 	}
 
 	function testMonsters() {
@@ -157,7 +163,7 @@ class Init {
 		);
 		$this->connect();
 
-		echo "Mosters creation ... ";
+		action('Adding test monsters');
 		foreach ($monsters as $v) {
 			$this->mysqli->query($v);
 			if ($this->mysqli->errno !== 0) {
@@ -165,14 +171,14 @@ class Init {
 				return;
 			}
 		}
-		echo $this->ok()."\n";
+		result('ok');
 	}
 
 	function drop() {
 		$this->connect();
-		"Dropping database ... ";
+		action('Dropping database `'.MYSQL_BASE.'`');
 		mysqlDelete();
-		echo $this->mysqli && $this->mysqli->errno === 0 ? $this->ok() : $this->err();
+		result($this->mysqli && $this->mysqli->errno === 0 ? 'ok' : 'error');
 	}
 
 	function ok($t = false) { global $done; $done++; return ($t?$t:'done'); }
@@ -184,5 +190,3 @@ function init_help() {
 	return
 		" [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]";
 }
-
-?>
