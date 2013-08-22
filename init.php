@@ -21,20 +21,20 @@
 require_once './utils.php';
 require_once './locparse.php';
 
-if($argc !== 1) {
-	writeln('Starting init.');
-	$init = new Init();
-	if (in_array("--database", $argv) || in_array("-d", $argv)) $init->database();
-	if (in_array("--tables", $argv) || in_array("-t", $argv)) $init->tables();
-	if (in_array("--unify-validate", $argv) || in_array("-uv", $argv)) $init->unifyValidate();
-	if (in_array("--unify-export", $argv) || in_array("-ue", $argv)) $init->unifyExport();
-	if (in_array("--test-monsters", $argv) || in_array("-tm", $argv)) $init->testMonsters();
-	if (in_array("--optimize", $argv) || in_array("-o", $argv)) $init->optimize();
-	if (in_array("--drop", $argv) || in_array("-dr", $argv)) $init->drop();
-	writeln('Done.');
-	if (in_array("--help", $argv) || in_array("-h", $argv)) echo init_help();
-}
-else echo init_help();
+
+if ($argc === 1 || in_array("--help", $argv) || in_array("-h", $argv))
+	die("Usage: [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]\n");
+
+writeln('Starting init.');
+$init = new Init();
+if (in_array("--database", $argv) || in_array("-d", $argv)) $init->database();
+if (in_array("--tables", $argv) || in_array("-t", $argv)) $init->tables();
+if (in_array("--unify-validate", $argv) || in_array("-uv", $argv)) $init->unifyValidate();
+if (in_array("--unify-export", $argv) || in_array("-ue", $argv)) $init->unifyExport();
+if (in_array("--test-monsters", $argv) || in_array("-tm", $argv)) $init->testMonsters();
+if (in_array("--optimize", $argv) || in_array("-o", $argv)) $init->optimize();
+if (in_array("--drop", $argv) || in_array("-dr", $argv)) $init->drop();
+writeln('Done.');
 
 
 class Init {
@@ -184,9 +184,4 @@ class Init {
 	function ok($t = false) { global $done; $done++; return ($t?$t:'done'); }
 	function err($t = false) { global $err; $err++; return ($t?$t:'error'); }
 	function warn($t = false) { global $warn; $warn++; return ($t?$t:'exists'); }
-}
-
-function init_help() {
-	return
-		" [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]";
 }
