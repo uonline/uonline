@@ -183,7 +183,8 @@ function getMigrationFunctions() {
 			addColumn("monsters", "mana|INT");
 			addColumn("monsters", "effects|TEXT");
 			addColumn("monsters", "attack_chance|INT");
-
+		},
+		2 => function() {
 			/************** stats ****************/
 			addTable('stats', '(`time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
 			addColumn("stats", "gen_time|DOUBLE");
@@ -218,13 +219,13 @@ function migrate($revision) {
 	{
 		foreach($migrate as $k => $v)
 		{
-			section("Migrating from revision ${currentRevision} to ${k}");
 			if ($k > $currentRevision)
 			{
+				section('Migrating from revision '.getCurrentRevision().' to '.$k);
 				$v();
-				setRevision($revision);
+				setRevision($k);
+				endSection();
 			}
-			endSection();
 		}
 	}
 	else
