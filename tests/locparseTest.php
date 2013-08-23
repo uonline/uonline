@@ -121,7 +121,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		mysqli_query($conn, 'CREATE DATABASE IF NOT EXISTS `'.$base.'`');
 		mysqli_select_db($conn, $base);
 		mysqli_query($conn, 'CREATE TABLE `areas` (`title` TINYTEXT, `description` TEXT, `id` INT, PRIMARY KEY (`id`))');
-		mysqli_query($conn, 'CREATE TABLE `locations` (`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `id` INT, `area` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))');
+		mysqli_query($conn, 'CREATE TABLE `locations` (`title` TINYTEXT, `goto` TINYTEXT, `description` TINYTEXT, `picture` TINYTEXT, `id` INT, `area` INT, `default` TINYINT(1) DEFAULT 0, PRIMARY KEY (`id`))');
 
 		$injector = (new Injector($my->areas, $my->locations));
 		$injector->inject(MYSQL_HOST, MYSQL_USER, MYSQL_PASS, $base);
@@ -153,7 +153,7 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 		// database locations assertion
 		$this->assertEquals(3, $conn->query("SELECT count(*) FROM `locations`")->fetch_array()[0]);
 
-		$qlocs = $conn->query("SELECT `title` AS `name`, `description` AS `description`, `goto` AS `goto`, `id` AS `id`, `area` AS `area`, `default` AS `isDefault` FROM `locations` ORDER BY `id`");
+		$qlocs = $conn->query("SELECT `title` AS `name`, `description` AS `description`, `goto` AS `goto`, `id` AS `id`, `area` AS `area`, `default` AS `isDefault`, `picture` as `picture` FROM `locations` ORDER BY `id`");
 
 		$l1 = $qlocs->fetch_object("Location");
 		$this->assertEquals(false, !!$l1->isDefault);

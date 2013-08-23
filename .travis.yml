@@ -7,8 +7,9 @@ services:
 before_script:
   - make diagnose
   - php composer.phar install
-  - mysql -e 'create database uonline_test;'
-  - echo "localhost|travis||uonline_test|off" > keyring
-  - php init.php --tables --unify-validate --unify-export --test-monsters --optimize
+  - echo "localhost|travis||uonline|off" > keyring
+  - php init.php --info
+  - php init.php --database --tables --unify-validate --unify-export --test-monsters --optimize --drop  # test full cycle
+  - php init.php --database --tables --unify-validate --unify-export --test-monsters --optimize
 script:
   - make testl

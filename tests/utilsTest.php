@@ -67,4 +67,25 @@ class UtilsTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals('<p>fuck</p>', nl2p('fuck'));
 		$this->assertEquals('<p>fuck</p><p>duck</p>', nl2p("fuck\n\nduck"));
 	}
+
+	public function testTextFunctions()
+	{
+		$this->assertEquals('', spaces(0));
+		$this->assertEquals(' ', spaces(1));
+		$this->assertEquals('   ', spaces(3));
+
+		section('Killing all humans');
+			section('Killing Fry');
+				action('Shooting');
+				result('ok');
+			endSection();
+			action('Shooting up');
+			result('ok');
+		endSection();
+		$this->expectOutputString('Killing all humans...
+  Killing Fry...
+    Shooting... ok
+  Shooting up... ok
+');
+	}
 }
