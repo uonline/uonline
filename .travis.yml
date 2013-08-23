@@ -6,12 +6,12 @@ services:
   - mysql
 before_script:
   - make diagnose
-  - php composer.phar install
+  - ./composer.phar install
   - echo "localhost|travis||uonline|off" > keyring
-  - php init.php --info
-  - php init.php --database --tables --unify-validate --unify-export --test-monsters --optimize --drop  # test full cycle
-  - php init.php --info
-  - php init.php --database --tables --unify-validate --unify-export --test-monsters --optimize
-  - php init.php --info
+  - ./init.php --info
+  - ./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize --drop  # test full cycle
+  - ./init.php --info
+  - ./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize
+  - ./init.php --info
 script:
   - make testl
