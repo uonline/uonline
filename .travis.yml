@@ -10,6 +10,8 @@ before_script:
   - echo "localhost|travis||uonline|off" > keyring
   - php init.php --info
   - php init.php --database --tables --unify-validate --unify-export --test-monsters --optimize --drop  # test full cycle
+  - php init.php --info
   - php init.php --database --tables --unify-validate --unify-export --test-monsters --optimize
+  - php init.php --info
 script:
   - make testl
