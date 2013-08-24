@@ -281,6 +281,7 @@ class Injector {
 		$conn = mysqli_connect($host, $user, $pass);
 		mysqli_select_db($conn, $base);
 
+		$conn->query("TRUNCATE `areas`");
 		foreach ($this->areas as $v) {
 			$r = mysqli_query($conn,
 							"REPLACE `areas`".
@@ -291,6 +292,8 @@ class Injector {
 								mysqli_real_escape_string($conn, $v->id).")");
 			if (!$r) echo($conn->error);
 		}
+
+		$conn->query("TRUNCATE `locations`");
 		foreach ($this->locations->locations as $v) {
 			$r = mysqli_query($conn,
 							'REPLACE `locations`'.
