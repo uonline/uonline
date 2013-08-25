@@ -164,7 +164,7 @@ $app->get('/profile/user/{user}/', function ($user) use ($app, $twig, $options, 
 /********************** logout **********************/
 $app->get('/action/logout', function () use ($app, $twig, $options, $s) {
 	closeSession($s);
-	return $app->redirect('/'.DEFAULT_INSTANCE.'/');
+	return $app->redirect('/');
 });
 
 
