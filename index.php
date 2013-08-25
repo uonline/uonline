@@ -67,7 +67,7 @@ $app->get('/', function () use ($app, $twig, $options, $s) {
 /********************** about **********************/
 $app->get('/about/', function () use ($app, $twig, $options, $s) {
 	$options['instance'] = 'about';
-	return $twig->render( 'about.twig', $options);
+	return $twig->render('about.twig', $options);
 });
 
 
@@ -76,7 +76,7 @@ $app->get('/about/', function () use ($app, $twig, $options, $s) {
 /********************** register **********************/
 $app->get('/register/', function () use ($app, $twig, $options, $s) {
 	$options['instance'] = 'register';
-	return $twig->render( 'register.twig', $options);
+	return $twig->render('register.twig', $options);
 });
 
 $app->post('/register/', function (Request $r) use ($app, $twig, $options, $s) {
@@ -98,7 +98,7 @@ $app->post('/register/', function (Request $r) use ($app, $twig, $options, $s) {
 		$options['pass'] = $p;
 		$options['error'] = $error;
 		$options['instance'] = 'register';
-		return $twig->render( 'register.twig', $options);
+		return $twig->render('register.twig', $options);
 	}
 });
 
@@ -108,7 +108,7 @@ $app->post('/register/', function (Request $r) use ($app, $twig, $options, $s) {
 /********************** login **********************/
 $app->get('/login/', function () use ($app, $twig, $options, $s) {
 	$options['instance'] = 'login';
-	return $twig->render( 'login.twig', $options);
+	return $twig->render('login.twig', $options);
 });
 
 $app->post('/login/', function (Request $r) use ($app, $twig, $options, $s) {
@@ -127,7 +127,7 @@ $app->post('/login/', function (Request $r) use ($app, $twig, $options, $s) {
 	$options['user'] = $u;
 	$options['error'] = $error;
 	$options['instance'] = 'login';
-	return $twig->render( 'login.twig', $options);
+	return $twig->render('login.twig', $options);
 });
 
 
@@ -138,24 +138,24 @@ $app->get('/profile/', function () use ($app, $twig, $options, $s) {
 	$chrs = userCharacters($s);
 	$options['profileIsMine'] = true;
 	$options['instance'] = 'profile';
-	return $twig->render( 'profile.twig', $options + $chrs);
+	return $twig->render('profile.twig', $options + $chrs);
 });
 
 $app->get('/profile/id/{id}/', function ($id) use ($app, $twig, $options, $s) {
-	if (!idExists($id)) return $twig->render( '404.twig', $options);
+	if (!idExists($id)) return $twig->render('404.twig', $options);
 	$chrs = userCharacters($id, 'id');
 	$options['profileIsMine'] = idBySession($s) === $id;
 	$options['instance'] = 'profile';
-	return $twig->render( 'profile.twig', $options + $chrs);
+	return $twig->render('profile.twig', $options + $chrs);
 })
 ->assert('id', '\d+');
 
 $app->get('/profile/user/{user}/', function ($user) use ($app, $twig, $options, $s) {
-	if (!userExists($user)) return $twig->render( '404.twig', $options);
+	if (!userExists($user)) return $twig->render('404.twig', $options);
 	$chrs = userCharacters($user, 'user');
 	$options['profileIsMine'] = userBySession($s) === $user;
 	$options['instance'] = 'profile';
-	return $twig->render( 'profile.twig', $options + $chrs);
+	return $twig->render('profile.twig', $options + $chrs);
 });
 
 
@@ -185,7 +185,7 @@ $app->get('/game/', function () use ($app, $twig, $options, $s) {
 		$options['fight_mode'] = fightMode($s, 'fight_mode');
 		$options['autoinvolved_fm'] = fightMode($s, 'autoinvolved_fm');
 		$options['instance'] = 'game';
-		return $twig->render( 'game.twig', $options);
+		return $twig->render('game.twig', $options);
 	}
 });
 
@@ -224,17 +224,17 @@ $app->get('/ajax/isNickBusy/{nick}', function ($nick) use ($app, $twig, $options
 $app->get('/stats/', function () use ($app, $twig, $options, $s) {
 	$options['stats'] = getStatistics();
 	$options['instance'] = 'stats';
-	return $twig->render( 'stats.twig', $options);
+	return $twig->render('stats.twig', $options);
 });
 
 /********************** world **********************/
 $app->get('/world/', function () use ($app, $twig, $options, $s) {
-	return $twig->render( 'world.twig', $options);
+	return $twig->render('world.twig', $options);
 });
 
 /********************** guidelines **********************/
 $app->get('/development/', function () use ($app, $twig, $options, $s) {
-	return $twig->render( 'development.twig', $options);
+	return $twig->render('development.twig', $options);
 });
 
 /********************** others **********************/
