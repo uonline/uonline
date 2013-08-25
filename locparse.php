@@ -200,6 +200,8 @@ class Parser {
 
 			if (preg_match("/^\\[(.+)\\]\\((.+)\\)$/", $s, $matches) && isset($l)) {
 				// fatal error
+				if (preg_match("/\\//", $s)) fileFatal("location's picture contains \"/\"",$filename,$k,$s);
+				// fatal error
 				if ($l->picture) fileFatal("more than one picture at location",$filename,$k,$s);
 				// fatal error
 				if ($matches[1] !== $matches[2]) fileFatal("picture url and desription are not equals",$filename,$k,$s);
