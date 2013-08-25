@@ -536,7 +536,7 @@ function allowedZones($s, $idsonly = false) {
 	$goto = mysqlFirstRes(
 		'SELECT `locations`.`goto` '.
 		'FROM `locations`, `uniusers` '.
-		"WHERE `uniusers`.`sessid` = '$s'".
+		"WHERE `uniusers`.`sessid` = '$s' ".
 		'AND `locations`.`id` = `uniusers`.`location` '.
 		'AND `uniusers`.`fight_mode` = 0');
 	$a = array(); $i = 0;
