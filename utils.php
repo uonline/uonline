@@ -513,6 +513,15 @@ function currentLocationTitle($s) {
 		'AND `locations`.`id`= `uniusers`.`location`');
 }
 
+function currentLocationPicture($s) {
+	mysqliConnect();
+	return mysqlFirstRes(
+		'SELECT `locations`.`picture` '.
+		'FROM `locations`,`uniusers` '.
+		"WHERE `uniusers`.`sessid` = '$s'".
+		'AND `locations`.`id`= `uniusers`.`location`');
+}
+
 function currentAreaTitle($s) {
 	mysqliConnect();
 	return mysqlFirstRes(
