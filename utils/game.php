@@ -153,7 +153,7 @@ function monstersOnLocation($s) {
 		'FROM `monster_prototypes`, `monsters`'.
 		'WHERE `monsters`.`location`=(select `uniusers`.`location` from `uniusers` where `sessexpire` > NOW() AND `uniusers`.`sessid`="'.$s.'")'.
 		'AND `monster_prototypes`.`id` = `monsters`.`id`');
-	for ($a=array(), $i=0; $q && $r = $q->fetch_assoc(); $a[$i++]=array(id => $r['id'], name => $r['name']) );
+	for ($a=array(), $i=0; $q && $r = $q->fetch_assoc(); $a[$i++]=array('id' => $r['id'], 'name' => $r['name']) );
 	return $a;
 }
 
