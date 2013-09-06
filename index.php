@@ -84,7 +84,7 @@ $app->post('/register/', function (Request $r) use ($app, $twig, $options, $s) {
 	if (allowToRegister($u, $p)) {
 		$s = registerUser($u, $p);
 		setMyCookie('sessid', $s);
-		return $app->redirect('/'.DEFAULT_INSTANCE.'/');
+		return $app->redirect('/'.DEFAULT_INSTANCE_FOR_USERS.'/');
 	}
 	else {
 		$error = true;
