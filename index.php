@@ -177,7 +177,7 @@ $app->get('/game/', function () use ($app, $twig, $options, $s) {
 	else {
 		$options['location_name'] = currentLocationTitle($s);
 		$options['area_name'] = currentAreaTitle($s);
-		$options['pic'] = currentLocationPicture($s);
+		if (currentLocationPicture($s)) $options['pic'] = currentLocationPicture($s);
 		$options['description'] = currentLocationDescription($s);
 		$options['ways'] = allowedZones($s);
 		$options['players_list'] = usersOnLocation($s);
