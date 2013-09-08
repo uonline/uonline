@@ -23,7 +23,8 @@ diagnose:
 	php composer.phar validate
 
 check:
-	RESULT='Everything is OK.'; for i in `find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/`; do if `which test` 'y' "==" 'y'"`cat $$i | egrep "^['\\"]use strict['\\"];"`"; then echo 'Non-strict:' $$i; RESULT='There are some non-strict files.'; else echo 'Strict:' $$i; fi; done; echo $$RESULT
+	RESULT='Everything is OK.'; echo ""; for i in `find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/`; do if `which test` 'y' "==" 'y'"`cat $$i | egrep "^['\\"]use strict['\\"];"`"; then echo 'Non-strict:' $$i; RESULT='There are some non-strict files.'; else echo 'Strict:' $$i; fi; done; echo $$RESULT; echo "";
+	RESULT='Everything is OK.'; echo ""; for i in `find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/`; do if `which test` 'y' "==" 'y'"`cat $$i | grep "Affero"`"; then echo 'No license:' $$i; RESULT='There are some files without a license.'; else echo 'With license:' $$i; fi; done; echo $$RESULT; echo "";
 
 test:
 	./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter verbose
