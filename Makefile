@@ -24,6 +24,7 @@ diagnose:
 
 test:
 	php vendor/bin/phpunit --strict --verbose --colors --coverage-html ./code-coverage-report tests/
+	./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter verbose
 
 testl:
 	php vendor/bin/phpunit --strict --verbose tests/
