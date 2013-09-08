@@ -32,6 +32,11 @@ if ($argv[1] == 'dump')
 	die;
 }
 
+if ($argv[1] == 'nodecall')
+{
+	$_SERVER['REQUEST_URI'] = $argv[2];
+}
+
 $time_start = microtime(true);
 $measure = true;
 

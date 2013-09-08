@@ -36,7 +36,7 @@ app.get('/node/', function(request, response) {
 function phpgate(request, response)
 {
 	var child_process = require('child_process');
-	child_process.execFile('php', ['index.php'], {}, function (error, stdout, stderr) {
+	child_process.execFile('php', ['index.php', 'nodecall', request.originalUrl], {}, function (error, stdout, stderr) {
 		console.log('PHP stdout: ' + stdout);
 		console.log('PHP stderr: ' + stderr);
 		if (error !== null) {
