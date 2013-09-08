@@ -56,7 +56,7 @@ function phpgate(request, response)
 	var env = {};
 	extend(process.env, env);
 	extend({
-		//GATEWAY_INTERFACE: GATEWAY_INTERFACE,
+		'GATEWAY_INTERFACE': 'CGI/1.1',
 		//SCRIPT_NAME: options.mountPoint,
 		'SCRIPT_FILENAME': 'index.php',
 		'REDIRECT_STATUS': 200,
@@ -66,7 +66,7 @@ function phpgate(request, response)
 		//SERVER_PORT: port || 80,
 		//SERVER_PROTOCOL: SERVER_PROTOCOL,
 		//SERVER_SOFTWARE: SERVER_SOFTWARE
-		}, env);
+	}, env);
 	for (var header in request.headers) {
 		var name = 'HTTP_' + header.toUpperCase().replace(/-/g, '_');
 		env[name] = request.headers[header];
@@ -117,6 +117,7 @@ app.post('/register/', phpgate);
 app.get('/login/', phpgate);
 app.post('/login/', phpgate);
 app.post('/profile/', phpgate);
+// http://expressjs.com/api.html#app.VERB
 //app.post('/profile/id/{id}/', phpgate);
 //app.post('/profile/user/{user}/', phpgate);
 app.get('/action/logout', phpgate);
