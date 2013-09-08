@@ -21,3 +21,6 @@ code-coverage-report/
 
 # Third-party
 vendor/
+
+## Node
+node_modules/
