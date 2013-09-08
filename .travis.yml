@@ -9,10 +9,10 @@ services:
   - postgresql
 before_script:
   - # PHP setup
+  - sudo apt-get install php
   - make diagnose
   - ./composer.phar install
   - # Node.js setup
-  - sudo apt-get install php
   - npm install
   - # Database setup
   - echo "localhost|travis||uonline|off" > keyring
