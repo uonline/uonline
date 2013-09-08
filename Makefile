@@ -23,10 +23,11 @@ diagnose:
 	php composer.phar validate
 
 test:
-	php vendor/bin/phpunit --strict --verbose --colors --coverage-html ./code-coverage-report tests/
 	./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter verbose
+	php vendor/bin/phpunit --strict --verbose --colors --coverage-html ./code-coverage-report tests/
 
 testl:
+	./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter verbose
 	php vendor/bin/phpunit --strict --verbose tests/
 
 deploy: pull killcache dirs compress diagnose test
