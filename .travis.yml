@@ -9,14 +9,13 @@ services:
   - postgresql
 before_script:
   - # PHP setup
+  - sudo apt-get update
   - sudo apt-get install php5
   - php --version
   - php -i
   - php -m
   - make diagnose
   - ./composer.phar install
-  - # Node.js setup
-  - npm install
   - # Database setup
   - echo "localhost|travis||uonline|off" > keyring
   - ./init.php --info
