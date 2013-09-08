@@ -1,12 +1,20 @@
-language: php
-php:
-  - 5.4
-  - 5.5
+language: node_js
+node_js:
+  - "0.11"
+  - "0.10"
+  - "0.8"
+  - "0.6"
 services:
   - mysql
+  - postgresql
 before_script:
+  - # PHP setup
   - make diagnose
   - ./composer.phar install
+  - # Node.js setup
+  - sudo apt-get install php
+  - npm install
+  - # Database setup
   - echo "localhost|travis||uonline|off" > keyring
   - ./init.php --info
   - ./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize --drop  # test full cycle
