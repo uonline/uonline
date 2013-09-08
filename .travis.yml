@@ -5,6 +5,8 @@ php:
 services:
   - mysql
   - postgresql
+env:
+  - MYSQL_DATABASE_URL=mysql://travis:@localhost/uonline
 before_script:
   - # Node.js setup
   - sudo apt-get update
