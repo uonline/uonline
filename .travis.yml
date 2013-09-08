@@ -9,7 +9,7 @@ services:
   - postgresql
 before_script:
   - # PHP setup
-  - sudo apt-get install php
+  - sudo apt-get install php5
   - php --version
   - php -i
   - php -m
