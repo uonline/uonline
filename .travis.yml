@@ -1,19 +1,17 @@
-language: node_js
-node_js:
-  - "0.11"
-  - "0.10"
-  - "0.8"
-  - "0.6"
+language: php
+php:
+  - "5.5"
+  - "5.4"
 services:
   - mysql
   - postgresql
 before_script:
-  - # PHP setup
+  - # Node.js setup
   - sudo apt-get update
-  - sudo apt-get install php5
-  - php --version
-  - php -i
-  - php -m
+  - sudo apt-get install nodejs
+  - node --version
+  - npm install
+  - # PHP setup
   - make diagnose
   - ./composer.phar install
   - # Database setup
