@@ -1,0 +1,11 @@
+{
+  "name": "uonline",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "~3.3.8",
+    "twig": "~0.5.10",
+    "nodeunit": "~0.8.1",
+    "pg": "~2.6.0",
+    "any-db": "~0.6.0"
+  }
+}
