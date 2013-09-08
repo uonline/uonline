@@ -33,10 +33,18 @@ app.get('/node/', function(request, response) {
 	response.send('Node.js is up and running.');
 });
 
+function extend(source, destination) {
+	for (var i in source) {
+		destination[i] = source[i];
+	}
+	return destination;
+}
+
 function phpgate(request, response)
 {
 	var child_process = require('child_process');
-	child_process.execFile('php', ['index.php', 'nodecall', request.originalUrl], {}, function (error, stdout, stderr) {
+	/*
+	child_process.execFile('php-cgi', ['index.php', 'nodecall', request.originalUrl], {}, function (error, stdout, stderr) {
 		console.log('PHP stdout: ' + stdout);
 		console.log('PHP stderr: ' + stderr);
 		if (error !== null) {
@@ -44,6 +52,61 @@ function phpgate(request, response)
 			response.send('PHP gate error. See console for details.');
 		}
 		response.send(stdout);
+	});*/
+	var env = {};
+	extend(process.env, env);
+	extend({
+		//GATEWAY_INTERFACE: GATEWAY_INTERFACE,
+		//SCRIPT_NAME: options.mountPoint,
+		'SCRIPT_FILENAME': 'index.php',
+		'REDIRECT_STATUS': 200,
+		//PATH_INFO: req.uri.pathname.substring(options.mountPoint.length),
+		'REQUEST_URI': request.originalUrl,
+		//SERVER_NAME: address || 'unknown',
+		//SERVER_PORT: port || 80,
+		//SERVER_PROTOCOL: SERVER_PROTOCOL,
+		//SERVER_SOFTWARE: SERVER_SOFTWARE
+		}, env);
+	for (var header in request.headers) {
+		var name = 'HTTP_' + header.toUpperCase().replace(/-/g, '_');
+		env[name] = request.headers[header];
+	}
+	//extend(options.env, env);
+	env.REQUEST_METHOD = request.method;
+	//env.QUERY_STRING = request.uri.query || '';
+	if ('content-length' in request.headers) {
+		env.CONTENT_LENGTH = request.headers['content-length'];
+	}
+	if ('content-type' in request.headers) {
+		env.CONTENT_TYPE = request.headers['content-type'];
+	}
+	if ('authorization' in request.headers) {
+		var auth = request.headers.authorization.split(' ');
+		env.AUTH_TYPE = auth[0];
+	}
+	// SPAWN!
+	var cgiSpawn = child_process.spawn('php-cgi', [], { env: env });
+	// TODO: send POST data to stdin
+	//request.pipe(cgiSpawn.stdin);
+	//req.body - PARSED post data
+	var CGIParser = require('./cgiparser.js');
+	var cgiResult = new CGIParser(cgiSpawn.stdout);
+	// When the blank line after the headers has been parsed, then
+	// the 'headers' event is emitted with a Headers instance.
+	cgiResult.on('headers', function(headers) {
+		headers.forEach(function(header) {
+			// Don't set the 'Status' header. It's special, and should be
+			// used to set the HTTP response code below.
+			if (header.key === 'Status') return;
+			response.header(header.key, header.value);
+		});
+
+		// set the response status code
+		response.statusCode = parseInt(headers.status, 10) || 200;
+
+		cgiResult.on('data', function (chunk) {
+			response.send(chunk);
+		});
 	});
 }
 
