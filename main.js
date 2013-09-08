@@ -33,6 +33,40 @@ app.get('/node/', function(request, response) {
 	response.send('Node.js is up and running.');
 });
 
+function phpgate(request, response)
+{
+	var child_process = require('child_process');
+	child_process.execFile('php', ['index.php'], {}, function (error, stdout, stderr) {
+		console.log('PHP stdout: ' + stdout);
+		console.log('PHP stderr: ' + stderr);
+		if (error !== null) {
+			console.log('PHP exec error: ' + error);
+			response.send('PHP gate error. See console for details.');
+		}
+		response.send(stdout);
+	});
+}
+
+app.get('/', phpgate);
+app.get('/about/', phpgate);
+app.get('/register/', phpgate);
+app.post('/register/', phpgate);
+app.get('/login/', phpgate);
+app.post('/login/', phpgate);
+app.post('/profile/', phpgate);
+//app.post('/profile/id/{id}/', phpgate);
+//app.post('/profile/user/{user}/', phpgate);
+app.get('/action/logout', phpgate);
+app.get('/game/', phpgate);
+//app.get('/action/go/{to}', phpgate);
+app.get('/action/attack', phpgate);
+app.get('/action/escape', phpgate);
+//app.get('/ajax/isNickBusy/{nick}', phpgate);
+app.get('/stats/', phpgate);
+app.get('/world/', phpgate);
+app.get('/development/', phpgate);
+
+
 /*
 app.get('/', function(request, response) {
 	response.redirect('/about/');
