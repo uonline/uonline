@@ -14,6 +14,9 @@
  *
  */
 
+
+"use strict";
+
 exports.ap = function(a1, n, step) {
 	return (2 * a1 + (n-1) * step) * n / 2;
 }
