@@ -20,12 +20,12 @@ exports.tableExists = function (test) {
 	test.expect(6);
 	conn.query('CREATE TABLE testtable (id INT NOT NULL)', [], function(err, res){
 		test.ifError(err);
-		tables.tableExists(conn, 'uonline', 'testtable', function(err, res){
+		tables.tableExists(conn, 'testtable', function(err, res){
 			test.ifError(err);
 			test.strictEqual(res, true, 'table should exist after created');
 			conn.query('DROP TABLE testtable', [], function(err, res){
 				test.ifError(err);
-				tables.tableExists(conn, 'uonline', 'testtable', function(err, res){
+				tables.tableExists(conn, 'testtable', function(err, res){
 					test.ifError(err);
 					test.strictEqual(res, false, 'table should not exist after dropped');
 					test.done();
@@ -42,14 +42,14 @@ exports.tableExistsAsync = function (test) {
 			conn.query('CREATE TABLE testtable (id INT NOT NULL)', [], callback);
 		},
 		function(res, callback){
-			tables.tableExists(conn, 'uonline', 'testtable', callback);
+			tables.tableExists(conn, 'testtable', callback);
 		},
 		function(res, callback){
 			test.strictEqual(res, true, 'table should exist after created');
 			conn.query('DROP TABLE testtable', [], callback);
 		},
 		function(res, callback){
-			tables.tableExists(conn, 'uonline', 'testtable', callback);
+			tables.tableExists(conn, 'testtable', callback);
 		},
 		],
 		function(err, res){

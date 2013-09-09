@@ -17,11 +17,11 @@
 
 "use strict";
 
-exports.tableExists = function(dbConnection, dbName, name, callback)
+exports.tableExists = function(dbConnection, name, callback)
 {
 	dbConnection.query(
 		"SELECT count(*) AS result FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
-		[dbName, name],
+		[dbConnection.config.database, name],
 		function (err, res){
 			if (!!err) callback(error, undefined);
 			callback(undefined, (res.rows[0].result > 0));
