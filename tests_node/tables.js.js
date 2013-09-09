@@ -2,6 +2,8 @@
 
 var tables = require('../utils/tables.js');
 
+var async = require('async');
+
 var anyDB = require('any-db');
 var dbURL = process.env.MYSQL_DATABASE_URL || 'mysql://anonymous:nopassword@localhost/uonline';
 var conn = null;
@@ -36,25 +38,16 @@ exports.tableExists = function (test) {
 }
 
 exports.tableExistsAsync = function (test) {
-	var async = require('async');
-	async.waterfall([
-		function(callback){
-			conn.query('CREATE TABLE testtable (id INT NOT NULL)', [], callback);
-		},
-		function(res, callback){
-			tables.tableExists(conn, 'testtable', callback);
-		},
-		function(res, callback){
-			test.strictEqual(res, true, 'table should exist after created');
-			conn.query('DROP TABLE testtable', [], callback);
-		},
-		function(res, callback){
-			tables.tableExists(conn, 'testtable', callback);
-		},
+	async.series([
+			function(callback){ conn.query('CREATE TABLE testtable (id INT NOT NULL)', [], callback); },
+			async.apply(tables.tableExists, conn, 'testtable'),
+			function(callback){ conn.query('DROP TABLE testtable', [], callback); },
+			async.apply(tables.tableExists, conn, 'testtable'),
 		],
-		function(err, res){
-			test.ifError(err);
-			test.strictEqual(res, false, 'table should not exist after dropped');
+		function(error, result){
+			test.ifError(error);
+			test.strictEqual(result[1], true, 'table should exist after created');
+			test.strictEqual(result[3], false, 'table should not exist after dropped');
 			test.done();
 		}
 	);
