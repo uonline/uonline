@@ -24,5 +24,7 @@ before_script:
   - ./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize
   - ./init.php --info
 script:
-  - make check
+  - make checkstrict
+  - make checklicense
+  - make lint
   - make testl

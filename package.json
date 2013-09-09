@@ -10,6 +10,7 @@
     "stream-stack": ">= 1.1.1",
     "header-stack": ">= 0.0.2",
     "mysql": "~2.0.0-alpha9",
-    "async": "~0.2.9"
+    "async": "~0.2.9",
+    "jshint": "~2.1.10"
   }
 }
