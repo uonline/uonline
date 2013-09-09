@@ -25,11 +25,11 @@ module.exports = Parser;
 
 Parser.prototype._proxyData = function(b) {
   this.emit('data', b);
-}
+};
 
 Parser.prototype._parseHeader = function(chunk) {
   this._headerParser.stream.emit('data', chunk);
-}
+};
 
 Parser.prototype._onHeadersComplete = function(headers, leftover) {
   this._onData = this._proxyData;
@@ -37,4 +37,4 @@ Parser.prototype._onHeadersComplete = function(headers, leftover) {
   if (leftover) {
     this._onData(leftover);
   }
-}
+};

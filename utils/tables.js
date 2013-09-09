@@ -22,9 +22,9 @@ exports.tableExists = function(dbConnection, name, callback)
 	dbConnection.query(
 		"SELECT count(*) AS result FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
 		[dbConnection.config.database, name],
-		function (err, res){
-			if (!!err) callback(error, undefined);
-			callback(undefined, (res.rows[0].result > 0));
+		function (error, result){
+			if (!!error) callback(error, undefined);
+			callback(undefined, (result.rows[0].result > 0));
 		}
 	);
-}
+};

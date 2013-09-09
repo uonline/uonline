@@ -28,12 +28,12 @@ var conn = null;
 exports.setUp = function (done) {
 	conn = anyDB.createConnection(dbURL);
 	done();
-}
+};
 
 exports.tearDown = function (done) {
 	conn.end();
 	done();
-}
+};
 
 exports.tableExists = function (test) {
 	test.expect(6);
@@ -52,7 +52,7 @@ exports.tableExists = function (test) {
 			});
 		});
 	});
-}
+};
 
 exports.tableExistsAsync = function (test) {
 	async.series([
@@ -68,4 +68,4 @@ exports.tableExistsAsync = function (test) {
 			test.done();
 		}
 	);
-}
+};
