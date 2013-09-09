@@ -20,11 +20,11 @@
 exports.tableExists = function(dbConnection, dbName, name, callback)
 {
 	dbConnection.query(
-		"SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
+		"SELECT count(*) AS result FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
 		[dbName, name],
 		function (err, res){
 			if (!!err) callback(error, undefined);
-			callback(undefined, (res.rows.length > 0));
+			callback(undefined, (res.rows[0].result > 0));
 		}
 	);
 }

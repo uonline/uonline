@@ -27,10 +27,35 @@ exports.tableExists = function (test) {
 				test.ifError(err);
 				tables.tableExists(conn, 'uonline', 'testtable', function(err, res){
 					test.ifError(err);
-					test.strictEqual(res, true, 'table should not exist after dropped');
+					test.strictEqual(res, false, 'table should not exist after dropped');
 					test.done();
 				});
 			});
 		});
 	});
+}
+
+exports.tableExistsAsync = function (test) {
+	var async = require('async');
+	async.waterfall([
+		function(callback){
+			conn.query('CREATE TABLE testtable (id INT NOT NULL)', [], callback);
+		},
+		function(res, callback){
+			tables.tableExists(conn, 'uonline', 'testtable', callback);
+		},
+		function(res, callback){
+			test.strictEqual(res, true, 'table should exist after created');
+			conn.query('DROP TABLE testtable', [], callback);
+		},
+		function(res, callback){
+			tables.tableExists(conn, 'uonline', 'testtable', callback);
+		},
+		],
+		function(err, res){
+			test.ifError(err);
+			test.strictEqual(res, false, 'table should not exist after dropped');
+			test.done();
+		}
+	);
 }
