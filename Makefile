@@ -2,9 +2,6 @@ all:
 	# No. Specify a target.
 
 
-compress:
-	./compress-templates.sh
-
 pull:
 	git pull origin master
 
