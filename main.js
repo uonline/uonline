@@ -23,6 +23,7 @@ var twig = require('twig');
 
 var app = express();
 app.use(express.logger());
+app.use(express.bodyParser());
 
 app.use('/bootstrap', express.static(__dirname + '/bootstrap'));
 app.use('/img', express.static(__dirname + '/img'));
@@ -43,16 +44,8 @@ function extend(source, destination) {
 function phpgate(request, response)
 {
 	var child_process = require('child_process');
-	/*
-	child_process.execFile('php-cgi', ['index.php', 'nodecall', request.originalUrl], {}, function (error, stdout, stderr) {
-		console.log('PHP stdout: ' + stdout);
-		console.log('PHP stderr: ' + stderr);
-		if (error !== null) {
-			console.log('PHP exec error: ' + error);
-			response.send('PHP gate error. See console for details.');
-		}
-		response.send(stdout);
-	});*/
+	var querystring = require('querystring');
+
 	var env = {};
 	extend(process.env, env);
 	extend({
@@ -86,9 +79,9 @@ function phpgate(request, response)
 	}
 	// SPAWN!
 	var cgiSpawn = child_process.spawn('php-cgi', [], { env: env });
-	// TODO: send POST data to stdin
-	//request.pipe(cgiSpawn.stdin);
-	//req.body - PARSED post data
+	// Re-send POST data
+	cgiSpawn.stdin.write(querystring.stringify(request.body));
+
 	var CGIParser = require('./cgiparser.js');
 	var cgiResult = new CGIParser(cgiSpawn.stdout);
 	// When the blank line after the headers has been parsed, then
