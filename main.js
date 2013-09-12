@@ -17,6 +17,12 @@
 
 "use strict";
 
+var anyDB = require('any-db');
+var dbURL = process.env.MYSQL_DATABASE_URL || 'mysql://anonymous:nopassword@localhost/uonline';
+var mysqlConnection = anyDB.createConnection(dbURL);
+
+var userUtils = require('./utils/user.js');
+
 var express = require('express');
 var twig = require('twig');
 //var utils = require('./utils.js');
@@ -118,7 +124,14 @@ app.get('/game/', phpgate);
 app.get('/action/go/:to', phpgate);
 app.get('/action/attack', phpgate);
 app.get('/action/escape', phpgate);
-app.get('/ajax/isNickBusy/:nick', phpgate);
+
+app.get('/ajax/isNickBusy/:nick', function(request, response) {
+	userUtils.userExists(mysqlConnection, request.param('nick'), function(error, result){
+		if (!!error) { response.send(500); return; }
+		response.json({ 'nick': request.param('nick'), 'isNickBusy': result });
+	});
+});
+
 app.get('/stats/', phpgate);
 app.get('/world/', phpgate);
 app.get('/development/', phpgate);
