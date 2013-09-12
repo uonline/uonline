@@ -17,11 +17,14 @@
 
 "use strict";
 
-exports.tableExists = function(dbConnection, name, callback)
+exports.userExists = function(dbConnection, username, callback, table)
 {
+	if (!table) table = 'uniusers';
 	dbConnection.query(
-		"SELECT count(*) AS result FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
-		[dbConnection.config.database, name],
+		// Seems unsafe? It is.
+		// But escaper doesn't know that table name and column value are different things.
+		'SELECT count(*) AS result FROM `'+table+'` WHERE user = ?',
+		[username],
 		function (error, result){
 			if (!!error)
 			{

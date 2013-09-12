@@ -37,14 +37,14 @@ exports.tearDown = function (done) {
 
 exports.tableExists = function (test) {
 	test.expect(6);
-	conn.query('CREATE TABLE testtable (id INT NOT NULL)', [], function(err, res){
+	conn.query('CREATE TABLE test_table (id INT NOT NULL)', [], function(err, res){
 		test.ifError(err);
-		tables.tableExists(conn, 'testtable', function(err, res){
+		tables.tableExists(conn, 'test_table', function(err, res){
 			test.ifError(err);
 			test.strictEqual(res, true, 'table should exist after created');
-			conn.query('DROP TABLE testtable', [], function(err, res){
+			conn.query('DROP TABLE test_table', [], function(err, res){
 				test.ifError(err);
-				tables.tableExists(conn, 'testtable', function(err, res){
+				tables.tableExists(conn, 'test_table', function(err, res){
 					test.ifError(err);
 					test.strictEqual(res, false, 'table should not exist after dropped');
 					test.done();
@@ -56,10 +56,10 @@ exports.tableExists = function (test) {
 
 exports.tableExistsAsync = function (test) {
 	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS testtable (id INT NOT NULL)', [], callback); },
-			async.apply(tables.tableExists, conn, 'testtable'),
-			function(callback){ conn.query('DROP TABLE testtable', [], callback); },
-			async.apply(tables.tableExists, conn, 'testtable'),
+			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS test_table (id INT NOT NULL)', [], callback); },
+			async.apply(tables.tableExists, conn, 'test_table'),
+			function(callback){ conn.query('DROP TABLE test_table', [], callback); },
+			async.apply(tables.tableExists, conn, 'test_table'),
 		],
 		function(error, result){
 			test.ifError(error);
