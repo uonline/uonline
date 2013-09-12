@@ -27,4 +27,4 @@ script:
   - make checkstrict
   - make checklicense
   - make lint
-  - make testl
+  - make test
