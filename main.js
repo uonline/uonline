@@ -24,6 +24,7 @@ var twig = require('twig');
 var app = express();
 app.use(express.logger());
 app.use(express.bodyParser());
+app.use(express.compress());
 
 app.use('/bootstrap', express.static(__dirname + '/bootstrap'));
 app.use('/img', express.static(__dirname + '/img'));
