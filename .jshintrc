@@ -1,4 +1,5 @@
 {
 	"node": true,
-	"undef": true
+	"undef": true,
+	"bitwise": true
 }
