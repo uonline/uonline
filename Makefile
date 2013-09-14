@@ -37,7 +37,7 @@ lintverbose:
 	find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/ | xargs ./node_modules/jshint/bin/jshint --show-non-errors
 
 test:
-	./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter verbose
+	npm test
 	php vendor/bin/phpunit --strict --verbose `if $$(which test) x$${TRAVIS} '==' x; then echo --colors; fi` --coverage-html ./code-coverage-report tests_php/
 
 deploy: pull killcache dirs compress diagnose test

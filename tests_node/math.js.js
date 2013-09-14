@@ -17,7 +17,11 @@
 
 "use strict";
 
-var math = require('../utils/math.js');
+var jsc = require('jscoverage');
+jsc.enableCoverage(true);
+function coverageReport(){ jsc.coverage(); jsc.coverageDetail(); }
+
+var math = jsc.require(module, '../utils/math.js');
 
 exports.ap = function (test) {
 	test.strictEqual(153, math.ap(3,6,9), 'should calculate result');

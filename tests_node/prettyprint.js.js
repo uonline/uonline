@@ -17,7 +17,11 @@
 
 "use strict";
 
-var prettyprint = require('../utils/prettyprint.js');
+var jsc = require('jscoverage');
+jsc.enableCoverage(true);
+function coverageReport(){ jsc.coverage(); jsc.coverageDetail(); }
+
+var prettyprint = jsc.require(module, '../utils/prettyprint.js');
 
 exports.spaces = function (test) {
 	test.strictEqual(prettyprint.spaces(0), '', 'should return empty string when I ask for 0 spaces');

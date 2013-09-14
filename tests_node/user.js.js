@@ -17,7 +17,11 @@
 
 "use strict";
 
-var users = require('../utils/user.js');
+var jsc = require('jscoverage');
+jsc.enableCoverage(true);
+function coverageReport(){ jsc.coverage(); jsc.coverageDetail(); }
+
+var users = jsc.require(module, '../utils/user.js');
 
 var async = require('async');
 
