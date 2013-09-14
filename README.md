@@ -4,8 +4,19 @@ uonline [![Build Status](https://travis-ci.org/uonline/uonline.png?branch=master
 A browser-based MMORPG game in a fantasy world.
 
 
-Deployment
-----------
+Deployment (Node.js)
+--------------------
+
+1. Clone the repo.
+2. Install Node.js.
+3. Run `npm install`.
+4. Install and set up MySQL (see below).
+5. Install and set up PostgreSQL.
+6. If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `node main.js`.
+
+
+Deployment (PHP)
+----------------
 
 1. Clone the repo.
 2. Install MySQL (package `mysql-server` in Debian). Run `mysql_secure_installation`.
