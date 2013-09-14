@@ -40,6 +40,10 @@ exports.tearDown = function (done) {
 };
 
 exports.userExists = function (test) {
+	users.userExists(conn, 'm1kc', function(error, result){
+		test.ok(!!error, 'should fail on nonexistent table');
+	}, 'test_nonexistent_table');
+
 	async.series([
 			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS test_users (user TINYTEXT NOT NULL)', [], callback); },
 			function(callback){ conn.query('INSERT INTO test_users VALUES ( ? )', ['m1kc'], callback); },
