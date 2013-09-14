@@ -19,7 +19,6 @@
 
 var jsc = require('jscoverage');
 jsc.enableCoverage(true);
-function coverageReport(){ jsc.coverage(); jsc.coverageDetail(); }
 
 var prettyprint = jsc.require(module, '../utils/prettyprint.js');
 
