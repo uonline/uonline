@@ -38,7 +38,7 @@ lintverbose:
 
 test:
 	./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter verbose
-	php vendor/bin/phpunit --strict --verbose `if $$(which test) x$${TRAVIS} '==' x; then echo --colors; fi` --coverage-html ./code-coverage-report tests/
+	php vendor/bin/phpunit --strict --verbose `if $$(which test) x$${TRAVIS} '==' x; then echo --colors; fi` --coverage-html ./code-coverage-report tests_php/
 
 deploy: pull killcache dirs compress diagnose test
 
