@@ -1,6 +1,16 @@
 {
   "name": "uonline",
   "version": "1.0.0",
+  "description": "MMORPG game in a fantasy world",
+  "homepage": "https://github.com/uonline/uonline",
+  "bugs": "https://github.com/uonline/uonline/issues",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/uonline/uonline.git"
+  },
+  "license": "AGPL-3.0",
+  "author": "m1kc <m1kc@yandex.ru>",
+  "private": true,
   "dependencies": {
     "express": "~3.3.8",
     "twig": "~0.5.10",
