@@ -671,7 +671,7 @@ Warning: string with spaces only
 
 		$my->processDir("./test", null, true);
 
-		$this->expectOutputString("Warning: dot after transition
+		$this->expectOutputString("Warning: button text ends with a dot
     * Пойти на Голубую улицу. `kront-outer/bluestreet`
     line 14 in ./test/Кронт - kront/map.ht.md
 ");
@@ -733,7 +733,7 @@ Warning: string with spaces only
 
 		$my->processDir("./test", null, true);
 
-		$this->expectOutputString("Warning: such target already exists
+		$this->expectOutputString("Warning: two links to the same target
     * Сходить на Зелёную улицу `greenstreet`
     line 12 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
 ");
@@ -792,9 +792,9 @@ Warning: string with spaces only
 ");
 		fclose($fp);
 
-		$this->setExpectedException("InvalidArgumentException", "required location not exists");
+		$this->setExpectedException("InvalidArgumentException", "target location does not exist");
 
-		$this->expectOutputString("Fatal: required location not exists
+		$this->expectOutputString("Fatal: target location does not exist
     * Пойти на Зелёную улицу `kront/greenstreet`
     line 13 in ./test/Кронт - kront/map.ht.md
 ");
@@ -854,9 +854,9 @@ Warning: string with spaces only
 ");
 		fclose($fp);
 
-		$this->setExpectedException("InvalidArgumentException", "can't find target of transition");
+		$this->setExpectedException("InvalidArgumentException", "can't find target");
 
-		$this->expectOutputString("Fatal: can't find target of transition
+		$this->expectOutputString("Fatal: can't find target
     * Пойти на другую Голубую улицу
     line 22 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
 ");
@@ -1042,9 +1042,9 @@ Warning: string with spaces only
 ");
 		fclose($fp);
 
-		$this->setExpectedException("InvalidArgumentException", "area's names from directory and file not equals");
+		$this->setExpectedException("InvalidArgumentException", "area name and folder name do not match");
 
-		$this->expectOutputString("Fatal: area's names from directory and file not equals
+		$this->expectOutputString("Fatal: area name and folder name do not match
     # Окрестность Кронта
     line 3 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
 ");
@@ -1105,9 +1105,9 @@ Warning: string with spaces only
 ");
 		fclose($fp);
 
-		$this->setExpectedException("InvalidArgumentException", "default location is not set");
+		$this->setExpectedException("InvalidArgumentException", "default location is not specified");
 
-		$this->expectOutputString("Fatal: default location is not set
+		$this->expectOutputString("Fatal: default location is not specified
 ");
 
 		$my->processDir("./test", null, true);
@@ -1168,9 +1168,9 @@ Warning: string with spaces only
 ");
 		fclose($fp);
 
-		$this->setExpectedException("InvalidArgumentException", "such location already exists");
+		$this->setExpectedException("InvalidArgumentException", "location already exists");
 
-		$this->expectOutputString("Fatal: such location already exists
+		$this->expectOutputString("Fatal: location already exists
     ### Лишняя зелёная улица `greenstreet`
     line 24 in ./test/Кронт - kront/Окрестности Кронта - outer/map.ht.md
 ");

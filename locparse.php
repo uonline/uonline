@@ -65,7 +65,7 @@ class Locations {
 
 	public function push($loc) {
 		// fatal error #7
-		if (array_key_exists($loc->label, $this->links)) fileFatal ("such location already exists", $loc->file, $loc->line, $loc->string);
+		if (array_key_exists($loc->label, $this->links)) fileFatal ("location already exists", $loc->file, $loc->line, $loc->string);
 		$this->links[$loc->label] = $loc->id;
 		$this->ids[$loc->id] = $loc;
 		$this->locations[] = $loc;
@@ -94,18 +94,18 @@ class Locations {
 			$goto = array(); $tmp = array(); $warn9 = false;
 			foreach ($loc->actions as $v) {
 				// fatal error #1
-				if (!array_key_exists($v['target'], $this->links)) fileFatal("required location not exists", $loc->file, $v['line'], $v['string']);
+				if (!array_key_exists($v['target'], $this->links)) fileFatal("target location does not exist", $loc->file, $v['line'], $v['string']);
 				$goto[] = $v['action'] . "=" . $this->links[$v['target']];
 				if (in_array($this->links[$v['target']], $tmp)) $warn9 = true;
 				$tmp[] = $this->links[$v['target']];
 			}
 			// warning #9
-			if ($warn9) fileWarning("such target already exists", $loc->file, $v['line'], $v['string']);
+			if ($warn9) fileWarning("two links to the same target", $loc->file, $v['line'], $v['string']);
 			$loc->goto = implode($goto, "|");
 			$hasDefault = $loc->isDefault || $hasDefault;
 		}
 		// fatal error #6
-		if (!$hasDefault) fileFatal ("default location is not set");
+		if (!$hasDefault) fileFatal ("default location is not specified");
 	}
 
 	public function trimDesc() {
@@ -200,17 +200,17 @@ class Parser {
 
 			if (preg_match("/^\\[(.+)\\]\\((.+)\\)$/", $s, $matches) && isset($l)) {
 				// fatal error
-				if (preg_match("/\\//", $s)) fileFatal("location's picture contains \"/\"",$filename,$k,$s);
+				if (preg_match("/\\//", $s)) fileFatal("filename should not contain '/'",$filename,$k,$s);
 				// fatal error
-				if ($l->picture) fileFatal("more than one picture at location",$filename,$k,$s);
+				if ($l->picture) fileFatal("more than one picture specified",$filename,$k,$s);
 				// fatal error
-				if ($matches[1] !== $matches[2]) fileFatal("picture url and desription are not equals",$filename,$k,$s);
+				if ($matches[1] !== $matches[2]) fileFatal("URL and title should be equal",$filename,$k,$s);
 				$l->picture = $matches[1];
 			}
 			if (startsWith($s, "# ")) {
 				// fatal error #5
 				$areaParsed = substr($s, 2);
-				if ($areaParsed != $area->name) fileFatal("area's names from directory and file not equals",$filename,$k,$s);
+				if ($areaParsed != $area->name) fileFatal("area name and folder name do not match",$filename,$k,$s);
 			}
 			else if (startsWith($s, "### ")) {
 				$inLocation = true;
@@ -230,10 +230,10 @@ class Parser {
 				$tmpAction = array_key_exists(1, $matches) ? $matches[1] : null;
 				$tmpTarget = array_key_exists(2, $matches) ? $matches[2] : null;
 				// fatal error #2
-				if (!$tmpTarget) fileFatal("can't find target of transition",$filename,$k,$s);
+				if (!$tmpTarget) fileFatal("can't find target",$filename,$k,$s);
 				// warning #8
 				if (endsWith($tmpAction, ".")) {
-					fileWarning("dot after transition",$filename,$k,$s);
+					fileWarning("button text ends with a dot",$filename,$k,$s);
 				}
 				if (strpos($tmpTarget, '/') === false) $tmpTarget = $area->label . "/" . $tmpTarget;
 				$this->locations->last()->actions[] = array(
@@ -264,8 +264,8 @@ class Parser {
 
 	function report() {
 		return
-			"found areas: ".count($this->areas)."\n".
-			"found locations: ".count($this->locations->locations);
+			"areas found: ".count($this->areas)."\n".
+			"locations found: ".count($this->locations->locations);
 	}
 }
 
