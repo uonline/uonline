@@ -17,6 +17,7 @@
  *
  */
 
+
 function stats($gen_time) {
 	global $_SERVER, $MYSQLI_CONN;
 	$ua = addslashes($_SERVER['HTTP_USER_AGENT']);

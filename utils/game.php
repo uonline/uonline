@@ -17,6 +17,7 @@
  *
  */
 
+
 function defaultLocation() {
 	mysqliConnect();
 	return (int) mysqlFirstRes(

@@ -17,6 +17,7 @@
  *
  */
 
+
 function getMigrationFunctions() {
 	return array (
 		1 => function() {

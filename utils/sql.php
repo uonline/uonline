@@ -17,6 +17,7 @@
  *
  */
 
+
 $MYSQLI_CONN = null;
 
 function mysqliInit($host = MYSQL_HOST, $user = MYSQL_USER, $pass = MYSQL_PASS, $base = MYSQL_BASE)  {

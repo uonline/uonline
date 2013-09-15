@@ -17,6 +17,7 @@
  *
  */
 
+
 function isAssoc($a) {
 	if (array_keys($a) === range(0, count($a) - 1)) return false;
 	return true;

@@ -17,6 +17,7 @@
  *
  */
 
+
 function correctUserName($nick) {
 	return
 		strlen($nick)>1 &&
@@ -45,4 +46,5 @@ function correctId($id) {
 function fixId($id) {
 	return $id+0;
 }
+
 ?>

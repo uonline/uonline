@@ -17,6 +17,7 @@
  *
  */
 
+
 function tableExists($t) {
 	mysqliConnect();
 	return
