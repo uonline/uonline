@@ -22,6 +22,7 @@ require_once('config.php');
 
 require_once('./utils/array.php');
 require_once('./utils/game.php');
+require_once('./utils/locparse.php');
 require_once('./utils/math.php');
 require_once('./utils/migration.php');
 require_once('./utils/prettyprint.php');

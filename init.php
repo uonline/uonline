@@ -20,7 +20,6 @@
 
 
 require_once './utils.php';
-require_once './locparse.php';
 
 
 if ($argc === 1 || in_array("--help", $argv) || in_array("-h", $argv))
