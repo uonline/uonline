@@ -17,6 +17,7 @@
  *
  */
 
+
 function rightSess($s) {
 	return $s && strlen($s) == SESSION_LENGTH;
 }
@@ -82,7 +83,7 @@ function generateSessId() {
 	while (mysqlFirstRes(
 		'SELECT count(*) '.
 		'FROM `uniusers` '.
-		'WHERE `sessid`="'.($sessid = mySalt()).'"') ); //were very idiotic..
+		'WHERE `sessid`="'.($sessid = mySalt()).'"') );
 	return $sessid;
 }
 
@@ -191,4 +192,5 @@ function setSession($u) {
 		'WHERE `user`="'.$u.'"');
 	return $s;
 }
+
 ?>

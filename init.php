@@ -23,7 +23,7 @@ require_once './utils.php';
 
 
 if ($argc === 1 || in_array("--help", $argv) || in_array("-h", $argv))
-	die("Usage: [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]\n");
+	die("Usage: [--info] [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]\n");
 
 if (in_array("--info", $argv) || in_array("-i", $argv))
 {

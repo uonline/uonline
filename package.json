@@ -1,16 +1,32 @@
 {
   "name": "uonline",
   "version": "1.0.0",
+  "description": "MMORPG game in a fantasy world",
+  "homepage": "https://github.com/uonline/uonline",
+  "bugs": "https://github.com/uonline/uonline/issues",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/uonline/uonline.git"
+  },
+  "license": "AGPL-3.0",
+  "author": "m1kc <m1kc@yandex.ru>",
+  "private": true,
   "dependencies": {
     "express": "~3.3.8",
     "twig": "~0.5.10",
-    "nodeunit": "~0.8.1",
     "pg": "~2.6.0",
     "any-db": "~0.6.0",
     "stream-stack": ">= 1.1.1",
     "header-stack": ">= 0.0.2",
     "mysql": "~2.0.0-alpha9",
-    "async": "~0.2.9",
-    "jshint": "~2.1.10"
+    "async": "~0.2.9"
+  },
+  "devDependencies": {
+    "nodeunit": "~0.8.1",
+    "jshint": "~2.1.10",
+    "jscoverage": "~0.3.8"
+  },
+  "scripts": {
+    "test": "node test.js"
   }
 }

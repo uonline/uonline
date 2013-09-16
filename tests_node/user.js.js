@@ -20,7 +20,7 @@
 var jsc = require('jscoverage');
 jsc.enableCoverage(true);
 
-var tables = jsc.require(module, '../utils/tables.js');
+var users = jsc.require(module, '../utils/user.js');
 
 var async = require('async');
 
@@ -38,36 +38,23 @@ exports.tearDown = function (done) {
 	done();
 };
 
-exports.tableExists = function (test) {
-	test.expect(6);
-	conn.query('CREATE TABLE test_table (id INT NOT NULL)', [], function(err, res){
-		test.ifError(err);
-		tables.tableExists(conn, 'test_table', function(err, res){
-			test.ifError(err);
-			test.strictEqual(res, true, 'table should exist after created');
-			conn.query('DROP TABLE test_table', [], function(err, res){
-				test.ifError(err);
-				tables.tableExists(conn, 'test_table', function(err, res){
-					test.ifError(err);
-					test.strictEqual(res, false, 'table should not exist after dropped');
-					test.done();
-				});
-			});
-		});
-	});
-};
+exports.userExists = function (test) {
+	users.userExists(conn, 'm1kc', function(error, result){
+		test.ok(!!error, 'should fail on nonexistent table');
+	}, 'test_nonexistent_table');
 
-exports.tableExistsAsync = function (test) {
 	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS test_table (id INT NOT NULL)', [], callback); },
-			async.apply(tables.tableExists, conn, 'test_table'),
-			function(callback){ conn.query('DROP TABLE test_table', [], callback); },
-			async.apply(tables.tableExists, conn, 'test_table'),
+			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS test_users (user TINYTEXT NOT NULL)', [], callback); },
+			function(callback){ conn.query('INSERT INTO test_users VALUES ( ? )', ['m1kc'], callback); },
+			function(callback){ users.userExists(conn, 'm1kc', callback, 'test_users'); },
+			function(callback){ conn.query("TRUNCATE test_users", [], callback); },
+			function(callback){ users.userExists(conn, 'm1kc', callback, 'test_users'); },
+			function(callback){ conn.query('DROP TABLE test_users', [], callback); },
 		],
 		function(error, result){
 			test.ifError(error);
-			test.strictEqual(result[1], true, 'table should exist after created');
-			test.strictEqual(result[3], false, 'table should not exist after dropped');
+			test.strictEqual(result[2], true, 'user should exist after inserted');
+			test.strictEqual(result[4], false, 'user should not exist after deleted');
 			test.done();
 		}
 	);

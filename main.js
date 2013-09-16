@@ -17,12 +17,20 @@
 
 "use strict";
 
+var anyDB = require('any-db');
+var dbURL = process.env.MYSQL_DATABASE_URL || 'mysql://anonymous:nopassword@localhost/uonline';
+var mysqlConnection = anyDB.createConnection(dbURL);
+
+var userUtils = require('./utils/user.js');
+
 var express = require('express');
 var twig = require('twig');
 //var utils = require('./utils.js');
 
 var app = express();
 app.use(express.logger());
+app.use(express.bodyParser());
+app.use(express.compress());
 
 app.use('/bootstrap', express.static(__dirname + '/bootstrap'));
 app.use('/img', express.static(__dirname + '/img'));
@@ -43,16 +51,8 @@ function extend(source, destination) {
 function phpgate(request, response)
 {
 	var child_process = require('child_process');
-	/*
-	child_process.execFile('php-cgi', ['index.php', 'nodecall', request.originalUrl], {}, function (error, stdout, stderr) {
-		console.log('PHP stdout: ' + stdout);
-		console.log('PHP stderr: ' + stderr);
-		if (error !== null) {
-			console.log('PHP exec error: ' + error);
-			response.send('PHP gate error. See console for details.');
-		}
-		response.send(stdout);
-	});*/
+	var querystring = require('querystring');
+
 	var env = {};
 	extend(process.env, env);
 	extend({
@@ -86,9 +86,9 @@ function phpgate(request, response)
 	}
 	// SPAWN!
 	var cgiSpawn = child_process.spawn('php-cgi', [], { env: env });
-	// TODO: send POST data to stdin
-	//request.pipe(cgiSpawn.stdin);
-	//req.body - PARSED post data
+	// Re-send POST data
+	cgiSpawn.stdin.write(querystring.stringify(request.body));
+
 	var CGIParser = require('./cgiparser.js');
 	var cgiResult = new CGIParser(cgiSpawn.stdout);
 	// When the blank line after the headers has been parsed, then
@@ -116,16 +116,22 @@ app.get('/register/', phpgate);
 app.post('/register/', phpgate);
 app.get('/login/', phpgate);
 app.post('/login/', phpgate);
-app.post('/profile/', phpgate);
-// http://expressjs.com/api.html#app.VERB
-//app.post('/profile/id/{id}/', phpgate);
-//app.post('/profile/user/{user}/', phpgate);
+app.get('/profile/', phpgate);
+app.get('/profile/id/:id/', phpgate);
+app.get('/profile/user/:user/', phpgate);
 app.get('/action/logout', phpgate);
 app.get('/game/', phpgate);
-//app.get('/action/go/{to}', phpgate);
+app.get('/action/go/:to', phpgate);
 app.get('/action/attack', phpgate);
 app.get('/action/escape', phpgate);
-//app.get('/ajax/isNickBusy/{nick}', phpgate);
+
+app.get('/ajax/isNickBusy/:nick', function(request, response) {
+	userUtils.userExists(mysqlConnection, request.param('nick'), function(error, result){
+		if (!!error) { response.send(500); return; }
+		response.json({ 'nick': request.param('nick'), 'isNickBusy': result });
+	});
+});
+
 app.get('/stats/', phpgate);
 app.get('/world/', phpgate);
 app.get('/development/', phpgate);

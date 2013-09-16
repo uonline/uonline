@@ -1,6 +1,3 @@
-<?php
-
-
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,8 +15,13 @@
  */
 
 
-function ap($a1, $n, $step) {
-	return (2 * $a1 + ($n-1) * $step) * $n / 2;
-}
+"use strict";
 
-?>
+var reporter = require('nodeunit').reporters.verbose; // may be: default, verbose, minimal, skip_passed
+reporter.run(['tests_node/']);
+
+var jsc = require('jscoverage');
+process.on('exit', function () {
+	jsc.coverage(); // print summary info, cover percent
+	jsc.coverageDetail(); // print uncovered lines
+});

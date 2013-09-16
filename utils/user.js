@@ -1,6 +1,3 @@
-<?php
-
-
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,8 +15,25 @@
  */
 
 
-function ap($a1, $n, $step) {
-	return (2 * $a1 + ($n-1) * $step) * $n / 2;
-}
+"use strict";
 
-?>
+exports.userExists = function(dbConnection, username, callback, table)
+{
+	if (!table) table = 'uniusers';
+	dbConnection.query(
+		// Seems unsafe? It is.
+		// But escaper doesn't know that table name and column value are different things.
+		'SELECT count(*) AS result FROM `'+table+'` WHERE user = ?',
+		[username],
+		function (error, result){
+			if (!!error)
+			{
+				callback(error, undefined);
+			}
+			else
+			{
+				callback(undefined, (result.rows[0].result > 0));
+			}
+		}
+	);
+};

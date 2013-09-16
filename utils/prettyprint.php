@@ -17,6 +17,7 @@
  *
  */
 
+
 $offset = 0;
 
 function spaces($count) {

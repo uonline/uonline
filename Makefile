@@ -22,11 +22,13 @@ diagnose:
 	php composer.phar diagnose
 	php composer.phar validate
 
+check: checkstrict checklicense lint
+
 checkstrict:
 	RESULT='Everything is OK.'; echo ""; for i in `find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/`; do if `which test` 'y' "==" 'y'"`cat $$i | egrep "^['\\"]use strict['\\"];"`"; then echo 'Non-strict:' $$i; RESULT='There are some non-strict files.'; else echo 'Strict:' $$i; fi; done; echo $$RESULT; echo "";
 
 checklicense:
-	RESULT='Everything is OK.'; echo ""; for i in `find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/`; do if `which test` 'y' "==" 'y'"`cat $$i | grep "Affero"`"; then echo 'No license:' $$i; RESULT='There are some files without a license.'; else echo 'With license:' $$i; fi; done; echo $$RESULT; echo "";
+	RESULT='Everything is OK.'; echo ""; for i in `find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/`; do if `which test` 'y' "==" 'y'"`cat $$i | grep "WARRANTY"`"; then echo 'No license:' $$i; RESULT='There are some files without a license.'; else echo 'With license:' $$i; fi; done; echo $$RESULT; echo "";
 
 lint:
 	find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/ | xargs ./node_modules/jshint/bin/jshint
@@ -35,12 +37,8 @@ lintverbose:
 	find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/ | xargs ./node_modules/jshint/bin/jshint --show-non-errors
 
 test:
-	./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter verbose
-	php vendor/bin/phpunit --strict --verbose --colors --coverage-html ./code-coverage-report tests/
-
-testl:
-	./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter verbose
-	php vendor/bin/phpunit --strict --verbose tests/
+	npm test
+	php vendor/bin/phpunit --strict --verbose `if $$(which test) x$${TRAVIS} '==' x; then echo --colors; fi` --coverage-html ./code-coverage-report tests_php/
 
 deploy: pull killcache dirs compress diagnose test
 

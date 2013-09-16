@@ -1,6 +1,3 @@
-<?php
-
-
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,8 +15,33 @@
  */
 
 
-function ap($a1, $n, $step) {
-	return (2 * $a1 + ($n-1) * $step) * $n / 2;
-}
+"use strict";
 
-?>
+var offset = 0;
+
+exports.spaces = function(count){
+	var s = '';
+	for (var i=0; i<count; i++) s += ' ';
+	return s;
+};
+
+exports.writeln = function(text){
+	console.log(this.spaces(offset) + text);
+};
+
+exports.section = function(name){
+	this.writeln(name + '...');
+	offset += 2;
+};
+
+exports.endSection = function(){
+	offset -= 2;
+};
+
+exports.action = function(name){
+	console.log(this.spaces(offset) + name + '...'); // must be: no newline!
+};
+
+exports.result = function(result){
+	console.log(' ' + result);
+};

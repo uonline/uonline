@@ -17,6 +17,7 @@
  *
  */
 
+
 ##SHA-512
 function myCrypt($pass, $salt) {
 	return crypt($pass, '$6$rounds=10000$'.$salt.'$');

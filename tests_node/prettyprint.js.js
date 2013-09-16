@@ -1,6 +1,3 @@
-<?php
-
-
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,8 +15,16 @@
  */
 
 
-function ap($a1, $n, $step) {
-	return (2 * $a1 + ($n-1) * $step) * $n / 2;
-}
+"use strict";
 
-?>
+var jsc = require('jscoverage');
+jsc.enableCoverage(true);
+
+var prettyprint = jsc.require(module, '../utils/prettyprint.js');
+
+exports.spaces = function (test) {
+	test.strictEqual(prettyprint.spaces(0), '', 'should return empty string when I ask for 0 spaces');
+	test.strictEqual(prettyprint.spaces(1), ' ', 'should return given number of spaces');
+	test.strictEqual(prettyprint.spaces(4), '    ', 'should return given number of spaces');
+	test.done();
+};

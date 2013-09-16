@@ -18,7 +18,7 @@
  */
 
 
-if ($argv[1] == 'dump')
+if (isset($argv) && $argv[1] == 'dump')
 {
 	var_dump($GLOBALS);
 	var_dump($_SERVER);
