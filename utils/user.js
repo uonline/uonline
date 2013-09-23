@@ -23,7 +23,7 @@ exports.userExists = function(dbConnection, username, callback, table)
 	dbConnection.query(
 		// Seems unsafe? It is.
 		// But escaper doesn't know that table name and column value are different things.
-		'SELECT count(*) AS result FROM `'+table+'` WHERE user = ?',
+		'SELECT * FROM `'+table+'` WHERE user = ?',
 		[username],
 		function (error, result){
 			if (!!error)
@@ -32,7 +32,7 @@ exports.userExists = function(dbConnection, username, callback, table)
 			}
 			else
 			{
-				callback(undefined, (result.rows[0].result > 0));
+				callback(undefined, (result.rowCount > 0));
 			}
 		}
 	);
