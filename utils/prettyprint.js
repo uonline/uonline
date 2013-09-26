@@ -25,23 +25,29 @@ exports.spaces = function(count){
 	return s;
 };
 
-exports.writeln = function(text){
-	console.log(this.spaces(offset) + text);
+exports.writeln = function(text, targetConsole){
+	if (!targetConsole) targetConsole = console;
+	targetConsole.log(this.spaces(offset) + text);
 };
 
-exports.section = function(name){
-	this.writeln(name + '...');
+exports.section = function(name, targetConsole){
+	if (!targetConsole) targetConsole = console;
+	this.writeln(name + '...', targetConsole);
 	offset += 2;
+	return offset;
 };
 
 exports.endSection = function(){
 	offset -= 2;
+	return offset;
 };
 
-exports.action = function(name){
-	console.log(this.spaces(offset) + name + '...'); // must be: no newline!
+exports.action = function(name, targetConsole){
+	if (!targetConsole) targetConsole = console;
+	targetConsole.log(this.spaces(offset) + name + '...'); // must be: no newline!
 };
 
-exports.result = function(result){
-	console.log(' ' + result);
+exports.result = function(result, targetConsole){
+	if (!targetConsole) targetConsole = console;
+	targetConsole.log(' ' + result);
 };
