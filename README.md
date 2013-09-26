@@ -4,6 +4,29 @@ uonline [![Build Status](https://travis-ci.org/uonline/uonline.png?branch=master
 A browser-based MMORPG game in a fantasy world.
 
 
+Requirements
+------------
+
+* Node.js with npm;
+* PHP 5.4 or higher;
+* PHP-MySQL module;
+* PHP-CGI package;
+* MySQL or MariaDB;
+* MySQL user `anonymous` with password `nopassword`;
+* PostgreSQL (currently not used).
+
+
+Common problems
+---------------
+
+* Don't forget to install packages (`npm install` and `./composer.phar install`).
+* Don't forget to create keyring.
+* Don't forget to get submodules (`git submodule init`, `git submodule update`);
+* Don't forget to initialize database (`./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize`).
+* Don't forget to compress templates (`make compress`).
+* If nothing helps, ask [m1kc](https://github.com/m1kc).
+
+
 Deployment (Node.js)
 --------------------
 
