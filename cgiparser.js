@@ -65,5 +65,6 @@ Parser.prototype._onHeadersComplete = function(headers, leftover) {
   this.emit('headers', headers);
   if (leftover) {
     this._onData(leftover);
+    this.emit('leftover',leftover); // added by m1kc
   }
 };

@@ -103,10 +103,15 @@ function phpgate(request, response)
 
 		// set the response status code
 		response.statusCode = parseInt(headers.status, 10) || 200;
+	});
 
-		cgiResult.on('data', function (chunk) {
-			response.send(chunk);
-		});
+	cgiResult.on('leftover', function (chunk) {
+		response.send(chunk);
+	});
+
+	cgiResult.on('error', function (something) {
+		console.log('PHP gate error');
+		console.log(something);
 	});
 }
 
