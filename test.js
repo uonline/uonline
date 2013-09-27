@@ -17,8 +17,8 @@
 
 "use strict";
 
-var reporter = require('nodeunit').reporters.verbose; // may be: default, verbose, minimal, skip_passed
-reporter.run(['tests_node/']);
+var reporter = require('nodeunit').reporters.default; // may be: default, verbose, minimal, skip_passed
+reporter.run(['tests_node/'], null, function(err) { if (!!err) { process.exit(1); } });
 
 var jsc = require('jscoverage');
 process.on('exit', function () {
