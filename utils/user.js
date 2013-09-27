@@ -53,21 +53,6 @@ exports.idExists = function(dbConnection, id, callback) {
 	);
 };
 
-exports.userExists = function(dbConnection, user, callback) {
-	dbConnection.query(
-		'SELECT count(*) FROM `uniusers` WHERE `user` = ?',
-		[user],
-		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			}
-			else {
-				callback(undefined, (result.rows[0].result > 0));
-			}
-		}
-	);
-};
-
 exports.mailExists = function(dbConnection, mail, callback) {
 	dbConnection.query(
 		'SELECT count(*) FROM `uniusers` WHERE `mail` = ?',
