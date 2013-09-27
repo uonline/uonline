@@ -37,7 +37,7 @@ exports.emailIsValid = function (test) {
 	test.strictEqual(validation.emailIsValid('security@mail.ru'), true, 'should pass good emails');
 	test.strictEqual(validation.emailIsValid('wtf'), false, 'should not pass the shit');
 	test.done();
-}
+};
 
 exports.passwordIsValid = function (test) {
 	test.strictEqual(validation.passwordIsValid('make install clean'), true, 'should pass good passwords');
@@ -45,4 +45,4 @@ exports.passwordIsValid = function (test) {
 	test.strictEqual(validation.passwordIsValid('b'), false, 'not too short');
 	test.strictEqual(validation.passwordIsValid('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'), false, 'not too long');
 	test.done();
-}
+};

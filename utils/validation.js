@@ -18,13 +18,13 @@
 "use strict";
 
 exports.usernameIsValid = function(nick) {
-	return /^[a-zA-Z0-9а-яА-ЯёЁйЙру_ -]{2,32}$/.test(nick);
-}
+	return ( /^[a-zA-Z0-9а-яА-ЯёЁйЙру_ -]{2,32}$/ ).test(nick);
+};
 
 exports.emailIsValid = function(email) {
-	return /^([a-z0-9_\.\-]{1,20})@([a-z0-9\.\-]{1,20})\.([a-z]{2,4})$/i.test(email);
-}
+	return ( /^([a-z0-9_\.\-]{1,20})@([a-z0-9\.\-]{1,20})\.([a-z]{2,4})$/i ).test(email);
+};
 
 exports.passwordIsValid = function(pass) {
-	return /^[-!@#$%^&*()_+A-Za-z0-9 ]{4,32}$/.test(pass);
-}
+	return ( /^[-!@#$%^&*()_+A-Za-z0-9 ]{4,32}$/ ).test(pass);
+};
