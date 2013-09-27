@@ -112,3 +112,59 @@ exports.sessionActive = function(dbConnection, sess, callback) {
 		}
 	);
 };
+
+exports.generateSessId = function(dbConnection, callback) {
+	//here random sessid must be checked for uniqueness
+	callback(undefined, exports.mySalt());
+};
+
+exports.userBySession = function(dbConnection, sess, callback) {
+	dbConnection.query(
+		'SELECT `user` FROM `uniusers` WHERE `sessid` = ?',
+		[sess],
+		function (error, result) {
+			if (!!error) {
+				callback(error, undefined);
+			}
+			else {
+				callback(undefined, result.rows[0].result);
+			}
+		}
+	);
+};
+
+exports.idBySession = function(dbConnection, sess, callback) {
+	dbConnection.query(
+		'SELECT `id` FROM `uniusers` WHERE `sessid` = ?',
+		[sess],
+		function (error, result) {
+			if (!!error) {
+				callback(error, undefined);
+			}
+			else {
+				callback(undefined, result.rows[0].result);
+			}
+		}
+	);
+};
+
+exports.refreshSession = function(dbConnection, sess, sess_timeexpire) {
+	dbConnection.query(
+		'UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL ? SECOND WHERE `sessid` = ?',
+		[sess_timeexpire, sess]
+	);
+};
+
+exports.refreshSession = function(dbConnection, sess) {
+	dbConnection.query(
+		'UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid` = ?',
+		[sess]
+	);
+};
+
+exports.mySalt = function(sess_length) {
+	var salt = '';
+	var a = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+	for(var i=0; i<sess_length; i++) { salt += a[Math.floor(Math.random() * a.length)]; }
+	return salt;
+};
