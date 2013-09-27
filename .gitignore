@@ -6,7 +6,6 @@ vendor/
 
 # Compressed templates and their cache
 templates_cache/
-templates/
 
 # NetBeans
 nbproject/
