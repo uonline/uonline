@@ -24,7 +24,7 @@ var mysqlConnection = anyDB.createConnection(dbURL);
 var userUtils = require('./utils/user.js');
 
 var express = require('express');
-var twig = require('twig');
+
 //var utils = require('./utils.js');
 
 var app = express();
@@ -35,10 +35,25 @@ app.use(express.compress());
 app.use('/bootstrap', express.static(__dirname + '/bootstrap'));
 app.use('/img', express.static(__dirname + '/img'));
 
+var swig = require('swig');
+app.engine('html', swig.renderFile);
+app.engine('twig', swig.renderFile);
+app.engine('swig', swig.renderFile);
+app.set('view engine', 'twig'); // historical reasons
+app.set('views', __dirname + '/templates');
+
 //utils.dbConnect();
 
 app.get('/node/', function(request, response) {
 	response.send('Node.js is up and running.');
+});
+
+app.get('/node-about/', function(request, response) {
+	// warning: for testing purposes only
+	var options = {};
+	options.instance = 'about';
+	options.loggedIn = false;
+	response.render('about', options);
 });
 
 function extend(source, destination) {
