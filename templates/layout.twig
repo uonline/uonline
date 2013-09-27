@@ -24,16 +24,16 @@
 					<a class="brand" href="/">uonline</a>
 					<ul class="nav">
 						<li {% if instance == 'about' %} class="active" {% endif %}><a href="/about/">Об игре</a></li>
-						<!-- <li><a href="#">Новости</a></li>
+						{# <!-- <li><a href="#">Новости</a></li>
 						<li><a href="#">Форум</a></li>
-						<li><a href="#">Рейтинг</a></li> -->
+						<li><a href="#">Рейтинг</a></li> --> #}
 					</ul>
 					<ul class="nav pull-right">
 						{% if loggedIn == true %}
 							<li><a href="/profile/"><i class="{% if admin == true %}icon-certificate{% else %}icon-user{% endif %}"></i> <b>{{ login }}</b></a></li>
 							<li {% if instance == 'profile' and profileIsMine == true %} class="active" {% endif %}><a href="/profile/">Профиль</a></li>
 							<li {% if instance == 'game' %} class="active" {% endif %}><a href="/game/">Игра</a></li>
-							<!-- <li><a href="#">Кабинет</a></li> -->
+							{# <!-- <li><a href="#">Кабинет</a></li> --> #}
 							<li><a href="/action/logout">Выйти</a></li>
 						{% elseif loggedIn == false %}
 							<li {% if instance == 'login' %} class="active" {% endif %}><a href="/login/"><i class="icon-chevron-right"></i> Вход</a></li>
