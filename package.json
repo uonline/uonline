@@ -13,13 +13,13 @@
   "private": true,
   "dependencies": {
     "express": "~3.3.8",
-    "twig": "~0.5.10",
     "pg": "~2.6.0",
     "any-db": "~0.6.0",
     "stream-stack": ">= 1.1.1",
     "header-stack": ">= 0.0.2",
     "mysql": "~2.0.0-alpha9",
-    "async": "~0.2.9"
+    "async": "~0.2.9",
+    "swig": "~1.0.0"
   },
   "devDependencies": {
     "nodeunit": "~0.8.1",
