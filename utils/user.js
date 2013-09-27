@@ -37,3 +37,78 @@ exports.userExists = function(dbConnection, username, callback, table)
 		}
 	);
 };
+
+exports.idExists = function(dbConnection, id, callback) {
+	dbConnection.query(
+		'SELECT count(*) FROM `uniusers` WHERE `id`= ?',
+		[id],
+		function (error, result) {
+			if (!!error) {
+				callback(error, undefined);
+			}
+			else {
+				callback(undefined, (result.rows[0].result > 0));
+			}
+		}
+	);
+};
+
+exports.userExists = function(dbConnection, user, callback) {
+	dbConnection.query(
+		'SELECT count(*) FROM `uniusers` WHERE `user` = ?',
+		[user],
+		function (error, result) {
+			if (!!error) {
+				callback(error, undefined);
+			}
+			else {
+				callback(undefined, (result.rows[0].result > 0));
+			}
+		}
+	);
+};
+
+exports.mailExists = function(dbConnection, mail, callback) {
+	dbConnection.query(
+		'SELECT count(*) FROM `uniusers` WHERE `mail` = ?',
+		[mail],
+		function (error, result) {
+			if (!!error) {
+				callback(error, undefined);
+			}
+			else {
+				callback(undefined, (result.rows[0].result > 0));
+			}
+		}
+	);
+};
+
+exports.sessionExists = function(dbConnection, sess, callback) {
+	dbConnection.query(
+		'SELECT count(*) FROM `uniusers` WHERE `sessid` = ?',
+		[sess],
+		function (error, result) {
+			if (!!error) {
+				callback(error, undefined);
+			}
+			else {
+				callback(undefined, (result.rows[0].result > 0));
+			}
+		}
+	);
+};
+
+exports.sessionActive = function(dbConnection, sess, callback) {
+	dbConnection.query(
+		'SELECT `sessexpire` > NOW() FROM `uniusers` WHERE `sessid` = ?',
+		[sess],
+		function (error, result) {
+			if (!!error) {
+				callback(error, undefined);
+			}
+			else {
+				callback(undefined, (result.rows[0].result > 0));
+			}
+		}
+	);
+};
