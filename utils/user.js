@@ -98,9 +98,9 @@ exports.sessionActive = function(dbConnection, sess, callback) {
 	);
 };
 
-exports.generateSessId = function(dbConnection, callback) {
+exports.generateSessId = function(dbConnection, sess_length, callback) {
 	//here random sessid must be checked for uniqueness
-	callback(undefined, exports.mySalt());
+	callback(undefined, exports.mySalt(sess_length));
 };
 
 exports.userBySession = function(dbConnection, sess, callback) {
@@ -140,7 +140,7 @@ exports.refreshSession = function(dbConnection, sess, sess_timeexpire) {
 	);
 };
 
-exports.refreshSession = function(dbConnection, sess) {
+exports.closeSession = function(dbConnection, sess) {
 	dbConnection.query(
 		'UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid` = ?',
 		[sess]
