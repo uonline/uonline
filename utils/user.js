@@ -153,3 +153,21 @@ exports.mySalt = function(sess_length) {
 	for(var i=0; i<sess_length; i++) { salt += a[Math.floor(Math.random() * a.length)]; }
 	return salt;
 };
+
+exports.registerUser = function(dbConnection, user, password, permissions, callback) {
+	var salt = mySalt(16);
+	dbConnection.query(
+		'INSERT INTO `uniusers` '+
+		'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES '+
+		'(?, ?, ?, ?, NOW(), NOW() + INTERVAL ? SECOND, ?, ?)',
+		[user, salt, myCrypt(password, salt), exports.generateSessId(), SESSION_TIMEEXPIRE, defaultLocation(), permissions], //finalize later
+		function (error, result) {
+			if (!!error) {
+				callback(error, undefined);
+			}
+			else {
+				callback(undefined, result.rows[0].result);
+			}
+		}
+	);
+};
