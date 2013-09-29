@@ -23,3 +23,6 @@ vendor/
 
 ## Node
 node_modules/
+
+# Gedit
+*~
