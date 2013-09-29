@@ -6,8 +6,7 @@ services:
   - mysql
   - postgresql
 env:
-  - DATABASE_URL_TEST=postgres://travis:@localhost/uonline_test
-  - MYSQL_DATABASE_URL_TEST=mysql://travis:@localhost/uonline_test
+  - DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test" MYSQL_DATABASE_URL_TEST="mysql://travis:@localhost/uonline_test"
 before_script:
   - # Node.js setup
   - sudo apt-get update
