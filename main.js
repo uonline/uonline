@@ -17,9 +17,10 @@
 
 "use strict";
 
+var config = require('./config.js');
+
 var anyDB = require('any-db');
-var dbURL = process.env.MYSQL_DATABASE_URL || 'mysql://anonymous:nopassword@localhost/uonline';
-var mysqlConnection = anyDB.createPool(dbURL, {min: 2, max: 20});
+var mysqlConnection = anyDB.createPool(config.MYSQL_DATABASE_URL, {min: 2, max: 20});
 
 var userUtils = require('./utils/user.js');
 

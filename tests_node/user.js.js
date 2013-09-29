@@ -17,6 +17,8 @@
 
 "use strict";
 
+var config = require('../config.js');
+
 var jsc = require('jscoverage');
 jsc.enableCoverage(true);
 
@@ -25,11 +27,10 @@ var users = jsc.require(module, '../utils/user.js');
 var async = require('async');
 
 var anyDB = require('any-db');
-var dbURL = process.env.MYSQL_DATABASE_URL || 'mysql://anonymous:nopassword@localhost/uonline';
 var conn = null;
 
 exports.setUp = function (done) {
-	conn = anyDB.createConnection(dbURL);
+	conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
 	done();
 };
 

@@ -16,10 +16,9 @@
 
 "use strict";
 
-exports.getDefaultLocation = function(dbConnection, callback, table) {
-	if (!table) table = "locations";
+exports.getDefaultLocation = function(dbConnection, callback) {
 	dbConnection.query(
-		'SELECT id FROM '+table+' WHERE `default`=1',
+		'SELECT id FROM locations WHERE `default`=1',
 		function (error, result) {
 			if (!!error) {
 				callback(error, undefined);
@@ -31,4 +30,32 @@ exports.getDefaultLocation = function(dbConnection, callback, table) {
 	);
 };
 
+exports.getUserLocationId = function(dbConnection, sessid, callback) {
+	dbConnection.query(
+		'SELECT location FROM uniusers WHERE sessid=?',
+		[sessid],
+		function (error, result) {
+			if (!!error) {
+				callback(error, undefined);
+			} else {
+				callback(undefined, result.rows[0].location);
+			}
+		}
+	);
+};
+
+/*exports.getUserLocationId = function(dbConnection, sessid, callback) {
+	dbConnection.query(
+		'SELECT locations.area FROM locations, uniusers WHERE uniusers.sessid=? AND locations.id=uniusers.location',
+		[sessid],
+		function (error, result) {
+			if (!!error) {
+				callback(error, undefined);
+			} else {
+				console.log(result.rows[0])
+				callback(undefined, result.rows[0]);
+			}
+		}
+	);
+};*/
 

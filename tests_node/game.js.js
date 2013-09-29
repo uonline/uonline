@@ -17,6 +17,8 @@
 
 "use strict";
 
+var config = require('../config.js');
+
 var jsc = require('jscoverage');
 jsc.enableCoverage(true);
 
@@ -25,11 +27,10 @@ var game = jsc.require(module, '../utils/game.js');
 var async = require('async');
 
 var anyDB = require('any-db');
-var dbURL = process.env.MYSQL_DATABASE_URL || 'mysql://anonymous:nopassword@localhost/uonline';
 var conn = null;
 
 exports.setUp = function (done) {
-	conn = anyDB.createConnection(dbURL);
+	conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
 	//conn.query("DROP TABLE IF EXISTS locations;", done);
 	done();
 };
@@ -42,14 +43,14 @@ exports.tearDown = function (done) {
 
 exports.getDefaultLocation = function (test) {
 	async.series([
-			function(callback){ conn.query('DROP TABLE IF EXISTS test_locations', callback); },
-			function(callback){ conn.query('CREATE TABLE test_locations'+
+			function(callback){ conn.query('DROP TABLE IF EXISTS locations', callback); },
+			function(callback){ conn.query('CREATE TABLE locations '+
 				'(`id` INT, PRIMARY KEY (`id`), `default` TINYINT(1) DEFAULT 0 )', callback); },
-			function(callback){ conn.query('INSERT INTO test_locations VALUES ( 1, 0 )', callback); },
-			function(callback){ conn.query('INSERT INTO test_locations VALUES ( 2, 1 )', callback); },
-			function(callback){ conn.query('INSERT INTO test_locations VALUES ( 3, 0 )', callback); },
-			function(callback){ game.getDefaultLocation(conn, callback, 'test_locations'); },
-			function(callback){ conn.query('DROP TABLE test_locations', callback); },
+			function(callback){ conn.query('INSERT INTO locations VALUES ( 1, 0 )', callback); },
+			function(callback){ conn.query('INSERT INTO locations VALUES ( 2, 1 )', callback); },
+			function(callback){ conn.query('INSERT INTO locations VALUES ( 3, 0 )', callback); },
+			function(callback){ game.getDefaultLocation(conn, callback); },
+			function(callback){ conn.query('DROP TABLE locations', callback); },
 		],
 		function(error, result) {
 			test.ifError(error);
@@ -59,4 +60,23 @@ exports.getDefaultLocation = function (test) {
 	);
 };
 
+exports.getUserLocationId = function (test) {
+	async.series([
+			function(callback){ conn.query('DROP TABLE IF EXISTS uniusers', callback); },
+			function(callback){ conn.query('CREATE TABLE uniusers '+
+				'(`id` INT, PRIMARY KEY (`id`), `location` INT DEFAULT 1, `sessid` TINYTEXT )', callback); },
+			function(callback){ conn.query('INSERT INTO uniusers              VALUES ( 1, 3, "qweasd" )', callback); },
+			function(callback){ conn.query('INSERT INTO uniusers (id, sessid) VALUES ( 2,    "asdzxc" )', callback); },
+			function(callback){ game.getUserLocationId(conn, "qweasd", callback); },
+			function(callback){ game.getUserLocationId(conn, "asdzxc", callback); },
+			function(callback){ conn.query('DROP TABLE uniusers', callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[4], 3, 'user location should be 3');
+			test.strictEqual(result[5], 1, 'user location should be 1 (by default)');
+			test.done();
+		}
+	);
+};
 
