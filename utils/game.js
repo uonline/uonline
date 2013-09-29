@@ -14,6 +14,7 @@
  *
  */
 
+
 "use strict";
 
 exports.getDefaultLocation = function(dbConnection, callback) {
@@ -32,7 +33,7 @@ exports.getDefaultLocation = function(dbConnection, callback) {
 
 exports.getUserLocationId = function(dbConnection, sessid, callback) {
 	dbConnection.query(
-		'SELECT location FROM uniusers WHERE sessid=?',
+		'SELECT location FROM uniusers WHERE sessid = ?',
 		[sessid],
 		function (error, result) {
 			if (!!error) {
