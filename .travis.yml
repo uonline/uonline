@@ -23,6 +23,7 @@ before_script:
   - ./init.php --info
   - ./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize
   - ./init.php --info
+  - mysql -e 'create database uonline_test;'
 script:
   - make checkstrict
   - make checklicense
