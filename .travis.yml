@@ -6,7 +6,8 @@ services:
   - mysql
   - postgresql
 env:
-  - MYSQL_DATABASE_URL=mysql://travis:@localhost/uonline
+  - DATABASE_URL_TEST=postgres://travis:@localhost/uonline_test
+  - MYSQL_DATABASE_URL_TEST=mysql://travis:@localhost/uonline_test
 before_script:
   - # Node.js setup
   - sudo apt-get update
@@ -17,7 +18,7 @@ before_script:
   - make diagnose
   - ./composer.phar install
   - # Database setup
-  - echo "localhost|travis||uonline|off" > keyring
+  - echo "localhost|travis||uonline_test|off" > keyring
   - ./init.php --info
   - ./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize --drop  # test full cycle
   - ./init.php --info
