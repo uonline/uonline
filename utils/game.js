@@ -25,8 +25,10 @@ exports.getDefaultLocation = function(dbConnection, callback, table) {
 				callback(error, undefined);
 			} else {
 				//{ rows: [ { id: 172926385 } ], rowCount: 1, lastInsertId: undefined }
-				callback(undefined, result. rows[0].id);
+				callback(undefined, result.rows[0].id);
 			}
 		}
 	);
 };
+
+

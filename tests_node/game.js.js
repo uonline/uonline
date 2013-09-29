@@ -40,20 +40,23 @@ exports.tearDown = function (done) {
 };
 
 
-exports.defaultLocation = function (test) {
+exports.getDefaultLocation = function (test) {
 	async.series([
 			function(callback){ conn.query('DROP TABLE IF EXISTS test_locations', callback); },
-			function(callback){ conn.query('CREATE TABLE test_locations (`id` INT, PRIMARY KEY (`id`), `default` TINYINT(1) DEFAULT 0 )', callback); },
+			function(callback){ conn.query('CREATE TABLE test_locations'+
+				'(`id` INT, PRIMARY KEY (`id`), `default` TINYINT(1) DEFAULT 0 )', callback); },
 			function(callback){ conn.query('INSERT INTO test_locations VALUES ( 1, 0 )', callback); },
 			function(callback){ conn.query('INSERT INTO test_locations VALUES ( 2, 1 )', callback); },
 			function(callback){ conn.query('INSERT INTO test_locations VALUES ( 3, 0 )', callback); },
 			function(callback){ game.getDefaultLocation(conn, callback, 'test_locations'); },
 			function(callback){ conn.query('DROP TABLE test_locations', callback); },
 		],
-		function(error, result){console.log(error)
+		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[5], 2, 'second location should be default');
+			test.strictEqual(result[5], 2, 'should return id of default location');
 			test.done();
 		}
 	);
 };
+
+
