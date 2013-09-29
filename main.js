@@ -19,7 +19,7 @@
 
 var anyDB = require('any-db');
 var dbURL = process.env.MYSQL_DATABASE_URL || 'mysql://anonymous:nopassword@localhost/uonline';
-var mysqlConnection = anyDB.createConnection(dbURL);
+var mysqlConnection = anyDB.createPool(dbURL, {min: 2, max: 20});
 
 var userUtils = require('./utils/user.js');
 
@@ -28,6 +28,7 @@ var express = require('express');
 //var utils = require('./utils.js');
 
 var app = express();
+app.enable('trust proxy');
 app.use(express.logger());
 app.use(express.bodyParser());
 app.use(express.compress());
