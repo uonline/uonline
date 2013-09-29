@@ -51,9 +51,8 @@ exports.defaultLocation = function (test) {
 			function(callback){ conn.query('DROP TABLE test_locations', callback); },
 		],
 		function(error, result){
-			console.log("callback")
 			test.ifError(error);
-			//test.strictEqual(result[5], 2, '');
+			test.strictEqual(result[5], 2, 'second location should be default');
 			test.done();
 		}
 	);

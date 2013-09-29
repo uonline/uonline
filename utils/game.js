@@ -24,11 +24,9 @@ exports.getDefaultLocation = function(dbConnection, callback, table) {
 			if (!!error) {
 				callback(error, undefined);
 			} else {
-				console.log("before call")
 				//{ rows: [ { id: 172926385 } ], rowCount: 1, lastInsertId: undefined }
-				callback(undefined, rows[0].id);
-				console.log("after call")
+				callback(undefined, result. rows[0].id);
 			}
 		}
 	);
-}
+};
