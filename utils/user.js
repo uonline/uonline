@@ -159,15 +159,7 @@ exports.registerUser = function(dbConnection, user, password, permissions, callb
 	dbConnection.query(
 		'INSERT INTO `uniusers` '+
 		'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES '+
-		'(?, ?, ?, ?, NOW(), NOW() + INTERVAL ? SECOND, ?, ?)',
-		[user, salt, myCrypt(password, salt), exports.generateSessId(), SESSION_TIMEEXPIRE, defaultLocation(), permissions], //finalize later
-		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			}
-			else {
-				callback(undefined, result.rows[0].result);
-			}
-		}
+		'(?, ?, ?, ?, NOW(), NOW() + INTERVAL ? SECOND, (SELECT `id` FROM `locations` WHERE `default` = 1), ?)',
+		[user, salt, myCrypt(password, salt), exports.generateSessId(), require('config.js').sessionExpireTime, permissions]
 	);
 };
