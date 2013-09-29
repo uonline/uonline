@@ -44,7 +44,7 @@ exports.userExists = function (test) {
 	}, 'test_nonexistent_table');
 
 	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS test_users (user TINYTEXT NOT NULL)', [], callback); },
+			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS test_users (user TINYTEXT)', [], callback); },
 			function(callback){ conn.query('INSERT INTO test_users VALUES ( ? )', ['m1kc'], callback); },
 			function(callback){ users.userExists(conn, 'm1kc', callback, 'test_users'); },
 			function(callback){ conn.query("TRUNCATE test_users", [], callback); },
@@ -58,4 +58,18 @@ exports.userExists = function (test) {
 			test.done();
 		}
 	);
+};
+
+exports.createSalt = function (test) {
+	var result;
+
+	result = users.createSalt(50);
+	test.strictEqual(result.length, 50, 'should keep specified length');
+	test.ok(( /^[a-zA-Z0-9]+$/ ).test(result), 'should contain printable characters');
+
+	result = users.createSalt(10);
+	test.strictEqual(result.length, 10, 'should keep specified length');
+	test.ok(( /^[a-zA-Z0-9]+$/ ).test(result), 'should contain printable characters');
+
+	test.done();
 };

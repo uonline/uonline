@@ -37,7 +37,7 @@ test:
 	npm test
 	php vendor/bin/phpunit --strict --verbose `if $$(which test) x$${TRAVIS} '==' x; then echo --colors; fi` --coverage-html ./code-coverage-report tests_php/
 
-deploy: pull killcache dirs compress diagnose test
+deploy: pull killcache dirs diagnose test
 
 serve:
 	php -S localhost:8080 -t .

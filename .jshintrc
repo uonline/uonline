@@ -3,5 +3,6 @@
 	"undef": true,
 	"bitwise": true,
 	"latedef": true,
-	"trailing": true
+	"trailing": true,
+	"maxlen": 120
 }
