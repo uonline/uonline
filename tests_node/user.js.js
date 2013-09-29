@@ -59,3 +59,17 @@ exports.userExists = function (test) {
 		}
 	);
 };
+
+exports.createSalt = function (test) {
+	var result;
+
+	result = users.createSalt(50);
+	test.strictEqual(result.length, 50, 'should keep specified length');
+	test.ok(( /^[a-zA-Z0-9]+$/ ).test(result), 'should contain printable characters');
+
+	result = users.createSalt(10);
+	test.strictEqual(result.length, 10, 'should keep specified length');
+	test.ok(( /^[a-zA-Z0-9]+$/ ).test(result), 'should contain printable characters');
+
+	test.done();
+};

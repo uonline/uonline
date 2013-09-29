@@ -100,7 +100,7 @@ exports.sessionActive = function(dbConnection, sess, callback) {
 
 exports.generateSessId = function(dbConnection, sess_length, callback) {
 	//here random sessid must be checked for uniqueness
-	callback(undefined, exports.mySalt(sess_length));
+	callback(undefined, exports.createSalt(sess_length));
 };
 
 exports.userBySession = function(dbConnection, sess, callback) {
@@ -147,7 +147,7 @@ exports.closeSession = function(dbConnection, sess) {
 	);
 };
 
-exports.mySalt = function(sess_length) {
+exports.createSalt = function(sess_length) {
 	var salt = '';
 	var a = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 	for(var i=0; i<sess_length; i++) { salt += a[Math.floor(Math.random() * a.length)]; }
@@ -155,7 +155,7 @@ exports.mySalt = function(sess_length) {
 };
 
 exports.registerUser = function(dbConnection, user, password, permissions, callback) {
-	var salt = mySalt(16);
+	var salt = createSalt(16);
 	dbConnection.query(
 		'INSERT INTO `uniusers` '+
 		'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES '+
