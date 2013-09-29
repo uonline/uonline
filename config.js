@@ -20,9 +20,18 @@
 exports.DATABASE_URL = process.env.DATABASE_URL ||
 	'postgres://anonymous:nopassword@localhost/uonline';
 exports.DATABASE_URL_TEST = process.env.DATABASE_URL_TEST ||
-	'postgres://anonymous_test:nopassword@localhost/uonline';
+	'postgres://anonymous:nopassword@localhost/uonline_test';
 exports.MYSQL_DATABASE_URL = process.env.MYSQL_DATABASE_URL ||
 	'mysql://anonymous:nopassword@localhost/uonline';
 exports.MYSQL_DATABASE_URL_TEST = process.env.MYSQL_DATABASE_URL_TEST ||
-	'mysql://anonymous_test:nopassword@localhost/uonline';
+	'mysql://anonymous:nopassword@localhost/uonline_test';
+
+exports.sessionLength = 64;
+exports.sessionExpireTime = 3600; // seconds
+
+exports.defaultInstanceForGuests = '/about/';
+exports.defaultInstanceForUsers = '/game/';
+
+exports.expStart = 1000;
+exports.expStep = 1000;
 
