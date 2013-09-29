@@ -17,6 +17,11 @@
 
 "use strict";
 
+var config = require('../config.js');
+
+var crypto = require('crypto');
+var async = require('async');
+
 exports.userExists = function(dbConnection, username, callback, table)
 {
 	if (!table) table = 'uniusers';
@@ -155,11 +160,45 @@ exports.createSalt = function(sess_length) {
 };
 
 exports.registerUser = function(dbConnection, user, password, permissions, callback) {
-	var salt = createSalt(16);
-	dbConnection.query(
-		'INSERT INTO `uniusers` '+
-		'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES '+
-		'(?, ?, ?, ?, NOW(), NOW() + INTERVAL ? SECOND, (SELECT `id` FROM `locations` WHERE `default` = 1), ?)',
-		[user, salt, myCrypt(password, salt), exports.generateSessId(), require('config.js').sessionExpireTime, permissions]
+	var salt = this.createSalt(16);
+	/*crypto.pbkdf2(password, salt, 4096, 256, function(error, cryptedPassword){
+		if (!!error) callback(error, undefined);
+		dbConnection.query(
+			'INSERT INTO `uniusers` '+
+			'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES '+
+			'(?, ?, ?, ?, NOW(), NOW() + INTERVAL ? SECOND, (SELECT `id` FROM `locations` WHERE `default` = 1), ?)',
+			[user, salt, cryptedPassword, exports.generateSessId(), config.sessionExpireTime, permissions],
+			function(error, queryResult){
+				if (!!error)
+				{
+					callback(error, undefined);
+				}
+				else
+				{
+					callback(undefined, queryResult);
+				}
+			}
+		);
+	});*/
+	async.waterfall([
+			function(innerCallback){
+				crypto.pbkdf2(password, salt, 4096, 256, innerCallback);
+			},
+			function(previousResult, innerCallback){
+				dbConnection.query(
+					'INSERT INTO `uniusers` '+
+					'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) '+
+					'VALUES '+
+					'(?, ?, ?, ?, NOW(), NOW() + INTERVAL ? SECOND, '+
+						'(SELECT `id` FROM `locations` WHERE `default` = 1), '+
+					'?)',
+					[user, salt, previousResult.toString(), exports.generateSessId(), config.sessionExpireTime,
+						permissions],
+					innerCallback);
+			},
+		],
+		function(error, result){
+			callback(error, result);
+		}
 	);
 };
