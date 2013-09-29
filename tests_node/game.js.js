@@ -50,7 +50,7 @@ exports.defaultLocation = function (test) {
 			function(callback){ game.getDefaultLocation(conn, callback, 'test_locations'); },
 			function(callback){ conn.query('DROP TABLE test_locations', callback); },
 		],
-		function(error, result){
+		function(error, result){console.log(error)
 			test.ifError(error);
 			test.strictEqual(result[5], 2, 'second location should be default');
 			test.done();
