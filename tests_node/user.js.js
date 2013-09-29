@@ -44,7 +44,7 @@ exports.userExists = function (test) {
 	}, 'test_nonexistent_table');
 
 	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS test_users (user TINYTEXT NOT NULL)', [], callback); },
+			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS test_users (user TINYTEXT)', [], callback); },
 			function(callback){ conn.query('INSERT INTO test_users VALUES ( ? )', ['m1kc'], callback); },
 			function(callback){ users.userExists(conn, 'm1kc', callback, 'test_users'); },
 			function(callback){ conn.query("TRUNCATE test_users", [], callback); },

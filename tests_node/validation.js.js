@@ -28,7 +28,7 @@ exports.usernameIsValid = function (test) {
 	test.strictEqual(validation.usernameIsValid('Михаил Кутузов'), true, 'should pass good names');
 	test.strictEqual(validation.usernameIsValid('Чёрный Властелин'), true, 'should pass good names');
 	test.strictEqual(validation.usernameIsValid('b'), false, 'not too short');
-	test.strictEqual(validation.usernameIsValid('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'), false, 'not too long');
+	test.strictEqual(validation.usernameIsValid('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'), false, 'not too long');
 	test.strictEqual(validation.usernameIsValid('DROP TABLE `users`;'), false, 'no odd characters');
 	test.done();
 };
@@ -43,6 +43,6 @@ exports.passwordIsValid = function (test) {
 	test.strictEqual(validation.passwordIsValid('make install clean'), true, 'should pass good passwords');
 	test.strictEqual(validation.passwordIsValid('вобла'), false, 'should not pass Russian');
 	test.strictEqual(validation.passwordIsValid('b'), false, 'not too short');
-	test.strictEqual(validation.passwordIsValid('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'), false, 'not too long');
+	test.strictEqual(validation.passwordIsValid('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'), false, 'not too long');
 	test.done();
 };
