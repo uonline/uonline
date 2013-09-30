@@ -29,32 +29,31 @@ var async = require('async');
 var anyDB = require('any-db');
 var conn = null;
 
+var usedTables = "locations, uniusers";
+
 exports.setUp = function (done) {
 	conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
-	//conn.query("DROP TABLE IF EXISTS locations;", done);
-	done();
+	conn.query("DROP TABLE IF EXISTS "+usedTables, done);
 };
 
 exports.tearDown = function (done) {
+	conn.query("DROP TABLE IF EXISTS "+usedTables, done);
 	conn.end();
-	done();
 };
 
 
 exports.getDefaultLocation = function (test) {
 	async.series([
-			function(callback){ conn.query('DROP TABLE IF EXISTS locations', callback); },
 			function(callback){ conn.query('CREATE TABLE locations '+
 				'(`id` INT, PRIMARY KEY (`id`), `default` TINYINT(1) DEFAULT 0 )', callback); },
 			function(callback){ conn.query('INSERT INTO locations VALUES ( 1, 0 )', callback); },
 			function(callback){ conn.query('INSERT INTO locations VALUES ( 2, 1 )', callback); },
 			function(callback){ conn.query('INSERT INTO locations VALUES ( 3, 0 )', callback); },
 			function(callback){ game.getDefaultLocation(conn, callback); },
-			function(callback){ conn.query('DROP TABLE locations', callback); },
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[5], 2, 'should return id of default location');
+			test.strictEqual(result[4], 2, 'should return id of default location');
 			test.done();
 		}
 	);
@@ -62,21 +61,56 @@ exports.getDefaultLocation = function (test) {
 
 exports.getUserLocationId = function (test) {
 	async.series([
-			function(callback){ conn.query('DROP TABLE IF EXISTS uniusers', callback); },
 			function(callback){ conn.query('CREATE TABLE uniusers '+
 				'(`id` INT, PRIMARY KEY (`id`), `location` INT DEFAULT 1, `sessid` TINYTEXT )', callback); },
 			function(callback){ conn.query('INSERT INTO uniusers              VALUES ( 1, 3, "qweasd" )', callback); },
 			function(callback){ conn.query('INSERT INTO uniusers (id, sessid) VALUES ( 2,    "asdzxc" )', callback); },
 			function(callback){ game.getUserLocationId(conn, "qweasd", callback); },
 			function(callback){ game.getUserLocationId(conn, "asdzxc", callback); },
-			function(callback){ conn.query('DROP TABLE uniusers', callback); },
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[4], 3, 'user location should be 3');
-			test.strictEqual(result[5], 1, 'user location should be 1 (by default)');
+			test.strictEqual(result[3], 3, 'user location should be 3');
+			test.strictEqual(result[4], 1, 'user location should be 1 (by default)');
 			test.done();
 		}
 	);
 };
+
+exports.getUserAreaId = function (test) {
+	async.series([
+			function(callback){ conn.query('CREATE TABLE uniusers '+
+				'(`id` INT, PRIMARY KEY (`id`), `location` INT DEFAULT 1, `sessid` TINYTEXT )', callback); },
+			function(callback){ conn.query('CREATE TABLE locations '+
+				'(`id` INT, PRIMARY KEY (`id`), `area` INT )', callback); },
+			function(callback){ conn.query('INSERT INTO uniusers VALUES ( 1, 3, "qweasd" )', callback); },
+			function(callback){ conn.query('INSERT INTO locations VALUES ( 3, 5 )', callback); },
+			function(callback){ game.getUserAreaId(conn, "qweasd", callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[4], 5, 'user should be in 5th area');
+			test.done();
+		}
+	);
+};
+
+exports.getCurrentLocationTitle = function (test) {
+	async.series([
+			function(callback){ conn.query('CREATE TABLE uniusers '+
+				'(`id` INT, PRIMARY KEY (`id`), `location` INT DEFAULT 1, `sessid` TINYTEXT )', callback); },
+			function(callback){ conn.query('CREATE TABLE locations '+
+				'(`id` INT, PRIMARY KEY (`id`), `title` TINYTEXT )', callback); },
+			function(callback){ conn.query('INSERT INTO uniusers VALUES ( 1, 3, "qweasd" )', callback); },
+			function(callback){ conn.query('INSERT INTO locations VALUES ( 3, "sometitle" )', callback); },
+			function(callback){ game.getCurrentLocationTitle(conn, "qweasd", callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[4], "sometitle", 'user should be in "sometitle" location');
+			test.done();
+		}
+	);
+};
+
 

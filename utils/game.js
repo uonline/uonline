@@ -45,18 +45,34 @@ exports.getUserLocationId = function(dbConnection, sessid, callback) {
 	);
 };
 
-/*exports.getUserLocationId = function(dbConnection, sessid, callback) {
+exports.getUserAreaId = function(dbConnection, sessid, callback) {
 	dbConnection.query(
-		'SELECT locations.area FROM locations, uniusers WHERE uniusers.sessid=? AND locations.id=uniusers.location',
+		'SELECT locations.area FROM locations, uniusers '+
+		'WHERE uniusers.sessid=? AND locations.id = uniusers.location',
 		[sessid],
 		function (error, result) {
 			if (!!error) {
 				callback(error, undefined);
 			} else {
-				console.log(result.rows[0])
-				callback(undefined, result.rows[0]);
+				callback(undefined, result.rows[0].area);
 			}
 		}
 	);
-};*/
+};
+
+exports.getCurrentLocationTitle = function(dbConnection, sessid, callback) {
+	dbConnection.query(
+		'SELECT locations.title FROM locations, uniusers '+
+		'WHERE uniusers.sessid = ? AND locations.id = uniusers.location',
+		[sessid],
+		function (error, result) {
+			if (!!error) {
+				callback(error, undefined);
+			} else {
+				callback(undefined, result.rows[0].title);
+			}
+		}
+	);
+};
+
 
