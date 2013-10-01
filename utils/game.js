@@ -75,4 +75,50 @@ exports.getCurrentLocationTitle = function(dbConnection, sessid, callback) {
 	);
 };
 
+exports.getCurrentLocationDescription = function(dbConnection, sessid, callback) {
+	dbConnection.query(
+		'SELECT description FROM locations, uniusers '+
+		'WHERE uniusers.sessid = ? AND locations.id = uniusers.location',
+		[sessid],
+		function (error, result) {
+			callback(error, result.rows[0].description);
+		}
+	);
+};
+
+exports.getAllowedZones = function(dbConnection, sessid, ids_only, callback) {
+	if (!callback) callback = ids_only;
+	dbConnection.query(
+		'SELECT locations.goto FROM locations, uniusers '+
+		'WHERE uniusers.sessid = ? AND locations.id = uniusers.location AND uniusers.fight_mode = 0',
+		[sessid],
+		function (error, result) {
+			if (!!error) return callback(error, undefined);
+			var a = result.rows[0].goto.split("|");
+			for (var i=0;i<a.length;i++)
+				a[i] = ids_only ?
+					a[i].substr(0,a[i].indexOf("=")) :
+					a[i].split("=");
+			callback(undefined, a);
+		}
+	);
+};
+
+/*exports.changeLocation = function(dbConnection, sessid, locid, callback) {
+	var count = 0;
+	function onend(error, result) {
+		if (!!error) return callback(error, undefined);
+		callback(undefined, result.rows[0]);
+	}
+	dbConnection.query(
+		'UPDATE uniusers SET location = ? WHERE sessid = ?',
+		[locid, sessid], onend);
+	dbConnection.query(
+		'SELECT max(attack_chance) FROM monsters, uniusers'+
+		'WHERE uniusers.sessid = ? AND uniusers.location = monsters.location',
+		[sessid], function(error, result) {
+			
+		});
+}*/
+
 
