@@ -17,13 +17,9 @@
 
 "use strict";
 
-exports.tableExists = function(dbConnection, name, callback)
-{
-	dbConnection.query(
-		"SELECT count(*) AS result FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
-		[dbConnection.config.database, name],
-		function (error, result){
-			callback(error, error || (result.rows[0].result > 0));
-		}
-	);
-};
+exports.game = require('./utils/game.js');
+exports.math = require('./utils/math.js');
+exports.prettyprint = require('./utils/prettyprint.js');
+exports.tables = require('./utils/tables.js');
+exports.user = require('./utils/user.js');
+exports.validation = require('./utils/validation.js');

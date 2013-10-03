@@ -75,6 +75,11 @@ exports.getUserLocation = function(dbConnection, sessid, callback) {
 };*/
 
 /*exports.changeLocation = function(dbConnection, sessid, locid, callback) {
+	var count = 0;
+	function onend(error, result) {
+		if (!!error) return callback(error, undefined);
+		callback(undefined, result.rows[0]);
+	}
 	dbConnection.query(
 		'START TRANSACTION;'+
 		'  SELECT 1;'+

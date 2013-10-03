@@ -22,23 +22,13 @@ var config = require('../config.js');
 var crypto = require('crypto');
 var async = require('async');
 
-exports.userExists = function(dbConnection, username, callback, table)
+exports.userExists = function(dbConnection, username, callback)
 {
-	if (!table) table = 'uniusers';
 	dbConnection.query(
-		// Seems unsafe? It is.
-		// But escaper doesn't know that table name and column value are different things.
-		'SELECT count(*) AS result FROM `'+table+'` WHERE user = ?',
+		'SELECT count(*) AS result FROM `uniusers` WHERE user = ?',
 		[username],
-		function (error, result){
-			if (!!error)
-			{
-				callback(error, undefined);
-			}
-			else
-			{
-				callback(undefined, (result.rows[0].result > 0));
-			}
+		function (error, result) {
+			callback(error, error || (result.rows[0].result > 0));
 		}
 	);
 };
@@ -90,7 +80,7 @@ exports.sessionExists = function(dbConnection, sess, callback) {
 
 exports.sessionActive = function(dbConnection, sess, callback) {
 	dbConnection.query(
-		'SELECT `sessexpire` > NOW() FROM `uniusers` WHERE `sessid` = ?',
+		'SELECT `sessexpire` > NOW() AS result FROM `uniusers` WHERE `sessid` = ?',
 		[sess],
 		function (error, result) {
 			if (!!error) {
