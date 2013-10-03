@@ -42,7 +42,7 @@ exports.tearDown = function (done) {
 exports.userExists = function (test) {
 	users.userExists(conn, 'm1kc', function(error, result){
 		test.ok(!!error, 'should fail on nonexistent table');
-	}, 'test_nonexistent_table');
+	});
 
 	async.series([
 			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (user TINYTEXT)', [], callback); },
