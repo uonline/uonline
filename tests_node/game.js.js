@@ -70,8 +70,8 @@ exports.getUserLocationId = function (test) {
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[3], 3, 'user location should be 3');
-			test.strictEqual(result[4], 1, 'user location should be 1 (by default)');
+			test.strictEqual(result[3], 3, "should return user's location id");
+			test.strictEqual(result[4], 1, "should return user's location id");
 			test.done();
 		}
 	);
@@ -89,7 +89,7 @@ exports.getUserAreaId = function (test) {
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[4], 5, 'user should be in 5th area');
+			test.strictEqual(result[4], 5, "should return user's area id");
 			test.done();
 		}
 	);
@@ -107,7 +107,7 @@ exports.getCurrentLocationTitle = function (test) {
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[4], "sometitle", 'user should be in "sometitle" location');
+			test.strictEqual(result[4], "sometitle", "should return user's location title");
 			test.done();
 		}
 	);
