@@ -19,14 +19,9 @@
 
 exports.getDefaultLocation = function(dbConnection, callback) {
 	dbConnection.query(
-		'SELECT id FROM locations WHERE `default`=1',
+		'SELECT * FROM locations WHERE `default` = 1',
 		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			} else {
-				//{ rows: [ { id: 172926385 } ], rowCount: 1, lastInsertId: undefined }
-				callback(undefined, result.rows[0].id);
-			}
+			callback(error, error || result.rows[0]);
 		}
 	);
 };
@@ -36,88 +31,56 @@ exports.getUserLocationId = function(dbConnection, sessid, callback) {
 		'SELECT location FROM uniusers WHERE sessid = ?',
 		[sessid],
 		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			} else {
-				callback(undefined, result.rows[0].location);
-			}
+			if (result.rowCount == 0) error = "Wrong user's sessid";
+			callback(error, error || result.rows[0].location);
 		}
 	);
 };
 
-exports.getUserAreaId = function(dbConnection, sessid, callback) {
+exports.getUserLocation = function(dbConnection, sessid, callback) {
 	dbConnection.query(
-		'SELECT locations.area FROM locations, uniusers '+
+		'SELECT locations.* FROM locations, uniusers '+
 		'WHERE uniusers.sessid=? AND locations.id = uniusers.location',
 		[sessid],
 		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			} else {
-				callback(undefined, result.rows[0].area);
+			if (result.rowCount == 0) error = "No matches found";
+			if (!!error) return callback(error, null);
+			var res = result.rows[0];
+			var goto = res.goto.split("|");
+			for (var i=0;i<goto.length;i++) {
+				var s = goto[i].split("=");
+				goto[i] = {id: s[1], text: s[0]};
 			}
+			res.goto = goto;
+			callback(null, res);
 		}
 	);
 };
 
-exports.getCurrentLocationTitle = function(dbConnection, sessid, callback) {
-	dbConnection.query(
-		'SELECT locations.title FROM locations, uniusers '+
-		'WHERE uniusers.sessid = ? AND locations.id = uniusers.location',
-		[sessid],
-		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			} else {
-				callback(undefined, result.rows[0].title);
-			}
-		}
-	);
-};
-
-exports.getCurrentLocationDescription = function(dbConnection, sessid, callback) {
-	dbConnection.query(
-		'SELECT description FROM locations, uniusers '+
-		'WHERE uniusers.sessid = ? AND locations.id = uniusers.location',
-		[sessid],
-		function (error, result) {
-			callback(error, result.rows[0].description);
-		}
-	);
-};
-
-exports.getAllowedZones = function(dbConnection, sessid, ids_only, callback) {
-	if (!callback) callback = ids_only;
+/*exports.getAllowedZones = function(dbConnection, sessid, callback) {
 	dbConnection.query(
 		'SELECT locations.goto FROM locations, uniusers '+
 		'WHERE uniusers.sessid = ? AND locations.id = uniusers.location AND uniusers.fight_mode = 0',
 		[sessid],
 		function (error, result) {
-			if (!!error) return callback(error, undefined);
+			if (!!error) return callback(error, null);
 			var a = result.rows[0].goto.split("|");
-			for (var i=0;i<a.length;i++)
-				a[i] = ids_only ?
-					a[i].substr(0,a[i].indexOf("=")) :
-					a[i].split("=");
-			callback(undefined, a);
+			for (var i=0;i<a.length;i++) {
+				var s = a[i].split("=");
+				a[i] = {to: s[1], name: s[0]};
+			}
+			callback(null, a);
 		}
 	);
-};
+};*/
 
 /*exports.changeLocation = function(dbConnection, sessid, locid, callback) {
-	var count = 0;
-	function onend(error, result) {
-		if (!!error) return callback(error, undefined);
-		callback(undefined, result.rows[0]);
-	}
 	dbConnection.query(
-		'UPDATE uniusers SET location = ? WHERE sessid = ?',
-		[locid, sessid], onend);
-	dbConnection.query(
-		'SELECT max(attack_chance) FROM monsters, uniusers'+
-		'WHERE uniusers.sessid = ? AND uniusers.location = monsters.location',
-		[sessid], function(error, result) {
-			
+		'START TRANSACTION;'+
+		'  SELECT 1;'+
+		'COMMIT;',
+		function(error, result) {
+			console.log(error, result)
 		});
 }*/
 

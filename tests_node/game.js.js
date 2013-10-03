@@ -42,75 +42,144 @@ exports.tearDown = function (done) {
 };
 
 
+function cCreateLocations(callback) {
+	conn.query('CREATE TABLE locations ('+
+		'`id` INT, PRIMARY KEY (`id`),'+
+		'`title` TINYTEXT,'+
+		'`goto` TINYTEXT,'+
+		//'`description` TEXT,'+
+		'`area` INT,'+
+		'`default` TINYINT(1) DEFAULT 0 )', callback);
+}
+function cCreateUniusers(callback) {
+	conn.query('CREATE TABLE uniusers ('+
+		'`id` INT, PRIMARY KEY (`id`),'+
+		'`location` INT DEFAULT 1,'+
+		'`sessid` TINYTEXT )', callback);
+}
+function makeInsCallback(dbName, fields) {
+	var params=[], values=[];
+	for (var i in fields) {
+		params.push(i);
+		values.push(JSON.stringify(fields[i]));
+	}
+	var query = 'INSERT INTO '+dbName+' ('+params.join(', ')+') VALUES ('+values.join(', ')+')';
+	//console.log(query)
+	return function(callback) {conn.query(query, callback);};
+}
+
 exports.getDefaultLocation = function (test) {
 	async.series([
-			function(callback){ conn.query('CREATE TABLE locations '+
-				'(`id` INT, PRIMARY KEY (`id`), `default` TINYINT(1) DEFAULT 0 )', callback); },
-			function(callback){ conn.query('INSERT INTO locations VALUES ( 1, 0 )', callback); },
-			function(callback){ conn.query('INSERT INTO locations VALUES ( 2, 1 )', callback); },
-			function(callback){ conn.query('INSERT INTO locations VALUES ( 3, 0 )', callback); },
+			cCreateLocations,
+			makeInsCallback('locations', {"id":1}),
+			makeInsCallback('locations', {"id":2, "`default`":1}),
+			makeInsCallback('locations', {"id":3}),
 			function(callback){ game.getDefaultLocation(conn, callback); },
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[4], 2, 'should return id of default location');
+			test.strictEqual(result[4].id, 2, 'should return id of default location');
 			test.done();
 		}
 	);
 };
 
-exports.getUserLocationId = function (test) {
-	async.series([
-			function(callback){ conn.query('CREATE TABLE uniusers '+
-				'(`id` INT, PRIMARY KEY (`id`), `location` INT DEFAULT 1, `sessid` TINYTEXT )', callback); },
-			function(callback){ conn.query('INSERT INTO uniusers              VALUES ( 1, 3, "qweasd" )', callback); },
-			function(callback){ conn.query('INSERT INTO uniusers (id, sessid) VALUES ( 2,    "asdzxc" )', callback); },
-			function(callback){ game.getUserLocationId(conn, "qweasd", callback); },
-			function(callback){ game.getUserLocationId(conn, "asdzxc", callback); },
-		],
-		function(error, result) {
-			test.ifError(error);
-			test.strictEqual(result[3], 3, 'user location should be 3');
-			test.strictEqual(result[4], 1, 'user location should be 1 (by default)');
-			test.done();
-		}
-	);
+exports.getUserLocationId = {
+	"testValidData": function(test) {
+		async.series([
+				cCreateUniusers,
+				makeInsCallback('uniusers', {"id":1, "location":3, "sessid":"qweasd"}),
+				makeInsCallback('uniusers', {"id":2,               "sessid":"asdzxc"}),
+				function(callback){ game.getUserLocationId(conn, "qweasd", callback); },
+				function(callback){ game.getUserLocationId(conn, "asdzxc", callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.strictEqual(result[3], 3, 'user should be on 3rd location');
+				test.strictEqual(result[4], 1, 'user should be on default 1st location');
+				test.done();
+			}
+		);
+	},
+	"testWrongSessid": function(test) {
+		async.series([
+				cCreateUniusers,
+				function(callback) {game.getUserLocationId(conn, "no_such_sessid", callback)},
+			],
+			function(error, result) {
+				test.ok(error);
+				test.done();
+			}
+		);
+	}
 };
 
-exports.getUserAreaId = function (test) {
-	async.series([
-			function(callback){ conn.query('CREATE TABLE uniusers '+
-				'(`id` INT, PRIMARY KEY (`id`), `location` INT DEFAULT 1, `sessid` TINYTEXT )', callback); },
-			function(callback){ conn.query('CREATE TABLE locations '+
-				'(`id` INT, PRIMARY KEY (`id`), `area` INT )', callback); },
-			function(callback){ conn.query('INSERT INTO uniusers VALUES ( 1, 3, "qweasd" )', callback); },
-			function(callback){ conn.query('INSERT INTO locations VALUES ( 3, 5 )', callback); },
-			function(callback){ game.getUserAreaId(conn, "qweasd", callback); },
-		],
-		function(error, result) {
-			test.ifError(error);
-			test.strictEqual(result[4], 5, 'user should be in 5th area');
+exports.getUserLocation = {
+	"setUp": function(callback) {
+		async.series([
+				cCreateUniusers,
+				cCreateLocations,
+				makeInsCallback('uniusers', {"id":1, "location":3, "sessid":"someid"})
+			], callback);
+	},
+	"testValidData": function(test) {
+		async.series([
+				makeInsCallback('locations', {
+					"id":3, "area":5, "title":"The Location", "goto":"Left=7|Forward=8|Right=9"}),
+				function(callback){ game.getUserLocation(conn, "someid", callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.strictEqual(result[1].id, 3, 'user should be on 3rd location');
+				test.strictEqual(result[1].goto.length, 3, 'there should be 3 ways out');
+				test.strictEqual(result[1].goto[0].text, 'Left',  'first way should be "Left"');
+				test.equal      (result[1].goto[0].id,   7,       'first way should lead to 7th location');
+				test.strictEqual(result[1].goto[1].text, 'Forward', 'second way should be "Forward"');
+				test.equal      (result[1].goto[1].id,   8,       'second way should lead to 8th location');
+				test.strictEqual(result[1].goto[2].text, 'Right', 'third way should be "Right"');
+				test.equal      (result[1].goto[2].id,   9,       'third way should lead to 9th location');
+				test.done();
+			}
+		);
+	},
+	"testWrongSessid": function(test) {
+		game.getUserLocation(conn, 'no_such_sessid', function(error, result) {
+			test.ok(error, 'should fail on wrong sessid');
 			test.done();
-		}
-	);
-};
+		});
+	},
+	//а поидее, надо проверять валидность локаци при переходе юзера на неё, и тут это не должно имень смысла
+	"testWrongLocid": function(test) {
+		async.series([
+				makeInsCallback('locations', {"id":1, "area":5}),
+				function(callback){ game.getUserLocation(conn, "someid", callback); },
+			],
+			function(error, result) {
+				test.ok(error, 'should fail if user.location is wrong');
+				test.done();
+			}
+		);
+	}
+}
 
-exports.getCurrentLocationTitle = function (test) {
-	async.series([
-			function(callback){ conn.query('CREATE TABLE uniusers '+
-				'(`id` INT, PRIMARY KEY (`id`), `location` INT DEFAULT 1, `sessid` TINYTEXT )', callback); },
-			function(callback){ conn.query('CREATE TABLE locations '+
-				'(`id` INT, PRIMARY KEY (`id`), `title` TINYTEXT )', callback); },
-			function(callback){ conn.query('INSERT INTO uniusers VALUES ( 1, 3, "qweasd" )', callback); },
-			function(callback){ conn.query('INSERT INTO locations VALUES ( 3, "sometitle" )', callback); },
-			function(callback){ game.getCurrentLocationTitle(conn, "qweasd", callback); },
-		],
-		function(error, result) {
-			test.ifError(error);
-			test.strictEqual(result[4], "sometitle", 'user should be in "sometitle" location');
-			test.done();
-		}
-	);
-};
-
+/*exports.changeLocation = {
+	"setUp": function(callback) {
+		async.series([
+				cCreateUniusers,
+				cCreateLocations,
+				makeInsCallback('uniusers', {"id":1, "location":3, "sessid":"someid"})
+			], callback);
+	},
+	"testValidData": function(test) {
+		async.series([
+				makeInsCallback('locations', {"id":3}),
+				function(callback){ game.changeLocation(conn, "someid", 3, callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.done();
+			}
+		);
+	},
+}*/
 
