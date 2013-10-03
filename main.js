@@ -22,11 +22,9 @@ var config = require('./config.js');
 var anyDB = require('any-db');
 var mysqlConnection = anyDB.createPool(config.MYSQL_DATABASE_URL, {min: 2, max: 20});
 
-var userUtils = require('./utils/user.js');
+var utils = require('./utils.js');
 
 var express = require('express');
-
-//var utils = require('./utils.js');
 
 var app = express();
 app.enable('trust proxy');
@@ -44,7 +42,8 @@ app.engine('swig', swig.renderFile);
 app.set('view engine', 'twig'); // historical reasons
 app.set('views', __dirname + '/templates');
 
-//utils.dbConnect();
+
+/*** routing routines ***/
 
 app.get('/node/', function(request, response) {
 	response.send('Node.js is up and running.');
@@ -148,7 +147,7 @@ app.get('/action/attack', phpgate);
 app.get('/action/escape', phpgate);
 
 app.get('/ajax/isNickBusy/:nick', function(request, response) {
-	userUtils.userExists(mysqlConnection, request.param('nick'), function(error, result){
+	utils.user.userExists(mysqlConnection, request.param('nick'), function(error, result){
 		if (!!error) { response.send(500); return; }
 		response.json({ 'nick': request.param('nick'), 'isNickBusy': result });
 	});
