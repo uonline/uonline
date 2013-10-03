@@ -21,12 +21,7 @@ exports.getDefaultLocation = function(dbConnection, callback) {
 	dbConnection.query(
 		'SELECT id FROM locations WHERE `default`=1',
 		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			} else {
-				//{ rows: [ { id: 172926385 } ], rowCount: 1, lastInsertId: undefined }
-				callback(undefined, result.rows[0].id);
-			}
+			callback(error, error || result.rows[0].id);
 		}
 	);
 };
@@ -36,11 +31,7 @@ exports.getUserLocationId = function(dbConnection, sessid, callback) {
 		'SELECT location FROM uniusers WHERE sessid = ?',
 		[sessid],
 		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			} else {
-				callback(undefined, result.rows[0].location);
-			}
+			callback(error, error || result.rows[0].location);
 		}
 	);
 };
@@ -51,11 +42,7 @@ exports.getUserAreaId = function(dbConnection, sessid, callback) {
 		'WHERE uniusers.sessid=? AND locations.id = uniusers.location',
 		[sessid],
 		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			} else {
-				callback(undefined, result.rows[0].area);
-			}
+			callback(error, error || result.rows[0].area);
 		}
 	);
 };
@@ -66,11 +53,7 @@ exports.getCurrentLocationTitle = function(dbConnection, sessid, callback) {
 		'WHERE uniusers.sessid = ? AND locations.id = uniusers.location',
 		[sessid],
 		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			} else {
-				callback(undefined, result.rows[0].title);
-			}
+			callback(error, error || result.rows[0].title);
 		}
 	);
 };
@@ -117,7 +100,7 @@ exports.getAllowedZones = function(dbConnection, sessid, ids_only, callback) {
 		'SELECT max(attack_chance) FROM monsters, uniusers'+
 		'WHERE uniusers.sessid = ? AND uniusers.location = monsters.location',
 		[sessid], function(error, result) {
-			
+
 		});
 }*/
 
