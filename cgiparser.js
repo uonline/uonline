@@ -3,6 +3,7 @@
  * (The MIT License)
  *
  * Copyright (c) 2012 Nathan Rajlich nathan@tootallnate.net
+ * Copyright (c) 2013 m1kc m1kc@yandex.ru
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
