@@ -45,17 +45,38 @@ exports.userExists = function (test) {
 	}, 'test_nonexistent_table');
 
 	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS test_users (user TINYTEXT)', [], callback); },
-			function(callback){ conn.query('INSERT INTO test_users VALUES ( ? )', ['m1kc'], callback); },
-			function(callback){ users.userExists(conn, 'm1kc', callback, 'test_users'); },
-			function(callback){ conn.query("TRUNCATE test_users", [], callback); },
-			function(callback){ users.userExists(conn, 'm1kc', callback, 'test_users'); },
-			function(callback){ conn.query('DROP TABLE test_users', [], callback); },
+			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (user TINYTEXT)', [], callback); },
+			function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', ['m1kc'], callback); },
+			function(callback){ users.userExists(conn, 'm1kc', callback); },
+			function(callback){ conn.query("TRUNCATE uniusers", [], callback); },
+			function(callback){ users.userExists(conn, 'm1kc', callback); },
+			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
 		],
 		function(error, result){
 			test.ifError(error);
 			test.strictEqual(result[2], true, 'user should exist after inserted');
 			test.strictEqual(result[4], false, 'user should not exist after deleted');
+			test.done();
+		}
+	);
+};
+
+exports.sessionActive = function (test) {
+	async.series([
+			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers '+
+				'(sessid TINYTEXT, sessexpire DATETIME)', [], callback); },
+			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
+				"( 'abcd', NOW() - INTERVAL 3600 SECOND )", [], callback); },
+			function(callback){ users.sessionActive(conn, 'abcd', callback); },
+			function(callback){ conn.query("UPDATE uniusers "+
+				"SET sessexpire = NOW() + INTERVAL 3600 SECOND WHERE sessid = 'abcd'", [], callback); },
+			function(callback){ users.sessionActive(conn, 'abcd', callback); },
+			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
+		],
+		function(error, result){
+			test.ifError(error);
+			test.strictEqual(result[2], false, 'session should not be active if expired');
+			test.strictEqual(result[4], true, 'session should be active if not expired');
 			test.done();
 		}
 	);

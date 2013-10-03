@@ -90,7 +90,7 @@ exports.sessionExists = function(dbConnection, sess, callback) {
 
 exports.sessionActive = function(dbConnection, sess, callback) {
 	dbConnection.query(
-		'SELECT `sessexpire` > NOW() FROM `uniusers` WHERE `sessid` = ?',
+		'SELECT `sessexpire` > NOW() AS result FROM `uniusers` WHERE `sessid` = ?',
 		[sess],
 		function (error, result) {
 			if (!!error) {
