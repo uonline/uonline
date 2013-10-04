@@ -31,7 +31,7 @@ exports.getUserLocationId = function(dbConnection, sessid, callback) {
 		'SELECT location FROM uniusers WHERE sessid = ?',
 		[sessid],
 		function (error, result) {
-			if (result.rowCount == 0) error = "Wrong user's sessid";
+			if (result.rowCount === 0) error = "Wrong user's sessid";
 			callback(error, error || result.rows[0].location);
 		}
 	);
@@ -43,7 +43,7 @@ exports.getUserLocation = function(dbConnection, sessid, callback) {
 		'WHERE uniusers.sessid=? AND locations.id = uniusers.location',
 		[sessid],
 		function (error, result) {
-			if (result.rowCount == 0) error = "No matches found";
+			if (result.rowCount === 0) error = "No matches found";
 			if (!!error) return callback(error, null);
 			var res = result.rows[0];
 			var goto = res.goto.split("|");
