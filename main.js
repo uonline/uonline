@@ -54,6 +54,7 @@ app.get('/node/', function(request, response) {
 app.get('/node-about/', function(request, response) {
 	// warning: for testing purposes only
 	var options = {};
+	options.now = new Date();
 	options.instance = 'about';
 	options.loggedIn = false;
 	response.render('about', options);
