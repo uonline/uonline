@@ -24,11 +24,14 @@ var mysqlConnection = anyDB.createPool(config.MYSQL_DATABASE_URL, {min: 2, max: 
 
 var utils = require('./utils.js');
 
+var async = require('async');
+
 var express = require('express');
 
 var app = express();
 app.enable('trust proxy');
 app.use(express.logger());
+app.use(express.cookieParser());
 app.use(express.bodyParser());
 app.use(express.compress());
 
@@ -44,6 +47,33 @@ app.set('views', __dirname + '/templates');
 
 var phpgate = require('./cgi.js').phpgate;
 
+app.use(function(request, response, next){
+	if (!!request.cookies.sessid)
+	{
+		var sessid = request.cookies.sessid;
+		async.waterfall([
+				function(callback){
+					utils.user.sessionActive(mysqlConnection, sessid, callback);
+				},
+				function(active, callback) {
+					if (active)
+					{
+						console.log('REFRESHING ' + sessid);
+						utils.user.refreshSession(mysqlConnection, sessid, config.sessionExpireTime, callback);
+					}
+					else
+					{
+						callback();
+					}
+				}
+			],
+			function(error, result)
+			{
+				next();
+			}
+		);
+	}
+});
 
 /*** routing routines ***/
 
