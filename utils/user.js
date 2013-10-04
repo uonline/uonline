@@ -128,11 +128,10 @@ exports.idBySession = function(dbConnection, sess, callback) {
 	);
 };
 
-exports.refreshSession = function(dbConnection, sess, sess_timeexpire) {
+exports.refreshSession = function(dbConnection, sess, sess_timeexpire, callback) {
 	dbConnection.query(
 		'UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL ? SECOND WHERE `sessid` = ?',
-		[sess_timeexpire, sess]
-	);
+		[sess_timeexpire, sess], callback);
 };
 
 exports.closeSession = function(dbConnection, sess) {
