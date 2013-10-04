@@ -23,7 +23,6 @@ Common problems
 * Don't forget to create keyring.
 * Don't forget to get submodules (`git submodule init`, `git submodule update`);
 * Don't forget to initialize database (`./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize`).
-* Don't forget to compress templates (`make compress`).
 * If nothing helps, ask [m1kc](https://github.com/m1kc).
 
 
