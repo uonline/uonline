@@ -37,6 +37,9 @@ test:
 	npm test
 	php vendor/bin/phpunit --strict --verbose `if $$(which test) x$${TRAVIS} '==' x; then echo --colors; fi` --coverage-html ./code-coverage-report tests_php/
 
+grunt:
+	./node_modules/grunt-cli/bin/grunt
+
 deploy: pull killcache dirs diagnose test
 
 serve:
