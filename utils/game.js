@@ -77,15 +77,24 @@ exports.getUserLocation = function(dbConnection, sessid, callback) {
 exports.changeLocation = function(dbConnection, sessid, locid, callback) {
 	//var c = function(e,r) {console.log(e,r)}
 	exports.getUserLocation(dbConnection, sessid, function(error, result) {
-		
+
 		if (!!error) {callback(error, null); return;}
-		
-		var i = result.goto.length-1;
-		for (;i>=0; i--)
+
+		var found = false;
+		for (var i in result.goto)
+		{
 			if (result.goto[i].id == locid)
+			{
+				found = true;
 				break;
-		if (i < 0) {callback('No way from location '+result.id+' to '+locid, null); return;}
-		
+			}
+		}
+		if (!found)
+		{
+			callback('No way from location '+result.id+' to '+locid, null);
+			return;
+		}
+
 		var tx = dbConnection.begin();
 		tx.on('error', callback);
 		tx.query('UPDATE uniusers SET location = ? WHERE sessid = ?', [locid, sessid]);
