@@ -29,7 +29,7 @@ var async = require('async');
 var anyDB = require('any-db');
 var conn = null;
 
-var usedTables = "locations, uniusers";
+var usedTables = "locations, uniusers, monsters";
 
 exports.setUp = function (done) {
 	conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
@@ -55,7 +55,15 @@ function creationUniusersTableCallback(callback) {
 	conn.query('CREATE TABLE uniusers ('+
 		'`id` INT, PRIMARY KEY (`id`),'+
 		'`location` INT DEFAULT 1,'+
-		'`sessid` TINYTEXT )', callback);
+		'`sessid` TINYTEXT,'+
+		'`fight_mode` INT DEFAULT 0,'+
+		'`autoinvolved_fm` INT DEFAULT 0 )', callback);
+}
+function creationMonstersTableCallback(callback) {
+	conn.query('CREATE TABLE monsters ('+
+		'`id` INT, PRIMARY KEY (`id`),'+
+		'`location` INT DEFAULT 1,'+
+		'`attack_chance` INT )', callback);
 }
 function insertCallback(dbName, fields) { //НЕ для использования снаружи тестов
 	var params=[], values=[];
@@ -161,24 +169,48 @@ exports.getUserLocation = {
 	}
 };
 
-/*exports.changeLocation = {
+exports.changeLocation = {
 	"setUp": function(callback) {
 		async.series([
 				creationUniusersTableCallback,
 				creationLocationsTableCallback,
-				insertCallback('uniusers', {"id":1, "location":3, "sessid":"someid"})
+				creationMonstersTableCallback,
+				insertCallback('uniusers', {"id":1, "location":1, "sessid":"someid"}),
+				insertCallback('locations', {"id":1, "goto":"Left=2"}),
+				insertCallback('locations', {"id":2, "goto":"Right=3"}),
+				insertCallback('locations', {"id":3})
 			], callback);
 	},
 	"testValidData": function(test) {
 		async.series([
-				insertCallback('locations', {"id":3}),
+				insertCallback('monsters', {"id":1, "location":2, "attack_chance":-1}),
+				insertCallback('monsters', {"id":2, "location":3, "attack_chance":100}),
+				function(callback){ game.changeLocation(conn, "someid", 2, callback); },
+				function(callback){ game.getUserLocationId(conn, "someid", callback); },
+				function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE sessid="someid"', callback); },
 				function(callback){ game.changeLocation(conn, "someid", 3, callback); },
+				function(callback){ game.getUserLocationId(conn, "someid", callback); },
+				function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE sessid="someid"', callback); }
 			],
 			function(error, result) {
 				test.ifError(error);
+				test.strictEqual(result[3], 2, 'user shold have moved to new location');
+				test.strictEqual(result[4].rows[0].fight_mode, 0, 'user should not be attacked');
+				test.strictEqual(result[6], 3, 'user shold have moved to new location');
+				test.strictEqual(result[7].rows[0].fight_mode, 1, 'user should be attacked');
 				test.done();
 			}
 		);
 	},
-}*/
+	"testWrongLocid": function(test) {
+		async.series([
+				function(callback){ game.changeLocation(conn, "someid", 3, callback); },
+			],
+			function(error, result) {
+				test.ok(error, 'should fail if no way from current location to destination');
+				test.done();
+			}
+		);
+	}
+};
 

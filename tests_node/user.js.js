@@ -106,7 +106,7 @@ exports.refreshSession = function(test) {
 			function(callback){ users.refreshSession(conn, 'abcd', 3600, callback); },
 			function(callback){ users.sessionActive(conn, 'abcd', callback); },
 			function(callback){ conn.query("UPDATE uniusers "+
-				"SET sessexpire = sessexpire - INTERVAL 7200 SECOND ", [], callback); },
+				"SET sessexpire = sessexpire - INTERVAL 3601 SECOND ", [], callback); },
 			function(callback){ users.sessionActive(conn, 'abcd', callback); },
 			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
 		],

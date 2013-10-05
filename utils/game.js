@@ -74,19 +74,29 @@ exports.getUserLocation = function(dbConnection, sessid, callback) {
 	);
 };*/
 
-/*exports.changeLocation = function(dbConnection, sessid, locid, callback) {
-	var count = 0;
-	function onend(error, result) {
-		if (!!error) return callback(error, undefined);
-		callback(undefined, result.rows[0]);
-	}
-	dbConnection.query(
-		'START TRANSACTION;'+
-		'  SELECT 1;'+
-		'COMMIT;',
-		function(error, result) {
-			console.log(error, result)
-		});
-}*/
-
+exports.changeLocation = function(dbConnection, sessid, locid, callback) {
+	//var c = function(e,r) {console.log(e,r)}
+	exports.getUserLocation(dbConnection, sessid, function(error, result) {
+		
+		if (!!error) return callback(error, null);
+		
+		pathCheck: {
+			for (var i=0; i<result.goto.length; i++)
+				if (result.goto[i].id == locid)
+					break pathCheck;
+			return callback('No way from location '+result.id+' to '+locid, null);
+		}
+		
+		var tx = dbConnection.begin();
+		tx.on('error', callback);
+		tx.query('UPDATE uniusers SET location = ? WHERE sessid = ?', [locid, sessid]);
+		tx.query(
+			'UPDATE uniusers, locations, monsters '+
+			'SET uniusers.autoinvolved_fm = 1, uniusers.fight_mode = 1 '+
+			'WHERE uniusers.sessid = ? '+
+				'AND uniusers.location = monsters.location '+
+				'AND RAND()*100 <= monsters.attack_chance', [sessid]);
+		tx.commit(callback);
+	});
+};
 
