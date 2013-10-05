@@ -95,3 +95,28 @@ exports.createSalt = function (test) {
 
 	test.done();
 };
+
+exports.refreshSession = function(test) {
+	async.series([
+			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers '+
+				'(sessid TINYTEXT, sessexpire DATETIME)', [], callback); },
+			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
+				"( 'abcd', NOW() - INTERVAL 3600 SECOND )", [], callback); },
+			function(callback){ users.sessionActive(conn, 'abcd', callback); },
+			function(callback){ users.refreshSession(conn, 'abcd', 3600, callback); },
+			function(callback){ users.sessionActive(conn, 'abcd', callback); },
+			function(callback){ conn.query("UPDATE uniusers "+
+				"SET sessexpire = sessexpire - INTERVAL 7200 SECOND ", [], callback); },
+			function(callback){ users.sessionActive(conn, 'abcd', callback); },
+			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
+		],
+		function(error, result){
+			test.ifError(error);
+			test.strictEqual(result[2], false, 'session should not be active before refresh');
+			test.strictEqual(result[4], true, 'session should be active after refresh');
+			test.strictEqual(result[6], false, 'session should not be active after expire');
+			test.done();
+		}
+	);
+};
+
