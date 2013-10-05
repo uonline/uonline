@@ -44,7 +44,7 @@ exports.getUserLocation = function(dbConnection, sessid, callback) {
 		[sessid],
 		function (error, result) {
 			if (result.rowCount === 0) error = "No matches found";
-			if (!!error) return callback(error, null);
+			if (!!error) {callback(error, null); return;}
 			var res = result.rows[0];
 			var goto = res.goto.split("|");
 			for (var i=0;i<goto.length;i++) {
@@ -63,7 +63,7 @@ exports.getUserLocation = function(dbConnection, sessid, callback) {
 		'WHERE uniusers.sessid = ? AND locations.id = uniusers.location AND uniusers.fight_mode = 0',
 		[sessid],
 		function (error, result) {
-			if (!!error) return callback(error, null);
+			if (!!error) {callback(error, null); return;}
 			var a = result.rows[0].goto.split("|");
 			for (var i=0;i<a.length;i++) {
 				var s = a[i].split("=");
@@ -78,14 +78,13 @@ exports.changeLocation = function(dbConnection, sessid, locid, callback) {
 	//var c = function(e,r) {console.log(e,r)}
 	exports.getUserLocation(dbConnection, sessid, function(error, result) {
 		
-		if (!!error) return callback(error, null);
+		if (!!error) {callback(error, null); return;}
 		
-		pathCheck: {
-			for (var i=0; i<result.goto.length; i++)
-				if (result.goto[i].id == locid)
-					break pathCheck;
-			return callback('No way from location '+result.id+' to '+locid, null);
-		}
+		var i = result.goto.length-1;
+		for (;i>=0; i--)
+			if (result.goto[i].id == locid)
+				break;
+		if (i < 0) {callback('No way from location '+result.id+' to '+locid, null); return;}
 		
 		var tx = dbConnection.begin();
 		tx.on('error', callback);
