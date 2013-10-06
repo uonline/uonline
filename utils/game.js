@@ -31,7 +31,7 @@ exports.getUserLocationId = function(dbConnection, sessid, callback) {
 		'SELECT location FROM uniusers WHERE sessid = ?',
 		[sessid],
 		function (error, result) {
-			if (result.rowCount === 0) error = "Wrong user's sessid";
+			if (result && result.rowCount === 0) error = "Wrong user's sessid";
 			callback(error, error || result.rows[0].location);
 		}
 	);
@@ -43,7 +43,7 @@ exports.getUserLocation = function(dbConnection, sessid, callback) {
 		'WHERE uniusers.sessid=? AND locations.id = uniusers.location',
 		[sessid],
 		function (error, result) {
-			if (result.rowCount === 0) error = "No matches found";
+			if (result && result.rowCount === 0) error = "No matches found";
 			if (!!error) {callback(error, null); return;}
 			var res = result.rows[0];
 			var goto = res.goto.split("|");
@@ -108,3 +108,23 @@ exports.changeLocation = function(dbConnection, sessid, locid, callback) {
 	});
 };
 
+exports.goAttack = function(dbConnection, sessid, callback) {
+	dbConnection.query("UPDATE uniusers SET fight_mode = 1 WHERE sessid = ?", [sessid], callback);
+};
+
+exports.goEscape = function(dbConnection, sessid, callback) {
+	dbConnection.query("UPDATE uniusers SET fight_mode = 0, autoinvolved_fm = 0 WHERE sessid = ?", [sessid], callback);
+};
+
+exports.getNearbyUsers = function(dbConnection, sessid, callback) {
+	dbConnection.query(
+		"SELECT id, user FROM uniusers "+
+		"WHERE sessexpire > NOW() AND location = ("+
+			"SELECT location FROM uniusers WHERE sessid = ?)"+
+		"AND sessid != ?",
+		[sessid, sessid],
+		function(error, result) {
+			callback(error, error || result.rows);
+		}
+	);
+};

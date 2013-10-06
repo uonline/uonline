@@ -55,7 +55,9 @@ function creationUniusersTableCallback(callback) {
 	conn.query('CREATE TABLE uniusers ('+
 		'`id` INT, PRIMARY KEY (`id`),'+
 		'`location` INT DEFAULT 1,'+
+		'`user` TINYTEXT,'+
 		'`sessid` TINYTEXT,'+
+		'`sessexpire` DATETIME,'+
 		'`fight_mode` INT DEFAULT 0,'+
 		'`autoinvolved_fm` INT DEFAULT 0 )', callback);
 }
@@ -213,4 +215,87 @@ exports.changeLocation = {
 		);
 	}
 };
+
+exports.goAttack = function(test) {
+	async.series([
+			creationUniusersTableCallback,
+			insertCallback('uniusers', {"id":1, "sessid":"someid"}),
+			function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE sessid="someid"', callback); },
+			function(callback){ game.goAttack(conn, "someid", callback); },
+			function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE sessid="someid"', callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[2].rows[0].fight_mode, 0, 'user should not be attacking');
+			test.strictEqual(result[4].rows[0].fight_mode, 1, 'user should not attacking');
+			test.done();
+		}
+	);
+};
+
+exports.goEscape = function(test) {
+	async.series([
+			creationUniusersTableCallback,
+			insertCallback('uniusers', {"id":1, "sessid":"someid", "fight_mode":1, "autoinvolved_fm":1}),
+			function(callback){ game.goEscape(conn, "someid", callback); },
+			function(callback){ conn.query(
+				'SELECT fight_mode, autoinvolved_fm FROM uniusers WHERE sessid="someid"', callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[3].rows[0].fight_mode, 0, 'user should not be attacking');
+			test.strictEqual(result[3].rows[0].autoinvolved_fm, 0, 'user should not be autoinvolved');
+			test.done();
+		}
+	);
+};
+
+exports.getNearbyUsers = {
+	"setUp": function(callback) {
+		var d = new Date();
+		var expire = (d.getFullYear()+1)+'-'+(d.getMonth()+1)+'-'+d.getDate();
+		async.series([
+				creationUniusersTableCallback,
+				creationLocationsTableCallback,
+				insertCallback('uniusers', {"id":1, "user":"user1", "location":1,
+					"sessid":"someid", "sessexpire":expire}),
+				insertCallback('uniusers', {"id":2, "user":"user2", "location":1,
+					"sessid":"otherid", "sessexpire":expire}),
+				insertCallback('uniusers', {"id":3, "user":"user3", "location":1,
+					"sessid":"thirdid", "sessexpire":expire}),
+				insertCallback('uniusers', {"id":4, "user":"alone", "location":2,
+					"sessid":"aloneid", "sessexpire":expire}),
+				insertCallback('locations', {"id":1}),
+			], callback);
+	},
+	"testValidData": function(test) {
+		async.series([
+				function(callback){ game.getNearbyUsers(conn, "someid", callback); },
+				function(callback){ game.getNearbyUsers(conn, "aloneid", callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.strictEqual(result[0].length, 2, 'should return all other users on this location');
+				test.strictEqual(result[0][0].id, 2, "one user's id");
+				test.strictEqual(result[0][1].id, 3, "other user's id");
+				test.strictEqual(result[0][0].user, 'user2', "one user's name");
+				test.strictEqual(result[0][1].user, 'user3', "other user's name");
+				test.strictEqual(result[1].length, 0, 'alone user should be alone. for now');
+				test.done();
+			}
+		);
+	},
+	//TODO: finish this
+//	"testWrongSessid": function(test) {
+//		async.series([
+//				function(callback) {game.getNearbyUsers(conn, "no_such_sessid", callback);},
+//			],
+//			function(error, result) {console.log(error, result)
+//				test.ok(error);
+//				test.done();
+//			}
+//		);
+//	}
+};
+
 
