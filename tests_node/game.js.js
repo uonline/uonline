@@ -124,7 +124,7 @@ exports.getUserLocationId = {
 				function(callback) {game.getUserLocationId(conn, "no_such_sessid", callback);},
 			],
 			function(error, result) {
-				test.ok(error);
+				test.ok(!!error, 'should fail on wrong sessid');
 				test.done();
 			}
 		);
