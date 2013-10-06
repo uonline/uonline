@@ -37,6 +37,12 @@ test:
 	npm test
 	php vendor/bin/phpunit --strict --verbose `if $$(which test) x$${TRAVIS} '==' x; then echo --colors; fi` --coverage-html ./code-coverage-report tests_php/
 
+browserify: browserified/validation.js
+
+browserified/validation.js: utils/validation.js
+	mkdir -p ./browserified
+	./node_modules/browserify/bin/cmd.js utils/validation.js -s validation -o ./browserified/validation.js
+
 deploy: pull killcache dirs diagnose test
 
 serve:

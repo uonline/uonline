@@ -24,7 +24,8 @@
   "devDependencies": {
     "nodeunit": "~0.8.1",
     "jshint": "~2.1.10",
-    "jscoverage": "~0.3.8"
+    "jscoverage": "~0.3.8",
+    "browserify": "~2.34.0"
   },
   "scripts": {
     "test": "node test.js"
