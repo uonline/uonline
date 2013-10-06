@@ -31,7 +31,7 @@ lint:
 	find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/ | grep -v ./browserified/ | xargs ./node_modules/jshint/bin/jshint
 
 lintverbose:
-	find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/ | xargs ./node_modules/jshint/bin/jshint --show-non-errors
+	find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/ | grep -v ./browserified/ | xargs ./node_modules/jshint/bin/jshint --show-non-errors
 
 test:
 	npm test
