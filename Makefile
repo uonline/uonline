@@ -28,7 +28,7 @@ checklicense:
 	RESULT='Everything is OK.'; echo ""; for i in `find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/`; do if `which test` 'y' "==" 'y'"`cat $$i | grep "WARRANTY"`"; then echo 'No license:' $$i; RESULT='There are some files without a license.'; else echo 'With license:' $$i; fi; done; echo $$RESULT; echo "";
 
 lint:
-	find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/ | xargs ./node_modules/jshint/bin/jshint
+	find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/ | grep -v ./browserified/ | xargs ./node_modules/jshint/bin/jshint
 
 lintverbose:
 	find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/ | xargs ./node_modules/jshint/bin/jshint --show-non-errors
