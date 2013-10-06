@@ -55,7 +55,7 @@ $twig->addFilter(new Twig_SimpleFilter('tf', 'tf', array('pre_escape' => 'html',
 $twig->addFilter(new Twig_SimpleFilter('nl2p', 'nl2p', array('pre_escape' => 'html', 'is_safe' => array('html') ) ) );
 
 $app = new Silex\Application();
-$app['debug'] = true;
+$app['debug'] = false;
 
 $s = array_key_exists("sessid", $_COOKIE) ? $_COOKIE["sessid"] : null; refreshSession($s);
 $options = array(
