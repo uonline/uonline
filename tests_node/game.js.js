@@ -29,16 +29,24 @@ var async = require('async');
 var anyDB = require('any-db');
 var conn = null;
 
-var usedTables = "locations, uniusers, monsters";
+var usedTables = ['locations', 'uniusers', 'monsters'].join(', ');
 
 exports.setUp = function (done) {
-	conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
-	conn.query("DROP TABLE IF EXISTS "+usedTables, done);
+	async.series([
+		function(callback) {
+			conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
+			conn.query("DROP TABLE IF EXISTS "+usedTables, callback);
+		},
+	], done);
 };
 
 exports.tearDown = function (done) {
-	conn.query("DROP TABLE IF EXISTS "+usedTables, done);
-	conn.end();
+	async.series([
+		function(callback) {
+			conn.query("DROP TABLE IF EXISTS "+usedTables, callback);
+			conn.end();
+		},
+	], done);
 };
 
 
