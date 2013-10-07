@@ -106,14 +106,14 @@ exports.getUserLocationId = {
 		async.series([
 				creationUniusersTableCallback,
 				insertCallback('uniusers', {"id":1, "location":3, "sessid":"qweasd"}),
-				insertCallback('uniusers', {"id":2,               "sessid":"asdzxc"}),
+				insertCallback('uniusers', {"id":2, "location":1, "sessid":"asdzxc"}),
 				function(callback){ game.getUserLocationId(conn, "qweasd", callback); },
 				function(callback){ game.getUserLocationId(conn, "asdzxc", callback); },
 			],
 			function(error, result) {
 				test.ifError(error);
-				test.strictEqual(result[3], 3, 'should return user\'s location id');
-				test.strictEqual(result[4], 1, 'should return user\'s location id');
+				test.strictEqual(result[3], 3, "should return user's location id");
+				test.strictEqual(result[4], 1, "should return user's location id");
 				test.done();
 			}
 		);
@@ -124,7 +124,7 @@ exports.getUserLocationId = {
 				function(callback) {game.getUserLocationId(conn, "no_such_sessid", callback);},
 			],
 			function(error, result) {
-				test.ok(!!error, 'should fail on wrong sessid');
+				test.strictEqual(error, "Wrong user's sessid", 'should fail on wrong sessid');
 				test.done();
 			}
 		);
@@ -147,21 +147,18 @@ exports.getUserLocation = {
 			],
 			function(error, result) {
 				test.ifError(error);
-				test.strictEqual(result[1].id, 3, 'should return user\'s location id');
-				test.strictEqual(result[1].goto.length, 3, 'there should be 3 ways out');
-				test.strictEqual(result[1].goto[0].text, 'Left',  'should return first way name');
-				test.strictEqual(result[1].goto[0].id,   '7',     'should return first way id');
-				test.strictEqual(result[1].goto[1].text, 'Forward', 'should return second way name');
-				test.strictEqual(result[1].goto[1].id,   '8',     'should return second way id');
-				test.strictEqual(result[1].goto[2].text, 'Right', 'should return third wayname');
-				test.strictEqual(result[1].goto[2].id,   '9',     'should return third way id');
+				test.strictEqual(result[1].id, 3, "should return user's location id");
+				test.deepEqual(result[1].goto, [
+					{id:7, text:'Left'},
+					{id:8, text:'Forward'},
+					{id:9, text:'Right'}], 'should return ways from location');
 				test.done();
 			}
 		);
 	},
 	"testWrongSessid": function(test) {
 		game.getUserLocation(conn, 'no_such_sessid', function(error, result) {
-			test.ok(error, 'should fail on wrong sessid');
+			test.strictEqual(error, "Wrong user's sessid", 'should fail on wrong sessid');
 			test.done();
 		});
 	},
@@ -227,15 +224,13 @@ exports.changeLocation = {
 exports.goAttack = function(test) {
 	async.series([
 			creationUniusersTableCallback,
-			insertCallback('uniusers', {"id":1, "sessid":"someid"}),
-			function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE sessid="someid"', callback); },
+			insertCallback('uniusers', {"id":1, "sessid":"someid", "fight_mode":0}),
 			function(callback){ game.goAttack(conn, "someid", callback); },
 			function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE sessid="someid"', callback); },
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[2].rows[0].fight_mode, 0, 'user should not be attacking');
-			test.strictEqual(result[4].rows[0].fight_mode, 1, 'user should not attacking');
+			test.strictEqual(result[3].rows[0].fight_mode, 1, 'user should be attacking');
 			test.done();
 		}
 	);
@@ -283,12 +278,10 @@ exports.getNearbyUsers = {
 			],
 			function(error, result) {
 				test.ifError(error);
-				test.strictEqual(result[0].length, 2, 'should return all other users on this location');
-				test.strictEqual(result[0][0].id, 2, "one user's id");
-				test.strictEqual(result[0][1].id, 3, "other user's id");
-				test.strictEqual(result[0][0].user, 'user2', "one user's name");
-				test.strictEqual(result[0][1].user, 'user3', "other user's name");
-				test.strictEqual(result[1].length, 0, 'alone user should be alone. for now');
+				test.deepEqual(result[0], [
+					{id:2, user:'user2'},
+					{id:3, user:'user3'}], 'should return all other users on this location');
+				test.deepEqual(result[1], [], 'alone user should be alone. for now');
 				test.done();
 			}
 		);
