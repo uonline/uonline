@@ -37,6 +37,7 @@ app.use(express.compress());
 
 app.use('/bootstrap', express.static(__dirname + '/bootstrap'));
 app.use('/img', express.static(__dirname + '/img'));
+app.use('/browserified', express.static(__dirname + '/browserified'));
 
 var swig = require('swig');
 app.engine('html', swig.renderFile);
