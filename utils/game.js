@@ -49,7 +49,7 @@ exports.getUserLocation = function(dbConnection, sessid, callback) {
 			var goto = res.goto.split("|");
 			for (var i=0;i<goto.length;i++) {
 				var s = goto[i].split("=");
-				goto[i] = {id: parseInt(s[1]), text: s[0]};
+				goto[i] = {id: parseInt(s[1], 10), text: s[0]};
 			}
 			res.goto = goto;
 			callback(null, res);
