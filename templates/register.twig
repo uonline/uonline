@@ -24,7 +24,7 @@
 						<span class="help-inline"><small>От 2 до 32 символов, [a-zA-Z0-9а-яА-Я_- ].</small></span>
 					</div>
 				</div>
-				<div class="control-group {% if (invalidPass == true) %}error{% endif %}">
+				<div class="control-group {% if (invalidPass == true) %}error{% endif %}" id="password-control-group">
 					<label class="control-label" for="pass">Пароль</label>
 					<div class="controls">
 						<input type="password" id="pass" name="pass" maxlength="32">
@@ -41,6 +41,7 @@
 				</div>
 			</form>
 
+			<script type="text/javascript" src="/browserified/validation.js"></script>
 			<script type="text/javascript">
 				$("#revealpass").click(function(){
 					if ($("input[name=pass]").prop("type")=="password")
@@ -53,8 +54,28 @@
 					}
 				});
 				$("input[name=user]").change(function(){
+					if (validation.usernameIsValid($("input[name=user]").val()))
+					{
+						$("#user-control-group").removeClass("error");
+					}
+					else
+					{
+						$("#user-control-group").addClass("error");
+					}
+				});
+				$("input[name=pass]").change(function(){
+					if (validation.passwordIsValid($("input[name=pass]").val()))
+					{
+						$("#password-control-group").removeClass("error");
+					}
+					else
+					{
+						$("#password-control-group").addClass("error");
+					}
+				});
+				$("input[name=user]").change(function(){
 					$.getJSON("/ajax/isNickBusy/"+encodeURIComponent($("input[name=user]").val()), function(data){
-						if (data.isNickBusy)
+						if (data.isNickBusy && (data.nick == $("input[name=user]").val()))
 						{
 							$("#user-control-group").addClass("error");
 						}
