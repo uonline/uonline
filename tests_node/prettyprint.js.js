@@ -31,31 +31,28 @@ exports.spaces = function (test) {
 
 exports.writeln = function(test) {
 	test.expect(1);
-	var targetConsole = {};
-	targetConsole.log = function(text) {
+	var targetFunction = function(text) {
 		test.strictEqual(text, 'Nikolai Baskov is up and running.', 'should print text');
 	};
-	prettyprint.writeln('Nikolai Baskov is up and running.', targetConsole);
+	prettyprint.writeln('Nikolai Baskov is up and running.', targetFunction);
 	test.done();
 };
 
 exports.section = function(test) {
 	test.expect(4);
-	var targetConsole;
+	var targetFunction;
 	var result;
 
-	targetConsole = {};
-	targetConsole.log = function(text) {
+	targetFunction = function(text) {
 		test.strictEqual(text, 'Killing...', 'should print text without offset at first call');
 	};
-	result = prettyprint.section('Killing', targetConsole);
+	result = prettyprint.section('Killing', targetFunction);
 	test.strictEqual(result, 2, 'should increase offset by 2 every time');
 
-	targetConsole = {};
-	targetConsole.log = function(text) {
+	targetFunction = function(text) {
 		test.strictEqual(text, '  Killing...', 'should print text with offset');
 	};
-	result = prettyprint.section('Killing', targetConsole);
+	result = prettyprint.section('Killing', targetFunction);
 	test.strictEqual(result, 4, 'should increase offset by 2 every time');
 
 	prettyprint.endSection();
@@ -65,15 +62,14 @@ exports.section = function(test) {
 };
 
 exports.endSection = function(test) {
-	var targetConsole;
+	var targetFunction;
 	var result;
-	targetConsole = {};
-	targetConsole.log = function(text) {
+	targetFunction = function(text) {
 		// do nothing
 	};
 
-	result = prettyprint.section('some section', targetConsole);
-	result = prettyprint.section('some section', targetConsole);
+	result = prettyprint.section('some section', targetFunction);
+	result = prettyprint.section('some section', targetFunction);
 	result = prettyprint.endSection();
 	test.strictEqual(result, 2, 'should decrease offset by 2');
 	result = prettyprint.endSection();
@@ -84,7 +80,7 @@ exports.endSection = function(test) {
 
 exports.action = function(test) {
 	test.expect(3);
-	var targetFunction, targetConsole;
+	var targetFunction;
 	var result;
 
 	targetFunction = function(text) {
@@ -92,11 +88,10 @@ exports.action = function(test) {
 	};
 	prettyprint.action('Killing', targetFunction);
 
-	targetConsole = {};
-	targetConsole.log = function(text) {
+	targetFunction = function(text) {
 		// do nothing
 	};
-	prettyprint.section('some section', targetConsole);
+	prettyprint.section('some section', targetFunction);
 	targetFunction = function(text) {
 		test.strictEqual(text, '  Killing...', 'should print text with section offset');
 	};
@@ -113,14 +108,13 @@ exports.action = function(test) {
 
 exports.result = function(test) {
 	test.expect(1);
-	var targetConsole;
+	var targetFunction;
 	var result;
 
-	targetConsole = {};
-	targetConsole.log = function(text) {
+	targetFunction = function(text) {
 		test.strictEqual(text, ' done', 'should print text with offset');
 	};
-	prettyprint.result('done', targetConsole);
+	prettyprint.result('done', targetFunction);
 
 	test.done();
 };
