@@ -123,6 +123,35 @@ app.get('/node-about/', function(request, response) {
 	);
 });
 
+app.get('/node-main/', function(request, response) {
+	// warning: for testing purposes only
+	async.parallel([
+			function(callback){
+				if (!!request.cookies.sessid)
+				{
+					utils.user.sessionActive(mysqlConnection, request.cookies.sessid, callback);
+				}
+				else
+				{
+					callback(undefined, false);
+				}
+			},
+		],
+		function(error, result){
+			console.log(result);
+			if (result[0] === true)
+			{
+				response.redirect(config.defaultInstanceForUsers);
+			}
+			else
+			{
+				response.redirect(config.defaultInstanceForGuests);
+			}
+		}
+	);
+});
+
+
 app.get('/', phpgate);
 app.get('/about/', phpgate);
 app.get('/register/', phpgate);
