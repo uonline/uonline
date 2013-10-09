@@ -123,8 +123,9 @@ app.get('/node-about/', function(request, response) {
 	);
 });
 
-app.get('/node-main/', function(request, response) {
-	// warning: for testing purposes only
+/*** real ones ***/
+
+app.get('/', function(request, response) {
 	async.parallel([
 			function(callback){
 				if (!!request.cookies.sessid)
@@ -151,8 +152,6 @@ app.get('/node-main/', function(request, response) {
 	);
 });
 
-
-app.get('/', phpgate);
 app.get('/about/', phpgate);
 app.get('/register/', phpgate);
 app.post('/register/', phpgate);
