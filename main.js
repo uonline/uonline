@@ -88,11 +88,29 @@ app.get('/node/', function(request, response) {
 
 app.get('/node-about/', function(request, response) {
 	// warning: for testing purposes only
-	var options = {};
-	options.now = new Date();
-	options.instance = 'about';
-	options.loggedIn = false;
-	response.render('about', options);
+	async.series([
+			function(callback){
+				if (!!request.cookies.sessid)
+				{
+					utils.user.sessionActive(mysqlConnection, request.cookies.sessid, callback);
+				}
+				else
+				{
+					callback(undefined, false);
+				}
+			},
+		],
+		function(error, result){
+			console.log(result);
+			var options = {};
+			options.now = new Date();
+			options.instance = 'about';
+			options.admin = false; // fixme
+			options.loggedIn = result[0];
+			options.login = null; // fixme
+			response.render('about', options);
+		}
+	);
 });
 
 app.get('/', phpgate);
