@@ -100,7 +100,7 @@ exports.generateSessId = function(dbConnection, sess_length, callback) {
 
 exports.userBySession = function(dbConnection, sess, callback) {
 	dbConnection.query(
-		'SELECT `user` FROM `uniusers` WHERE `sessid` = ?',
+		'SELECT `user` AS result FROM `uniusers` WHERE `sessid` = ?',
 		[sess],
 		function (error, result) {
 			if (!!error) {

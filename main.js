@@ -88,7 +88,7 @@ app.get('/node/', function(request, response) {
 
 app.get('/node-about/', function(request, response) {
 	// warning: for testing purposes only
-	async.series([
+	async.parallel([
 			function(callback){
 				if (!!request.cookies.sessid)
 				{
@@ -99,6 +99,16 @@ app.get('/node-about/', function(request, response) {
 					callback(undefined, false);
 				}
 			},
+			function(callback){
+				if (!!request.cookies.sessid)
+				{
+					utils.user.userBySession(mysqlConnection, request.cookies.sessid, callback);
+				}
+				else
+				{
+					callback(undefined, undefined);
+				}
+			},
 		],
 		function(error, result){
 			console.log(result);
@@ -107,7 +117,7 @@ app.get('/node-about/', function(request, response) {
 			options.instance = 'about';
 			options.admin = false; // fixme
 			options.loggedIn = result[0];
-			options.login = null; // fixme
+			options.login = result[1];
 			response.render('about', options);
 		}
 	);
