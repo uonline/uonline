@@ -74,6 +74,10 @@ app.use(function(request, response, next){
 			}
 		);
 	}
+	else
+	{
+		next();
+	}
 });
 
 /*** routing routines ***/
