@@ -42,9 +42,9 @@ exports.endSection = function(){
 	return offset;
 };
 
-exports.action = function(name, targetConsole){
-	if (!targetConsole) targetConsole = console;
-	targetConsole.log(this.spaces(offset) + name + '...'); // must be: no newline!
+exports.action = function(name, targetFunction){
+	if (!targetFunction) targetFunction = process.stdout.write;
+	targetFunction(this.spaces(offset) + name + '...');
 };
 
 exports.result = function(result, targetConsole){
