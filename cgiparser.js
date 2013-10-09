@@ -28,6 +28,8 @@
  */
 
 
+"use strict";
+
 var Stream = require('stream').Stream;
 var StreamStack = require('stream-stack').StreamStack;
 var HeaderParser = require('header-stack').Parser;
