@@ -89,6 +89,7 @@ exports.updateSession = function (test) {
 			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
 				"('user0', 1, 'someid', NOW() - INTERVAL 3600 SECOND )", [], callback); },
 			function(callback){ users.updateSession(conn, 'someid', 7200, callback); },
+			function(callback){ users.updateSession(conn, 'someid', 7200, callback); },
 			function(callback){ conn.query("UPDATE uniusers "+
 				"SET sessexpire = NOW() + INTERVAL 3600 SECOND", [], callback); },
 			function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },
@@ -101,13 +102,16 @@ exports.updateSession = function (test) {
 			test.deepEqual(result[2], {
 					sessionIsActive: false
 				}, 'session should not be active if expired');
-			test.deepEqual(result[5], {
+			test.deepEqual(result[3], {
+					sessionIsActive: false
+				}, 'sesson expire time should not be updated if expired');
+			test.deepEqual(result[6], {
 					sessionIsActive: true,
 					username: 'user0',
 					permissions: 1
 				}, 'session should be active if not expired and user data should be returned');
-			var timeBefore = new Date(result[4].rows[0].sessexpire);
-			var timeAfter = new Date(result[6].rows[0].sessexpire);
+			var timeBefore = new Date(result[5].rows[0].sessexpire);
+			var timeAfter = new Date(result[7].rows[0].sessexpire);
 			test.ok(timeBefore < timeAfter, "session expire time should have been updated");
 			test.done();
 		}
