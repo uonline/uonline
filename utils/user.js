@@ -93,6 +93,34 @@ exports.sessionActive = function(dbConnection, sess, callback) {
 	);
 };
 
+exports.updateSession = function(dbConnection, sessid, sess_timeexpire, callback) {
+	dbConnection.query(
+		'SELECT user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
+		[sessid],
+		function (error, result) {
+			
+			if (!!error) {
+				callback(error, null);
+				return;
+			}
+			
+			if (result.rowCount === 0) {
+				callback(null, {sessionIsActive: false});
+				return;
+			}
+			
+			exports.refreshSession(dbConnection, sessid, sess_timeexpire, function(err, res) {
+				if (err) {callback(err, null); return;}
+				callback(null, {
+					sessionIsActive: true,
+					username: result.rows[0].user,
+					permissions: result.rows[0].permissions
+				});
+			});
+		}
+	);
+};
+
 exports.generateSessId = function(dbConnection, sess_length, callback) {
 	//here random sessid must be checked for uniqueness
 	callback(undefined, exports.createSalt(sess_length));
