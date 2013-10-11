@@ -84,7 +84,7 @@ app.get('/node/', function(request, response) {
 
 app.get('/', function(request, response) {
 	response.redirect((request.uonline.basicOpts.loggedIn === true) ?
-				config.defaultInstanceForUsers : config.defaultInstanceForGuests);
+		config.defaultInstanceForUsers : config.defaultInstanceForGuests);
 });
 
 app.get('/about/', function(request, response) {
