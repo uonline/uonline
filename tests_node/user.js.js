@@ -61,28 +61,7 @@ exports.userExists = function (test) {
 	);
 };
 
-exports.sessionActive = function (test) {
-	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers '+
-				'(sessid TINYTEXT, sessexpire DATETIME)', [], callback); },
-			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-				"( 'abcd', NOW() - INTERVAL 3600 SECOND )", [], callback); },
-			function(callback){ users.sessionActive(conn, 'abcd', callback); },
-			function(callback){ conn.query("UPDATE uniusers "+
-				"SET sessexpire = NOW() + INTERVAL 3600 SECOND WHERE sessid = 'abcd'", [], callback); },
-			function(callback){ users.sessionActive(conn, 'abcd', callback); },
-			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
-		],
-		function(error, result){
-			test.ifError(error);
-			test.strictEqual(result[2], false, 'session should not be active if expired');
-			test.strictEqual(result[4], true, 'session should be active if not expired');
-			test.done();
-		}
-	);
-};
-
-exports.updateSession = function (test) {
+exports.sessionInfoRefreshing = function (test) {
 	async.series([
 			function(callback){ conn.query('CREATE TABLE uniusers '+
 				'(user TINYTEXT, permissions INT, sessid TINYTEXT, sessexpire DATETIME)', [], callback); },//0
@@ -144,6 +123,7 @@ exports.createSalt = function (test) {
 	test.done();
 };
 
+/* it is testing in sessionInfoRefreshing
 exports.refreshSession = function(test) {
 	async.series([
 			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers '+
@@ -168,5 +148,5 @@ exports.refreshSession = function(test) {
 			test.done();
 		}
 	);
-};
+};*/
 

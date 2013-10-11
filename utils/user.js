@@ -78,21 +78,6 @@ exports.sessionExists = function(dbConnection, sess, callback) {
 	);
 };
 
-exports.sessionActive = function(dbConnection, sess, callback) {
-	dbConnection.query(
-		'SELECT `sessexpire` > NOW() AS result FROM `uniusers` WHERE `sessid` = ?',
-		[sess],
-		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			}
-			else {
-				callback(undefined, (result.rows[0].result > 0));
-			}
-		}
-	);
-};
-
 exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, callback) {
 	if (!sessid)
 	{
@@ -131,21 +116,6 @@ exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, 
 exports.generateSessId = function(dbConnection, sess_length, callback) {
 	//here random sessid must be checked for uniqueness
 	callback(undefined, exports.createSalt(sess_length));
-};
-
-exports.userBySession = function(dbConnection, sess, callback) {
-	dbConnection.query(
-		'SELECT `user` AS result FROM `uniusers` WHERE `sessid` = ?',
-		[sess],
-		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			}
-			else {
-				callback(undefined, result.rows[0].result);
-			}
-		}
-	);
 };
 
 exports.idBySession = function(dbConnection, sess, callback) {
