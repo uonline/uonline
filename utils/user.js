@@ -105,7 +105,7 @@ exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, 
 				callback(null, {
 					sessionIsActive: true,
 					username: result.rows[0].user,
-					admin: (result.rows[0].permissions === config.ADMIN)
+					admin: (result.rows[0].permissions === config.PERMISSIONS_ADMIN)
 				});
 			});
 		}
