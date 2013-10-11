@@ -35,3 +35,6 @@ exports.defaultInstanceForUsers = '/game/';
 exports.expStart = 1000;
 exports.expStep = 1000;
 
+exports.USER = 0;
+exports.ADMIN = 65535;
+

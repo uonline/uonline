@@ -66,7 +66,7 @@ exports.sessionInfoRefreshing = function (test) {
 			function(callback){ conn.query('CREATE TABLE uniusers '+
 				'(user TINYTEXT, permissions INT, sessid TINYTEXT, sessexpire DATETIME)', [], callback); },//0
 			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-				"('user0', 1, 'someid', NOW() - INTERVAL 3600 SECOND )", [], callback); },
+				"('user0', "+config.ADMIN+", 'someid', NOW() - INTERVAL 3600 SECOND )", [], callback); },
 			function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
 			function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
 			function(callback){ conn.query("UPDATE uniusers "+
@@ -76,7 +76,7 @@ exports.sessionInfoRefreshing = function (test) {
 			function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },
 			function(callback){ users.sessionInfoRefreshing(conn, undefined, 7200, callback); },
 			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-				"('user1', 0, 'otherid', NOW() + INTERVAL 3600 SECOND )", [], callback); },
+				"('user1', "+config.USER+", 'otherid', NOW() + INTERVAL 3600 SECOND )", [], callback); },
 			function(callback){ users.sessionInfoRefreshing(conn, "otherid", 7200, callback); },//10
 			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
 		],
