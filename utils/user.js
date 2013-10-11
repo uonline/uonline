@@ -82,35 +82,34 @@ exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, 
 	if (!sessid)
 	{
 		callback(null, {sessionIsActive: false});
+		return;
 	}
-	else
-	{
-		dbConnection.query(
-			'SELECT user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
-			[sessid],
-			function (error, result) {
 
-				if (!!error) {
-					callback(error, null);
-					return;
-				}
+	dbConnection.query(
+		'SELECT user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
+		[sessid],
+		function (error, result) {
 
-				if (result.rowCount === 0) {
-					callback(null, {sessionIsActive: false});
-					return;
-				}
-
-				exports.refreshSession(dbConnection, sessid, sess_timeexpire, function(err, res) {
-					if (err) {callback(err, null); return;}
-					callback(null, {
-						sessionIsActive: true,
-						username: result.rows[0].user,
-						admin: (result.rows[0].permissions === 1)
-					});
-				});
+			if (!!error) {
+				callback(error, null);
+				return;
 			}
-		);
-	}
+
+			if (result.rowCount === 0) {
+				callback(null, {sessionIsActive: false});
+				return;
+			}
+
+			exports.refreshSession(dbConnection, sessid, sess_timeexpire, function(err, res) {
+				if (err) {callback(err, null); return;}
+				callback(null, {
+					sessionIsActive: true,
+					username: result.rows[0].user,
+					admin: (result.rows[0].permissions === 1)
+				});
+			});
+		}
+	);
 };
 
 exports.generateSessId = function(dbConnection, sess_length, callback) {
