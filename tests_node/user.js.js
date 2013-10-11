@@ -123,6 +123,26 @@ exports.createSalt = function (test) {
 	test.done();
 };
 
+exports.closeSession = function (test) {
+	async.series([
+			function(callback){ conn.query('CREATE TABLE uniusers '+
+				'(sessid TINYTEXT, sessexpire DATETIME)', [], callback); },//0
+			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
+				"('someid', NOW() + INTERVAL 3600 SECOND )", [], callback); },
+			function(callback){ users.closeSession(conn, 'someid', callback); },
+			function(callback){ conn.query('SELECT sessexpire > NOW() AS active FROM uniusers', callback); },
+			function(callback){ users.closeSession(conn, undefined, callback); },
+			function(callback){ conn.query('DROP TABLE uniusers', [], callback); }, //5
+		],
+		function(error, result){
+			test.ifError(error);
+			test.strictEqual(result[3].rows[0].active, 0, 'session should have expired');
+			test.strictEqual(result[4], 'Not closing: empty sessid', 'false sessid should have been detected');
+			test.done();
+		}
+	);
+};
+
 /* it is testing in sessionInfoRefreshing
 exports.refreshSession = function(test) {
 	async.series([
