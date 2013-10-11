@@ -95,6 +95,7 @@ exports.updateSession = function (test) {
 			function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },
 			function(callback){ users.updateSession(conn, 'someid', 7200, callback); },
 			function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },
+			function(callback){ users.updateSession(conn, undefined, 7200, callback); },
 			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
 		],
 		function(error, result){
@@ -110,6 +111,9 @@ exports.updateSession = function (test) {
 					username: 'user0',
 					permissions: 1
 				}, 'session should be active if not expired and user data should be returned');
+			test.deepEqual(result[8], {
+					sessionIsActive: false
+				}, 'should not fail on empty sessid');
 			var timeBefore = new Date(result[5].rows[0].sessexpire);
 			var timeAfter = new Date(result[7].rows[0].sessexpire);
 			test.ok(timeBefore < timeAfter, "session expire time should have been updated");
