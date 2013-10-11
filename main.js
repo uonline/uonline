@@ -82,29 +82,30 @@ app.get('/node/', function(request, response) {
 
 /*** real ones ***/
 
+function quickRender(request, response, template)
+{
+	var options = request.uonline.basicOpts;
+	options.instance = template;
+	response.render(template, options);
+}
+
 app.get('/', function(request, response) {
 	response.redirect((request.uonline.basicOpts.loggedIn === true) ?
 		config.defaultInstanceForUsers : config.defaultInstanceForGuests);
 });
 
 app.get('/about/', function(request, response) {
-	var options = request.uonline.basicOpts;
-	options.instance = 'about';
-	response.render('about', options);
+	quickRender(request, response, 'about');
 });
 
 app.get('/register/', function(request, response) {
-	var options = request.uonline.basicOpts;
-	options.instance = 'register';
-	response.render('register', options);
+	quickRender(request, response, 'register');
 });
 
 app.post('/register/', phpgate);
 
 app.get('/login/', function(request, response) {
-	var options = request.uonline.basicOpts;
-	options.instance = 'login';
-	response.render('login', options);
+	quickRender(request, response, 'login');
 });
 
 app.post('/login/', phpgate);
