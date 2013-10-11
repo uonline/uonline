@@ -143,21 +143,6 @@ app.get('/world/', phpgate);
 app.get('/development/', phpgate);
 
 
-/*
-app.get('/', function(request, response) {
-	response.redirect('/about/');
-});
-
-app.get('/about/', function(request, response) {
-	var t = Date.now();
-	var options = {};
-	options.instance = 'about';
-	options.loggedIn = false;
-	response.render('about.twig', options);
-	console.log(request.path+' - done in '+(Date.now()-t)+' ms');
-});
-*/
-
 /***** main *****/
 var port = process.env.PORT || 5000;
 app.listen(port, function() {
