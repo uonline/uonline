@@ -100,7 +100,13 @@ app.get('/register/', function(request, response) {
 });
 
 app.post('/register/', phpgate);
-app.get('/login/', phpgate);
+
+app.get('/login/', function(request, response) {
+	var options = request.uonline.basicOpts;
+	options.instance = 'login';
+	response.render('login', options);
+});
+
 app.post('/login/', phpgate);
 app.get('/profile/', phpgate);
 app.get('/profile/id/:id/', phpgate);
