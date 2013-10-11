@@ -98,17 +98,17 @@ exports.updateSession = function(dbConnection, sessid, sess_timeexpire, callback
 		'SELECT user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
 		[sessid],
 		function (error, result) {
-			
+
 			if (!!error) {
 				callback(error, null);
 				return;
 			}
-			
+
 			if (result.rowCount === 0) {
 				callback(null, {sessionIsActive: false});
 				return;
 			}
-			
+
 			exports.refreshSession(dbConnection, sessid, sess_timeexpire, function(err, res) {
 				if (err) {callback(err, null); return;}
 				callback(null, {
@@ -157,9 +157,16 @@ exports.idBySession = function(dbConnection, sess, callback) {
 };
 
 exports.refreshSession = function(dbConnection, sess, sess_timeexpire, callback) {
-	dbConnection.query(
-		'UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL ? SECOND WHERE `sessid` = ?',
-		[sess_timeexpire, sess], callback);
+	if (!sess)
+	{
+		callback(undefined, 'Not refreshing: empty sessid');
+	}
+	else
+	{
+		dbConnection.query(
+			'UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL ? SECOND WHERE `sessid` = ?',
+			[sess_timeexpire, sess], callback);
+	}
 };
 
 exports.closeSession = function(dbConnection, sess) {
