@@ -86,8 +86,31 @@ app.get('/node/', function(request, response) {
 	response.send('Node.js is up and running.');
 });
 
-app.get('/node-about/', function(request, response) {
-	// warning: for testing purposes only
+/*** real ones ***/
+
+app.get('/', function(request, response) {
+	async.parallel([
+			function(callback){
+				if (!!request.cookies.sessid)
+				{
+					utils.user.sessionActive(mysqlConnection, request.cookies.sessid, callback);
+				}
+				else
+				{
+					callback(undefined, false);
+				}
+			},
+		],
+		function(error, result){
+			console.log(result);
+			response.redirect((result[0] === true) ?
+				config.defaultInstanceForUsers : config.defaultInstanceForGuests);
+		}
+	);
+});
+
+app.get('/about/', function(request, response) {
+	// shitty, doesn't use all power of session info
 	async.parallel([
 			function(callback){
 				if (!!request.cookies.sessid)
@@ -109,13 +132,24 @@ app.get('/node-about/', function(request, response) {
 					callback(undefined, undefined);
 				}
 			},
+			function(callback){
+				if (!!request.cookies.sessid)
+				{
+					utils.user.updateSession(mysqlConnection, request.cookies.sessid,
+						config.sessionExpireTime, callback);
+				}
+				else
+				{
+					callback(undefined, undefined);
+				}
+			},
 		],
 		function(error, result){
 			console.log(result);
 			var options = {};
 			options.now = new Date();
 			options.instance = 'about';
-			options.admin = false; // fixme
+			options.admin = (!!result[2] && result[2].permissions == 65535);
 			options.loggedIn = result[0];
 			options.login = result[1];
 			response.render('about', options);
@@ -123,36 +157,6 @@ app.get('/node-about/', function(request, response) {
 	);
 });
 
-/*** real ones ***/
-
-app.get('/', function(request, response) {
-	async.parallel([
-			function(callback){
-				if (!!request.cookies.sessid)
-				{
-					utils.user.sessionActive(mysqlConnection, request.cookies.sessid, callback);
-				}
-				else
-				{
-					callback(undefined, false);
-				}
-			},
-		],
-		function(error, result){
-			console.log(result);
-			if (result[0] === true)
-			{
-				response.redirect(config.defaultInstanceForUsers);
-			}
-			else
-			{
-				response.redirect(config.defaultInstanceForGuests);
-			}
-		}
-	);
-});
-
-app.get('/about/', phpgate);
 app.get('/register/', phpgate);
 app.post('/register/', phpgate);
 app.get('/login/', phpgate);
