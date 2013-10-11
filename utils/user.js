@@ -176,11 +176,18 @@ exports.refreshSession = function(dbConnection, sess, sess_timeexpire, callback)
 	}
 };
 
-exports.closeSession = function(dbConnection, sess) {
-	dbConnection.query(
-		'UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid` = ?',
-		[sess]
-	);
+exports.closeSession = function(dbConnection, sess, callback) {
+	if (!sess)
+	{
+		callback(undefined, 'Not closing: empty sessid');
+	}
+	else
+	{
+		dbConnection.query(
+			'UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid` = ?',
+			[sess], callback
+		);
+	}
 };
 
 exports.createSalt = function(sess_length) {

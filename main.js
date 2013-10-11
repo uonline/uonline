@@ -111,7 +111,20 @@ app.post('/login/', phpgate);
 app.get('/profile/', phpgate);
 app.get('/profile/id/:id/', phpgate);
 app.get('/profile/user/:user/', phpgate);
-app.get('/action/logout', phpgate);
+
+app.get('/action/logout', function(request, response) {
+	utils.user.closeSession(mysqlConnection, request.cookies.sessid, function(error, result){
+		if (!!error)
+		{
+			response.send(500);
+		}
+		else
+		{
+			response.redirect('/');
+		}
+	}); // TODO: move sessid to uonline{}
+});
+
 app.get('/game/', phpgate);
 app.get('/action/go/:to', phpgate);
 app.get('/action/attack', phpgate);
