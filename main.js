@@ -93,7 +93,12 @@ app.get('/about/', function(request, response) {
 	response.render('about', options);
 });
 
-app.get('/register/', phpgate);
+app.get('/register/', function(request, response) {
+	var options = request.uonline.basicOpts;
+	options.instance = 'register';
+	response.render('register', options);
+});
+
 app.post('/register/', phpgate);
 app.get('/login/', phpgate);
 app.post('/login/', phpgate);
