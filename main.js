@@ -49,35 +49,29 @@ app.set('views', __dirname + '/templates');
 var phpgate = require('./cgi.js').phpgate;
 
 app.use(function(request, response, next){
-	if (!!request.cookies.sessid)
-	{
-		var sessid = request.cookies.sessid;
-		async.waterfall([
-				function(callback){
-					utils.user.sessionActive(mysqlConnection, sessid, callback);
-				},
-				function(active, callback) {
-					if (active)
-					{
-						console.log('REFRESHING ' + sessid);
-						utils.user.refreshSession(mysqlConnection, sessid, config.sessionExpireTime, callback);
-					}
-					else
-					{
-						callback();
-					}
-				}
-			],
-			function(error, result)
+	request.uonline = {};
+	request.uonline.basicOpts = {};
+	async.parallel([
+			function(callback){
+				utils.user.updateSession(mysqlConnection, request.cookies.sessid, config.sessionExpireTime, callback);
+			},
+		],
+		function(error, result)
+		{
+			if(!!error)
 			{
+				response.send(500);
+			}
+			else
+			{
+				request.uonline.basicOpts.now = new Date();
+				request.uonline.basicOpts.loggedIn = result[0].sessionIsActive;
+				request.uonline.basicOpts.login = result[0].username;
+				request.uonline.basicOpts.admin = (result[0].permissions == 65535);
 				next();
 			}
-		);
-	}
-	else
-	{
-		next();
-	}
+		}
+	);
 });
 
 /*** routing routines ***/
@@ -89,72 +83,14 @@ app.get('/node/', function(request, response) {
 /*** real ones ***/
 
 app.get('/', function(request, response) {
-	async.parallel([
-			function(callback){
-				if (!!request.cookies.sessid)
-				{
-					utils.user.sessionActive(mysqlConnection, request.cookies.sessid, callback);
-				}
-				else
-				{
-					callback(undefined, false);
-				}
-			},
-		],
-		function(error, result){
-			console.log(result);
-			response.redirect((result[0] === true) ?
+	response.redirect((request.uonline.basicOpts.loggedIn === true) ?
 				config.defaultInstanceForUsers : config.defaultInstanceForGuests);
-		}
-	);
 });
 
 app.get('/about/', function(request, response) {
-	// shitty, doesn't use all power of session info
-	async.parallel([
-			function(callback){
-				if (!!request.cookies.sessid)
-				{
-					utils.user.sessionActive(mysqlConnection, request.cookies.sessid, callback);
-				}
-				else
-				{
-					callback(undefined, false);
-				}
-			},
-			function(callback){
-				if (!!request.cookies.sessid)
-				{
-					utils.user.userBySession(mysqlConnection, request.cookies.sessid, callback);
-				}
-				else
-				{
-					callback(undefined, undefined);
-				}
-			},
-			function(callback){
-				if (!!request.cookies.sessid)
-				{
-					utils.user.updateSession(mysqlConnection, request.cookies.sessid,
-						config.sessionExpireTime, callback);
-				}
-				else
-				{
-					callback(undefined, undefined);
-				}
-			},
-		],
-		function(error, result){
-			console.log(result);
-			var options = {};
-			options.now = new Date();
-			options.instance = 'about';
-			options.admin = (!!result[2] && result[2].permissions == 65535);
-			options.loggedIn = result[0];
-			options.login = result[1];
-			response.render('about', options);
-		}
-	);
+	var options = request.uonline.basicOpts;
+	options.instance = 'about';
+	response.render('about', options);
 });
 
 app.get('/register/', phpgate);
