@@ -93,7 +93,7 @@ exports.sessionActive = function(dbConnection, sess, callback) {
 	);
 };
 
-exports.updateSession = function(dbConnection, sessid, sess_timeexpire, callback) {
+exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, callback) {
 	if (!sessid)
 	{
 		callback(null, {sessionIsActive: false});
@@ -120,7 +120,7 @@ exports.updateSession = function(dbConnection, sessid, sess_timeexpire, callback
 					callback(null, {
 						sessionIsActive: true,
 						username: result.rows[0].user,
-						permissions: result.rows[0].permissions
+						admin: (result.rows[0].permissions === 1)
 					});
 				});
 			}

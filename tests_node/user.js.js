@@ -85,17 +85,20 @@ exports.sessionActive = function (test) {
 exports.updateSession = function (test) {
 	async.series([
 			function(callback){ conn.query('CREATE TABLE uniusers '+
-				'(user TINYTEXT, permissions INT, sessid TINYTEXT, sessexpire DATETIME)', [], callback); },
+				'(user TINYTEXT, permissions INT, sessid TINYTEXT, sessexpire DATETIME)', [], callback); },//0
 			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
 				"('user0', 1, 'someid', NOW() - INTERVAL 3600 SECOND )", [], callback); },
-			function(callback){ users.updateSession(conn, 'someid', 7200, callback); },
-			function(callback){ users.updateSession(conn, 'someid', 7200, callback); },
+			function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
+			function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
 			function(callback){ conn.query("UPDATE uniusers "+
 				"SET sessexpire = NOW() + INTERVAL 3600 SECOND", [], callback); },
+			function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },//5
+			function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
 			function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },
-			function(callback){ users.updateSession(conn, 'someid', 7200, callback); },
-			function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },
-			function(callback){ users.updateSession(conn, undefined, 7200, callback); },
+			function(callback){ users.sessionInfoRefreshing(conn, undefined, 7200, callback); },
+			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
+				"('user1', 0, 'otherid', NOW() + INTERVAL 3600 SECOND )", [], callback); },
+			function(callback){ users.sessionInfoRefreshing(conn, "otherid", 7200, callback); },//10
 			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
 		],
 		function(error, result){
@@ -109,13 +112,18 @@ exports.updateSession = function (test) {
 			test.deepEqual(result[6], {
 					sessionIsActive: true,
 					username: 'user0',
-					permissions: 1
+					admin: true
 				}, 'session should be active if not expired and user data should be returned');
 			test.deepEqual(result[8], {
 					sessionIsActive: false
 				}, 'should not fail on empty sessid');
 			var timeBefore = new Date(result[5].rows[0].sessexpire);
 			var timeAfter = new Date(result[7].rows[0].sessexpire);
+			test.deepEqual(result[10], {
+					sessionIsActive: true,
+					username: 'user1',
+					admin: false
+				}, 'if user is NOT admin, he is NOT admin');
 			test.ok(timeBefore < timeAfter, "session expire time should have been updated");
 			test.done();
 		}
