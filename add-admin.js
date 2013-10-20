@@ -22,7 +22,10 @@
 
 var utils = require('./utils.js');
 
-if (process.argv.length != 4)
+console.log("Warning: PHP and Node.js have different hashing algorithms.\n" +
+    utils.prettyprint.spaces(9) + "Don't try to use them together.");
+
+if (process.argv.length !== 4)
 {
     console.log('Usage: <username> <password>');
     process.exit(2);

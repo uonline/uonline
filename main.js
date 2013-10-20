@@ -51,27 +51,21 @@ var phpgate = require('./cgi.js').phpgate;
 app.use(function(request, response, next){
 	request.uonline = {};
 	request.uonline.basicOpts = {};
-	async.parallel([
-			function(callback){
-				utils.user.updateSession(mysqlConnection, request.cookies.sessid, config.sessionExpireTime, callback);
-			},
-		],
-		function(error, result)
-		{
-			if(!!error)
+	utils.user.sessionInfoRefreshing(
+		mysqlConnection, request.cookies.sessid, config.sessionExpireTime, function(error, result){
+			if (!!error)
 			{
 				response.send(500);
 			}
 			else
 			{
 				request.uonline.basicOpts.now = new Date();
-				request.uonline.basicOpts.loggedIn = result[0].sessionIsActive;
-				request.uonline.basicOpts.login = result[0].username;
-				request.uonline.basicOpts.admin = (result[0].permissions == 65535);
+				request.uonline.basicOpts.loggedIn = result.sessionIsActive;
+				request.uonline.basicOpts.login = result.username;
+				request.uonline.basicOpts.admin = result.admin;
 				next();
 			}
-		}
-	);
+	});
 });
 
 /*** routing routines ***/
