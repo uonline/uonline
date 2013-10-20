@@ -191,7 +191,12 @@ exports.registerUser = function(dbConnection, user, password, permissions, callb
 			function(innerCallback){
 				crypto.pbkdf2(password, salt, 4096, 256, innerCallback);
 			},
-			function(previousResult, innerCallback){
+			function(hash, innerCallback){
+				exports.generateSessId(dbConnection, 20, function(error, result){
+					innerCallback(undefined, hash, result);
+				});
+			},
+			function(hash, sessid, innerCallback){
 				dbConnection.query(
 					'INSERT INTO `uniusers` '+
 					'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) '+
@@ -199,7 +204,7 @@ exports.registerUser = function(dbConnection, user, password, permissions, callb
 					'(?, ?, ?, ?, NOW(), NOW() + INTERVAL ? SECOND, '+
 						'(SELECT `id` FROM `locations` WHERE `default` = 1), '+
 					'?)',
-					[user, salt, previousResult.toString(), exports.generateSessId(), config.sessionExpireTime,
+					[user, salt, hash.toString(), sessid, config.sessionExpireTime,
 						permissions],
 					innerCallback);
 			},
