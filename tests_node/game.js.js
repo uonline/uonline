@@ -29,7 +29,7 @@ var async = require('async');
 var anyDB = require('any-db');
 var conn = null;
 
-var usedTables = ['locations', 'uniusers', 'monsters'].join(', ');
+var usedTables = ['locations', 'uniusers', 'monsters', 'monster_prototypes'].join(', ');
 
 exports.setUp = function (done) {
 	async.series([
@@ -75,6 +75,12 @@ function creationMonstersTableCallback(callback) {
 		'`location` INT DEFAULT 1,'+
 		'`attack_chance` INT )', callback);
 }
+function creationMonsterProtoTableCallback(callback) {
+	conn.query('CREATE TABLE monster_prototypes ('+
+		'`id` INT, PRIMARY KEY (`id`),'+
+		'`name` TINYTEXT DEFAULT 1 )', callback);
+}
+
 function insertCallback(dbName, fields) { //НЕ для использования снаружи тестов
 	var params=[], values=[];
 	for (var i in fields) {
@@ -299,4 +305,27 @@ exports.getNearbyUsers = {
 //	}
 };
 
-
+/*exports.getNearbyMonsters = {
+	"setUp": function(callback) {
+		var d = new Date();
+		var expire = (d.getFullYear()+1)+'-'+(d.getMonth()+1)+'-'+d.getDate();
+		async.series([
+				creationUniusersTableCallback,
+				insertCallback('uniusers', {"id":1, "loaction":1}),
+				insertCallback('uniusers', {"id":2, "loaction":2}),
+				creationMonstersTableCallback,
+				insertCallback('monsters', {"id":1, "location":1}),
+				creationMonsterProtoTableCallback,
+				insertCallback('monster_prototypes', {"id":1, "location":1}),
+			], callback);
+	},
+	"testValidData": function(test) {
+		async.series([
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.done();
+			}
+		);
+	},
+};*/

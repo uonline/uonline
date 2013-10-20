@@ -95,6 +95,11 @@ function getMigrationFunctions() {
 			addColumn("stats", "uagent|TINYTEXT");
 			addColumn("stats", "url|TEXT");
 		},
+		3 => function() {
+			/************** monsters ****************/
+			renameColumn("monsters", "id|prototype");
+			renameColumn("monsters", "incarn_id|id");
+		}
 	);
 }
 
