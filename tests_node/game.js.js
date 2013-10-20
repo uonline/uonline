@@ -72,13 +72,14 @@ function creationUniusersTableCallback(callback) {
 function creationMonstersTableCallback(callback) {
 	conn.query('CREATE TABLE monsters ('+
 		'`id` INT, PRIMARY KEY (`id`),'+
+		'`prototype` INT,'+
 		'`location` INT DEFAULT 1,'+
 		'`attack_chance` INT )', callback);
 }
 function creationMonsterProtoTableCallback(callback) {
 	conn.query('CREATE TABLE monster_prototypes ('+
 		'`id` INT, PRIMARY KEY (`id`),'+
-		'`name` TINYTEXT DEFAULT 1 )', callback);
+		'`name` TINYTEXT )', callback);
 }
 
 function insertCallback(dbName, fields) { //НЕ для использования снаружи тестов
@@ -305,27 +306,26 @@ exports.getNearbyUsers = {
 //	}
 };
 
-/*exports.getNearbyMonsters = {
-	"setUp": function(callback) {
-		var d = new Date();
-		var expire = (d.getFullYear()+1)+'-'+(d.getMonth()+1)+'-'+d.getDate();
-		async.series([
-				creationUniusersTableCallback,
-				insertCallback('uniusers', {"id":1, "loaction":1}),
-				insertCallback('uniusers', {"id":2, "loaction":2}),
-				creationMonstersTableCallback,
-				insertCallback('monsters', {"id":1, "location":1}),
-				creationMonsterProtoTableCallback,
-				insertCallback('monster_prototypes', {"id":1, "location":1}),
-			], callback);
-	},
-	"testValidData": function(test) {
-		async.series([
-			],
-			function(error, result) {
-				test.ifError(error);
-				test.done();
-			}
-		);
-	},
-};*/
+exports.getNearbyMonsters = function(test) {
+	async.series([
+			creationUniusersTableCallback,//0
+			insertCallback('uniusers', {"id":1, "location":1}),
+			insertCallback('uniusers', {"id":2, "location":2}),
+			creationMonsterProtoTableCallback,
+			insertCallback('monster_prototypes', {"id":1, "name":"The Creature of Unimaginable Horror"}),
+			creationMonstersTableCallback,//5
+			insertCallback('monsters', {"id":1, "prototype":1, "location":1, "attack_chance":42}),
+			insertCallback('monsters', {"id":2, "prototype":1, "location":2}),
+			insertCallback('monsters', {"id":3, "prototype":1, "location":2}),
+			function(callback){ game.getNearbyMonsters(conn, 1, callback); }
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[9].length, 1, "should not return excess monsters");
+			test.strictEqual(result[9][0].attack_chance, 42, "should return monster's info");
+			test.strictEqual(result[9][0].name, "The Creature of Unimaginable Horror",
+				"should return prototype info too");
+			test.done();
+		}
+	);
+};

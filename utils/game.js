@@ -131,16 +131,16 @@ exports.getNearbyUsers = function(dbConnection, sessid, callback) {
 
 
 // using id instead of sessid down here
-/*exports.getNearbyMonsters = function(dbConnection, userid, callback) {
+exports.getNearbyMonsters = function(dbConnection, userid, callback) {
 	dbConnection.query(
-		'SELECT monster_prototypes.*, monsters.*'+
-		'FROM monster_prototypes, monsters'+
+		'SELECT monster_prototypes.*, monsters.* '+
+		'FROM monster_prototypes, monsters '+
 		'WHERE monsters.location = ('+
-			'SELECT uniusers.location FROM uniusers WHERE uniusers.id = ?)'+
+			'SELECT uniusers.location FROM uniusers WHERE uniusers.id = ?) '+
 		'AND monster_prototypes.id = monsters.prototype',
 		[userid],
 		function(error, result) {
 			callback(error, error || result.rows);
 		}
 	);
-};*/
+};
