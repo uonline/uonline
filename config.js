@@ -38,3 +38,6 @@ exports.expStep = 1000;
 exports.PERMISSIONS_USER = 0;
 exports.PERMISSIONS_ADMIN = 65535;
 
+exports.EXP_STEP = 1000;
+exports.EXP_MAX_START = 1000;
+

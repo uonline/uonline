@@ -17,6 +17,9 @@
 
 "use strict";
 
+var config = require('../config.js');
+var math = require('./math.js');
+
 exports.getDefaultLocation = function(dbConnection, callback) {
 	dbConnection.query(
 		'SELECT * FROM locations WHERE `default` = 1',
@@ -144,3 +147,42 @@ exports.getNearbyMonsters = function(dbConnection, userid, callback) {
 		}
 	);
 };
+
+exports.uninvolve = function(dbConnection, userid, callback) {
+	dbConnection.query("UPDATE uniusers SET autoinvolved_fm = 0 WHERE id = ?", [userid], callback);
+};
+
+var characters = [
+	'health',
+	'health_max',
+	'mana',
+	'mana_max',
+	'energy',
+	'power',
+	'defense',
+	'agility',
+	'accuracy',
+	'intelligence',
+	'initiative',
+	'exp',
+	'level',
+];
+var joinedCharacters = characters.join(",");
+exports.getUserCharacters = function(dbConnection, userid, callback) {
+	dbConnection.query(
+		"SELECT "+joinedCharacters+" FROM uniusers WHERE id = ?",
+		[userid],
+		function(error, result) {
+			if (!!error) callback(error, null);
+			var res = result.result[0];
+			res.health_percent = res.health * 100 / res.health_max;
+			res.mana_percent = res.mana * 100 / res.mana_max;
+			var expPrevMax = math.ap(config.EXP_MAX_START, res.level-1, config.EXP_STEP);
+			res.exp_max = math.ap(config.EXP_MAX_START, res.level, config.EXP_STEP);
+			res.exp_percent = (res.exp-expPrevMax) * 100 / (res.exp_max-expPrevMax);
+			//res['nickname'] = res['user']; //лучше поле 'user' переименовать
+		}
+	);
+};
+
+
