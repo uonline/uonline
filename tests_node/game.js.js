@@ -67,7 +67,20 @@ function creationUniusersTableCallback(callback) {
 		'`sessid` TINYTEXT,'+
 		'`sessexpire` DATETIME,'+
 		'`fight_mode` INT DEFAULT 0,'+
-		'`autoinvolved_fm` INT DEFAULT 0 )', callback);
+		'`autoinvolved_fm` INT DEFAULT 0, '+
+		'`level` INT DEFAULT 1, '+
+		'`health` INT DEFAULT 200, '+
+		'`health_max` INT DEFAULT 200, '+
+		'`mana` INT DEFAULT 100, '+
+		'`mana_max` INT DEFAULT 100, '+
+		'`energy` INT DEFAULT 50, '+
+		'`power` INT DEFAULT 3, '+
+		'`defense` INT DEFAULT 3, '+
+		'`agility` INT DEFAULT 3, '+ //ловкость
+		'`accuracy` INT DEFAULT 3, '+ //точность
+		'`intelligence` INT DEFAULT 5, '+ //интеллект
+		'`initiative` INT DEFAULT 5, '+ //инициатива
+		'`exp` INT DEFAULT 0 )', callback);
 }
 function creationMonstersTableCallback(callback) {
 	conn.query('CREATE TABLE monsters ('+
@@ -329,3 +342,60 @@ exports.getNearbyMonsters = function(test) {
 		}
 	);
 };
+
+exports.uninvolve = function(test) {
+	async.series([
+			creationUniusersTableCallback,
+			insertCallback('uniusers', {"id":1, "fight_mode":1, "autoinvolved_fm":1}),
+			function(callback){ game.uninvolve(conn, 1, callback); },
+			function(callback){ conn.query(
+				'SELECT fight_mode, autoinvolved_fm FROM uniusers WHERE id=1', callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[3].rows[0].fight_mode, 1, 'should not disable fight mode');
+			test.strictEqual(result[3].rows[0].autoinvolved_fm, 0, 'user should not be autoinvolved');
+			test.done();
+		}
+	);
+};
+
+exports.getUserCharacters = function(test) {
+	async.series([
+			creationUniusersTableCallback,
+			insertCallback('uniusers', {
+				id: 1,
+				fight_mode: 1, autoinvolved_fm: 1,
+				health: 100,   health_max: 200,
+				mana: 50,      mana_max: 200,
+				exp: 1000,     level: 2,
+				energy: 128,
+				power: 1,
+				defense: 2,
+				agility: 3,
+				accuracy: 4,
+				intelligence: 5,
+				initiative: 6
+			}),
+			function(callback){ game.getUserCharacters(conn, 1, callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.deepEqual(result[2], {
+				health: 100,   health_max: 200,    health_percent: 50,
+				mana: 50,      mana_max: 200,      mana_percent: 25,
+				level: 2,
+				exp: 1000,     exp_max: 3000,      exp_percent: 0,
+				energy: 128,
+				power: 1,
+				defense: 2,
+				agility: 3,
+				accuracy: 4,
+				intelligence: 5,
+				initiative: 6
+			}, "should return specific fields");
+			test.done();
+		}
+	);
+};
+
