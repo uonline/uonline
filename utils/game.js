@@ -119,27 +119,40 @@ exports.goEscape = function(dbConnection, userid, callback) {
 	dbConnection.query("UPDATE uniusers SET fight_mode = 0, autoinvolved_fm = 0 WHERE id = ?", [userid], callback);
 };
 
-exports.getNearbyUsers = function(dbConnection, userid, callback) {
+exports.getUsersOnLocation = function(dbConnection, locid, callback) {
 	dbConnection.query(
 		"SELECT id, user FROM uniusers "+
-		"WHERE sessexpire > NOW() AND location = ("+
-			"SELECT location FROM uniusers WHERE id = ?)"+
-		"AND id != ?",
-		[userid, userid],
+		"WHERE sessexpire > NOW() AND location = ?",
+		[locid],
 		function(error, result) {
 			callback(error, error || result.rows);
 		}
 	);
 };
 
-exports.getNearbyMonsters = function(dbConnection, userid, callback) {
+exports.getNearbyUsers = function(dbConnection, userid, locid, callback) {
+	exports.getUsersOnLocation(
+		dbConnection,
+		locid,
+		function(error, result) {
+			if (!!error) callback(error, null);
+			for (var i=0; i<result.length; i++)
+				if (result[i].id == userid) {
+					result.splice(i,1);
+					break;
+				}
+			callback(null, result);
+		}
+	);
+};
+
+exports.getNearbyMonsters = function(dbConnection, locid, callback) {
 	dbConnection.query(
 		'SELECT monster_prototypes.*, monsters.* '+
 		'FROM monster_prototypes, monsters '+
-		'WHERE monsters.location = ('+
-			'SELECT uniusers.location FROM uniusers WHERE uniusers.id = ?) '+
+		'WHERE monsters.location = ? '+
 		'AND monster_prototypes.id = monsters.prototype',
-		[userid],
+		[locid],
 		function(error, result) {
 			callback(error, error || result.rows);
 		}

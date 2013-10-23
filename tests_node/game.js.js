@@ -289,8 +289,8 @@ exports.getNearbyUsers = {
 	},
 	"testValidData": function(test) {
 		async.series([
-				function(callback){ game.getNearbyUsers(conn, 1, callback); },
-				function(callback){ game.getNearbyUsers(conn, 4, callback); },
+				function(callback){ game.getNearbyUsers(conn, 1, 1, callback); },
+				function(callback){ game.getNearbyUsers(conn, 4, 2, callback); },
 			],
 			function(error, result) {
 				test.ifError(error);
@@ -302,17 +302,6 @@ exports.getNearbyUsers = {
 			}
 		);
 	},
-	//TODO: finish this
-//	"testWrongSessid": function(test) {
-//		async.series([
-//				function(callback) {game.getNearbyUsers(conn, "no_such_sessid", callback);},
-//			],
-//			function(error, result) {console.log(error, result)
-//				test.ok(error);
-//				test.done();
-//			}
-//		);
-//	}
 };
 
 exports.getNearbyMonsters = function(test) {
