@@ -61,6 +61,23 @@ exports.userExists = function (test) {
 	);
 };
 
+exports.idExists = function (test) {
+	async.series([
+			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (id INT)', [], callback); },
+			function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', [ 114 ], callback); },
+			function(callback){ users.idExists(conn, 114, callback); },
+			function(callback){ users.idExists(conn, 9000, callback); },
+			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
+		],
+		function(error, result){
+			test.ifError(error);
+			test.strictEqual(result[2], true, 'should return true when user exists');
+			test.strictEqual(result[3], false, 'should return false when user does not exist');
+			test.done();
+		}
+	);
+};
+
 exports.sessionInfoRefreshing = function (test) {
 	async.series([
 			function(callback){ conn.query('CREATE TABLE uniusers '+

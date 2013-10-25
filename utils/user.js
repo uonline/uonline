@@ -35,23 +35,8 @@ exports.userExists = function(dbConnection, username, callback)
 
 exports.idExists = function(dbConnection, id, callback) {
 	dbConnection.query(
-		'SELECT count(*) FROM `uniusers` WHERE `id`= ?',
+		'SELECT count(*) AS result FROM `uniusers` WHERE `id`= ?',
 		[id],
-		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			}
-			else {
-				callback(undefined, (result.rows[0].result > 0));
-			}
-		}
-	);
-};
-
-exports.mailExists = function(dbConnection, mail, callback) {
-	dbConnection.query(
-		'SELECT count(*) FROM `uniusers` WHERE `mail` = ?',
-		[mail],
 		function (error, result) {
 			if (!!error) {
 				callback(error, undefined);
