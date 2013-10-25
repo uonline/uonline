@@ -47,3 +47,6 @@ deploy: pull killcache dirs diagnose test
 
 serve:
 	php -S localhost:8080 -t .
+
+nodemon:
+	./node_modules/nodemon/nodemon.js -e '.js|.twig|.css' main.js
