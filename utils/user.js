@@ -38,12 +38,7 @@ exports.idExists = function(dbConnection, id, callback) {
 		'SELECT count(*) AS result FROM `uniusers` WHERE `id`= ?',
 		[id],
 		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			}
-			else {
-				callback(undefined, (result.rows[0].result > 0));
-			}
+			callback(error, error || (result.rows[0].result > 0));
 		}
 	);
 };
