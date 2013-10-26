@@ -60,3 +60,43 @@ If you experience problems, try to run `make diagnose` to diagnose the most comm
 To correctly update uonline, run `make deploy`. To update Composer, run `php composer.phar selfupdate`. To update third-party libraries, run `php composer.phar update`.
 
 To run tests, run `make test`. Note that they cover not all the code.
+
+
+Programmers' guidelines
+-----------------------
+
+**Hint:** type `make lint` to check your code.
+
+* Use tabs, not spaces. Don't mix them and don't use smarttabs.
+* Place `use strict` in every file.
+* Use `if (!!something)` when checking for null or undefined.
+* Use this style for requiring: `require('./utils.js');`.
+* Use async where it makes sense.
+* Use semicolons even if they're optional.
+* Place figure brackets on the same line when you declare an anonymous function and on separate line otherwise.
+
+```js
+exports.closeSession = function(dbConnection, sess, callback) {
+	if (!sess)
+	{
+		callback(undefined, 'Not closing: empty sessid');
+	}
+	else
+	{
+		dbConnection.query(
+			'UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid` = ?',
+			[sess], callback);
+	}
+};
+```
+
+* Use trailing commas. Place them even after last element - it allows you to swap lines easily.
+
+```js
+var numbers = [
+  1,
+  2,
+  3,
+  4,
+];
+```
