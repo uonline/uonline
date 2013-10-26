@@ -44,7 +44,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-browserify');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
-	grunt.loadTasks('./grunt-jscoverage-report/');
+	grunt.loadTasks('./grunt-custom-tasks/');
 
 	// Browser build task.
 	grunt.registerTask('ff',

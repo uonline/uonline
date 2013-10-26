@@ -27,5 +27,4 @@ before_script:
   - mysql -e 'create database uonline_test;'
 script:
   - make checkstrict
-  - make checklicense
   - grunt
