@@ -41,6 +41,7 @@ module.exports = function(grunt) {
 	grunt.loadTasks('./grunt-jscoverage-report/');
 
 	// Default task.
+	grunt.registerTask('ff', ['browserify', 'uglify']);
 	grunt.registerTask('default', ['jshint', 'browserify', 'uglify', 'nodeunit', 'jscoverage_report']);
 
 };
