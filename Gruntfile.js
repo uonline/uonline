@@ -30,7 +30,7 @@ module.exports = function(grunt) {
 				// reporter: './node_modules/jshint/src/reporters/non_error.js',
 			},
 			all: {
-				src: ['Gruntfile.js', '*.js', 'utils/*.js', 'tests_node/*.js'],
+				src: ['*.js', 'utils/*.js', 'tests_node/*.js', 'grunt-custom-tasks/*.js'],
 			},
 		},
 		browserify: {
@@ -51,13 +51,13 @@ module.exports = function(grunt) {
 		checklicense: {
 			all: {
 				expand: true,
-				src: ['Gruntfile.js', '*.js', 'utils/*.js', 'tests_node/*.js'],
+				src: ['*.js', 'utils/*.js', 'tests_node/*.js', 'grunt-custom-tasks/*.js'],
 			},
 		},
 		checkstrict: {
 			all: {
 				expand: true,
-				src: ['Gruntfile.js', '*.js', 'utils/*.js', 'tests_node/*.js'],
+				src: ['*.js', 'utils/*.js', 'tests_node/*.js', 'grunt-custom-tasks/*.js'],
 			},
 		},
 	});
