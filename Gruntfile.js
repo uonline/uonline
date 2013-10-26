@@ -31,6 +31,12 @@ module.exports = function(grunt) {
 				dest: './browserified/validation.min.js',
 			},
 		},
+		checklicense: {
+			all: {
+				expand: true,
+				src: ['Gruntfile.js', '*.js', 'utils/*.js', 'tests_node/*.js'],
+			},
+		},
 	});
 
 	// These plugins provide necessary tasks.
@@ -40,8 +46,11 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadTasks('./grunt-jscoverage-report/');
 
+	// Browser build task.
+	grunt.registerTask('ff',
+		['browserify', 'uglify']);
 	// Default task.
-	grunt.registerTask('ff', ['browserify', 'uglify']);
-	grunt.registerTask('default', ['jshint', 'browserify', 'uglify', 'nodeunit', 'jscoverage_report']);
+	grunt.registerTask('default',
+		['checklicense', 'jshint', 'browserify', 'uglify', 'nodeunit', 'jscoverage_report']);
 
 };
