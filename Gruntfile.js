@@ -25,15 +25,22 @@ module.exports = function(grunt) {
 				},
 			},
 		},
+		uglify: {
+			all: {
+				src: './browserified/validation.js',
+				dest: './browserified/validation.min.js',
+			},
+		},
 	});
 
 	// These plugins provide necessary tasks.
 	grunt.loadNpmTasks('grunt-contrib-nodeunit');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-browserify');
+	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadTasks('./grunt-jscoverage-report/');
 
 	// Default task.
-	grunt.registerTask('default', ['jshint', 'browserify', 'nodeunit', 'jscoverage_report']);
+	grunt.registerTask('default', ['jshint', 'browserify', 'uglify', 'nodeunit', 'jscoverage_report']);
 
 };
