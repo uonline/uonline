@@ -31,7 +31,8 @@
     "grunt-contrib-nodeunit": "~0.2.1",
     "grunt-contrib-jshint": "~0.6.4",
     "grunt-cli": "~0.1.9",
-    "grunt-jscoverage": "0.0.3"
+    "grunt-jscoverage": "0.0.3",
+    "grunt-browserify": "~1.2.9"
   },
   "scripts": {
     "test": "node test.js"

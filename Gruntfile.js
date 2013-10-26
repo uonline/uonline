@@ -19,7 +19,16 @@ module.exports = function(grunt) {
 			options: {
 				inputDirectory: 'utils',
 				outputDirectory: 'utils-cov',
-			}
+			},
+		},
+		browserify: {
+			all: {
+				src: './utils/validation.js',
+				dest: './browserified/validation.js',
+				options: {
+					standalone: 'validation',
+				},
+			},
 		},
 	});
 
@@ -27,8 +36,9 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-nodeunit');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-jscoverage');
+	grunt.loadNpmTasks('grunt-browserify');
 
 	// Default task.
-	grunt.registerTask('default', ['jshint', 'nodeunit']);
+	grunt.registerTask('default', ['browserify', 'jshint', 'nodeunit']);
 
 };
