@@ -57,6 +57,6 @@ module.exports = function(grunt) {
 		['browserify', 'uglify']);
 	// Default task.
 	grunt.registerTask('default',
-		['checklicense', 'jshint', 'browserify', 'uglify', 'nodeunit', 'jscoverage_report']);
+		['checkstrict', 'checklicense', 'jshint', 'browserify', 'uglify', 'nodeunit', 'jscoverage_report']);
 
 };
