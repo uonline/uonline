@@ -37,6 +37,7 @@ app.use(express.compress());
 
 app.use('/bootstrap', express.static(__dirname + '/bootstrap'));
 app.use('/img', express.static(__dirname + '/img'));
+app.use('/browserified', express.static(__dirname + '/browserified'));
 
 var swig = require('swig');
 app.engine('html', swig.renderFile);
@@ -48,31 +49,23 @@ app.set('views', __dirname + '/templates');
 var phpgate = require('./cgi.js').phpgate;
 
 app.use(function(request, response, next){
-	if (!!request.cookies.sessid)
-	{
-		var sessid = request.cookies.sessid;
-		async.waterfall([
-				function(callback){
-					utils.user.sessionActive(mysqlConnection, sessid, callback);
-				},
-				function(active, callback) {
-					if (active)
-					{
-						console.log('REFRESHING ' + sessid);
-						utils.user.refreshSession(mysqlConnection, sessid, config.sessionExpireTime, callback);
-					}
-					else
-					{
-						callback();
-					}
-				}
-			],
-			function(error, result)
+	request.uonline = {};
+	request.uonline.basicOpts = {};
+	utils.user.sessionInfoRefreshing(
+		mysqlConnection, request.cookies.sessid, config.sessionExpireTime, function(error, result){
+			if (!!error)
 			{
+				response.send(500);
+			}
+			else
+			{
+				request.uonline.basicOpts.now = new Date();
+				request.uonline.basicOpts.loggedIn = result.sessionIsActive;
+				request.uonline.basicOpts.login = result.username;
+				request.uonline.basicOpts.admin = result.admin;
 				next();
 			}
-		);
-	}
+	});
 });
 
 /*** routing routines ***/
@@ -81,25 +74,52 @@ app.get('/node/', function(request, response) {
 	response.send('Node.js is up and running.');
 });
 
-app.get('/node-about/', function(request, response) {
-	// warning: for testing purposes only
-	var options = {};
-	options.now = new Date();
-	options.instance = 'about';
-	options.loggedIn = false;
-	response.render('about', options);
+/*** real ones ***/
+
+function quickRender(request, response, template)
+{
+	var options = request.uonline.basicOpts;
+	options.instance = template;
+	response.render(template, options);
+}
+
+app.get('/', function(request, response) {
+	response.redirect((request.uonline.basicOpts.loggedIn === true) ?
+		config.defaultInstanceForUsers : config.defaultInstanceForGuests);
 });
 
-app.get('/', phpgate);
-app.get('/about/', phpgate);
-app.get('/register/', phpgate);
+app.get('/about/', function(request, response) {
+	quickRender(request, response, 'about');
+});
+
+app.get('/register/', function(request, response) {
+	quickRender(request, response, 'register');
+});
+
 app.post('/register/', phpgate);
-app.get('/login/', phpgate);
+
+app.get('/login/', function(request, response) {
+	quickRender(request, response, 'login');
+});
+
 app.post('/login/', phpgate);
 app.get('/profile/', phpgate);
 app.get('/profile/id/:id/', phpgate);
 app.get('/profile/user/:user/', phpgate);
-app.get('/action/logout', phpgate);
+
+app.get('/action/logout', function(request, response) {
+	utils.user.closeSession(mysqlConnection, request.cookies.sessid, function(error, result){
+		if (!!error)
+		{
+			response.send(500);
+		}
+		else
+		{
+			response.redirect('/');
+		}
+	}); // TODO: move sessid to uonline{}
+});
+
 app.get('/game/', phpgate);
 app.get('/action/go/:to', phpgate);
 app.get('/action/attack', phpgate);
@@ -116,21 +136,6 @@ app.get('/stats/', phpgate);
 app.get('/world/', phpgate);
 app.get('/development/', phpgate);
 
-
-/*
-app.get('/', function(request, response) {
-	response.redirect('/about/');
-});
-
-app.get('/about/', function(request, response) {
-	var t = Date.now();
-	var options = {};
-	options.instance = 'about';
-	options.loggedIn = false;
-	response.render('about.twig', options);
-	console.log(request.path+' - done in '+(Date.now()-t)+' ms');
-});
-*/
 
 /***** main *****/
 var port = process.env.PORT || 5000;

@@ -2,27 +2,29 @@
 keyring
 tablestate
 maintenance
+templates_cache/
+
+# Used by tests
+test/
+
+# Third-party tools
+node_modules/
 vendor/
 
-# Compressed templates and their cache
-templates_cache/
+# PHPUnit reports
+code-coverage-report/
+
+# For Windows, legacy
+htmlcompressor.jar
+yuicompressor.jar
+
+# Browserified Node modules
+browserified/
+
+## Tool-specific
 
 # NetBeans
 nbproject/
 
-# For Windows
-htmlcompressor.jar
-yuicompressor.jar
-
-# For tests
-test/
-code-coverage-report/
-
-# Third-party
-vendor/
-
-## Node
-node_modules/
-
-# Gedit
+# gedit backups
 *~

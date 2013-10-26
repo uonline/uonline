@@ -17,6 +17,9 @@
 
 "use strict";
 
+var config = require('../config.js');
+var math = require('./math.js');
+
 exports.getDefaultLocation = function(dbConnection, callback) {
 	dbConnection.query(
 		'SELECT * FROM locations WHERE `default` = 1',
@@ -26,30 +29,30 @@ exports.getDefaultLocation = function(dbConnection, callback) {
 	);
 };
 
-exports.getUserLocationId = function(dbConnection, sessid, callback) {
+exports.getUserLocationId = function(dbConnection, userid, callback) {
 	dbConnection.query(
-		'SELECT location FROM uniusers WHERE sessid = ?',
-		[sessid],
+		'SELECT location FROM uniusers WHERE id = ?',
+		[userid],
 		function (error, result) {
-			if (result.rowCount === 0) error = "Wrong user's sessid";
+			if (result && result.rowCount === 0) error = "Wrong user's id";
 			callback(error, error || result.rows[0].location);
 		}
 	);
 };
 
-exports.getUserLocation = function(dbConnection, sessid, callback) {
+exports.getUserLocation = function(dbConnection, userid, callback) {
 	dbConnection.query(
 		'SELECT locations.* FROM locations, uniusers '+
-		'WHERE uniusers.sessid=? AND locations.id = uniusers.location',
-		[sessid],
+		'WHERE uniusers.id=? AND locations.id = uniusers.location',
+		[userid],
 		function (error, result) {
-			if (result.rowCount === 0) error = "No matches found";
-			if (!!error) return callback(error, null);
+			if (result && result.rowCount === 0) error = "Wrong user's id";
+			if (!!error) {callback(error, null); return;}
 			var res = result.rows[0];
 			var goto = res.goto.split("|");
 			for (var i=0;i<goto.length;i++) {
 				var s = goto[i].split("=");
-				goto[i] = {id: s[1], text: s[0]};
+				goto[i] = {id: parseInt(s[1], 10), text: s[0]};
 			}
 			res.goto = goto;
 			callback(null, res);
@@ -63,7 +66,7 @@ exports.getUserLocation = function(dbConnection, sessid, callback) {
 		'WHERE uniusers.sessid = ? AND locations.id = uniusers.location AND uniusers.fight_mode = 0',
 		[sessid],
 		function (error, result) {
-			if (!!error) return callback(error, null);
+			if (!!error) {callback(error, null); return;}
 			var a = result.rows[0].goto.split("|");
 			for (var i=0;i<a.length;i++) {
 				var s = a[i].split("=");
@@ -74,19 +77,124 @@ exports.getUserLocation = function(dbConnection, sessid, callback) {
 	);
 };*/
 
-/*exports.changeLocation = function(dbConnection, sessid, locid, callback) {
-	var count = 0;
-	function onend(error, result) {
-		if (!!error) return callback(error, undefined);
-		callback(undefined, result.rows[0]);
-	}
+exports.changeLocation = function(dbConnection, userid, locid, callback) {
+	//var c = function(e,r) {console.log(e,r)}
+	exports.getUserLocation(dbConnection, userid, function(error, result) {
+
+		if (!!error) {callback(error, null); return;}
+
+		var found = false;
+		for (var i in result.goto)
+		{
+			if (result.goto[i].id == locid)
+			{
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+		{
+			callback('No way from location '+result.id+' to '+locid, null);
+			return;
+		}
+
+		var tx = dbConnection.begin();
+		tx.on('error', callback);
+		tx.query('UPDATE uniusers SET location = ? WHERE id = ?', [locid, userid]);
+		tx.query(
+			'UPDATE uniusers, locations, monsters '+
+			'SET uniusers.autoinvolved_fm = 1, uniusers.fight_mode = 1 '+
+			'WHERE uniusers.id = ? '+
+				'AND uniusers.location = monsters.location '+
+				'AND RAND()*100 <= monsters.attack_chance', [userid]);
+		tx.commit(callback);
+	});
+};
+
+exports.goAttack = function(dbConnection, userid, callback) {
+	dbConnection.query("UPDATE uniusers SET fight_mode = 1 WHERE id = ?", [userid], callback);
+};
+
+exports.goEscape = function(dbConnection, userid, callback) {
+	dbConnection.query("UPDATE uniusers SET fight_mode = 0, autoinvolved_fm = 0 WHERE id = ?", [userid], callback);
+};
+
+exports.getUsersOnLocation = function(dbConnection, locid, callback) {
 	dbConnection.query(
-		'START TRANSACTION;'+
-		'  SELECT 1;'+
-		'COMMIT;',
+		"SELECT id, user FROM uniusers "+
+		"WHERE sessexpire > NOW() AND location = ?",
+		[locid],
 		function(error, result) {
-			console.log(error, result)
-		});
-}*/
+			callback(error, error || result.rows);
+		}
+	);
+};
+
+exports.getNearbyUsers = function(dbConnection, userid, locid, callback) {
+	exports.getUsersOnLocation(
+		dbConnection,
+		locid,
+		function(error, result) {
+			if (!!error) callback(error, null);
+			for (var i=0; i<result.length; i++)
+				if (result[i].id == userid) {
+					result.splice(i,1);
+					break;
+				}
+			callback(null, result);
+		}
+	);
+};
+
+exports.getNearbyMonsters = function(dbConnection, locid, callback) {
+	dbConnection.query(
+		'SELECT monster_prototypes.*, monsters.* '+
+		'FROM monster_prototypes, monsters '+
+		'WHERE monsters.location = ? '+
+		'AND monster_prototypes.id = monsters.prototype',
+		[locid],
+		function(error, result) {
+			callback(error, error || result.rows);
+		}
+	);
+};
+
+exports.uninvolve = function(dbConnection, userid, callback) {
+	dbConnection.query("UPDATE uniusers SET autoinvolved_fm = 0 WHERE id = ?", [userid], callback);
+};
+
+var characters = [
+	'health',
+	'health_max',
+	'mana',
+	'mana_max',
+	'energy',
+	'power',
+	'defense',
+	'agility',
+	'accuracy',
+	'intelligence',
+	'initiative',
+	'exp',
+	'level',
+];
+var joinedCharacters = characters.join(",");
+exports.getUserCharacters = function(dbConnection, userid, callback) {
+	dbConnection.query(
+		"SELECT "+joinedCharacters+" FROM uniusers WHERE id = ?",
+		[userid],
+		function(error, result) {
+			if (!!error) callback(error, null);
+			var res = result.rows[0];
+			res.health_percent = res.health * 100 / res.health_max;
+			res.mana_percent = res.mana * 100 / res.mana_max;
+			var expPrevMax = math.ap(config.EXP_MAX_START, res.level-1, config.EXP_STEP);
+			res.exp_max = math.ap(config.EXP_MAX_START, res.level, config.EXP_STEP);
+			res.exp_percent = (res.exp-expPrevMax) * 100 / (res.exp_max-expPrevMax);
+			//res['nickname'] = res['user']; //лучше поле 'user' переименовать
+			callback(null, res);
+		}
+	);
+};
 
 

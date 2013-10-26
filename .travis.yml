@@ -28,4 +28,5 @@ script:
   - make checkstrict
   - make checklicense
   - make lint
+  - make browserify
   - make test

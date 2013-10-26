@@ -25,14 +25,14 @@ exports.spaces = function(count){
 	return s;
 };
 
-exports.writeln = function(text, targetConsole){
-	if (!targetConsole) targetConsole = console;
-	targetConsole.log(this.spaces(offset) + text);
+exports.writeln = function(text, targetFunction){
+	if (!targetFunction) targetFunction = console.log;
+	targetFunction(this.spaces(offset) + text);
 };
 
-exports.section = function(name, targetConsole){
-	if (!targetConsole) targetConsole = console;
-	this.writeln(name + '...', targetConsole);
+exports.section = function(name, targetFunction){
+	if (!targetFunction) targetFunction = console.log;
+	this.writeln(name + '...', targetFunction);
 	offset += 2;
 	return offset;
 };
@@ -42,12 +42,12 @@ exports.endSection = function(){
 	return offset;
 };
 
-exports.action = function(name, targetConsole){
-	if (!targetConsole) targetConsole = console;
-	targetConsole.log(this.spaces(offset) + name + '...'); // must be: no newline!
+exports.action = function(name, targetFunction){
+	if (!targetFunction) targetFunction = process.stdout.write;
+	targetFunction(this.spaces(offset) + name + '...');
 };
 
-exports.result = function(result, targetConsole){
-	if (!targetConsole) targetConsole = console;
-	targetConsole.log(' ' + result);
+exports.result = function(result, targetFunction){
+	if (!targetFunction) targetFunction = console.log;
+	targetFunction(' ' + result);
 };

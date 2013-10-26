@@ -35,30 +35,10 @@ exports.userExists = function(dbConnection, username, callback)
 
 exports.idExists = function(dbConnection, id, callback) {
 	dbConnection.query(
-		'SELECT count(*) FROM `uniusers` WHERE `id`= ?',
+		'SELECT count(*) AS result FROM `uniusers` WHERE `id`= ?',
 		[id],
 		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			}
-			else {
-				callback(undefined, (result.rows[0].result > 0));
-			}
-		}
-	);
-};
-
-exports.mailExists = function(dbConnection, mail, callback) {
-	dbConnection.query(
-		'SELECT count(*) FROM `uniusers` WHERE `mail` = ?',
-		[mail],
-		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			}
-			else {
-				callback(undefined, (result.rows[0].result > 0));
-			}
+			callback(error, error || (result.rows[0].result > 0));
 		}
 	);
 };
@@ -78,16 +58,50 @@ exports.sessionExists = function(dbConnection, sess, callback) {
 	);
 };
 
-exports.sessionActive = function(dbConnection, sess, callback) {
-	dbConnection.query(
-		'SELECT `sessexpire` > NOW() AS result FROM `uniusers` WHERE `sessid` = ?',
-		[sess],
-		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
+exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, callback) {
+	if (!sessid)
+	{
+		callback(null, {sessionIsActive: false});
+		return;
+	}
+
+	async.auto({
+			getUser: function(callback) {
+				dbConnection.query('SELECT user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
+					[sessid], callback);
+			},
+			refresh: ['getUser', function (callback, results) {
+				if (results.getUser.rowCount === 0)
+				{
+					callback(null, 'session does not exist or expired');
+				}
+				else
+				{
+					dbConnection.query(
+						'UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL ? SECOND WHERE `sessid` = ?',
+						[sess_timeexpire, sessid], callback);
+				}
+			}],
+		},
+		function (error, results) {
+			if (!!error)
+			{
+				callback(error, null);
 			}
-			else {
-				callback(undefined, (result.rows[0].result > 0));
+			else
+			{
+				if (results.refresh === 'session does not exist or expired')
+				{
+					callback(null, { sessionIsActive: false });
+				}
+				else
+				{
+					callback(null, {
+						sessionIsActive: true,
+						username: results.getUser.rows[0].user,
+						admin: (results.getUser.rows[0].permissions === config.PERMISSIONS_ADMIN)
+					});
+				}
 			}
 		}
 	);
@@ -96,21 +110,6 @@ exports.sessionActive = function(dbConnection, sess, callback) {
 exports.generateSessId = function(dbConnection, sess_length, callback) {
 	//here random sessid must be checked for uniqueness
 	callback(undefined, exports.createSalt(sess_length));
-};
-
-exports.userBySession = function(dbConnection, sess, callback) {
-	dbConnection.query(
-		'SELECT `user` FROM `uniusers` WHERE `sessid` = ?',
-		[sess],
-		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			}
-			else {
-				callback(undefined, result.rows[0].result);
-			}
-		}
-	);
 };
 
 exports.idBySession = function(dbConnection, sess, callback) {
@@ -128,17 +127,18 @@ exports.idBySession = function(dbConnection, sess, callback) {
 	);
 };
 
-exports.refreshSession = function(dbConnection, sess, sess_timeexpire, callback) {
-	dbConnection.query(
-		'UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL ? SECOND WHERE `sessid` = ?',
-		[sess_timeexpire, sess], callback);
-};
-
-exports.closeSession = function(dbConnection, sess) {
-	dbConnection.query(
-		'UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid` = ?',
-		[sess]
-	);
+exports.closeSession = function(dbConnection, sess, callback) {
+	if (!sess)
+	{
+		callback(undefined, 'Not closing: empty sessid');
+	}
+	else
+	{
+		dbConnection.query(
+			'UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid` = ?',
+			[sess], callback
+		);
+	}
 };
 
 exports.createSalt = function(sess_length) {
@@ -173,7 +173,12 @@ exports.registerUser = function(dbConnection, user, password, permissions, callb
 			function(innerCallback){
 				crypto.pbkdf2(password, salt, 4096, 256, innerCallback);
 			},
-			function(previousResult, innerCallback){
+			function(hash, innerCallback){
+				exports.generateSessId(dbConnection, 20, function(error, result){
+					innerCallback(undefined, hash, result);
+				});
+			},
+			function(hash, sessid, innerCallback){
 				dbConnection.query(
 					'INSERT INTO `uniusers` '+
 					'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) '+
@@ -181,7 +186,7 @@ exports.registerUser = function(dbConnection, user, password, permissions, callb
 					'(?, ?, ?, ?, NOW(), NOW() + INTERVAL ? SECOND, '+
 						'(SELECT `id` FROM `locations` WHERE `default` = 1), '+
 					'?)',
-					[user, salt, previousResult.toString(), exports.generateSessId(), config.sessionExpireTime,
+					[user, salt, hash.toString(), sessid, config.sessionExpireTime,
 						permissions],
 					innerCallback);
 			},

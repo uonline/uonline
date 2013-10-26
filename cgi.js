@@ -28,6 +28,8 @@
  */
 
 
+"use strict";
+
 function extend(source, destination) {
 	for (var i in source) {
 		destination[i] = source[i];
