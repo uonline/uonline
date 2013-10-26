@@ -50,3 +50,6 @@ serve:
 
 nodemon:
 	./node_modules/nodemon/nodemon.js -e '.js|.twig|.css' main.js
+
+grunt:
+	./node_modules/grunt-cli/bin/grunt
