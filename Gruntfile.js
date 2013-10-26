@@ -15,12 +15,6 @@ module.exports = function(grunt) {
 				src: ['Gruntfile.js', '*.js', 'utils/*.js', 'tests_node/*.js'],
 			},
 		},
-		jscoverage: {
-			options: {
-				inputDirectory: 'utils',
-				outputDirectory: 'utils-cov',
-			},
-		},
 		browserify: {
 			all: {
 				src: './utils/validation.js',
@@ -35,7 +29,6 @@ module.exports = function(grunt) {
 	// These plugins provide necessary tasks.
 	grunt.loadNpmTasks('grunt-contrib-nodeunit');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
-	grunt.loadNpmTasks('grunt-jscoverage');
 	grunt.loadNpmTasks('grunt-browserify');
 
 	// Default task.
