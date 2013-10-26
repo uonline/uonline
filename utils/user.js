@@ -65,34 +65,44 @@ exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, 
 		return;
 	}
 
-	dbConnection.query(
-		'SELECT user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
-		[sessid],
-		function (error, result) {
-
-			if (!!error) {
+	async.auto({
+			getUser: function(callback) {
+				dbConnection.query('SELECT user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
+					[sessid], callback);
+			},
+			refresh: ['getUser', function (callback, results) {
+				if (results.getUser.rowCount === 0)
+				{
+					callback(null, 'session does not exist or expired');
+				}
+				else
+				{
+					dbConnection.query(
+						'UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL ? SECOND WHERE `sessid` = ?',
+						[sess_timeexpire, sessid], callback);
+				}
+			}],
+		},
+		function (error, results) {
+			if (!!error)
+			{
 				callback(error, null);
-				return;
 			}
-
-			if (result.rowCount === 0) {
-				callback(null, {sessionIsActive: false});
-				return;
-			}
-
-			dbConnection.query(
-				'UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL ? SECOND WHERE `sessid` = ?',
-				[sess_timeexpire, sessid],
-				function (err, res) {
-
-					if (!!err) { callback(err, null); return; }
+			else
+			{
+				if (results.refresh === 'session does not exist or expired')
+				{
+					callback(null, { sessionIsActive: false });
+				}
+				else
+				{
 					callback(null, {
 						sessionIsActive: true,
-						username: result.rows[0].user,
-						admin: (result.rows[0].permissions === config.PERMISSIONS_ADMIN)
+						username: results.getUser.rows[0].user,
+						admin: (results.getUser.rows[0].permissions === config.PERMISSIONS_ADMIN)
 					});
-
-			});
+				}
+			}
 		}
 	);
 };
