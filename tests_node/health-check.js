@@ -17,6 +17,9 @@
 
 "use strict";
 
+// This test must always pass.
+// If it doesn't, something is *really* bad.
+
 exports.test = function (test) {
 	test.strictEqual(4, 2+2, '2+2 should be 4');
 	test.done();
