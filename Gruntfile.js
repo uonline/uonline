@@ -37,6 +37,12 @@ module.exports = function(grunt) {
 				src: ['Gruntfile.js', '*.js', 'utils/*.js', 'tests_node/*.js'],
 			},
 		},
+		checkstrict: {
+			all: {
+				expand: true,
+				src: ['Gruntfile.js', '*.js', 'utils/*.js', 'tests_node/*.js'],
+			},
+		},
 	});
 
 	// These plugins provide necessary tasks.
