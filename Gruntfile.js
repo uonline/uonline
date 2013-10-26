@@ -31,8 +31,9 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-nodeunit');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-browserify');
+	grunt.loadTasks('./grunt-jscoverage-report/');
 
 	// Default task.
-	grunt.registerTask('default', ['jshint', 'browserify', 'nodeunit']);
+	grunt.registerTask('default', ['jshint', 'browserify', 'nodeunit', 'jscoverage_report']);
 
 };
