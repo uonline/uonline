@@ -13,6 +13,7 @@ before_script:
   - sudo apt-get install nodejs
   - node --version
   - npm install
+  - npm install -g grunt-cli
   - # PHP setup
   - make diagnose
   - ./composer.phar install
@@ -27,6 +28,4 @@ before_script:
 script:
   - make checkstrict
   - make checklicense
-  - make lint
-  - make browserify
-  - make test
+  - grunt
