@@ -10,6 +10,7 @@ module.exports = function(grunt) {
 		jshint: {
 			options: {
 				jshintrc: '.jshintrc',
+				// reporter: './node_modules/jshint/src/reporters/non_error.js',
 			},
 			all: {
 				src: ['Gruntfile.js', '*.js', 'utils/*.js', 'tests_node/*.js'],
@@ -32,6 +33,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-browserify');
 
 	// Default task.
-	grunt.registerTask('default', ['browserify', 'jshint', 'nodeunit']);
+	grunt.registerTask('default', ['jshint', 'browserify', 'nodeunit']);
 
 };
