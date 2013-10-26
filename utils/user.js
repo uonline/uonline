@@ -80,13 +80,18 @@ exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, 
 				return;
 			}
 
-			exports.refreshSession(dbConnection, sessid, sess_timeexpire, function(err, res) {
-				if (err) {callback(err, null); return;}
-				callback(null, {
-					sessionIsActive: true,
-					username: result.rows[0].user,
-					admin: (result.rows[0].permissions === config.PERMISSIONS_ADMIN)
-				});
+			dbConnection.query(
+				'UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL ? SECOND WHERE `sessid` = ?',
+				[sess_timeexpire, sessid],
+				function (err, res) {
+
+					if (!!err) { callback(err, null); return; }
+					callback(null, {
+						sessionIsActive: true,
+						username: result.rows[0].user,
+						admin: (result.rows[0].permissions === config.PERMISSIONS_ADMIN)
+					});
+
 			});
 		}
 	);
@@ -110,19 +115,6 @@ exports.idBySession = function(dbConnection, sess, callback) {
 			}
 		}
 	);
-};
-
-exports.refreshSession = function(dbConnection, sess, sess_timeexpire, callback) {
-	if (!sess)
-	{
-		callback(undefined, 'Not refreshing: empty sessid');
-	}
-	else
-	{
-		dbConnection.query(
-			'UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL ? SECOND WHERE `sessid` = ?',
-			[sess_timeexpire, sess], callback);
-	}
 };
 
 exports.closeSession = function(dbConnection, sess, callback) {

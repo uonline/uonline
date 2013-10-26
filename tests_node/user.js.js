@@ -159,31 +159,3 @@ exports.closeSession = function (test) {
 		}
 	);
 };
-
-/* it is testing in sessionInfoRefreshing
-exports.refreshSession = function(test) {
-	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers '+
-				'(sessid TINYTEXT, sessexpire DATETIME)', [], callback); },
-			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-				"( 'abcd', NOW() - INTERVAL 3600 SECOND )", [], callback); },
-			function(callback){ users.sessionActive(conn, 'abcd', callback); },
-			function(callback){ users.refreshSession(conn, 'abcd', 3600, callback); },
-			function(callback){ users.sessionActive(conn, 'abcd', callback); },
-			function(callback){ conn.query("UPDATE uniusers "+
-				"SET sessexpire = sessexpire - INTERVAL 3601 SECOND ", [], callback); },
-			function(callback){ users.sessionActive(conn, 'abcd', callback); },
-			function(callback){ users.refreshSession(conn, undefined, 3600, callback); },
-			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
-		],
-		function(error, result){
-			test.ifError(error);
-			test.strictEqual(result[2], false, 'session should not be active before refresh');
-			test.strictEqual(result[4], true, 'session should be active after refresh');
-			test.strictEqual(result[6], false, 'session should not be active after expire');
-			test.strictEqual(result[7], 'Not refreshing: empty sessid', 'should not crash on undefined session');
-			test.done();
-		}
-	);
-};*/
-
