@@ -82,9 +82,9 @@ module.exports = function(grunt) {
 
 	// Everything except tests.
 	grunt.registerTask('ff',
-		['coffee', 'checkstrict', 'checklicense', 'jshint', 'browserify', 'uglify']);
+		['checkstrict', 'checklicense', 'jshint', 'coffee', 'browserify', 'uglify']);
 	// Default task.
 	grunt.registerTask('default',
-		['coffee', 'checkstrict', 'checklicense', 'jshint', 'browserify', 'uglify', 'nodeunit', 'jscoverage_report']);
+		['checkstrict', 'checklicense', 'jshint', 'coffee', 'browserify', 'uglify', 'nodeunit', 'jscoverage_report']);
 
 };
