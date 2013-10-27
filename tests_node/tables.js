@@ -17,6 +17,8 @@
 
 "use strict";
 
+var config = require('../config.js');
+
 var jsc = require('jscoverage');
 jsc.enableCoverage(true);
 
@@ -25,11 +27,10 @@ var tables = jsc.require(module, '../utils/tables.js');
 var async = require('async');
 
 var anyDB = require('any-db');
-var dbURL = process.env.MYSQL_DATABASE_URL || 'mysql://anonymous:nopassword@localhost/uonline';
 var conn = null;
 
 exports.setUp = function (done) {
-	conn = anyDB.createConnection(dbURL);
+	conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
 	done();
 };
 
@@ -40,7 +41,7 @@ exports.tearDown = function (done) {
 
 exports.tableExists = function (test) {
 	test.expect(6);
-	conn.query('CREATE TABLE test_table (id INT NOT NULL)', [], function(err, res){
+	conn.query('CREATE TABLE IF NOT EXISTS test_table (id INT NOT NULL)', [], function(err, res){
 		test.ifError(err);
 		tables.tableExists(conn, 'test_table', function(err, res){
 			test.ifError(err);
