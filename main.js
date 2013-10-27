@@ -138,8 +138,7 @@ app.get('/development/', phpgate);
 
 
 /***** main *****/
-console.log(process.env);
-var port = process.env.PORT || 5000;
+var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 5000;
 app.listen(port, function() {
 	console.log("Listening on " + port);
 	if (port==5000) console.log("Try http://localhost:" + port + "/");
