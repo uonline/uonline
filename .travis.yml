@@ -36,4 +36,4 @@ deploy:
     php: "5.5"
     repo: uonline/uonline
   skip_cleanup: true
-  buildpack: nodejs
+  buildpack: https://github.com/heroku/heroku-buildpack-nodejs/archive/master.tar.gz
