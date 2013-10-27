@@ -69,9 +69,9 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadTasks('./grunt-custom-tasks/');
 
-	// Browser build task.
+	// Everything except tests.
 	grunt.registerTask('ff',
-		['browserify', 'uglify']);
+		['checkstrict', 'checklicense', 'jshint', 'browserify', 'uglify']);
 	// Default task.
 	grunt.registerTask('default',
 		['checkstrict', 'checklicense', 'jshint', 'browserify', 'uglify', 'nodeunit', 'jscoverage_report']);
