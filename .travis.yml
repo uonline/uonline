@@ -27,13 +27,3 @@ before_script:
   - mysql -e 'create database uonline_test;'
 script:
   - grunt
-deploy:
-  provider: heroku
-  api_key:
-    secure: NMvJJant19eGwk9DvUrBBiV0DJdBoHra7txaGVAmZPc+2WeCppeJ0XVEwYECuEKr8CEfG7aZ1Lxs8BCkhc/DZherBj9qIxOqpH17nrawQQ6kNlwFL34TSPMKqIbbeioJQdOEXelAN7wSTuaStJr3TDwRBifZQm/rHfqL/9DEHko=
-  app: m1kc-uonline
-  on:
-    php: "5.5"
-    repo: uonline/uonline
-  skip_cleanup: true
-  buildpack: Node.js
