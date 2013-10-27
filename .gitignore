@@ -24,6 +24,7 @@ browserified/
 # Compiled from CoffeeScript
 utils/validation.js
 tests_node/validation.js
+tests_node/tables.js
 
 ## Tool-specific
 
