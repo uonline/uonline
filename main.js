@@ -138,8 +138,37 @@ app.get('/development/', phpgate);
 
 
 /***** main *****/
-var port = process.env.PORT || 5000;
-app.listen(port, function() {
-	console.log("Listening on " + port);
-	if (port==5000) console.log("Try http://localhost:" + port + "/");
-});
+var DEFAULT_PORT = 5000;
+var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || DEFAULT_PORT;
+var ip = process.env.OPENSHIFT_NODEJS_IP || undefined;
+console.log("Starting up on port " + port + ", and IP is " + ip);
+
+if (port != DEFAULT_PORT)
+{
+	console.log("[grunt] Oh, god, I'm in cloud!");
+	console.log("[grunt] Running `grunt ff`.");
+	var child = require('child_process').exec('./node_modules/grunt-cli/bin/grunt ff',
+		function (error, stdout, stderr) {
+			if (stdout.length > 0) console.log('[grunt] stdout: ' + stdout);
+			if (stderr.length > 0) console.log('[grunt] stderr: ' + stderr);
+			if (error !== null) {
+				console.log('[grunt] exec error: ' + error);
+			}
+			console.log("[grunt] Finished.");
+		}
+	);
+}
+
+var startupFinished = function() {
+	console.log("Listening on port " + port);
+	if (port == DEFAULT_PORT) console.log("Try http://localhost:" + port + "/");
+};
+
+if (ip !== undefined)
+{
+	app.listen(port, ip, startupFinished);
+}
+else
+{
+	app.listen(port, startupFinished);
+}
