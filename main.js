@@ -138,6 +138,7 @@ app.get('/development/', phpgate);
 
 
 /***** main *****/
+console.log(process.env);
 var port = process.env.PORT || 5000;
 app.listen(port, function() {
 	console.log("Listening on " + port);
