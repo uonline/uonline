@@ -70,6 +70,13 @@ module.exports = function(grunt) {
 				bare: true,
 			},
 		},
+		clean: {
+			coffee: [
+				'utils/validation.js',
+				'tests_node/validation.js',
+				'tests_node/tables.js',
+			],
+		},
 	});
 
 	// These plugins provide necessary tasks.
@@ -78,13 +85,14 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-browserify');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-coffee');
+	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadTasks('./grunt-custom-tasks/');
 
 	// Everything except tests.
 	grunt.registerTask('ff',
-		['checkstrict', 'checklicense', 'jshint', 'coffee', 'browserify', 'uglify']);
+		['clean', 'checkstrict', 'checklicense', 'jshint', 'coffee', 'browserify', 'uglify']);
 	// Default task.
 	grunt.registerTask('default',
-		['checkstrict', 'checklicense', 'jshint', 'coffee', 'browserify', 'uglify', 'nodeunit', 'jscoverage_report']);
+		['ff', 'nodeunit', 'jscoverage_report']);
 
 };
