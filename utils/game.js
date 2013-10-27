@@ -29,24 +29,24 @@ exports.getDefaultLocation = function(dbConnection, callback) {
 	);
 };
 
-exports.getUserLocationId = function(dbConnection, sessid, callback) {
+exports.getUserLocationId = function(dbConnection, userid, callback) {
 	dbConnection.query(
-		'SELECT location FROM uniusers WHERE sessid = ?',
-		[sessid],
+		'SELECT location FROM uniusers WHERE id = ?',
+		[userid],
 		function (error, result) {
-			if (result && result.rowCount === 0) error = "Wrong user's sessid";
+			if (result && result.rowCount === 0) error = "Wrong user's id";
 			callback(error, error || result.rows[0].location);
 		}
 	);
 };
 
-exports.getUserLocation = function(dbConnection, sessid, callback) {
+exports.getUserLocation = function(dbConnection, userid, callback) {
 	dbConnection.query(
 		'SELECT locations.* FROM locations, uniusers '+
-		'WHERE uniusers.sessid=? AND locations.id = uniusers.location',
-		[sessid],
+		'WHERE uniusers.id=? AND locations.id = uniusers.location',
+		[userid],
 		function (error, result) {
-			if (result && result.rowCount === 0) error = "Wrong user's sessid";
+			if (result && result.rowCount === 0) error = "Wrong user's id";
 			if (!!error) {callback(error, null); return;}
 			var res = result.rows[0];
 			var goto = res.goto.split("|");
@@ -77,9 +77,9 @@ exports.getUserLocation = function(dbConnection, sessid, callback) {
 	);
 };*/
 
-exports.changeLocation = function(dbConnection, sessid, locid, callback) {
+exports.changeLocation = function(dbConnection, userid, locid, callback) {
 	//var c = function(e,r) {console.log(e,r)}
-	exports.getUserLocation(dbConnection, sessid, function(error, result) {
+	exports.getUserLocation(dbConnection, userid, function(error, result) {
 
 		if (!!error) {callback(error, null); return;}
 
@@ -100,48 +100,59 @@ exports.changeLocation = function(dbConnection, sessid, locid, callback) {
 
 		var tx = dbConnection.begin();
 		tx.on('error', callback);
-		tx.query('UPDATE uniusers SET location = ? WHERE sessid = ?', [locid, sessid]);
+		tx.query('UPDATE uniusers SET location = ? WHERE id = ?', [locid, userid]);
 		tx.query(
 			'UPDATE uniusers, locations, monsters '+
 			'SET uniusers.autoinvolved_fm = 1, uniusers.fight_mode = 1 '+
-			'WHERE uniusers.sessid = ? '+
+			'WHERE uniusers.id = ? '+
 				'AND uniusers.location = monsters.location '+
-				'AND RAND()*100 <= monsters.attack_chance', [sessid]);
+				'AND RAND()*100 <= monsters.attack_chance', [userid]);
 		tx.commit(callback);
 	});
 };
 
-exports.goAttack = function(dbConnection, sessid, callback) {
-	dbConnection.query("UPDATE uniusers SET fight_mode = 1 WHERE sessid = ?", [sessid], callback);
+exports.goAttack = function(dbConnection, userid, callback) {
+	dbConnection.query("UPDATE uniusers SET fight_mode = 1 WHERE id = ?", [userid], callback);
 };
 
-exports.goEscape = function(dbConnection, sessid, callback) {
-	dbConnection.query("UPDATE uniusers SET fight_mode = 0, autoinvolved_fm = 0 WHERE sessid = ?", [sessid], callback);
+exports.goEscape = function(dbConnection, userid, callback) {
+	dbConnection.query("UPDATE uniusers SET fight_mode = 0, autoinvolved_fm = 0 WHERE id = ?", [userid], callback);
 };
 
-exports.getNearbyUsers = function(dbConnection, sessid, callback) {
+exports.getUsersOnLocation = function(dbConnection, locid, callback) {
 	dbConnection.query(
 		"SELECT id, user FROM uniusers "+
-		"WHERE sessexpire > NOW() AND location = ("+
-			"SELECT location FROM uniusers WHERE sessid = ?)"+
-		"AND sessid != ?",
-		[sessid, sessid],
+		"WHERE sessexpire > NOW() AND location = ?",
+		[locid],
 		function(error, result) {
 			callback(error, error || result.rows);
 		}
 	);
 };
 
+exports.getNearbyUsers = function(dbConnection, userid, locid, callback) {
+	exports.getUsersOnLocation(
+		dbConnection,
+		locid,
+		function(error, result) {
+			if (!!error) callback(error, null);
+			for (var i=0; i<result.length; i++)
+				if (result[i].id == userid) {
+					result.splice(i,1);
+					break;
+				}
+			callback(null, result);
+		}
+	);
+};
 
-// using id instead of sessid down here
-exports.getNearbyMonsters = function(dbConnection, userid, callback) {
+exports.getNearbyMonsters = function(dbConnection, locid, callback) {
 	dbConnection.query(
 		'SELECT monster_prototypes.*, monsters.* '+
 		'FROM monster_prototypes, monsters '+
-		'WHERE monsters.location = ('+
-			'SELECT uniusers.location FROM uniusers WHERE uniusers.id = ?) '+
+		'WHERE monsters.location = ? '+
 		'AND monster_prototypes.id = monsters.prototype',
-		[userid],
+		[locid],
 		function(error, result) {
 			callback(error, error || result.rows);
 		}
@@ -174,13 +185,14 @@ exports.getUserCharacters = function(dbConnection, userid, callback) {
 		[userid],
 		function(error, result) {
 			if (!!error) callback(error, null);
-			var res = result.result[0];
+			var res = result.rows[0];
 			res.health_percent = res.health * 100 / res.health_max;
 			res.mana_percent = res.mana * 100 / res.mana_max;
 			var expPrevMax = math.ap(config.EXP_MAX_START, res.level-1, config.EXP_STEP);
 			res.exp_max = math.ap(config.EXP_MAX_START, res.level, config.EXP_STEP);
 			res.exp_percent = (res.exp-expPrevMax) * 100 / (res.exp_max-expPrevMax);
 			//res['nickname'] = res['user']; //лучше поле 'user' переименовать
+			callback(null, res);
 		}
 	);
 };

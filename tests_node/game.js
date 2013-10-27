@@ -67,7 +67,20 @@ function creationUniusersTableCallback(callback) {
 		'`sessid` TINYTEXT,'+
 		'`sessexpire` DATETIME,'+
 		'`fight_mode` INT DEFAULT 0,'+
-		'`autoinvolved_fm` INT DEFAULT 0 )', callback);
+		'`autoinvolved_fm` INT DEFAULT 0, '+
+		'`level` INT DEFAULT 1, '+
+		'`health` INT DEFAULT 200, '+
+		'`health_max` INT DEFAULT 200, '+
+		'`mana` INT DEFAULT 100, '+
+		'`mana_max` INT DEFAULT 100, '+
+		'`energy` INT DEFAULT 50, '+
+		'`power` INT DEFAULT 3, '+
+		'`defense` INT DEFAULT 3, '+
+		'`agility` INT DEFAULT 3, '+ //ловкость
+		'`accuracy` INT DEFAULT 3, '+ //точность
+		'`intelligence` INT DEFAULT 5, '+ //интеллект
+		'`initiative` INT DEFAULT 5, '+ //инициатива
+		'`exp` INT DEFAULT 0 )', callback);
 }
 function creationMonstersTableCallback(callback) {
 	conn.query('CREATE TABLE monsters ('+
@@ -112,10 +125,10 @@ exports.getUserLocationId = {
 	"testValidData": function(test) {
 		async.series([
 				creationUniusersTableCallback,
-				insertCallback('uniusers', {"id":1, "location":3, "sessid":"qweasd"}),
-				insertCallback('uniusers', {"id":2, "location":1, "sessid":"asdzxc"}),
-				function(callback){ game.getUserLocationId(conn, "qweasd", callback); },
-				function(callback){ game.getUserLocationId(conn, "asdzxc", callback); },
+				insertCallback('uniusers', {"id":1, "location":3}),
+				insertCallback('uniusers', {"id":2, "location":1}),
+				function(callback){ game.getUserLocationId(conn, 1, callback); },
+				function(callback){ game.getUserLocationId(conn, 2, callback); },
 			],
 			function(error, result) {
 				test.ifError(error);
@@ -128,10 +141,10 @@ exports.getUserLocationId = {
 	"testWrongSessid": function(test) {
 		async.series([
 				creationUniusersTableCallback,
-				function(callback) {game.getUserLocationId(conn, "no_such_sessid", callback);},
+				function(callback) {game.getUserLocationId(conn, -1, callback);},
 			],
 			function(error, result) {
-				test.strictEqual(error, "Wrong user's sessid", 'should fail on wrong sessid');
+				test.strictEqual(error, "Wrong user's id", 'should fail on wrong sessid');
 				test.done();
 			}
 		);
@@ -150,7 +163,7 @@ exports.getUserLocation = {
 		async.series([
 				insertCallback('locations', {
 					"id":3, "area":5, "title":"The Location", "goto":"Left=7|Forward=8|Right=9"}),
-				function(callback){ game.getUserLocation(conn, "someid", callback); },
+				function(callback){ game.getUserLocation(conn, 1, callback); },
 			],
 			function(error, result) {
 				test.ifError(error);
@@ -164,8 +177,8 @@ exports.getUserLocation = {
 		);
 	},
 	"testWrongSessid": function(test) {
-		game.getUserLocation(conn, 'no_such_sessid', function(error, result) {
-			test.strictEqual(error, "Wrong user's sessid", 'should fail on wrong sessid');
+		game.getUserLocation(conn, -1, function(error, result) {
+			test.strictEqual(error, "Wrong user's id", 'should fail on wrong id');
 			test.done();
 		});
 	},
@@ -173,7 +186,7 @@ exports.getUserLocation = {
 	"testWrongLocid": function(test) {
 		async.series([
 				insertCallback('locations', {"id":1, "area":5}),
-				function(callback){ game.getUserLocation(conn, "someid", callback); },
+				function(callback){ game.getUserLocation(conn, 1, callback); },
 			],
 			function(error, result) {
 				test.ok(error, 'should fail if user.location is wrong');
@@ -189,7 +202,7 @@ exports.changeLocation = {
 				creationUniusersTableCallback,
 				creationLocationsTableCallback,
 				creationMonstersTableCallback,
-				insertCallback('uniusers', {"id":1, "location":1, "sessid":"someid"}),
+				insertCallback('uniusers', {"id":1, "location":1}),
 				insertCallback('locations', {"id":1, "goto":"Left=2"}),
 				insertCallback('locations', {"id":2, "goto":"Right=3"}),
 				insertCallback('locations', {"id":3})
@@ -199,12 +212,12 @@ exports.changeLocation = {
 		async.series([
 				insertCallback('monsters', {"id":1, "location":2, "attack_chance":-1}),
 				insertCallback('monsters', {"id":2, "location":3, "attack_chance":100}),
-				function(callback){ game.changeLocation(conn, "someid", 2, callback); },
-				function(callback){ game.getUserLocationId(conn, "someid", callback); },
-				function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE sessid="someid"', callback); },
-				function(callback){ game.changeLocation(conn, "someid", 3, callback); },
-				function(callback){ game.getUserLocationId(conn, "someid", callback); },
-				function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE sessid="someid"', callback); }
+				function(callback){ game.changeLocation(conn, 1, 2, callback); },
+				function(callback){ game.getUserLocationId(conn, 1, callback); },
+				function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE id=1', callback); },
+				function(callback){ game.changeLocation(conn, 1, 3, callback); },
+				function(callback){ game.getUserLocationId(conn, 1, callback); },
+				function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE id=1', callback); }
 			],
 			function(error, result) {
 				test.ifError(error);
@@ -218,7 +231,7 @@ exports.changeLocation = {
 	},
 	"testWrongLocid": function(test) {
 		async.series([
-				function(callback){ game.changeLocation(conn, "someid", 3, callback); },
+				function(callback){ game.changeLocation(conn, 1, 3, callback); },
 			],
 			function(error, result) {
 				test.ok(error, 'should fail if no way from current location to destination');
@@ -231,9 +244,9 @@ exports.changeLocation = {
 exports.goAttack = function(test) {
 	async.series([
 			creationUniusersTableCallback,
-			insertCallback('uniusers', {"id":1, "sessid":"someid", "fight_mode":0}),
-			function(callback){ game.goAttack(conn, "someid", callback); },
-			function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE sessid="someid"', callback); },
+			insertCallback('uniusers', {"id":1, "fight_mode":0}),
+			function(callback){ game.goAttack(conn, 1, callback); },
+			function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE id=1', callback); },
 		],
 		function(error, result) {
 			test.ifError(error);
@@ -246,10 +259,10 @@ exports.goAttack = function(test) {
 exports.goEscape = function(test) {
 	async.series([
 			creationUniusersTableCallback,
-			insertCallback('uniusers', {"id":1, "sessid":"someid", "fight_mode":1, "autoinvolved_fm":1}),
-			function(callback){ game.goEscape(conn, "someid", callback); },
+			insertCallback('uniusers', {"id":1, "fight_mode":1, "autoinvolved_fm":1}),
+			function(callback){ game.goEscape(conn, 1, callback); },
 			function(callback){ conn.query(
-				'SELECT fight_mode, autoinvolved_fm FROM uniusers WHERE sessid="someid"', callback); },
+				'SELECT fight_mode, autoinvolved_fm FROM uniusers WHERE id=1', callback); },
 		],
 		function(error, result) {
 			test.ifError(error);
@@ -267,43 +280,28 @@ exports.getNearbyUsers = {
 		async.series([
 				creationUniusersTableCallback,
 				creationLocationsTableCallback,
-				insertCallback('uniusers', {"id":1, "user":"user1", "location":1,
-					"sessid":"someid", "sessexpire":expire}),
-				insertCallback('uniusers', {"id":2, "user":"user2", "location":1,
-					"sessid":"otherid", "sessexpire":expire}),
-				insertCallback('uniusers', {"id":3, "user":"user3", "location":1,
-					"sessid":"thirdid", "sessexpire":expire}),
-				insertCallback('uniusers', {"id":4, "user":"alone", "location":2,
-					"sessid":"aloneid", "sessexpire":expire}),
+				insertCallback('uniusers', {"id":1, "user":"someuser",  "location":1, "sessexpire":expire}),
+				insertCallback('uniusers', {"id":2, "user":"otheruser", "location":1, "sessexpire":expire}),
+				insertCallback('uniusers', {"id":3, "user":"thirduser", "location":1, "sessexpire":expire}),
+				insertCallback('uniusers', {"id":4, "user":"aloneuser", "location":2, "sessexpire":expire}),
 				insertCallback('locations', {"id":1}),
 			], callback);
 	},
 	"testValidData": function(test) {
 		async.series([
-				function(callback){ game.getNearbyUsers(conn, "someid", callback); },
-				function(callback){ game.getNearbyUsers(conn, "aloneid", callback); },
+				function(callback){ game.getNearbyUsers(conn, 1, 1, callback); },
+				function(callback){ game.getNearbyUsers(conn, 4, 2, callback); },
 			],
 			function(error, result) {
 				test.ifError(error);
 				test.deepEqual(result[0], [
-					{id:2, user:'user2'},
-					{id:3, user:'user3'}], 'should return all other users on this location');
+					{id:2, user:'otheruser'},
+					{id:3, user:'thirduser'}], 'should return all other users on this location');
 				test.deepEqual(result[1], [], 'alone user should be alone. for now');
 				test.done();
 			}
 		);
 	},
-	//TODO: finish this
-//	"testWrongSessid": function(test) {
-//		async.series([
-//				function(callback) {game.getNearbyUsers(conn, "no_such_sessid", callback);},
-//			],
-//			function(error, result) {console.log(error, result)
-//				test.ok(error);
-//				test.done();
-//			}
-//		);
-//	}
 };
 
 exports.getNearbyMonsters = function(test) {
@@ -329,3 +327,60 @@ exports.getNearbyMonsters = function(test) {
 		}
 	);
 };
+
+exports.uninvolve = function(test) {
+	async.series([
+			creationUniusersTableCallback,
+			insertCallback('uniusers', {"id":1, "fight_mode":1, "autoinvolved_fm":1}),
+			function(callback){ game.uninvolve(conn, 1, callback); },
+			function(callback){ conn.query(
+				'SELECT fight_mode, autoinvolved_fm FROM uniusers WHERE id=1', callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[3].rows[0].fight_mode, 1, 'should not disable fight mode');
+			test.strictEqual(result[3].rows[0].autoinvolved_fm, 0, 'user should not be autoinvolved');
+			test.done();
+		}
+	);
+};
+
+exports.getUserCharacters = function(test) {
+	async.series([
+			creationUniusersTableCallback,
+			insertCallback('uniusers', {
+				id: 1,
+				fight_mode: 1, autoinvolved_fm: 1,
+				health: 100,   health_max: 200,
+				mana: 50,      mana_max: 200,
+				exp: 1000,     level: 2,
+				energy: 128,
+				power: 1,
+				defense: 2,
+				agility: 3,
+				accuracy: 4,
+				intelligence: 5,
+				initiative: 6
+			}),
+			function(callback){ game.getUserCharacters(conn, 1, callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.deepEqual(result[2], {
+				health: 100,   health_max: 200,    health_percent: 50,
+				mana: 50,      mana_max: 200,      mana_percent: 25,
+				level: 2,
+				exp: 1000,     exp_max: 3000,      exp_percent: 0,
+				energy: 128,
+				power: 1,
+				defense: 2,
+				agility: 3,
+				accuracy: 4,
+				intelligence: 5,
+				initiative: 6
+			}, "should return specific fields");
+			test.done();
+		}
+	);
+};
+
