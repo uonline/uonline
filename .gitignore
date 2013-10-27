@@ -21,6 +21,9 @@ yuicompressor.jar
 # Browserified Node modules
 browserified/
 
+# Compiled from CoffeeScript
+tests_node/validation.js
+
 ## Tool-specific
 
 # NetBeans
