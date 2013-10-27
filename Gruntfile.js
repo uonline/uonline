@@ -63,7 +63,7 @@ module.exports = function(grunt) {
 		coffee: {
 			all: {
 				expand: true,
-				src: 'tests_node/*.coffee',
+				src: ['utils/*.coffee', 'tests_node/*.coffee'],
 				ext: '.js',
 			},
 			options: {

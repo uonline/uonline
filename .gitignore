@@ -22,6 +22,7 @@ yuicompressor.jar
 browserified/
 
 # Compiled from CoffeeScript
+utils/validation.js
 tests_node/validation.js
 
 ## Tool-specific
