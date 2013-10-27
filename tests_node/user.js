@@ -78,6 +78,23 @@ exports.idExists = function (test) {
 	);
 };
 
+exports.sessionExists = function (test) {
+	async.series([
+			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (sessid TINYTEXT)', [], callback); },
+			function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid" ], callback); },
+			function(callback){ users.sessionExists(conn, "someid", callback); },
+			function(callback){ users.sessionExists(conn, "wrongid", callback); },
+			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
+		],
+		function(error, result){
+			test.ifError(error);
+			test.strictEqual(result[2], true, 'should return true when sessid exists');
+			test.strictEqual(result[3], false, 'should return false when sessid does not exist');
+			test.done();
+		}
+	);
+};
+
 exports.sessionInfoRefreshing = function (test) {
 	async.series([
 			function(callback){ conn.query('CREATE TABLE uniusers '+
@@ -122,6 +139,30 @@ exports.sessionInfoRefreshing = function (test) {
 				}, 'if user is NOT admin, he is NOT admin');
 			test.ok(timeBefore < timeAfter, "session expire time should have been updated");
 			test.done();
+		}
+	);
+};
+
+exports.generateSessId = function (test) {
+	//not very clean hack
+	var backup = users.createSalt;
+	var i = 0;
+	users.createSalt = function(len) {
+		return "someid"+i++;
+	};
+	async.series([
+			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (sessid TINYTEXT)', [], callback); },
+			function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid1" ], callback); },
+			function(callback){ users.generateSessId(conn, 16, callback); },
+			function(callback){ users.generateSessId(conn, 16, callback); },
+			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[2], 'someid0');
+			test.strictEqual(result[3], 'someid2', 'sessid should be unique');
+			test.done();
+			users.createSalt = backup;
 		}
 	);
 };

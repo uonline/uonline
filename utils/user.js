@@ -45,14 +45,14 @@ exports.idExists = function(dbConnection, id, callback) {
 
 exports.sessionExists = function(dbConnection, sess, callback) {
 	dbConnection.query(
-		'SELECT count(*) FROM `uniusers` WHERE `sessid` = ?',
+		'SELECT count(*) AS result FROM `uniusers` WHERE `sessid` = ?',
 		[sess],
 		function (error, result) {
 			if (!!error) {
-				callback(error, undefined);
+				callback(error, null);
 			}
 			else {
-				callback(undefined, (result.rows[0].result > 0));
+				callback(null, (result.rows[0].result > 0));
 			}
 		}
 	);
@@ -109,7 +109,23 @@ exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, 
 
 exports.generateSessId = function(dbConnection, sess_length, callback) {
 	//here random sessid must be checked for uniqueness
-	callback(undefined, exports.createSalt(sess_length));
+	//and it'll be!
+	(function iteration()
+	{
+		var sessid = exports.createSalt(sess_length);
+		exports.sessionExists(dbConnection, sessid, function(error, exists) {
+			if (!!error)
+			{
+				callback(error, null);
+				return;
+			}
+			if (exists) {
+				iteration();
+				return;
+			}
+			callback(null, sessid);
+		});
+	})();
 };
 
 exports.idBySession = function(dbConnection, sess, callback) {
