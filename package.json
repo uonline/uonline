@@ -29,9 +29,9 @@
   },
   "devDependencies": {
     "nodeunit": "~0.8.1",
-    "jshint": "~2.1.10",
+    "jshint": "~2.3.0",
     "jscoverage": "~0.3.8",
-    "browserify": "~2.34.0",
+    "browserify": "~2.35.0",
     "nodemon": "~0.7.10",
     "coveralls": "~2.3.0"
   },
