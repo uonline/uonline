@@ -78,93 +78,117 @@ exports.idExists = function (test) {
 	);
 };
 
-exports.sessionExists = function (test) {
-	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (sessid TINYTEXT)', [], callback); },
-			function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid" ], callback); },
-			function(callback){ users.sessionExists(conn, "someid", callback); },
-			function(callback){ users.sessionExists(conn, "wrongid", callback); },
-			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
-		],
-		function(error, result){
-			test.ifError(error);
-			test.strictEqual(result[2], true, 'should return true when sessid exists');
-			test.strictEqual(result[3], false, 'should return false when sessid does not exist');
+exports.sessionExists = {
+	'testNoErrors': function (test) {
+		async.series([
+				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (sessid TINYTEXT)',[], callback);},
+				function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid" ], callback); },
+				function(callback){ users.sessionExists(conn, "someid", callback); },
+				function(callback){ users.sessionExists(conn, "wrongid", callback); },
+				function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
+			],
+			function(error, result){
+				test.ifError(error);
+				test.strictEqual(result[2], true, 'should return true when sessid exists');
+				test.strictEqual(result[3], false, 'should return false when sessid does not exist');
+				test.done();
+			}
+		);
+	},
+	'testErrors': function (test) {
+		users.sessionExists(conn, "someid", function(error, result) {
+			test.ok(error, "should return error without table");
 			test.done();
-		}
-	);
+		});
+	},
 };
 
-exports.sessionInfoRefreshing = function (test) {
-	async.series([
-			function(callback){ conn.query('CREATE TABLE uniusers '+
-				'(user TINYTEXT, permissions INT, sessid TINYTEXT, sessexpire DATETIME)', [], callback); },//0
-			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-				"('user0', ?, 'someid', NOW() - INTERVAL 3600 SECOND )", [config.PERMISSIONS_ADMIN], callback); },
-			function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
-			function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
-			function(callback){ conn.query("UPDATE uniusers "+
-				"SET sessexpire = NOW() + INTERVAL 3600 SECOND", [], callback); },
-			function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },//5
-			function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
-			function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },
-			function(callback){ users.sessionInfoRefreshing(conn, undefined, 7200, callback); },
-			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-				"('user1', ?, 'otherid', NOW() + INTERVAL 3600 SECOND )", [config.PERMISSIONS_USER], callback); },
-			function(callback){ users.sessionInfoRefreshing(conn, "otherid", 7200, callback); },//10
-			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
-		],
-		function(error, result){
-			test.ifError(error);
-			test.deepEqual(result[2], {
-					sessionIsActive: false
-				}, 'session should not be active if expired');
-			test.deepEqual(result[3], {
-					sessionIsActive: false
-				}, 'sesson expire time should not be updated if expired');
-			test.deepEqual(result[6], {
-					sessionIsActive: true,
-					username: 'user0',
-					admin: true
-				}, 'session should be active if not expired and user data should be returned');
-			test.deepEqual(result[8], {
-					sessionIsActive: false
-				}, 'should not fail on empty sessid');
-			var timeBefore = new Date(result[5].rows[0].sessexpire);
-			var timeAfter = new Date(result[7].rows[0].sessexpire);
-			test.deepEqual(result[10], {
-					sessionIsActive: true,
-					username: 'user1',
-					admin: false
-				}, 'if user is NOT admin, he is NOT admin');
-			test.ok(timeBefore < timeAfter, "session expire time should have been updated");
+exports.sessionInfoRefreshing = {
+	'testNoErrors': function (test) {
+		async.series([
+				function(callback){ conn.query('CREATE TABLE uniusers '+
+					'(user TINYTEXT, permissions INT, sessid TINYTEXT, sessexpire DATETIME)', [], callback); },//0
+				function(callback){ conn.query("INSERT INTO uniusers VALUES "+
+					"('user0', ?, 'someid', NOW() - INTERVAL 3600 SECOND )", [config.PERMISSIONS_ADMIN], callback); },
+				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
+				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
+				function(callback){ conn.query("UPDATE uniusers "+
+					"SET sessexpire = NOW() + INTERVAL 3600 SECOND", [], callback); },
+				function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },//5
+				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
+				function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },
+				function(callback){ users.sessionInfoRefreshing(conn, undefined, 7200, callback); },
+				function(callback){ conn.query("INSERT INTO uniusers VALUES "+
+					"('user1', ?, 'otherid', NOW() + INTERVAL 3600 SECOND )", [config.PERMISSIONS_USER], callback); },
+				function(callback){ users.sessionInfoRefreshing(conn, "otherid", 7200, callback); },//10
+				function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
+			],
+			function(error, result){
+				test.ifError(error);
+				test.deepEqual(result[2], {
+						sessionIsActive: false
+					}, 'session should not be active if expired');
+				test.deepEqual(result[3], {
+						sessionIsActive: false
+					}, 'sesson expire time should not be updated if expired');
+				test.deepEqual(result[6], {
+						sessionIsActive: true,
+						username: 'user0',
+						admin: true
+					}, 'session should be active if not expired and user data should be returned');
+				test.deepEqual(result[8], {
+						sessionIsActive: false
+					}, 'should not fail on empty sessid');
+				var timeBefore = new Date(result[5].rows[0].sessexpire);
+				var timeAfter = new Date(result[7].rows[0].sessexpire);
+				test.deepEqual(result[10], {
+						sessionIsActive: true,
+						username: 'user1',
+						admin: false
+					}, 'if user is NOT admin, he is NOT admin');
+				test.ok(timeBefore < timeAfter, "session expire time should have been updated");
+				test.done();
+			}
+		);
+	},
+	'testErrors': function(test) {
+		users.sessionInfoRefreshing(conn, "someid", 0, function(error, result) {
+			test.ok(error, "should return error without table");
 			test.done();
-		}
-	);
+		});
+	},
 };
 
-exports.generateSessId = function (test) {
-	//not very clean hack
-	var backup = users.createSalt;
-	var i = 0;
-	users.createSalt = function(len) {
-		return "someid"+i++;
-	};
-	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (sessid TINYTEXT)', [], callback); },
-			function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid1" ], callback); },
-			function(callback){ users.generateSessId(conn, 16, callback); },
-			function(callback){ users.generateSessId(conn, 16, callback); },
-			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
-		],
-		function(error, result) {
-			test.ifError(error);
-			test.strictEqual(result[2], 'someid0');
-			test.strictEqual(result[3], 'someid2', 'sessid should be unique');
+exports.generateSessId = {
+	'testNoErrors': function (test) {
+		//not very clean hack
+		var backup = users.createSalt;
+		var i = 0;
+		users.createSalt = function(len) {
+			return "someid"+i++;
+		};
+		async.series([
+				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (sessid TINYTEXT)',[], callback);},
+				function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid1" ], callback); },
+				function(callback){ users.generateSessId(conn, 16, callback); },
+				function(callback){ users.generateSessId(conn, 16, callback); },
+				function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.strictEqual(result[2], 'someid0');
+				test.strictEqual(result[3], 'someid2', 'sessid should be unique');
+				test.done();
+				users.createSalt = backup;
+			}
+		);
+	},
+	'testErrors': function(test) {
+		users.generateSessId(conn, 16, function(error, result) {
+			test.ok(error, "should return error without table");
 			test.done();
-			users.createSalt = backup;
-		}
-	);
+		});
+	},
 };
 
 exports.createSalt = function (test) {
