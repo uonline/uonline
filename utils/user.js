@@ -164,7 +164,7 @@ exports.createSalt = function(sess_length) {
 	return salt;
 };
 
-exports.registerUser = function(dbConnection, user, password, permissions, callback) {
+exports.registerUser = function (dbConnection, user, password, permissions, callback) {
 	var salt = this.createSalt(16);
 	/*crypto.pbkdf2(password, salt, 4096, 256, function(error, cryptedPassword){
 		if (!!error) callback(error, undefined);
@@ -186,15 +186,15 @@ exports.registerUser = function(dbConnection, user, password, permissions, callb
 		);
 	});*/
 	async.waterfall([
-			function(innerCallback){
+			function (innerCallback) {
 				crypto.pbkdf2(password, salt, 4096, 256, innerCallback);
 			},
-			function(hash, innerCallback){
-				exports.generateSessId(dbConnection, 20, function(error, result){
-					innerCallback(undefined, hash, result);
+			function (hash, innerCallback) {
+				exports.generateSessId(dbConnection, 20, function (error, result) {
+					innerCallback(error, hash, result);
 				});
 			},
-			function(hash, sessid, innerCallback){
+			function (hash, sessid, innerCallback) {
 				dbConnection.query(
 					'INSERT INTO `uniusers` '+
 					'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) '+
@@ -207,7 +207,7 @@ exports.registerUser = function(dbConnection, user, password, permissions, callb
 					innerCallback);
 			},
 		],
-		function(error, result){
+		function (error, result) {
 			callback(error, result);
 		}
 	);

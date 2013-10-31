@@ -1,4 +1,4 @@
-uonline [![Build Status](https://travis-ci.org/uonline/uonline.png?branch=master)](https://travis-ci.org/uonline/uonline)
+uonline [![Build Status](https://travis-ci.org/uonline/uonline.png?branch=master)](https://travis-ci.org/uonline/uonline) [![Coverage Status](https://coveralls.io/repos/uonline/uonline/badge.png?branch=master)](https://coveralls.io/r/uonline/uonline?branch=master) [![Dependency Status](https://david-dm.org/uonline/uonline.png)](https://david-dm.org/uonline/uonline) [![devDependency Status](https://david-dm.org/uonline/uonline/dev-status.png)](https://david-dm.org/uonline/uonline#info=devDependencies) 
 =======
 
 A browser-based MMORPG game in a fantasy world.
