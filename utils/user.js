@@ -67,7 +67,8 @@ exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, 
 
 	async.auto({
 			getUser: function(callback) {
-				dbConnection.query('SELECT user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
+				dbConnection.query(
+					'SELECT user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
 					[sessid], callback);
 			},
 			refresh: ['getUser', function (callback, results) {
@@ -171,7 +172,7 @@ exports.registerUser = function (dbConnection, user, password, permissions, call
 		dbConnection.query(
 			'INSERT INTO `uniusers` '+
 			'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) VALUES '+
-			'(?, ?, ?, ?, NOW(), NOW() + INTERVAL ? SECOND, (SELECT `id` FROM `locations` WHERE `default` = 1), ?)',
+			'(?, ?, ?, ?, NOW(), NOW() + INTERVAL ? SECOND, (SELECT id FROM locations WHERE `default` = 1), ?)',
 			[user, salt, cryptedPassword, exports.generateSessId(), config.sessionExpireTime, permissions],
 			function(error, queryResult){
 				if (!!error)

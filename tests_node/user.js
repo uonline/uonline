@@ -81,7 +81,8 @@ exports.idExists = function (test) {
 exports.sessionExists = {
 	'testNoErrors': function (test) {
 		async.series([
-				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (sessid TINYTEXT)',[], callback);},
+				function(callback){ conn.query(
+					'CREATE TABLE IF NOT EXISTS uniusers (sessid TINYTEXT)', [], callback); },
 				function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid" ], callback); },
 				function(callback){ users.sessionExists(conn, "someid", callback); },
 				function(callback){ users.sessionExists(conn, "wrongid", callback); },
@@ -107,9 +108,10 @@ exports.sessionInfoRefreshing = {
 	'testNoErrors': function (test) {
 		async.series([
 				function(callback){ conn.query('CREATE TABLE uniusers '+
-					'(user TINYTEXT, permissions INT, sessid TINYTEXT, sessexpire DATETIME)', [], callback); },//0
+					'(user TINYTEXT, permissions INT, sessid TINYTEXT, sessexpire DATETIME)', [], callback); },
 				function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-					"('user0', ?, 'someid', NOW() - INTERVAL 3600 SECOND )", [config.PERMISSIONS_ADMIN], callback); },
+					"('user0', ?, 'someid', NOW() - INTERVAL 3600 SECOND )",
+					[config.PERMISSIONS_ADMIN], callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
 				function(callback){ conn.query("UPDATE uniusers "+
@@ -119,7 +121,8 @@ exports.sessionInfoRefreshing = {
 				function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, undefined, 7200, callback); },
 				function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-					"('user1', ?, 'otherid', NOW() + INTERVAL 3600 SECOND )", [config.PERMISSIONS_USER], callback); },
+					"('user1', ?, 'otherid', NOW() + INTERVAL 3600 SECOND )",
+					[config.PERMISSIONS_USER], callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, "otherid", 7200, callback); },//10
 				function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
 			],
