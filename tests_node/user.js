@@ -161,25 +161,24 @@ exports.sessionInfoRefreshing = {
 
 exports.generateSessId = {
 	'testNoErrors': function (test) {
-		//not very clean hack
-		var backup = users.createSalt;
+		var _createSalt = users.createSalt;
 		var i = 0;
 		users.createSalt = function(len) {
-			return "someid"+i++;
+			return "someid" + (++i);
 		};
 		async.series([
-				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (sessid TINYTEXT)',[], callback);},
-				function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid1" ], callback); },
-				function(callback){ users.generateSessId(conn, 16, callback); },
-				function(callback){ users.generateSessId(conn, 16, callback); },
-				function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
+				function (callback) {
+					conn.query('CREATE TABLE IF NOT EXISTS uniusers (sessid TINYTEXT)', [], callback); },
+				function (callback) { conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid1" ], callback); },
+				function (callback) { conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid2" ], callback); },
+				function (callback) { users.generateSessId(conn, 16, callback); },
+				function (callback) { conn.query('DROP TABLE uniusers', [], callback); },
 			],
-			function(error, result) {
+			function (error, result) {
+				users.createSalt = _createSalt;
 				test.ifError(error);
-				test.strictEqual(result[2], 'someid0');
-				test.strictEqual(result[3], 'someid2', 'sessid should be unique');
+				test.strictEqual(result[3], 'someid3', 'sessid should be unique');
 				test.done();
-				users.createSalt = backup;
 			}
 		);
 	},
