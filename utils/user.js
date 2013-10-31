@@ -190,8 +190,8 @@ exports.registerUser = function(dbConnection, user, password, permissions, callb
 				crypto.pbkdf2(password, salt, 4096, 256, innerCallback);
 			},
 			function(hash, innerCallback){
-				exports.generateSessId(dbConnection, 20, function(error, result){
-					innerCallback(undefined, hash, result);
+				exports.generateSessId(dbConnection, 20, function (error, result){
+					innerCallback(error, hash, result);
 				});
 			},
 			function(hash, sessid, innerCallback){
