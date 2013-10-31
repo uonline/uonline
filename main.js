@@ -48,7 +48,14 @@ app.set('views', __dirname + '/templates');
 
 var phpgate = require('./cgi.js').phpgate;
 
-app.use(function(request, response, next){
+app.use(function (request, response, next) {
+	response.header('Content-Security-Policy-Report-Only',
+		"default-src 'self'; script-src 'self' http://code.jquery.com"
+	);
+	next();
+});
+
+app.use(function (request, response, next) {
 	request.uonline = {};
 	request.uonline.basicOpts = {};
 	utils.user.sessionInfoRefreshing(
