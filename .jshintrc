@@ -4,5 +4,5 @@
 	"bitwise": true,
 	"latedef": true,
 	"trailing": true,
-	"maxlen": 120
+	"maxlen": 115
 }

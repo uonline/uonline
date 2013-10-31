@@ -60,10 +60,11 @@ exports.tableExists = function (test) {
 
 exports.tableExistsAsync = function (test) {
 	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS test_table (id INT NOT NULL)', [], callback); },
-			async.apply(tables.tableExists, conn, 'test_table'),
+			function(callback){ conn.query(
+				'CREATE TABLE IF NOT EXISTS test_table (id INT NOT NULL)', [], callback); },
+			function(callback){ tables.tableExists(conn, 'test_table', callback); },
 			function(callback){ conn.query('DROP TABLE test_table', [], callback); },
-			async.apply(tables.tableExists, conn, 'test_table'),
+			function(callback){ tables.tableExists(conn, 'test_table', callback); },
 		],
 		function(error, result){
 			test.ifError(error);
