@@ -241,7 +241,7 @@ exports.closeSession = function (test) {
 			function(callback){ users.closeSession(conn, undefined, callback); },
 			function(callback){ conn.query('DROP TABLE uniusers', [], callback); }, //5
 		],
-		function(error, result){
+		function(error, result) {
 			test.ifError(error);
 			test.strictEqual(result[3].rows[0].active, 0, 'session should have expired');
 			test.strictEqual(result[4], 'Not closing: empty sessid', 'false sessid should have been detected');

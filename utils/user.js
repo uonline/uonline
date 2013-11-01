@@ -48,12 +48,12 @@ exports.sessionExists = function(dbConnection, sess, callback) {
 		'SELECT count(*) AS result FROM `uniusers` WHERE `sessid` = ?',
 		[sess],
 		function (error, result) {
-			if (!!error) {
+			if (!!error)
+			{
 				callback(error, null);
+				return;
 			}
-			else {
-				callback(null, (result.rows[0].result > 0));
-			}
+			callback(null, (result.rows[0].result > 0));
 		}
 	);
 };
@@ -75,35 +75,29 @@ exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, 
 				if (results.getUser.rowCount === 0)
 				{
 					callback(null, 'session does not exist or expired');
+					return;
 				}
-				else
-				{
-					dbConnection.query(
-						'UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL ? SECOND WHERE `sessid` = ?',
-						[sess_timeexpire, sessid], callback);
-				}
+				dbConnection.query(
+					'UPDATE `uniusers` SET `sessexpire` = NOW() + INTERVAL ? SECOND WHERE `sessid` = ?',
+					[sess_timeexpire, sessid], callback);
 			}],
 		},
 		function (error, results) {
 			if (!!error)
 			{
 				callback(error, null);
+				return;
 			}
-			else
+			if (results.refresh === 'session does not exist or expired')
 			{
-				if (results.refresh === 'session does not exist or expired')
-				{
-					callback(null, { sessionIsActive: false });
-				}
-				else
-				{
-					callback(null, {
-						sessionIsActive: true,
-						username: results.getUser.rows[0].user,
-						admin: (results.getUser.rows[0].permissions === config.PERMISSIONS_ADMIN)
-					});
-				}
+				callback(null, { sessionIsActive: false });
+				return;
 			}
+			callback(null, {
+				sessionIsActive: true,
+				username: results.getUser.rows[0].user,
+				admin: (results.getUser.rows[0].permissions === config.PERMISSIONS_ADMIN)
+			});
 		}
 	);
 };
@@ -120,7 +114,8 @@ exports.generateSessId = function(dbConnection, sess_length, callback) {
 				callback(error, null);
 				return;
 			}
-			if (exists) {
+			if (exists)
+			{
 				iteration();
 				return;
 			}
@@ -134,7 +129,10 @@ exports.idBySession = function(dbConnection, sess, callback) {
 		'SELECT `id` FROM `uniusers` WHERE `sessid` = ?',
 		[sess],
 		function (error, result) {
-			if (result && result.rowCount === 0) error = "Wrong user's id";
+			if (result && result.rowCount === 0)
+			{
+				error = "Wrong user's id";
+			}
 			callback(error, error || result.rows[0].id);
 		}
 	);
@@ -144,14 +142,12 @@ exports.closeSession = function(dbConnection, sess, callback) {
 	if (!sess)
 	{
 		callback(undefined, 'Not closing: empty sessid');
+		return;
 	}
-	else
-	{
-		dbConnection.query(
-			'UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid` = ?',
-			[sess], callback
-		);
-	}
+	dbConnection.query(
+		'UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid` = ?',
+		[sess], callback
+	);
 };
 
 exports.createSalt = function(sess_length) {
