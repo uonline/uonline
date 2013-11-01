@@ -193,18 +193,41 @@ exports.generateSessId = {
 	},
 };
 
-exports.createSalt = function (test) {
-	var result;
-
-	result = users.createSalt(50);
-	test.strictEqual(result.length, 50, 'should keep specified length');
-	test.ok(( /^[a-zA-Z0-9]+$/ ).test(result), 'should contain printable characters');
-
-	result = users.createSalt(10);
-	test.strictEqual(result.length, 10, 'should keep specified length');
-	test.ok(( /^[a-zA-Z0-9]+$/ ).test(result), 'should contain printable characters');
-
-	test.done();
+exports.idBySession = {
+	'testNoErrors': function (test) {
+		async.series([
+				function (callback) {
+					conn.query('CREATE TABLE IF NOT EXISTS uniusers (id INT, sessid TINYTEXT)', [], callback); },
+				function (callback) { conn.query('INSERT INTO uniusers VALUES ( 3, "someid" )', [], callback); },
+				function (callback) { users.idBySession(conn, "someid", callback); },
+				function (callback) { conn.query('DROP TABLE uniusers', [], callback); },
+			],
+			function (error, result) {
+				test.ifError(error);
+				test.strictEqual(result[2], 3, 'should return correct user id');
+				test.done();
+			}
+		);
+	},
+	'testWrongSessid': function (test) {
+		async.series([
+				function (callback) {
+					conn.query('CREATE TABLE IF NOT EXISTS uniusers (id INT, sessid TINYTEXT)', [], callback); },
+				function (callback) { users.idBySession(conn, "someid", callback); },
+				function (callback) { conn.query('DROP TABLE uniusers', [], callback); },
+			],
+			function (error, result) {
+				test.ok(error, "should return error on wrong sessid");
+				test.done();
+			}
+		);
+	},
+	'testQueryError': function(test) {
+		users.idBySession(conn, "someid", function(error, result) {
+			test.ok(error, "should return error without table");
+			test.done();
+		});
+	},
 };
 
 exports.closeSession = function (test) {
@@ -226,3 +249,45 @@ exports.closeSession = function (test) {
 		}
 	);
 };
+
+exports.createSalt = function (test) {
+	var result;
+
+	result = users.createSalt(50);
+	test.strictEqual(result.length, 50, 'should keep specified length');
+	test.ok(( /^[a-zA-Z0-9]+$/ ).test(result), 'should contain printable characters');
+
+	result = users.createSalt(10);
+	test.strictEqual(result.length, 10, 'should keep specified length');
+	test.ok(( /^[a-zA-Z0-9]+$/ ).test(result), 'should contain printable characters');
+
+	test.done();
+};
+
+exports.registerUser = function (test) {
+	async.series([
+			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers ('+
+				'user TINYTEXT, salt TINYTEXT, hash TINYTEXT, sessid TINYTEXT, reg_time DATETIME,'+
+				'sessexpire DATETIME, location INT DEFAULT 1, permissions INT DEFAULT 0)', [], callback); },
+			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS locations'+
+				'(id INT, `default` TINYINT(1))', [], callback);},
+			function(callback){ conn.query("INSERT INTO locations VALUES (2, 1)", [], callback); },
+			function(callback){ users.registerUser(conn, "TheUser", "password", 1, callback); },
+			function(callback){ conn.query('SELECT * FROM uniusers', callback); },
+			function(callback){ conn.query('DROP TABLE uniusers, locations', [], callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			var user = result[4].rows[0];
+			test.ok('salt' in user);
+			test.ok('hash' in user);
+			test.ok('sessid' in user);
+			test.ok(user.reg_time <= new Date());
+			test.ok(user.sessexpire > new Date());
+			test.strictEqual(user.location, 2, "user should have been spawned on default location");
+			test.strictEqual(user.permissions, 1, "user should have specified permissions");
+			test.done();
+		}
+	);
+};
+

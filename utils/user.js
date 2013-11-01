@@ -134,12 +134,8 @@ exports.idBySession = function(dbConnection, sess, callback) {
 		'SELECT `id` FROM `uniusers` WHERE `sessid` = ?',
 		[sess],
 		function (error, result) {
-			if (!!error) {
-				callback(error, undefined);
-			}
-			else {
-				callback(undefined, result.rows[0].result);
-			}
+			if (result && result.rowCount === 0) error = "Wrong user's id";
+			callback(error, error || result.rows[0].id);
 		}
 	);
 };
