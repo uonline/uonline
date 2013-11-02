@@ -144,6 +144,16 @@ app.get('/world/', phpgate);
 app.get('/development/', phpgate);
 
 
+app.use(function(err, req, res, next){
+	console.error(err.stack);
+	res.send(500, 'Something broke!');
+});
+
+app.get('*', function(req, res){
+	res.send('It\'s a 404', 404);
+});
+
+
 /***** main *****/
 var DEFAULT_PORT = 5000;
 var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || DEFAULT_PORT;
