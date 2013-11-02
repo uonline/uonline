@@ -27,4 +27,5 @@ before_script:
   - mysql -e 'create database uonline_test;'
 script:
   - grunt
+after_script:
   - ./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter lcov | ./node_modules/coveralls/bin/coveralls.js
