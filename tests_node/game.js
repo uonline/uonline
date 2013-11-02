@@ -105,20 +105,51 @@ function insertCallback(dbName, fields) { //НЕ для использовани
 	return function(callback) {conn.query(query, callback);};
 }
 
-exports.getDefaultLocation = function (test) {
-	async.series([
-			creationLocationsTableCallback,
-			insertCallback('locations', {"id":1}),
-			insertCallback('locations', {"id":2, "`default`":1}),
-			insertCallback('locations', {"id":3}),
-			function(callback){ game.getDefaultLocation(conn, callback); },
-		],
-		function(error, result) {
-			test.ifError(error);
-			test.strictEqual(result[4].id, 2, 'should return id of default location');
-			test.done();
-		}
-	);
+exports.getDefaultLocation = {
+	'good test': function (test) {
+		async.series([
+				creationLocationsTableCallback,
+				insertCallback('locations', {"id":1}),
+				insertCallback('locations', {"id":2, "`default`":1}),
+				insertCallback('locations', {"id":3}),
+				function(callback){ game.getDefaultLocation(conn, callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.strictEqual(result[4].id, 2, 'should return id of default location');
+				test.done();
+			}
+		);
+	},
+	'bad test': function (test) {
+		async.series([
+				creationLocationsTableCallback,
+				insertCallback('locations', { "id": 1 } ),
+				insertCallback('locations', { "id": 2 } ),
+				insertCallback('locations', { "id": 3 } ),
+				function(callback){ game.getDefaultLocation(conn, callback); },
+			],
+			function(error, result) {
+				test.ok(!!error, 'should return error if default location is not defined');
+				test.done();
+			}
+		);
+	},
+	'ambiguous test': function (test) {
+		async.series([
+				creationLocationsTableCallback,
+				insertCallback('locations', {"id":1}),
+				insertCallback('locations', {"id":2, "`default`":1}),
+				insertCallback('locations', {"id":3, "`default`":1}),
+				insertCallback('locations', {"id":4}),
+				function(callback){ game.getDefaultLocation(conn, callback); },
+			],
+			function(error, result) {
+				test.ok(!!error, 'should return error if there is more than one default location');
+				test.done();
+			}
+		);
+	},
 };
 
 exports.getUserLocationId = {

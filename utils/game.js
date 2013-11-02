@@ -24,6 +24,8 @@ exports.getDefaultLocation = function(dbConnection, callback) {
 	dbConnection.query(
 		'SELECT * FROM locations WHERE `default` = 1',
 		function (error, result) {
+			if (!!result && result.rowCount === 0) error = 'default location is not defined';
+			if (!!result && result.rowCount > 1) error = 'there is more than one default location';
 			callback(error, error || result.rows[0]);
 		}
 	);
