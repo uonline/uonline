@@ -23,7 +23,8 @@ module.exports = function(grunt) {
 	grunt.registerTask('jscoverage_report', 'Show jscoverage report.', function() {
 		grunt.task.requires('nodeunit');
 		var jsc = require('jscoverage');
-		jsc.coverage(); // print summary info, cover percent
+		// TODO: make these two options
+		//jsc.coverage(); // print summary info, cover percent
 		jsc.coverageDetail(); // print uncovered lines
 	});
 };
