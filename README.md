@@ -100,3 +100,6 @@ var numbers = [
   4,
 ];
 ```
+
+* Write tests for everything.
+* Write good assert comments: they should answer the question "What do this function should do?".
