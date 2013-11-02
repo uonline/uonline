@@ -32,7 +32,7 @@ exports.getDefaultLocation = function(dbConnection, callback) {
 			{
 				error = 'there is more than one default location';
 			}
-			callback(error, !!error || result.rows[0]);
+			callback(error, error || result.rows[0]);
 		}
 	);
 };
@@ -46,7 +46,7 @@ exports.getUserLocationId = function(dbConnection, userid, callback) {
 			{
 				error = "Wrong user's id";
 			}
-			callback(error, !!error || result.rows[0].location);
+			callback(error, error || result.rows[0].location);
 		}
 	);
 };
@@ -144,7 +144,7 @@ exports.getUsersOnLocation = function(dbConnection, locid, callback) {
 		"WHERE sessexpire > NOW() AND location = ?",
 		[locid],
 		function(error, result) {
-			callback(error, !!error || result.rows);
+			callback(error, error || result.rows);
 		}
 	);
 };

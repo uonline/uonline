@@ -28,7 +28,7 @@ exports.userExists = function(dbConnection, username, callback)
 		'SELECT count(*) AS result FROM `uniusers` WHERE user = ?',
 		[username],
 		function (error, result) {
-			callback(error, !!error || (result.rows[0].result > 0));
+			callback(error, error || (result.rows[0].result > 0));
 		}
 	);
 };
@@ -38,7 +38,7 @@ exports.idExists = function(dbConnection, id, callback) {
 		'SELECT count(*) AS result FROM `uniusers` WHERE `id`= ?',
 		[id],
 		function (error, result) {
-			callback(error, !!error || (result.rows[0].result > 0));
+			callback(error, error || (result.rows[0].result > 0));
 		}
 	);
 };
@@ -133,7 +133,7 @@ exports.idBySession = function(dbConnection, sess, callback) {
 			{
 				error = "Wrong user's id";
 			}
-			callback(error, !!error || result.rows[0].id);
+			callback(error, error || result.rows[0].id);
 		}
 	);
 };
