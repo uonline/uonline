@@ -278,14 +278,15 @@ exports.registerUser = function (test) {
 		],
 		function(error, result) {
 			test.ifError(error);
+			test.strictEqual(result[4].rowCount, 1, 'one registration - one user');
 			var user = result[4].rows[0];
-			test.ok('salt' in user);
-			test.ok('hash' in user);
-			test.ok('sessid' in user);
-			test.ok(user.reg_time <= new Date());
-			test.ok(user.sessexpire > new Date());
-			test.strictEqual(user.location, 2, "user should have been spawned on default location");
-			test.strictEqual(user.permissions, 1, "user should have specified permissions");
+			test.ok(user.salt.length > 0, 'salt should be set');
+			test.ok(user.hash.length > 0, 'hash should be set');
+			test.ok(user.sessid.length > 0, 'sessid should be set');
+			test.ok(user.reg_time <= new Date(), 'should not put registration time in future');
+			test.ok(user.sessexpire > new Date(), 'session should not have been expired');
+			test.strictEqual(user.location, 2, 'user should have been spawned on default location');
+			test.strictEqual(user.permissions, 1, 'user should have specified permissions');
 			test.done();
 		}
 	);

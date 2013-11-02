@@ -24,9 +24,15 @@ exports.getDefaultLocation = function(dbConnection, callback) {
 	dbConnection.query(
 		'SELECT * FROM locations WHERE `default` = 1',
 		function (error, result) {
-			if (!!result && result.rowCount === 0) error = 'default location is not defined';
-			if (!!result && result.rowCount > 1) error = 'there is more than one default location';
-			callback(error, error || result.rows[0]);
+			if (!!result && result.rowCount === 0)
+			{
+				error = 'default location is not defined';
+			}
+			if (!!result && result.rowCount > 1)
+			{
+				error = 'there is more than one default location';
+			}
+			callback(error, !!error || result.rows[0]);
 		}
 	);
 };
@@ -36,11 +42,11 @@ exports.getUserLocationId = function(dbConnection, userid, callback) {
 		'SELECT location FROM uniusers WHERE id = ?',
 		[userid],
 		function (error, result) {
-			if (result && result.rowCount === 0)
+			if (!!result && result.rowCount === 0)
 			{
 				error = "Wrong user's id";
 			}
-			callback(error, error || result.rows[0].location);
+			callback(error, !!error || result.rows[0].location);
 		}
 	);
 };
@@ -51,7 +57,7 @@ exports.getUserLocation = function(dbConnection, userid, callback) {
 		'WHERE uniusers.id=? AND locations.id = uniusers.location',
 		[userid],
 		function (error, result) {
-			if (result && result.rowCount === 0)
+			if (!!result && result.rowCount === 0)
 			{
 				error = "Wrong user's id";
 			}
@@ -138,7 +144,7 @@ exports.getUsersOnLocation = function(dbConnection, locid, callback) {
 		"WHERE sessexpire > NOW() AND location = ?",
 		[locid],
 		function(error, result) {
-			callback(error, error || result.rows);
+			callback(error, !!error || result.rows);
 		}
 	);
 };
@@ -151,7 +157,7 @@ exports.getNearbyUsers = function(dbConnection, userid, locid, callback) {
 			if (!!error) callback(error, null);
 			for (var i=0; i<result.length; i++)
 			{
-				if (result[i].id == userid)
+				if (result[i].id === userid)
 				{
 					result.splice(i,1);
 					break;
