@@ -153,8 +153,8 @@ console.log("Starting up on port " + port + ", and IP is " + ip);
 if (port != DEFAULT_PORT)
 {
 	console.log("[grunt] Oh, god, I'm in cloud!");
-	console.log("[grunt] Running `grunt ff`.");
-	var child = require('child_process').exec('./node_modules/grunt-cli/bin/grunt ff',
+	console.log("[grunt] Running `grunt build`.");
+	var child = require('child_process').exec('./node_modules/grunt-cli/bin/grunt build',
 		function (error, stdout, stderr) {
 			if (stdout.length > 0) console.log('[grunt] stdout: ' + stdout);
 			if (stderr.length > 0) console.log('[grunt] stderr: ' + stderr);
