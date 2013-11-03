@@ -94,6 +94,15 @@ function quickRender(request, response, template)
 	response.render(template, options);
 }
 
+function quickRenderError(request, response, code)
+{
+	var options = request.uonline.basicOpts;
+	options.code = code;
+	options.instance = 'error';
+	response.status(code);
+	response.render('error', options);
+}
+
 app.get('/', function(request, response) {
 	response.redirect((request.uonline.basicOpts.loggedIn === true) ?
 		config.defaultInstanceForUsers : config.defaultInstanceForGuests);
@@ -147,22 +156,15 @@ app.get('/stats/', phpgate);
 app.get('/world/', phpgate);
 app.get('/development/', phpgate);
 
-
-app.use(function (error, request, response, next) {
-	console.error(error.stack);
-	var options = request.uonline.basicOpts;
-	options.code = 500;
-	options.instance = 'error';
-	response.status(500);
-	response.render('error', options);
+// 404 handling
+app.get('*', function (request, response) {
+	quickRenderError(request, response, 404);
 });
 
-app.get('*', function (request, response) {
-	var options = request.uonline.basicOpts;
-	options.code = 404;
-	options.instance = 'error';
-	response.status(404);
-	response.render('error', options);
+// Exception handling
+app.use(function (error, request, response, next) {
+	console.error(error.stack);
+	quickRenderError(request, response, 500);
 });
 
 
