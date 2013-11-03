@@ -81,6 +81,10 @@ app.get('/node/', function(request, response) {
 	response.send('Node.js is up and running.');
 });
 
+app.get('/explode/', function (request, response) {
+	throw new Error('Emulated error.');
+});
+
 /*** real ones ***/
 
 function quickRender(request, response, template)
@@ -146,11 +150,19 @@ app.get('/development/', phpgate);
 
 app.use(function (error, request, response, next) {
 	console.error(error.stack);
-	response.send(500, 'Something broke!');
+	var options = request.uonline.basicOpts;
+	options.code = 500;
+	options.instance = 'error';
+	response.status(500);
+	response.render('error', options);
 });
 
 app.get('*', function (request, response) {
-	response.send("It's a 404", 404);
+	var options = request.uonline.basicOpts;
+	options.code = 404;
+	options.instance = 'error';
+	response.status(404);
+	response.render('error', options);
 });
 
 
