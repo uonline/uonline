@@ -144,13 +144,13 @@ app.get('/world/', phpgate);
 app.get('/development/', phpgate);
 
 
-app.use(function(err, req, res, next){
-	console.error(err.stack);
-	res.send(500, 'Something broke!');
+app.use(function (error, request, response, next) {
+	console.error(error.stack);
+	response.send(500, 'Something broke!');
 });
 
-app.get('*', function(req, res){
-	res.send('It\'s a 404', 404);
+app.get('*', function (request, response) {
+	response.send("It's a 404", 404);
 });
 
 
