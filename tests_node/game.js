@@ -105,20 +105,51 @@ function insertCallback(dbName, fields) { //НЕ для использовани
 	return function(callback) {conn.query(query, callback);};
 }
 
-exports.getDefaultLocation = function (test) {
-	async.series([
-			creationLocationsTableCallback,
-			insertCallback('locations', {"id":1}),
-			insertCallback('locations', {"id":2, "`default`":1}),
-			insertCallback('locations', {"id":3}),
-			function(callback){ game.getDefaultLocation(conn, callback); },
-		],
-		function(error, result) {
-			test.ifError(error);
-			test.strictEqual(result[4].id, 2, 'should return id of default location');
-			test.done();
-		}
-	);
+exports.getDefaultLocation = {
+	'good test': function (test) {
+		async.series([
+				creationLocationsTableCallback,
+				insertCallback('locations', {"id":1}),
+				insertCallback('locations', {"id":2, "`default`":1}),
+				insertCallback('locations', {"id":3}),
+				function(callback){ game.getDefaultLocation(conn, callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.strictEqual(result[4].id, 2, 'should return id of default location');
+				test.done();
+			}
+		);
+	},
+	'bad test': function (test) {
+		async.series([
+				creationLocationsTableCallback,
+				insertCallback('locations', { "id": 1 } ),
+				insertCallback('locations', { "id": 2 } ),
+				insertCallback('locations', { "id": 3 } ),
+				function(callback){ game.getDefaultLocation(conn, callback); },
+			],
+			function(error, result) {
+				test.ok(!!error, 'should return error if default location is not defined');
+				test.done();
+			}
+		);
+	},
+	'ambiguous test': function (test) {
+		async.series([
+				creationLocationsTableCallback,
+				insertCallback('locations', {"id":1}),
+				insertCallback('locations', {"id":2, "`default`":1}),
+				insertCallback('locations', {"id":3, "`default`":1}),
+				insertCallback('locations', {"id":4}),
+				function(callback){ game.getDefaultLocation(conn, callback); },
+			],
+			function(error, result) {
+				test.ok(!!error, 'should return error if there is more than one default location');
+				test.done();
+			}
+		);
+	},
 };
 
 exports.getUserLocationId = {
@@ -345,42 +376,50 @@ exports.uninvolve = function(test) {
 	);
 };
 
-exports.getUserCharacters = function(test) {
-	async.series([
-			creationUniusersTableCallback,
-			insertCallback('uniusers', {
-				id: 1,
-				fight_mode: 1, autoinvolved_fm: 1,
-				health: 100,   health_max: 200,
-				mana: 50,      mana_max: 200,
-				exp: 1000,     level: 2,
-				energy: 128,
-				power: 1,
-				defense: 2,
-				agility: 3,
-				accuracy: 4,
-				intelligence: 5,
-				initiative: 6
-			}),
-			function(callback){ game.getUserCharacters(conn, 1, callback); },
-		],
-		function(error, result) {
-			test.ifError(error);
-			test.deepEqual(result[2], {
-				health: 100,   health_max: 200,    health_percent: 50,
-				mana: 50,      mana_max: 200,      mana_percent: 25,
-				level: 2,
-				exp: 1000,     exp_max: 3000,      exp_percent: 0,
-				energy: 128,
-				power: 1,
-				defense: 2,
-				agility: 3,
-				accuracy: 4,
-				intelligence: 5,
-				initiative: 6
-			}, "should return specific fields");
+exports.getUserCharacters = {
+	'testNoErrors': function(test) {
+		async.series([
+				creationUniusersTableCallback,
+				insertCallback('uniusers', {
+					id: 1,
+					fight_mode: 1, autoinvolved_fm: 1,
+					health: 100,   health_max: 200,
+					mana: 50,      mana_max: 200,
+					exp: 1000,     level: 2,
+					energy: 128,
+					power: 1,
+					defense: 2,
+					agility: 3,
+					accuracy: 4,
+					intelligence: 5,
+					initiative: 6
+				}),
+				function(callback){ game.getUserCharacters(conn, 1, callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.deepEqual(result[2], {
+					health: 100,   health_max: 200,    health_percent: 50,
+					mana: 50,      mana_max: 200,      mana_percent: 25,
+					level: 2,
+					exp: 1000,     exp_max: 3000,      exp_percent: 0,
+					energy: 128,
+					power: 1,
+					defense: 2,
+					agility: 3,
+					accuracy: 4,
+					intelligence: 5,
+					initiative: 6
+				}, "should return specific fields");
+				test.done();
+			}
+		);
+	},
+	'testErrors': function(test) {
+		game.getUserCharacters(conn, 1, function(error, result) {
+			test.ok(error);
 			test.done();
-		}
-	);
+		});
+	},
 };
 

@@ -24,6 +24,14 @@ exports.getDefaultLocation = function(dbConnection, callback) {
 	dbConnection.query(
 		'SELECT * FROM locations WHERE `default` = 1',
 		function (error, result) {
+			if (!!result && result.rowCount === 0)
+			{
+				error = 'default location is not defined';
+			}
+			if (!!result && result.rowCount > 1)
+			{
+				error = 'there is more than one default location';
+			}
 			callback(error, error || result.rows[0]);
 		}
 	);
@@ -34,7 +42,10 @@ exports.getUserLocationId = function(dbConnection, userid, callback) {
 		'SELECT location FROM uniusers WHERE id = ?',
 		[userid],
 		function (error, result) {
-			if (result && result.rowCount === 0) error = "Wrong user's id";
+			if (!!result && result.rowCount === 0)
+			{
+				error = "Wrong user's id";
+			}
 			callback(error, error || result.rows[0].location);
 		}
 	);
@@ -46,11 +57,19 @@ exports.getUserLocation = function(dbConnection, userid, callback) {
 		'WHERE uniusers.id=? AND locations.id = uniusers.location',
 		[userid],
 		function (error, result) {
-			if (result && result.rowCount === 0) error = "Wrong user's id";
-			if (!!error) {callback(error, null); return;}
+			if (!!result && result.rowCount === 0)
+			{
+				error = "Wrong user's id";
+			}
+			if (!!error)
+			{
+				callback(error, null);
+				return;
+			}
 			var res = result.rows[0];
 			var goto = res.goto.split("|");
-			for (var i=0;i<goto.length;i++) {
+			for (var i=0;i<goto.length;i++)
+			{
 				var s = goto[i].split("=");
 				goto[i] = {id: parseInt(s[1], 10), text: s[0]};
 			}
@@ -137,10 +156,13 @@ exports.getNearbyUsers = function(dbConnection, userid, locid, callback) {
 		function(error, result) {
 			if (!!error) callback(error, null);
 			for (var i=0; i<result.length; i++)
-				if (result[i].id == userid) {
+			{
+				if (result[i].id === userid)
+				{
 					result.splice(i,1);
 					break;
 				}
+			}
 			callback(null, result);
 		}
 	);
@@ -184,7 +206,11 @@ exports.getUserCharacters = function(dbConnection, userid, callback) {
 		"SELECT "+joinedCharacters+" FROM uniusers WHERE id = ?",
 		[userid],
 		function(error, result) {
-			if (!!error) callback(error, null);
+			if (!!error)
+			{
+				callback(error, null);
+				return;
+			}
 			var res = result.rows[0];
 			res.health_percent = res.health * 100 / res.health_max;
 			res.mana_percent = res.mana * 100 / res.mana_max;

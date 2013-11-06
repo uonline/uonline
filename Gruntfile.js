@@ -88,11 +88,13 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadTasks('./grunt-custom-tasks/');
 
-	// Everything except tests.
-	grunt.registerTask('ff',
-		['clean', 'checkstrict', 'checklicense', 'jshint', 'coffee', 'browserify', 'uglify']);
+	// Basic tasks.
+	grunt.registerTask('check', ['checkstrict', 'checklicense', 'jshint']);
+	grunt.registerTask('build', ['browserify', 'uglify']);
+	grunt.registerTask('test', ['nodeunit', 'jscoverage_report']);
+	// Custom one.
+	grunt.registerTask('ff', ['check', 'build']);
 	// Default task.
-	grunt.registerTask('default',
-		['ff', 'nodeunit', 'jscoverage_report']);
+	grunt.registerTask('default', ['clean', 'check', 'coffee', 'build', 'test']);
 
 };

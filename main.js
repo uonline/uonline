@@ -81,6 +81,10 @@ app.get('/node/', function(request, response) {
 	response.send('Node.js is up and running.');
 });
 
+app.get('/explode/', function (request, response) {
+	throw new Error('Emulated error.');
+});
+
 /*** real ones ***/
 
 function quickRender(request, response, template)
@@ -88,6 +92,15 @@ function quickRender(request, response, template)
 	var options = request.uonline.basicOpts;
 	options.instance = template;
 	response.render(template, options);
+}
+
+function quickRenderError(request, response, code)
+{
+	var options = request.uonline.basicOpts;
+	options.code = code;
+	options.instance = 'error';
+	response.status(code);
+	response.render('error', options);
 }
 
 app.get('/', function(request, response) {
@@ -143,6 +156,17 @@ app.get('/stats/', phpgate);
 app.get('/world/', phpgate);
 app.get('/development/', phpgate);
 
+// 404 handling
+app.get('*', function (request, response) {
+	quickRenderError(request, response, 404);
+});
+
+// Exception handling
+app.use(function (error, request, response, next) {
+	console.error(error.stack);
+	quickRenderError(request, response, 500);
+});
+
 
 /***** main *****/
 var DEFAULT_PORT = 5000;
@@ -153,8 +177,8 @@ console.log("Starting up on port " + port + ", and IP is " + ip);
 if (port != DEFAULT_PORT)
 {
 	console.log("[grunt] Oh, god, I'm in cloud!");
-	console.log("[grunt] Running `grunt ff`.");
-	var child = require('child_process').exec('./node_modules/grunt-cli/bin/grunt ff',
+	console.log("[grunt] Running `grunt build`.");
+	var child = require('child_process').exec('./node_modules/grunt-cli/bin/grunt build',
 		function (error, stdout, stderr) {
 			if (stdout.length > 0) console.log('[grunt] stdout: ' + stdout);
 			if (stderr.length > 0) console.log('[grunt] stderr: ' + stderr);
