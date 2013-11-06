@@ -22,6 +22,9 @@ diagnose:
 lintverbose:
 	find -name "*.js" | grep -v ./node_modules/ | grep -v ./bootstrap/ | grep -v ./code-coverage-report/ | grep -v ./vendor/ | grep -v ./browserified/ | xargs ./node_modules/jshint/bin/jshint --show-non-errors
 
+coffeelint:
+	find -name '*.coffee' | grep -v ./node_modules/ | xargs ./node_modules/coffeelint/bin/coffeelint -f .coffeelintrc
+
 test:
 	npm test
 	php vendor/bin/phpunit --strict --verbose `if $$(which test) x$${TRAVIS} '==' x; then echo --colors; fi` --coverage-html ./code-coverage-report tests_php/
