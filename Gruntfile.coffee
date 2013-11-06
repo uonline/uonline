@@ -57,6 +57,10 @@ module.exports = (grunt) ->
 					'utils/*.js'
 					'tests_node/*.js'
 					'grunt-custom-tasks/*.js'
+					'*.coffee'
+					'utils/*.coffee'
+					'tests_node/*.coffee'
+					'grunt-custom-tasks/*.coffee'
 				]
 
 		checkstrict:
@@ -67,6 +71,10 @@ module.exports = (grunt) ->
 					'utils/*.js'
 					'tests_node/*.js'
 					'grunt-custom-tasks/*.js'
+					'*.coffee'
+					'utils/*.coffee'
+					'tests_node/*.coffee'
+					'grunt-custom-tasks/*.coffee'
 				]
 
 		coffee:
@@ -85,6 +93,15 @@ module.exports = (grunt) ->
 				'utils/validation.js'
 			]
 
+		coffeelint:
+			all: [
+				'*.coffee'
+				'utils/*.coffee'
+				'tests_node/*.coffee'
+				'grunt-custom-tasks/*.coffee'
+			]
+			options: JSON.parse require('fs').readFileSync('.coffeelintrc').toString()
+
 
 	# These plugins provide necessary tasks.
 	grunt.loadNpmTasks 'grunt-contrib-nodeunit'
@@ -93,10 +110,11 @@ module.exports = (grunt) ->
 	grunt.loadNpmTasks 'grunt-contrib-uglify'
 	grunt.loadNpmTasks 'grunt-contrib-coffee'
 	grunt.loadNpmTasks 'grunt-contrib-clean'
+	grunt.loadNpmTasks 'grunt-coffeelint'
 	grunt.loadTasks './grunt-custom-tasks/'
 
 	# Basic tasks.
-	grunt.registerTask 'check', ['checkstrict', 'checklicense', 'jshint']
+	grunt.registerTask 'check', ['checkstrict', 'checklicense', 'coffeelint', 'jshint']
 	grunt.registerTask 'build', ['browserify', 'uglify']
 	grunt.registerTask 'test', ['nodeunit', 'jscoverage_report']
 
