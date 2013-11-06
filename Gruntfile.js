@@ -22,7 +22,7 @@ module.exports = function(grunt) {
 	// Project configuration.
 	grunt.initConfig({
 		nodeunit: {
-			all: ['tests_node/health-check.js', 'tests_node/*.js'],
+			all: ['tests_node/health-check.js', 'tests_node/*.coffee', 'tests_node/*.js'],
 		},
 		jshint: {
 			options: {
