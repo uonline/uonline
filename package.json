@@ -27,7 +27,8 @@
     "grunt-contrib-uglify": "~0.2.4",
     "any-db": "~1.0.0",
     "any-db-postgres": "~1.0.0",
-    "any-db-mysql": "~1.0.0"
+    "any-db-mysql": "~1.0.0",
+    "jade": "~0.35.0"
   },
   "devDependencies": {
     "nodeunit": "~0.8.1",
