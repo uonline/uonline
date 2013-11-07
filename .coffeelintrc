@@ -31,8 +31,8 @@
     },
     "indentation": {
         "name": "indentation",
-        "value": 2,
-        "level": "ignore"
+        "value": 1,
+        "level": "error"
     },
     "camel_case_classes": {
         "name": "camel_case_classes",
