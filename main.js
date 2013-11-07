@@ -32,7 +32,8 @@ var app = express();
 app.enable('trust proxy');
 app.use(express.logger());
 app.use(express.cookieParser());
-app.use(express.bodyParser());
+app.use(express.json());
+app.use(express.urlencoded());
 app.use(express.compress());
 
 app.use('/bootstrap', express.static(__dirname + '/bootstrap'));
