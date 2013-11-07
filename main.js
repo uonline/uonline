@@ -131,8 +131,8 @@ app.post('/register/', function (request, response) {
 				utils.user.userExists(mysqlConnection, request.body.user, callback);
 			}],
 			register: ['usernameIsValid', 'passwordIsValid', 'userExists', function (callback, results) {
-				if (results.usernameIsValid === true && results.passwordIsValid === true
-					&& results.userExists === false)
+				if (results.usernameIsValid === true && results.passwordIsValid === true &&
+					results.userExists === false)
 				{
 					utils.user.registerUser(mysqlConnection, request.body.user, request.body.pass,
 						config.PERMISSIONS_USER, callback);
