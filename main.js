@@ -117,7 +117,52 @@ app.get('/register/', function(request, response) {
 	quickRender(request, response, 'register');
 });
 
-app.post('/register/', phpgate);
+app.post('/register/', function (request, response) {
+	var options = request.uonline.basicOpts;
+	options.instance = 'register';
+	async.auto({
+			usernameIsValid: function (callback, results) {
+				callback(null, utils.validation.usernameIsValid(request.body.user));
+			},
+			passwordIsValid: function (callback, results) {
+				callback(null, utils.validation.passwordIsValid(request.body.pass));
+			},
+			userExists: ['usernameIsValid', function (callback, results) {
+				utils.user.userExists(mysqlConnection, request.body.user, callback);
+			}],
+			register: ['usernameIsValid', 'passwordIsValid', 'userExists', function (callback, results) {
+				if (results.usernameIsValid === true && results.passwordIsValid === true
+					&& results.userExists === false)
+				{
+					utils.user.registerUser(mysqlConnection, request.body.user, request.body.pass,
+						config.PERMISSIONS_USER, callback);
+				}
+				else
+				{
+					callback(null, 'validation fail');
+				}
+			}],
+		},
+		function (error, results) {
+			if (!!error || results.register === 'validation fail')
+			{
+				options.error = true; // TODO: handle mysql errors
+				// TODO: simplify template params
+				options.invalidLogin = !results.usernameIsValid;
+				options.invalidPass = !results.passwordIsValid;
+				options.loginIsBusy = results.userExists;
+				options.user = request.body.user;
+				options.pass = request.body.pass;
+				response.render('register', options);
+			}
+			else
+			{
+				// TODO: set sessid
+				response.redirect(config.defaultInstanceForUsers);
+			}
+		}
+	);
+});
 
 app.get('/login/', function(request, response) {
 	quickRender(request, response, 'login');
