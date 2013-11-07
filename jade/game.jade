@@ -1,0 +1,55 @@
+// DIRTY!
+
+html
+	body
+		| {% extends "layout.twig" %}
+		| {% block title %}{{ location_name | tf }}{% endblock title %}
+		| {% block content %}
+		.page-header
+			h1
+				| {{ location_name | tf }}
+				small {{ area_name | tf }}
+		| {% if pic is defined %}
+		img.img-polaroid(src="{{ pic }}", style="float: right; margin-left: 1em; margin-bottom: 1em;")
+		| {% endif %}
+		| {{ description | tf | nl2p | nl2br }}
+		p(style="line-height: 2.5em;")
+			| {% for i in ways %}
+			a.btn(href="/action/go/{{ i.to }}") {{ i.name | tf }}
+			| {% endfor %}
+		br
+		p
+			small
+				| {% if players_list|length > 0 %}
+				| На этой локации находятся:
+				| {% for i in players_list %}
+				a(href="/profile/id/{{ i.id }}/") {{ i.name }}
+				| {% if not loop.last %}, {% endif %}
+				| {% endfor %}
+				| {% else %}
+				| На этой локации больше никого нет.
+				| {% endif %}
+		p
+			small
+				| {% if monsters_list|length > 0 %}
+				| Монстры на этой локации:
+				| {% for i in monsters_list %}
+				a(href="#") {{ i.name }}
+				| {% if not loop.last %}, {% endif %}
+				| {% endfor %}
+				// dirty layout
+				p
+					| {% if autoinvolved_fm %}
+					b Вас атаковали!
+					| {% endif %}
+				p
+					| {% if fight_mode %}
+					a(href="/action/escape") Свалить
+					| {% else %}
+					a(href="/action/attack") Атаковать
+					| {% endif %}
+				| {% else %}
+				| На этой локации нет монстров.
+				| {% endif %}
+		div(style="clear: both;")
+		| {% endblock content %}
