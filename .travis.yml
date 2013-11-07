@@ -9,14 +9,14 @@ env:
   - DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test" MYSQL_DATABASE_URL="mysql://travis:@localhost/uonline" MYSQL_DATABASE_URL_TEST="mysql://travis:@localhost/uonline_test"
 before_script:
   - # Node.js setup
-  - sudo apt-get update
-  - sudo apt-get install nodejs
+  - travis_retry sudo apt-get update
+  - travis_retry sudo apt-get install nodejs
   - node --version
-  - npm install
-  - npm install -g grunt-cli
+  - travis_retry npm install
+  - travis_retry npm install -g grunt-cli
   - # PHP setup
   - make diagnose
-  - ./composer.phar install
+  - travis_retry ./composer.phar install
   - # Database setup
   - echo "localhost|travis||uonline|off" > keyring
   - ./init.php --info
@@ -28,4 +28,4 @@ before_script:
 script:
   - grunt
 after_script:
-  - ./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter lcov | ./node_modules/coveralls/bin/coveralls.js
+  - ./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter lcov | travis_retry ./node_modules/coveralls/bin/coveralls.js
