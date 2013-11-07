@@ -40,12 +40,9 @@ app.use('/bootstrap', express.static(__dirname + '/bootstrap'));
 app.use('/img', express.static(__dirname + '/img'));
 app.use('/browserified', express.static(__dirname + '/browserified'));
 
-var swig = require('swig');
-app.engine('html', swig.renderFile);
-app.engine('twig', swig.renderFile);
-app.engine('swig', swig.renderFile);
-app.set('view engine', 'twig'); // historical reasons
-app.set('views', __dirname + '/templates');
+app.set('view engine', 'jade');
+app.locals.pretty = true;
+app.set('views', __dirname + '/jade');
 
 var phpgate = require('./cgi.js').phpgate;
 

@@ -1,0 +1,23 @@
+extends layout
+block title
+	| Вход
+block content
+	div.page-header
+		h1 Вход
+		if error === true
+			div.alert.alert-error
+				a.close(href='#', data-dismiss='alert') &times;
+				b Ошибка!
+				| #{' '}Не удалось войти, используя введённые данные.
+	form.form-horizontal(method='post', action='/login/')
+		div.control-group
+			label.control-label(for='user') Логин
+			div.controls
+				input#user(type='text', maxlength='32', name='user', value=user, required)
+		div.control-group
+			label.control-label(for='pass') Пароль
+			div.controls
+				input#pass(type='password', maxlength='32', name='pass', required)
+		div.control-group
+			div.controls
+				button.btn(type='submit') Войти

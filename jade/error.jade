@@ -1,0 +1,15 @@
+extends layout
+block title
+	if code === 404
+		| 404 &mdash; Страница не найдена
+	else
+		| Ошибка #{code}
+block content
+	div.page-header
+		if code === 404
+			h1 404#{' '}
+				small Страница не найдена
+		else
+			h1 Ошибка #{code}
+	p
+		a(href='/') Перейти на главную
