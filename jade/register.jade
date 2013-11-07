@@ -9,10 +9,10 @@ block content
 			a.close(href='#', data-dismiss='alert') &times;
 			if loginIsBusy === true
 				b Извините! Это имя уже занято.
-				| Придумайте какое-нибудь другое.
+				| #{' '}Придумайте какое-нибудь другое.
 			else
 				b Ой! Во введённых данных что-то не так.
-				| Исправьте ошибки и попробуйте ещё раз.
+				| #{' '}Исправьте ошибки и попробуйте ещё раз.
 	form.form-horizontal(method='post', action='/register/')
 		#user-control-group.control-group(class=((invalidLogin || loginIsBusy)?'error':''))
 			label.control-label(for='user') Логин
