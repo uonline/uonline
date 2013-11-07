@@ -22,6 +22,6 @@ reporter.run(['tests_node/'], null, function(err) { if (!!err) { process.exit(1)
 
 var jsc = require('jscoverage');
 process.on('exit', function () {
-	jsc.coverage(); // print summary info, cover percent
+	//jsc.coverage(); // print summary info, cover percent
 	jsc.coverageDetail(); // print uncovered lines
 });
