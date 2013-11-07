@@ -63,10 +63,7 @@ module.exports = function(grunt) {
 	});
 
 	// These plugins provide necessary tasks.
-	grunt.loadNpmTasks('grunt-contrib-nodeunit');
-	grunt.loadNpmTasks('grunt-contrib-jshint');
-	grunt.loadNpmTasks('grunt-browserify');
-	grunt.loadNpmTasks('grunt-contrib-uglify');
+	require('load-grunt-tasks')(grunt);
 	grunt.loadTasks('./grunt-custom-tasks/');
 
 	// Basic tasks.
