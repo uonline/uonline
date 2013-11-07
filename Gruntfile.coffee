@@ -104,13 +104,7 @@ module.exports = (grunt) ->
 
 
 	# These plugins provide necessary tasks.
-	grunt.loadNpmTasks 'grunt-contrib-nodeunit'
-	grunt.loadNpmTasks 'grunt-contrib-jshint'
-	grunt.loadNpmTasks 'grunt-browserify'
-	grunt.loadNpmTasks 'grunt-contrib-uglify'
-	grunt.loadNpmTasks 'grunt-contrib-coffee'
-	grunt.loadNpmTasks 'grunt-contrib-clean'
-	grunt.loadNpmTasks 'grunt-coffeelint'
+	require('load-grunt-tasks')(grunt)
 	grunt.loadTasks './grunt-custom-tasks/'
 
 	# Basic tasks.
