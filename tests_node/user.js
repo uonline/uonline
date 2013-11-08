@@ -31,7 +31,7 @@ var conn = null;
 
 exports.setUp = function (done) {
 	conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
-	conn.query('DROP TABLE IF EXISTS uniusers', [], done);
+	conn.query('DROP TABLE IF EXISTS uniusers, locations', [], done);
 };
 
 exports.tearDown = function (done) {
@@ -200,7 +200,6 @@ exports.idBySession = {
 					conn.query('CREATE TABLE IF NOT EXISTS uniusers (id INT, sessid TINYTEXT)', [], callback); },
 				function (callback) { conn.query('INSERT INTO uniusers VALUES ( 3, "someid" )', [], callback); },
 				function (callback) { users.idBySession(conn, "someid", callback); },
-				function (callback) { conn.query('DROP TABLE uniusers', [], callback); },
 			],
 			function (error, result) {
 				test.ifError(error);
@@ -239,7 +238,6 @@ exports.closeSession = function (test) {
 			function(callback){ users.closeSession(conn, 'someid', callback); },
 			function(callback){ conn.query('SELECT sessexpire > NOW() AS active FROM uniusers', callback); },
 			function(callback){ users.closeSession(conn, undefined, callback); },
-			function(callback){ conn.query('DROP TABLE uniusers', [], callback); }, //5
 		],
 		function(error, result) {
 			test.ifError(error);
@@ -274,7 +272,6 @@ exports.registerUser = function (test) {
 			function(callback){ conn.query("INSERT INTO locations VALUES (2, 1)", [], callback); },
 			function(callback){ users.registerUser(conn, "TheUser", "password", 1, callback); },
 			function(callback){ conn.query('SELECT * FROM uniusers', callback); },
-			function(callback){ conn.query('DROP TABLE uniusers, locations', [], callback); },
 		],
 		function(error, result) {
 			test.ifError(error);
@@ -290,5 +287,67 @@ exports.registerUser = function (test) {
 			test.done();
 		}
 	);
+};
+
+exports.accessGranted = {
+	'testNoErrors': function (test) {
+		async.series([
+				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers ('+
+					'user TINYTEXT, salt TINYTEXT, hash TINYTEXT, sessid TINYTEXT, reg_time DATETIME,'+
+					'sessexpire DATETIME, location INT DEFAULT 1, permissions INT DEFAULT 0)', [], callback); },
+				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS locations'+
+					'(id INT, `default` TINYINT(1))', [], callback);},
+				function(callback){ conn.query("INSERT INTO locations VALUES (2, 1)", [], callback); },
+				function(callback){ users.registerUser(conn, "TheUser", "password", 1, callback); },
+				function(callback){ users.accessGranted(conn, "TheUser", "password", callback); },
+				function(callback){ users.accessGranted(conn, "WrongUser", "password", callback); },
+				function(callback){ users.accessGranted(conn, "TheUser", "wrongpass", callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.strictEqual(result[4], true, "access should be granted for valid data");
+				test.strictEqual(result[5], false, "access should NOT be granted if user does not exists");
+				test.strictEqual(result[6], false, "access should NOT be granted if password is wrong");
+				test.done();
+			}
+		);
+	},
+	'testErrors': function (test) {
+		users.accessGranted(conn, "TheUser", "password", function(error, result) {
+			test.ok(error);
+			test.done();
+		});
+	},
+};
+
+exports.setSession = {
+	'testNoErrors': function (test) {
+		async.series([
+				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers ('+
+					'id INT AUTO_INCREMENT, PRIMARY KEY (id), user TINYTEXT, '+
+					'salt TINYTEXT, hash TINYTEXT, sessid TINYTEXT, reg_time DATETIME, '+
+					'sessexpire DATETIME, location INT DEFAULT 1, permissions INT DEFAULT 0)', [], callback); },//0
+				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS locations'+
+					'(id INT, `default` TINYINT(1))', [], callback);},
+				function(callback){ conn.query("INSERT INTO locations VALUES (2, 1)", [], callback); },
+				function(callback){ users.registerUser(conn, "TheUser", "password", 1, callback); },
+				function(callback){ conn.query('SELECT sessid FROM uniusers', [], callback);},
+				function(callback){ users.setSession(conn, 1, callback); },//5
+				function(callback){ conn.query('SELECT sessid, sessexpire FROM uniusers', [], callback);},
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.ok(result[4].rows[0].sessid !== result[6].rows[0].sessid, "Sessid should have changed");
+				test.ok(result[6].rows[0].sessexpire > new Date(), 'session should not have been expired');
+				test.done();
+			}
+		);
+	},
+	'testErrors': function (test) {
+		users.setSession(conn, 1, function(error, result) {
+			test.ok(error);
+			test.done();
+		});
+	},
 };
 

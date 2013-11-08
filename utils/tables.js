@@ -59,6 +59,11 @@ exports.renameCol = function(dbConnection, table, colOld, colNew, callback) {
 				callback(error, null);
 				return;
 			}
+			if (result.rowCount === 0)
+			{
+				callback("No such table/column", null);
+				return;
+			}
 			dbConnection.query(
 				'ALTER TABLE '+table+' CHANGE COLUMN '+colOld+' '+colNew+' '+result.rows[0].COLUMN_TYPE,
 				[],

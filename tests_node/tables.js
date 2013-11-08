@@ -108,19 +108,39 @@ exports.addCol = function (test) {
 	);
 };
 
-exports.renameCol = function (test) {
-	async.series([
-			function(callback){ tables.create(conn, 'test_table', 'id INT(9)', callback); },
-			function(callback){ tables.renameCol(conn, 'test_table', 'id', 'col', callback); },
-			function(callback){ conn.query('DESCRIBE test_table', [], callback); },
-		],
-		function(error, result) {
-			test.ifError(error);
-			test.strictEqual(result[2].rows[0].Field, 'col', 'column shold have been renamed');
-			test.strictEqual(result[2].rows[0].Type, 'int(9)', 'column type should be same');
+exports.renameCol = {
+	'testNoErrors': function (test) {
+		async.series([
+				function(callback){ tables.create(conn, 'test_table', 'id INT(9)', callback); },
+				function(callback){ tables.renameCol(conn, 'test_table', 'id', 'col', callback); },
+				function(callback){ conn.query('DESCRIBE test_table', [], callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.strictEqual(result[2].rows[0].Field, 'col', 'column shold have been renamed');
+				test.strictEqual(result[2].rows[0].Type, 'int(9)', 'column type should be same');
+				test.done();
+			}
+		);
+	},
+	'testNoTable': function (test) {
+		tables.renameCol(conn, 'test_table', 'id', 'col', function(error, result) {
+			test.ok(error, 'No table - no renaming');
 			test.done();
-		}
-	);
+		});
+	},
+	'testNoColumn': function (test) {
+		async.series([
+				function(callback){ tables.create(conn, 'test_table', 'id INT(9)', callback); },
+				function(callback){ tables.renameCol(conn, 'test_table', 'noSuchCol', 'col', callback); },
+			],
+			function(error, result) {
+				test.ok(error, 'No column - no renaming');
+				test.done();
+			}
+		);
+		
+	}
 };
 
 exports.dropCol = function (test) {
