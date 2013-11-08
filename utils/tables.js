@@ -27,3 +27,54 @@ exports.tableExists = function(dbConnection, name, callback)
 		}
 	);
 };
+
+exports.create = function(dbConnection, table, data, callback) {
+	dbConnection.query(
+		'CREATE TABLE '+table+' ('+data+')',
+		[],
+		function (error, result) {
+			callback(error, error || true);
+		}
+	);
+};
+
+exports.addCol = function(dbConnection, table, column, callback) {
+	dbConnection.query(
+		'ALTER TABLE '+table+' ADD COLUMN '+column,
+		[],
+		function (error, result) {
+			callback(error, error || true);
+		}
+	);
+};
+
+exports.renameCol = function(dbConnection, table, colOld, colNew, callback) {
+	dbConnection.query(
+		'SELECT COLUMN_TYPE FROM information_schema.COLUMNS '+
+		'WHERE TABLE_NAME = ? '+
+		'AND COLUMN_NAME = ?', [table, colOld],
+		function(error, result) {
+			if (error)
+			{
+				callback(error, null);
+				return;
+			}
+			dbConnection.query(
+				'ALTER TABLE '+table+' CHANGE COLUMN '+colOld+' '+colNew+' '+result.rows[0].COLUMN_TYPE,
+				[],
+				function (error, result) { callback(error, error || true); }
+			);
+		}
+	);
+};
+
+exports.dropCol = function(dbConnection, table, column, callback) {
+	dbConnection.query(
+		'ALTER TABLE '+table+' DROP COLUMN '+column,
+		[],
+		function (error, result) {
+			callback(error, error || true);
+		}
+	);
+};
+
