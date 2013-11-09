@@ -60,7 +60,6 @@ module.exports = (grunt) ->
 
 		checklicense:
 			all:
-				expand: true
 				src: [
 					'*.js'
 					'utils/*.js'
@@ -74,7 +73,6 @@ module.exports = (grunt) ->
 
 		checkstrict:
 			all:
-				expand: true
 				src: [
 					'*.js'
 					'utils/*.js'
