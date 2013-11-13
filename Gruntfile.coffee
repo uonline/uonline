@@ -19,10 +19,14 @@ module.exports = (grunt) ->
 	# Project configuration.
 	grunt.initConfig
 		nodeunit:
-			all: [
+			unit: [
 				'tests_node/health-check.js'
 				'tests_node/*.coffee'
 				'tests_node/*.js'
+				'!tests_node/phantom.coffee'
+			]
+			http: [
+				'tests_node/phantom.coffee'
 			]
 
 		jshint:
