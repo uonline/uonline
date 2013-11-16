@@ -78,6 +78,12 @@ exports.renameCol = function (dbConnection, table, colOld, colNew, callback) {
 	);
 };
 
+exports.changeCol = function(dbConnection, table, colName, colAttrs, callback) {
+	dbConnection.query(
+		'ALTER TABLE '+table+' CHANGE COLUMN '+colName+' '+colName+' '+colAttrs,
+		[], callback);
+};
+
 exports.dropCol = function(dbConnection, table, column, callback) {
 	dbConnection.query(
 		'ALTER TABLE '+table+' DROP COLUMN '+column,

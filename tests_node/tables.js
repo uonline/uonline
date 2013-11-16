@@ -143,6 +143,20 @@ exports.renameCol = {
 	}
 };
 
+exports.changeCol = function (test) {
+	async.series([
+			function(callback){ tables.create(conn, 'test_table', 'id INT', callback); },
+			function(callback){ tables.changeCol(conn, 'test_table', 'id', 'int(1)', callback); },
+			function(callback){ conn.query('DESCRIBE test_table', [], callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[2].rows[0].Type, 'int(1)', 'column type should have changed');
+			test.done();
+		}
+	);
+};
+
 exports.dropCol = function (test) {
 	async.series([
 			function(callback){ tables.create(conn, 'test_table', 'id INT', callback); },
