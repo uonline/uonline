@@ -67,13 +67,13 @@ exports.migrate = {
 			
 				test.ok(
 					result[1].rows.length === 1 &&
-					result[1].rows[0].Field === 'id', 'chould correctly perform first migration');
+					result[1].rows[0].Field === 'id', 'should correctly perform first migration');
 			
 				test.ok(
 					result[3].rows.length === 3 &&
 					result[3].rows[0].Field === 'id' &&
 					result[3].rows[1].Field === 'col0' &&
-					result[3].rows[2].Field === 'col1', 'chould correctly add second migration');
+					result[3].rows[2].Field === 'col1', 'should correctly add second migration');
 			
 				test.done();
 			}
@@ -85,7 +85,7 @@ exports.migrate = {
 				function(callback) {mg.migrate(conn, 1, callback);},
 			],
 			function(error, result) {
-				test.ok(error, 'Should return error if has failed to migrate');
+				test.ok(error, 'should return error if has failed to migrate');
 				test.done();
 			}
 		);
@@ -109,7 +109,7 @@ exports.migrateAll = function(test) {
 				rows[0].Type === 'int(11)' &&
 				rows[1].Type === 'int(1)' &&
 				rows[2].Type === 'int(2)' &&
-				rows[3].Type === 'int(3)', 'chould correctly perform migrations');
+				rows[3].Type === 'int(3)', 'should correctly perform migrations');
 			test.done();
 		}
 	);
