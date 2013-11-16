@@ -120,25 +120,18 @@ exports.setRevision = function() {
 exports.migrate = function(dbConnection, migration_id, callback) {
 	var migration = exports.getMigrationsData()[migration_id];
 	var i = 0;
-	function iteration(error) {
-		if (!!error)
-		{
-			callback(error, null);
-			return;
-		}
-		if (i == migration.length)
-		{
-			callback(null, true);
-			return;
-		}
-		var params = migration[i++].slice();
-		var funcName = params.splice(FUNC_NAME_COLUMN,1);
-		var func = tables[funcName];
-		params.unshift(dbConnection);
-		params.push(iteration);
-		func.apply(tables, params);
-	}
-	iteration(null);
+	async.whilst(
+		function() {return i < migration.length;},
+		function(callback) {
+			var params = migration[i++].slice();
+			var funcName = params.splice(FUNC_NAME_COLUMN, 1);
+			var func = tables[funcName];
+			params.unshift(dbConnection);
+			params.push(callback);
+			func.apply(tables, params);
+		},
+		callback
+	);
 };
 
 exports.migrateAll = function(dbConnection, callback) {
