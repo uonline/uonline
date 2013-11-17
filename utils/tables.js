@@ -17,6 +17,8 @@
 
 "use strict";
 
+var async = require('async');
+
 exports.tableExists = function(dbConnection, name, callback)
 {
 	dbConnection.query(
@@ -27,3 +29,68 @@ exports.tableExists = function(dbConnection, name, callback)
 		}
 	);
 };
+
+exports.create = function(dbConnection, table, data, callback) {
+	dbConnection.query(
+		'CREATE TABLE '+table+' ('+data+')',
+		[],
+		function (error, result) {
+			callback(error, error || true);
+		}
+	);
+};
+
+exports.addCol = function(dbConnection, table, column, callback) {
+	dbConnection.query(
+		'ALTER TABLE '+table+' ADD COLUMN '+column,
+		[],
+		function (error, result) {
+			callback(error, error || true);
+		}
+	);
+};
+
+exports.renameCol = function (dbConnection, table, colOld, colNew, callback) {
+	async.auto({
+			columnData: function (callback, results) {
+				dbConnection.query(
+					'SELECT COLUMN_TYPE FROM information_schema.COLUMNS '+
+					'WHERE TABLE_NAME = ? '+
+					'AND COLUMN_NAME = ?', [table, colOld], callback);
+			},
+			alter: ['columnData', function (callback, results) {
+				if (results.columnData.rowCount === 0)
+				{
+					callback('No such table/column', null);
+				}
+				else
+				{
+					dbConnection.query(
+						'ALTER TABLE '+table+' CHANGE COLUMN '+colOld+' '+
+							colNew+' '+results.columnData.rows[0].COLUMN_TYPE,
+						[], callback);
+				}
+			}]
+		},
+		function (error, results) {
+			callback(error, error || true);
+		}
+	);
+};
+
+exports.changeCol = function(dbConnection, table, colName, colAttrs, callback) {
+	dbConnection.query(
+		'ALTER TABLE '+table+' CHANGE COLUMN '+colName+' '+colName+' '+colAttrs,
+		[], callback);
+};
+
+exports.dropCol = function(dbConnection, table, column, callback) {
+	dbConnection.query(
+		'ALTER TABLE '+table+' DROP COLUMN '+column,
+		[],
+		function (error, result) {
+			callback(error, error || true);
+		}
+	);
+};
+
