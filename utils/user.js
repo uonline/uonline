@@ -240,7 +240,7 @@ exports.accessGranted = function(dbConnection, user, password, callback) {
 	);
 };
 
-exports.setSession = function(dbConnection, userid, callback) {
+exports.setSession = function(dbConnection, username, callback) {
 	async.waterfall([
 			function (innerCallback) {
 				exports.generateSessId(dbConnection, config.sessionLength, innerCallback);
@@ -249,13 +249,15 @@ exports.setSession = function(dbConnection, userid, callback) {
 				dbConnection.query(
 					'UPDATE uniusers '+
 					'SET sessexpire = NOW() + INTERVAL ? SECOND, sessid = ? '+
-					'WHERE id = ?',
-					[config.sessionExpireTime, sessid, userid],
-					callback);
+					'WHERE user = ?',
+					[config.sessionExpireTime, sessid, username],
+					function (error, result) {
+						innerCallback(error, result, sessid);
+					});
 			},
 		],
-		function (error, result) {
-			callback(error, result);
+		function (error, result, sessid) {
+			callback(error, sessid);
 		}
 	);
 };

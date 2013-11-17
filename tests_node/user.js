@@ -332,7 +332,7 @@ exports.setSession = {
 				function(callback){ conn.query("INSERT INTO locations VALUES (2, 1)", [], callback); },
 				function(callback){ users.registerUser(conn, "TheUser", "password", 1, callback); },
 				function(callback){ conn.query('SELECT sessid FROM uniusers', [], callback);},
-				function(callback){ users.setSession(conn, 1, callback); },//5
+				function(callback){ users.setSession(conn, 'TheUser', callback); },//5
 				function(callback){ conn.query('SELECT sessid, sessexpire FROM uniusers', [], callback);},
 			],
 			function(error, result) {
