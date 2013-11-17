@@ -78,7 +78,7 @@ app.use(function (request, response, next) {
 
 /*** routing routines ***/
 
-app.get('/node/', function(request, response) {
+app.get('/node/', function (request, response) {
 	response.send('Node.js is up and running.');
 });
 
@@ -104,32 +104,116 @@ function quickRenderError(request, response, code)
 	response.render('error', options);
 }
 
-app.get('/', function(request, response) {
+app.get('/', function (request, response) {
 	response.redirect((request.uonline.basicOpts.loggedIn === true) ?
 		config.defaultInstanceForUsers : config.defaultInstanceForGuests);
 });
 
-app.get('/about/', function(request, response) {
+app.get('/about/', function (request, response) {
 	quickRender(request, response, 'about');
 });
 
-app.get('/register/', function(request, response) {
+app.get('/register/', function (request, response) {
 	quickRender(request, response, 'register');
 });
 
-app.post('/register/', phpgate);
+app.post('/register/', function (request, response) {
+	var options = request.uonline.basicOpts;
+	options.instance = 'register';
+	async.auto({
+			usernameIsValid: function (callback, results) {
+				callback(null, utils.validation.usernameIsValid(request.body.user));
+			},
+			passwordIsValid: function (callback, results) {
+				callback(null, utils.validation.passwordIsValid(request.body.pass));
+			},
+			userExists: ['usernameIsValid', function (callback, results) {
+				utils.user.userExists(mysqlConnection, request.body.user, callback);
+			}],
+			register: ['usernameIsValid', 'passwordIsValid', 'userExists', function (callback, results) {
+				if (results.usernameIsValid === true && results.passwordIsValid === true &&
+					results.userExists === false)
+				{
+					utils.user.registerUser(mysqlConnection, request.body.user, request.body.pass,
+						config.PERMISSIONS_USER, callback);
+				}
+				else
+				{
+					callback(null, 'validation fail');
+				}
+			}],
+		},
+		function (error, results) {
+			if (!!error || results.register === 'validation fail')
+			{
+				options.error = true; // TODO: report mysql errors explicitly
+				// TODO: simplify template params
+				options.invalidLogin = !results.usernameIsValid;
+				options.invalidPass = !results.passwordIsValid;
+				options.loginIsBusy = results.userExists;
+				options.user = request.body.user;
+				options.pass = request.body.pass;
+				response.render('register', options);
+			}
+			else
+			{
+				// TODO: set sessid
+				//response.redirect(config.defaultInstanceForUsers);
+				response.redirect('/login/');
+			}
+		}
+	);
+});
 
-app.get('/login/', function(request, response) {
+app.get('/login/', function (request, response) {
 	quickRender(request, response, 'login');
 });
 
-app.post('/login/', phpgate);
+app.post('/login/', function (request, response) {
+	var options = request.uonline.basicOpts;
+	options.instance = 'login';
+	async.auto(
+		{
+			'accessGranted': function (callback) {
+				utils.user.accessGranted(mysqlConnection, request.body.user, request.body.pass, callback);
+			},
+			'setSession': ['accessGranted', function (callback, results) {
+				if (results.accessGranted === true)
+				{
+					utils.user.setSession(mysqlConnection, request.body.user, callback);
+				}
+				else
+				{
+					callback('access denied', null);
+				}
+			}],
+			'cookie': ['setSession', function (callback, results) {
+				response.cookie('sessid', results.setSession);
+				callback(null, null);
+			}],
+		},
+		function (error, results) {
+			if (!error)
+			{
+				response.redirect('/');
+			}
+			else
+			{
+				// TODO: report mysql errors explicitly
+				options.error = true;
+				options.user = request.body.user;
+				response.render('login', options);
+			}
+		}
+	);
+});
+
 app.get('/profile/', phpgate);
 app.get('/profile/id/:id/', phpgate);
 app.get('/profile/user/:user/', phpgate);
 
-app.get('/action/logout', function(request, response) {
-	utils.user.closeSession(mysqlConnection, request.cookies.sessid, function(error, result){
+app.get('/action/logout', function (request, response) {
+	utils.user.closeSession(mysqlConnection, request.cookies.sessid, function (error, result) {
 		if (!!error)
 		{
 			response.send(500);
@@ -146,7 +230,7 @@ app.get('/action/go/:to', phpgate);
 app.get('/action/attack', phpgate);
 app.get('/action/escape', phpgate);
 
-app.get('/ajax/isNickBusy/:nick', function(request, response) {
+app.get('/ajax/isNickBusy/:nick', function (request, response) {
 	utils.user.userExists(mysqlConnection, request.param('nick'), function(error, result){
 		if (!!error) { response.send(500); return; }
 		response.json({ 'nick': request.param('nick'), 'isNickBusy': result });
