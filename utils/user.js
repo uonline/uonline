@@ -68,7 +68,7 @@ exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, 
 	async.auto({
 			getUser: function(callback) {
 				dbConnection.query(
-					'SELECT user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
+					'SELECT id, user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
 					[sessid], callback);
 			},
 			refresh: ['getUser', function (callback, results) {
@@ -96,7 +96,8 @@ exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, 
 			callback(null, {
 				sessionIsActive: true,
 				username: results.getUser.rows[0].user,
-				admin: (results.getUser.rows[0].permissions === config.PERMISSIONS_ADMIN)
+				admin: (results.getUser.rows[0].permissions === config.PERMISSIONS_ADMIN),
+				userid: results.getUser.rows[0].id
 			});
 		}
 	);
@@ -187,7 +188,7 @@ exports.registerUser = function (dbConnection, user, password, permissions, call
 					innerCallback(error, hash, result);
 				});
 			},
-			function (hash, sessid, innerCallback) {
+			function (hash, sessid, innerCallback) {//console.log("reg", hash.toString('hex'))
 				dbConnection.query(
 					'INSERT INTO `uniusers` '+
 					'(`user`, `salt`, `hash`, `sessid`, `reg_time`, `sessexpire`, `location`, `permissions`) '+
@@ -195,7 +196,7 @@ exports.registerUser = function (dbConnection, user, password, permissions, call
 					'(?, ?, ?, ?, NOW(), NOW() + INTERVAL ? SECOND, '+
 						'(SELECT `id` FROM `locations` WHERE `default` = 1), '+
 					'?)',
-					[user, salt, hash.toString(), sessid, config.sessionExpireTime,
+					[user, salt, hash.toString('hex').substr(0,255), sessid, config.sessionExpireTime,
 						permissions],
 					innerCallback);
 			},
@@ -205,3 +206,60 @@ exports.registerUser = function (dbConnection, user, password, permissions, call
 		}
 	);
 };
+
+exports.accessGranted = function(dbConnection, user, password, callback) {
+	async.waterfall([
+			function (innerCallback) {
+				dbConnection.query(
+					'SELECT salt, hash FROM uniusers WHERE user = ?',
+					[user],
+					function(error, result) {
+						if (!!result && result.rowCount === 0)
+						{
+							callback(null, false); //Wrong user's name
+							return;
+						}
+						innerCallback(error, error || result.rows[0]);
+					});
+			},
+			function (result, innerCallback) {
+				crypto.pbkdf2(password, result.salt, 4096, 256, function(error, hash) {
+					if (result.hash == hash.toString('hex').substr(0,255))
+					{
+						callback(null, true);
+					}
+					else
+					{
+						callback(null, false); //Wrong user's pass
+					}
+				});
+			},
+		],
+		function (error, result) {
+			callback(error, result);
+		}
+	);
+};
+
+exports.setSession = function(dbConnection, username, callback) {
+	async.waterfall([
+			function (innerCallback) {
+				exports.generateSessId(dbConnection, config.sessionLength, innerCallback);
+			},
+			function (sessid, innerCallback) {
+				dbConnection.query(
+					'UPDATE uniusers '+
+					'SET sessexpire = NOW() + INTERVAL ? SECOND, sessid = ? '+
+					'WHERE user = ?',
+					[config.sessionExpireTime, sessid, username],
+					function (error, result) {
+						innerCallback(error, result, sessid);
+					});
+			},
+		],
+		function (error, result, sessid) {
+			callback(error, sessid);
+		}
+	);
+};
+

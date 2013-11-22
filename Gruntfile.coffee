@@ -26,10 +26,19 @@ module.exports = (grunt) ->
 			]
 
 		jshint:
-			options:
-				jshintrc: '.jshintrc'
-				# reporter: './node_modules/jshint/src/reporters/non_error.js',
 			all:
+				options:
+					jshintrc: '.jshintrc'
+				src: [
+					'*.js'
+					'utils/*.js'
+					'tests_node/*.js'
+					'grunt-custom-tasks/*.js'
+				]
+			verbose:
+				options:
+					jshintrc: '.jshintrc'
+					reporter: './node_modules/jshint/src/reporters/non_error.js'
 				src: [
 					'*.js'
 					'utils/*.js'
@@ -51,7 +60,6 @@ module.exports = (grunt) ->
 
 		checklicense:
 			all:
-				expand: true
 				src: [
 					'*.js'
 					'utils/*.js'
@@ -65,7 +73,6 @@ module.exports = (grunt) ->
 
 		checkstrict:
 			all:
-				expand: true
 				src: [
 					'*.js'
 					'utils/*.js'
@@ -108,7 +115,7 @@ module.exports = (grunt) ->
 	grunt.loadTasks './grunt-custom-tasks/'
 
 	# Basic tasks.
-	grunt.registerTask 'check', ['checkstrict', 'checklicense', 'coffeelint', 'jshint']
+	grunt.registerTask 'check', ['checkstrict', 'checklicense', 'coffeelint', 'jshint:all']
 	grunt.registerTask 'build', ['browserify', 'uglify']
 	grunt.registerTask 'test', ['nodeunit', 'jscoverage_report']
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env coffee
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -50,7 +50,7 @@ utils.user.userExists(conn, u, (error, result) ->
 		console.log 'Error: '+require('util').inspect(error)
 		process.exit 1
 	else if (result == true)
-		console.log 'User `'+u+'` already exists.'
+		console.log "User `#{u}` already exists."
 		process.exit 1
 	else
 		utils.user.registerUser(conn, u, p, config.PERMISSIONS_ADMIN, (error, result) ->
@@ -58,7 +58,7 @@ utils.user.userExists(conn, u, (error, result) ->
 				console.log 'Error: '+require('util').inspect(error)
 				process.exit 1
 			else
-				console.log 'New admin `'+u+'` registered successfully.'
+				console.log "New admin `#{u}` registered successfully."
 				process.exit 0
 		)
 )
