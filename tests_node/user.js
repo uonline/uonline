@@ -108,9 +108,9 @@ exports.sessionInfoRefreshing = {
 	'testNoErrors': function (test) {
 		async.series([
 				function(callback){ conn.query('CREATE TABLE uniusers '+
-					'(user TINYTEXT, permissions INT, sessid TINYTEXT, sessexpire DATETIME)', [], callback); },
+					'(id INT, user TINYTEXT, permissions INT, sessid TEXT, sessexpire DATETIME)', [], callback); },
 				function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-					"('user0', ?, 'someid', NOW() - INTERVAL 3600 SECOND )",
+					"(8, 'user0', ?, 'someid', NOW() - INTERVAL 3600 SECOND )",
 					[config.PERMISSIONS_ADMIN], callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
@@ -121,12 +121,12 @@ exports.sessionInfoRefreshing = {
 				function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, undefined, 7200, callback); },
 				function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-					"('user1', ?, 'otherid', NOW() + INTERVAL 3600 SECOND )",
+					"(99, 'user1', ?, 'otherid', NOW() + INTERVAL 3600 SECOND )",
 					[config.PERMISSIONS_USER], callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, "otherid", 7200, callback); },//10
 				function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
 			],
-			function(error, result){
+			function (error, result) {
 				test.ifError(error);
 				test.deepEqual(result[2], {
 						sessionIsActive: false
@@ -137,7 +137,8 @@ exports.sessionInfoRefreshing = {
 				test.deepEqual(result[6], {
 						sessionIsActive: true,
 						username: 'user0',
-						admin: true
+						admin: true,
+						userid: 8
 					}, 'session should be active if not expired and user data should be returned');
 				test.deepEqual(result[8], {
 						sessionIsActive: false
@@ -147,7 +148,8 @@ exports.sessionInfoRefreshing = {
 				test.deepEqual(result[10], {
 						sessionIsActive: true,
 						username: 'user1',
-						admin: false
+						admin: false,
+						userid: 99
 					}, 'if user is NOT admin, he is NOT admin');
 				test.ok(timeBefore < timeAfter, "session expire time should have been updated");
 				test.done();

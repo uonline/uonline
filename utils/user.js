@@ -68,7 +68,7 @@ exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, 
 	async.auto({
 			getUser: function(callback) {
 				dbConnection.query(
-					'SELECT user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
+					'SELECT id, user, permissions FROM uniusers WHERE sessid = ? AND sessexpire > NOW()',
 					[sessid], callback);
 			},
 			refresh: ['getUser', function (callback, results) {
@@ -96,7 +96,8 @@ exports.sessionInfoRefreshing = function(dbConnection, sessid, sess_timeexpire, 
 			callback(null, {
 				sessionIsActive: true,
 				username: results.getUser.rows[0].user,
-				admin: (results.getUser.rows[0].permissions === config.PERMISSIONS_ADMIN)
+				admin: (results.getUser.rows[0].permissions === config.PERMISSIONS_ADMIN),
+				userid: results.getUser.rows[0].id
 			});
 		}
 	);
