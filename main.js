@@ -71,6 +71,7 @@ app.use(function (request, response, next) {
 				request.uonline.basicOpts.loggedIn = result.sessionIsActive;
 				request.uonline.basicOpts.login = result.username;
 				request.uonline.basicOpts.admin = result.admin;
+				request.uonline.basicOpts.userid = result.userid;
 				next();
 			}
 	});
@@ -227,8 +228,46 @@ app.get('/action/logout', function (request, response) {
 
 app.get('/game/', phpgate);
 app.get('/action/go/:to', phpgate);
-app.get('/action/attack', phpgate);
-app.get('/action/escape', phpgate);
+
+app.get('/action/attack', function (request, response) {
+	if (!request.uonline.basicOpts.loggedIn)
+	{
+		response.redirect('/login/');
+	}
+	else
+	{
+		utils.game.goAttack(mysqlConnection, request.uonline.basicOpts.userid, function (error, result) {
+			if (!!error)
+			{
+				throw new Error(error);
+			}
+			else
+			{
+				response.redirect('/game/');
+			}
+		});
+	}
+});
+
+app.get('/action/escape', function (request, response) {
+	if (!request.uonline.basicOpts.loggedIn)
+	{
+		response.redirect('/login/');
+	}
+	else
+	{
+		utils.game.goEscape(mysqlConnection, request.uonline.basicOpts.userid, function (error, result) {
+			if (!!error)
+			{
+				throw new Error(error);
+			}
+			else
+			{
+				response.redirect('/game/');
+			}
+		});
+	}
+});
 
 app.get('/ajax/isNickBusy/:nick', function (request, response) {
 	utils.user.userExists(mysqlConnection, request.param('nick'), function(error, result){
@@ -238,8 +277,8 @@ app.get('/ajax/isNickBusy/:nick', function (request, response) {
 });
 
 app.get('/stats/', phpgate);
-app.get('/world/', phpgate);
-app.get('/development/', phpgate);
+//app.get('/world/', phpgate);
+//app.get('/development/', phpgate);
 
 // 404 handling
 app.get('*', function (request, response) {
