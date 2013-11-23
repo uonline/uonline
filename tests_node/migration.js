@@ -90,12 +90,12 @@ exports.setRevision = function(test) {
 	);
 };
 
-exports.migrateOne = {
+exports.justMigrate = {
 	'testNoErrors': function(test) {
 		async.series([
-				function(callback) {mg.migrateOne(conn, 0, callback);},
+				function(callback) {mg.justMigrate(conn, 0, callback);},
 				function(callback) {conn.query("DESCRIBE test_table", callback);},
-				function(callback) {mg.migrateOne(conn, 1, callback);},
+				function(callback) {mg.justMigrate(conn, 1, callback);},
 				function(callback) {conn.query("DESCRIBE test_table", callback);},
 			],
 			function(error, result) {
@@ -118,10 +118,47 @@ exports.migrateOne = {
 	'testErrors': function(test) {
 		async.series([
 				function(callback) {conn.query("DROP TABLE IF EXISTS test_table", callback);},
-				function(callback) {mg.migrateOne(conn, 1, callback);},
+				function(callback) {mg.justMigrate(conn, 1, callback);},
 			],
 			function(error, result) {
 				test.ok(error, 'should return error if has failed to migrate');
+				test.done();
+			}
+		);
+	},
+};
+
+exports.migrateOne = {
+	'testNoErrors': function(test) {
+		async.series([
+				function(callback) {mg.migrateOne(conn, 0, callback);},
+				function(callback) {mg.migrateOne(conn, 1, callback);},
+				function(callback) {mg.getCurrentRevision(conn, callback);},
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.strictEqual(result[2], 1, 'should update revision');
+				test.done();
+			}
+		);
+	},
+	'testTooNew': function(test) {
+		async.series([
+				function(callback) {mg.migrateOne(conn, 1, callback);},
+			],
+			function(error, result) {
+				test.ok(error, 'should fail if destination revision is too new');
+				test.done();
+			}
+		);
+	},
+	'testTooOld': function(test) {
+		async.series([
+				function(callback) {mg.migrateOne(conn, 0, callback);},
+				function(callback) {mg.migrateOne(conn, 0, callback);},
+			],
+			function(error, result) {
+				test.ok(error, 'should fail if destination revision is too old');
 				test.done();
 			}
 		);

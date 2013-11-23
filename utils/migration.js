@@ -129,11 +129,14 @@ exports.setRevision = function(dbConnection, revision, callback) {
 			function(callback) {dbConnection.query('DELETE FROM revision', [], callback);},
 			function(callback) {dbConnection.query('INSERT INTO revision VALUES (?)', [revision], callback);}
 		],
-		callback
+		function(error) {
+			callback(error);
+		}
 	);
 };
 
-exports.migrateOne = function(dbConnection, revision, callback) {
+//not for external useage: neither checks anyting nor updates revision
+exports.justMigrate = function(dbConnection, revision, callback) {
 	var migration = exports.getMigrationsData()[revision];
 	var i = 0;
 	async.whilst(
@@ -150,6 +153,26 @@ exports.migrateOne = function(dbConnection, revision, callback) {
 	);
 };
 
+exports.migrateOne = function(dbConnection, revision, callback) {
+	async.waterfall([
+		function(innerCallback) {
+			exports.getCurrentRevision(dbConnection, innerCallback);
+		},
+		function(curRevision, innerCallback) {
+			if (curRevision != revision-1)
+			{
+				callback("Can't migrate to <"+revision+">:"+
+					"current revision must be <"+(revision-1)+"> but it's <"+curRevision+">");
+				return;
+			}
+			exports.justMigrate(dbConnection, revision, innerCallback);
+		},
+		function(innerCallback) {
+			exports.setRevision(dbConnection, revision, callback);
+		},
+	], callback);
+};
+
 exports.migrate = function(dbConnection, dest_revision, callback) {
 	if (!callback) // if dest_revision is omitted
 	{
@@ -160,29 +183,23 @@ exports.migrate = function(dbConnection, dest_revision, callback) {
 	{
 		dest_revision = Math.min(dest_revision, exports.getNewestRevision());
 	}
-	exports.getCurrentRevision(dbConnection, function(error, current) {
-		if (!!error)
-		{
-			callback(error, null);
-			return;
-		}
-		var i = current+1;
-		async.whilst(
-			function() {return i<=dest_revision;},
-			function(callback) {
-				exports.migrateOne(dbConnection, i++, callback);
-			},
-			function(error, result) {
-				if (!!error)
-				{
-					callback(error);
-					return;
-				}
-				exports.setRevision(dbConnection, dest_revision, function(error, result) {
-					callback(error);
-				});
-			}
-		);
-	});
+	async.waterfall([
+		function(innerCallback) {
+			exports.getCurrentRevision(dbConnection, innerCallback);
+		},
+		function(current, innerCallback) {
+			var i = current+1;
+			async.whilst(
+				function() {return i<=dest_revision;},
+				function(veryInnerCallback) {
+					exports.justMigrate(dbConnection, i++, veryInnerCallback);
+				},
+				innerCallback
+			);
+		},
+		function(innerCallback) {
+			exports.setRevision(dbConnection, dest_revision, callback);
+		},
+	], callback);
 };
 
