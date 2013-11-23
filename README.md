@@ -73,7 +73,7 @@ To run PHP tests, run `make test`. Note that they cover not all the code.
 Programmers' guidelines
 -----------------------
 
-**Hint:** type `make lint` to check your code.
+**Hint:** Run `grunt` to check and test your code.
 
 * Use tabs, not spaces. Don't mix them and don't use smarttabs.
 * Place `use strict` in every file.
