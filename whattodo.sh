@@ -1,3 +1,2 @@
 #!/bin/sh
-find -name '*.js' | grep -v node_modules | xargs grep TODO
-find -name '*.coffee' | grep -v node_modules | xargs grep TODO
+( find -name '*.js'; find -name '*.coffee' ) | grep -v node_modules | grep -v server.js | xargs grep TODO -n
