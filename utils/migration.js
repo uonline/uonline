@@ -133,8 +133,8 @@ exports.setRevision = function(dbConnection, revision, callback) {
 	);
 };
 
-exports.migrate = function(dbConnection, migration_id, callback) {
-	var migration = exports.getMigrationsData()[migration_id];
+exports.migrateOne = function(dbConnection, revision, callback) {
+	var migration = exports.getMigrationsData()[revision];
 	var i = 0;
 	async.whilst(
 		function() {return i < migration.length;},
@@ -150,16 +150,39 @@ exports.migrate = function(dbConnection, migration_id, callback) {
 	);
 };
 
-exports.migrateAll = function(dbConnection, callback) {
-	var current = exports.getCurrentRevision();
-	var last = exports.getNewestRevision();
-	var i = current;
-	async.whilst(
-		function() {return i<=last;},
-		function(callback) {
-			exports.migrate(dbConnection, i++, callback);
-		},
-		callback
-	);
+exports.migrate = function(dbConnection, dest_revision, callback) {
+	if (!callback) // if dest_revision is omitted
+	{
+		callback = dest_revision;
+		dest_revision = exports.getNewestRevision();
+	}
+	else
+	{
+		dest_revision = Math.min(dest_revision, exports.getNewestRevision());
+	}
+	exports.getCurrentRevision(dbConnection, function(error, current) {
+		if (!!error)
+		{
+			callback(error, null);
+			return;
+		}
+		var i = current+1;
+		async.whilst(
+			function() {return i<=dest_revision;},
+			function(callback) {
+				exports.migrateOne(dbConnection, i++, callback);
+			},
+			function(error, result) {
+				if (!!error)
+				{
+					callback(error);
+					return;
+				}
+				exports.setRevision(dbConnection, dest_revision, function(error, result) {
+					callback(error);
+				});
+			}
+		);
+	});
 };
 

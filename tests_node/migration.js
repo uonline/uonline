@@ -90,12 +90,12 @@ exports.setRevision = function(test) {
 	);
 };
 
-exports.migrate = {
+exports.migrateOne = {
 	'testNoErrors': function(test) {
 		async.series([
-				function(callback) {mg.migrate(conn, 0, callback);},
+				function(callback) {mg.migrateOne(conn, 0, callback);},
 				function(callback) {conn.query("DESCRIBE test_table", callback);},
-				function(callback) {mg.migrate(conn, 1, callback);},
+				function(callback) {mg.migrateOne(conn, 1, callback);},
 				function(callback) {conn.query("DESCRIBE test_table", callback);},
 			],
 			function(error, result) {
@@ -118,7 +118,7 @@ exports.migrate = {
 	'testErrors': function(test) {
 		async.series([
 				function(callback) {conn.query("DROP TABLE IF EXISTS test_table", callback);},
-				function(callback) {mg.migrate(conn, 1, callback);},
+				function(callback) {mg.migrateOne(conn, 1, callback);},
 			],
 			function(error, result) {
 				test.ok(error, 'should return error if has failed to migrate');
@@ -128,14 +128,30 @@ exports.migrate = {
 	},
 };
 
-/*exports.migrateAll = function(test) {
+exports.migrate = function(test) {
 	async.series([
-			function(callback) {mg.migrateAll(conn, callback);},
+			function(callback) {mg.migrate(conn, 1, callback);},
 			function(callback) {conn.query("DESCRIBE test_table", callback);},
+			function(callback) {mg.getCurrentRevision(conn, callback);},
+			function(callback) {mg.migrate(conn, callback);},
+			function(callback) {conn.query("DESCRIBE test_table", callback);},
+			function(callback) {mg.getCurrentRevision(conn, callback);},
 		],
 		function(error, result) {
 			test.ifError(error);
+			
 			var rows = result[1].rows;
+			test.ok(
+				rows.length === 3 &&
+				rows[0].Field === 'id' &&
+				rows[1].Field === 'col0' &&
+				rows[2].Field === 'col1' &&
+				rows[0].Type === 'int(11)' &&
+				rows[1].Type === 'int(1)' &&
+				rows[2].Type === 'int(2)', 'should correctly perform part of migrations');
+			test.strictEqual(result[2], 1, 'should set correct revision');
+			
+			rows = result[4].rows;
 			test.ok(
 				rows.length === 4 &&
 				rows[0].Field === 'id' &&
@@ -145,11 +161,13 @@ exports.migrate = {
 				rows[0].Type === 'int(11)' &&
 				rows[1].Type === 'int(1)' &&
 				rows[2].Type === 'int(2)' &&
-				rows[3].Type === 'int(3)', 'should correctly perform migrations');
+				rows[3].Type === 'int(3)', 'should correctly perform all remaining migrations');
+			test.strictEqual(result[5], 3, 'should set correct revision');
+			
 			test.done();
 		}
 	);
-};*/
+};
 
 exports.tearDown = function (done) {
 	conn.query("DROP TABLE IF EXISTS test_table", function() {
