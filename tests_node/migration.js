@@ -19,6 +19,8 @@
 
 var config = require('../config.js');
 
+var tables = require('../utils/tables.js');
+
 var jsc = require('jscoverage');
 jsc.enableCoverage(true);
 
@@ -50,8 +52,42 @@ var migrationData = [
 
 exports.setUp = function (done) {
 	conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
-	conn.query("DROP TABLE IF EXISTS test_table", done);
+	conn.query("DROP TABLE IF EXISTS test_table, revision", done);
 	mg.setMigrationsData(migrationData);
+};
+
+exports.getCurrentRevision = function(test) {
+	async.series([
+			function(callback) {mg.getCurrentRevision(conn, callback);},
+			function(callback) {conn.query("CREATE TABLE revision (revision INT)", [], callback);},
+			function(callback) {conn.query("INSERT INTO revision VALUES (1)", [], callback);},
+			function(callback) {mg.getCurrentRevision(conn, callback);},
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[0], -1, "should return default value if revision table is not created");
+			test.strictEqual(result[3], 1, "should return correct value if revision table is created");
+			test.done();
+		}
+	);
+};
+
+exports.setRevision = function(test) {
+	async.series([
+			function(callback) {mg.setRevision(conn, 1, callback);},
+			function(callback) {tables.tableExists(conn, 'revision', callback);},
+			function(callback) {mg.getCurrentRevision(conn, callback);},
+			function(callback) {mg.setRevision(conn, 2, callback);},
+			function(callback) {mg.getCurrentRevision(conn, callback);},
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.ok(result[1], 'table should have been created');
+			test.strictEqual(result[2], 1, 'revision should have been set');
+			test.strictEqual(result[4], 2, 'revision should have been updated');
+			test.done();
+		}
+	);
 };
 
 exports.migrate = {
@@ -92,7 +128,7 @@ exports.migrate = {
 	},
 };
 
-exports.migrateAll = function(test) {
+/*exports.migrateAll = function(test) {
 	async.series([
 			function(callback) {mg.migrateAll(conn, callback);},
 			function(callback) {conn.query("DESCRIBE test_table", callback);},
@@ -113,7 +149,7 @@ exports.migrateAll = function(test) {
 			test.done();
 		}
 	);
-};
+};*/
 
 exports.tearDown = function (done) {
 	conn.query("DROP TABLE IF EXISTS test_table", function() {

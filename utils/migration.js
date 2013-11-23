@@ -109,12 +109,28 @@ exports.getNewestRevision = function() {
 	return exports.getMigrationsData().length-1;
 };
 
-exports.getCurrentRevision = function() {
-	return 0;
+exports.getCurrentRevision = function(dbConnection, callback) {
+	dbConnection.query("SELECT revision FROM revision", [], function(error, result) {
+		if (!!error)
+		{
+			callback(null, -1);
+		}
+		else
+		{
+			callback(null, result.rows[0].revision);
+		}
+	});
 };
 
-exports.setRevision = function() {
-	
+exports.setRevision = function(dbConnection, revision, callback) {
+	async.series([
+			function(callback) {
+				dbConnection.query('CREATE TABLE IF NOT EXISTS revision (revision INT NOT NULL)', [], callback);},
+			function(callback) {dbConnection.query('DELETE FROM revision', [], callback);},
+			function(callback) {dbConnection.query('INSERT INTO revision VALUES (?)', [revision], callback);}
+		],
+		callback
+	);
 };
 
 exports.migrate = function(dbConnection, migration_id, callback) {
