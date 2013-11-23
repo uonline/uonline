@@ -11,6 +11,7 @@ Requirements
 
 * Node.js with npm
 * CoffeeScript
+* Grunt
 * MySQL or MariaDB
 * MySQL user `anonymous` with password `nopassword`
 
