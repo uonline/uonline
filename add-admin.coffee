@@ -46,15 +46,15 @@ conn = anyDB.createConnection config.MYSQL_DATABASE_URL
 
 
 utils.user.userExists(conn, u, (error, result) ->
-	if (!!error)
+	if error?
 		console.log 'Error: '+require('util').inspect(error)
 		process.exit 1
-	else if (result == true)
+	else if result == true
 		console.log "User `#{u}` already exists."
 		process.exit 1
 	else
 		utils.user.registerUser(conn, u, p, config.PERMISSIONS_ADMIN, (error, result) ->
-			if (!!error)
+			if error?
 				console.log 'Error: '+require('util').inspect(error)
 				process.exit 1
 			else
