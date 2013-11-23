@@ -39,7 +39,7 @@
     "jscoverage": "~0.3.8",
     "browserify": "~2.35.0",
     "nodemon": "~0.7.10",
-    "coveralls": "~2.3.0"
+    "coveralls": "~2.5.0"
   },
   "scripts": {
     "test": "node test.js"
