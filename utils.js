@@ -17,9 +17,14 @@
 
 "use strict";
 
-exports.game = require('./utils/game.js');
-exports.math = require('./utils/math.js');
-exports.prettyprint = require('./utils/prettyprint.js');
-exports.tables = require('./utils/tables.js');
-exports.user = require('./utils/user.js');
-exports.validation = require('./utils/validation.js');
+var list = require('fs').readdirSync('./utils');
+for (var i in list)
+{
+	i = list[i];
+	var name = i.substring(0, i.length-3); // ".js".length === 3
+	var ext = i.substring(i.length-3);
+	if (ext === '.js')
+	{
+		exports[name] = require('./utils/'+i);
+	}
+}
