@@ -25,69 +25,70 @@ var FUNC_NAME_COLUMN = 1;
 var migrationData = [
 	[
 		/************** uniusers ****************/
-		['uniusers', 'create', 'id INT AUTO_INCREMENT, PRIMARY KEY (id)'],
-		['uniusers', 'addCol', 'location INT DEFAULT 1'],
-		['uniusers', 'addCol', 'permissions INT DEFAULT 0'],
-		['uniusers', 'addCol', 'user TINYTEXT'],
-		['uniusers', 'addCol', 'mail TINYTEXT'],
-		['uniusers', 'addCol', 'salt TINYTEXT'],
-		['uniusers', 'addCol', 'hash TINYTEXT'],
-		['uniusers', 'addCol', 'sessid TINYTEXT'],
-		['uniusers', 'addCol', 'sessexpire DATETIME'],
-		['uniusers', 'addCol', 'reg_time DATETIME'],
+		['uniusers', 'create',
+			'id INT AUTO_INCREMENT, PRIMARY KEY (id), '+
+			'location INT DEFAULT 1, '+
+			'permissions INT DEFAULT 0, '+
+			'user TINYTEXT, '+
+			'mail TINYTEXT, '+
+			'salt TINYTEXT, '+
+			'hash TINYTEXT, '+
+			'sessid TINYTEXT, '+
+			'sessexpire DATETIME, '+
+			'reg_time DATETIME, '+
 
-		['uniusers', 'addCol', 'fight_mode INT DEFAULT 0'],
-		['uniusers', 'addCol', 'autoinvolved_fm INT DEFAULT 0'],
-		['uniusers', 'addCol', 'level INT DEFAULT 1'],
-		['uniusers', 'addCol', 'health INT DEFAULT 200'],
-		['uniusers', 'addCol', 'health_max INT DEFAULT 200'],
-		['uniusers', 'addCol', 'mana INT DEFAULT 100'],
-		['uniusers', 'addCol', 'mana_max INT DEFAULT 100'],
-		['uniusers', 'addCol', 'energy INT DEFAULT 50'],
-		['uniusers', 'addCol', 'power INT DEFAULT 3'],
-		['uniusers', 'addCol', 'defense INT DEFAULT 3'],
-		['uniusers', 'addCol', 'agility INT DEFAULT 3'], //ловкость
-		['uniusers', 'addCol', 'accuracy INT DEFAULT 3'], //точность
-		['uniusers', 'addCol', 'intelligence INT DEFAULT 5'], //интеллект
-		['uniusers', 'addCol', 'initiative INT DEFAULT 5'], //инициатива
-		['uniusers', 'addCol', 'exp INT DEFAULT 0'],
-		['uniusers', 'addCol', 'effects TEXT'],
+			'fight_mode INT DEFAULT 0, '+
+			'autoinvolved_fm INT DEFAULT 0, '+
+			'level INT DEFAULT 1, '+
+			'health INT DEFAULT 200, '+
+			'health_max INT DEFAULT 200, '+
+			'mana INT DEFAULT 100, '+
+			'mana_max INT DEFAULT 100, '+
+			'energy INT DEFAULT 50, '+
+			'power INT DEFAULT 3, '+
+			'defense INT DEFAULT 3, '+
+			'agility INT DEFAULT 3, '+ //ловкость
+			'accuracy INT DEFAULT 3, '+ //точность
+			'intelligence INT DEFAULT 5, '+ //интеллект
+			'initiative INT DEFAULT 5, '+ //инициатива
+			'exp INT DEFAULT 0, '+
+			'effects TEXT'],
 
 		/************** locations ****************/
-		['locations', 'create', 'id INT, PRIMARY KEY (id)'],
-		['locations', 'addCol', 'title TINYTEXT'],
-		['locations', 'addCol', 'goto TINYTEXT'],
-		['locations', 'addCol', 'description TEXT'],
-		['locations', 'addCol', 'area INT'],
-		['locations', 'addCol', 'picture TINYTEXT'],
-		['locations', 'addCol', 'default TINYINT(1) DEFAULT 0'],
+		['locations', 'create', 'id INT, PRIMARY KEY (id), '+
+			'title TINYTEXT, '+
+			'goto TINYTEXT, '+
+			'description TEXT, '+
+			'area INT, '+
+			'picture TINYTEXT, '+
+			'default TINYINT(1) DEFAULT 0'],
 
 		/************** areas ****************/
-		['areas', 'create', 'id INT, PRIMARY KEY (id)'],
-		['areas', 'addCol', 'title TINYTEXT'],
-		['areas', 'addCol', 'description TEXT'],
+		['areas', 'create', 'id INT, PRIMARY KEY (id), '+
+			'title TINYTEXT, '+
+			'description TEXT'],
 
 		/************** monster_prototypes ****************/
-		['monster_prototypes', 'create', 'id INT AUTO_INCREMENT, PRIMARY KEY (id)'],
-		['monster_prototypes', 'addCol', 'name TINYTEXT'],
-		['monster_prototypes', 'addCol', 'level INT'],
-		['monster_prototypes', 'addCol', 'power INT'],
-		['monster_prototypes', 'addCol', 'agility INT'],
-		['monster_prototypes', 'addCol', 'endurance INT'],
-		['monster_prototypes', 'addCol', 'intelligence INT'],
-		['monster_prototypes', 'addCol', 'wisdom INT'],
-		['monster_prototypes', 'addCol', 'volition INT'],
-		['monster_prototypes', 'addCol', 'health_max INT'],
-		['monster_prototypes', 'addCol', 'mana_max INT'],
+		['monster_prototypes', 'create', 'id INT AUTO_INCREMENT, PRIMARY KEY (id), '+
+			'name TINYTEXT, '+
+			'level INT, '+
+			'power INT, '+
+			'agility INT, '+
+			'endurance INT, '+
+			'intelligence INT, '+
+			'wisdom INT, '+
+			'volition INT, '+
+			'health_max INT, '+
+			'mana_max INT'],
 	],
 	[
 		/************** stats ****************/
-		['stats', 'create', 'time TIMESTAMP DEFAULT CURRENT_TIMESTAMP'],
-		['stats', 'addCol', 'gen_time DOUBLE'],
-		['stats', 'addCol', 'instance TINYTEXT'],
-		['stats', 'addCol', 'ip TINYTEXT'],
-		['stats', 'addCol', 'uagent TINYTEXT'],
-		['stats', 'addCol', 'url TEXT'],
+		['stats', 'create', 'time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, '+
+			'gen_time DOUBLE, '+
+			'instance TINYTEXT, '+
+			'ip TINYTEXT, '+
+			'uagent TINYTEXT, '+
+			'url TEXT'],
 	],
 	[
 		/************** monsters ****************/
