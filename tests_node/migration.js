@@ -90,54 +90,31 @@ exports.setRevision = function(test) {
 	);
 };
 
-exports.justMigrate = {
-	'testNoErrors': function(test) {
-		async.series([
-				function(callback) {mg.justMigrate(conn, 0, callback);},
-				function(callback) {conn.query("DESCRIBE test_table", callback);},
-				function(callback) {mg.justMigrate(conn, 1, callback);},
-				function(callback) {conn.query("DESCRIBE test_table", callback);},
-			],
-			function(error, result) {
-				test.ifError(error);
-			
-				test.ok(
-					result[1].rows.length === 1 &&
-					result[1].rows[0].Field === 'id', 'should correctly perform first migration');
-			
-				test.ok(
-					result[3].rows.length === 3 &&
-					result[3].rows[0].Field === 'id' &&
-					result[3].rows[1].Field === 'col0' &&
-					result[3].rows[2].Field === 'col1', 'should correctly add second migration');
-			
-				test.done();
-			}
-		);
-	},
-	'testErrors': function(test) {
-		async.series([
-				function(callback) {conn.query("DROP TABLE IF EXISTS test_table", callback);},
-				function(callback) {mg.justMigrate(conn, 1, callback);},
-			],
-			function(error, result) {
-				test.ok(error, 'should return error if has failed to migrate');
-				test.done();
-			}
-		);
-	},
-};
-
 exports.migrateOne = {
 	'testNoErrors': function(test) {
 		async.series([
 				function(callback) {mg.migrateOne(conn, 0, callback);},
+				function(callback) {conn.query("DESCRIBE test_table", callback);},
 				function(callback) {mg.migrateOne(conn, 1, callback);},
+				function(callback) {mg.migrateOne(conn, 1, callback);},
+				function(callback) {conn.query("DESCRIBE test_table", callback);},
 				function(callback) {mg.getCurrentRevision(conn, callback);},
 			],
 			function(error, result) {
-				test.ifError(error);
-				test.strictEqual(result[2], 1, 'should update revision');
+				test.ifError(error, 'should not fail if destination revision is current');
+				
+				test.ok(
+					result[1].rows.length === 1 &&
+					result[1].rows[0].Field === 'id', 'should correctly perform first migration');
+				
+				test.ok(
+					result[4].rows.length === 3 &&
+					result[4].rows[0].Field === 'id' &&
+					result[4].rows[1].Field === 'col0' &&
+					result[4].rows[2].Field === 'col1', 'should correctly add second migration');
+				
+				test.strictEqual(result[5], 1, 'should update revision');
+				
 				test.done();
 			}
 		);
@@ -155,10 +132,23 @@ exports.migrateOne = {
 	'testTooOld': function(test) {
 		async.series([
 				function(callback) {mg.migrateOne(conn, 0, callback);},
+				function(callback) {mg.migrateOne(conn, 1, callback);},
 				function(callback) {mg.migrateOne(conn, 0, callback);},
 			],
 			function(error, result) {
 				test.ok(error, 'should fail if destination revision is too old');
+				test.done();
+			}
+		);
+	},
+	'testErrors': function(test) {
+		async.series([
+				function(callback) {conn.query("DROP TABLE IF EXISTS test_table", callback);},
+				function(callback) {mg.setRevision(conn, 0, callback);},
+				function(callback) {mg.migrateOne(conn, 1, callback);},
+			],
+			function(error, result) {
+				test.ok(error, 'should return error if has failed to migrate');
 				test.done();
 			}
 		);

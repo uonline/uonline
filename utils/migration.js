@@ -135,8 +135,7 @@ exports.setRevision = function(dbConnection, revision, callback) {
 	);
 };
 
-//not for external useage: neither checks anyting nor updates revision
-exports.justMigrate = function(dbConnection, revision, callback) {
+function justMigrate(dbConnection, revision, callback) {
 	var migration = exports.getMigrationsData()[revision];
 	var i = 0;
 	async.whilst(
@@ -151,7 +150,7 @@ exports.justMigrate = function(dbConnection, revision, callback) {
 		},
 		callback
 	);
-};
+}
 
 exports.migrateOne = function(dbConnection, revision, callback) {
 	async.waterfall([
@@ -159,13 +158,17 @@ exports.migrateOne = function(dbConnection, revision, callback) {
 			exports.getCurrentRevision(dbConnection, innerCallback);
 		},
 		function(curRevision, innerCallback) {
-			if (curRevision != revision-1)
+			if (curRevision == revision)
 			{
-				callback("Can't migrate to <"+revision+">:"+
-					"current revision must be <"+(revision-1)+"> but it's <"+curRevision+">");
+				callback(null);
 				return;
 			}
-			exports.justMigrate(dbConnection, revision, innerCallback);
+			if (curRevision != revision-1)
+			{
+				callback("Can't migrate to revision <"+revision+"> from current <"+curRevision+">");
+				return;
+			}
+			justMigrate(dbConnection, revision, innerCallback);
 		},
 		function(innerCallback) {
 			exports.setRevision(dbConnection, revision, callback);
@@ -192,7 +195,7 @@ exports.migrate = function(dbConnection, dest_revision, callback) {
 			async.whilst(
 				function() {return i<=dest_revision;},
 				function(veryInnerCallback) {
-					exports.justMigrate(dbConnection, i++, veryInnerCallback);
+					justMigrate(dbConnection, i++, veryInnerCallback);
 				},
 				innerCallback
 			);
