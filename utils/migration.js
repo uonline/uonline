@@ -21,6 +21,7 @@ var async = require('async');
 
 var tables = require('./tables.js');
 
+var TABLE_NAME_COLUMN = 0;
 var FUNC_NAME_COLUMN = 1;
 var migrationData = [
 	[
@@ -136,13 +137,24 @@ exports.setRevision = function(dbConnection, revision, callback) {
 	);
 };
 
-function justMigrate(dbConnection, revision, callback) {
+function justMigrate(dbConnection, revision, for_tables, callback) {
+	if (arguments.length == 3)
+	{
+		callback = for_tables;
+		for_tables = undefined;
+	}
 	var migration = exports.getMigrationsData()[revision];
 	var i = 0;
 	async.whilst(
 		function() {return i < migration.length;},
 		function(callback) {
 			var params = migration[i++].slice();
+			//mb convert for_tables to hashmap?
+			if (for_tables && for_tables.indexOf(params[TABLE_NAME_COLUMN]) == -1)
+			{
+				callback(null, null);
+				return;
+			}
 			var funcName = params.splice(FUNC_NAME_COLUMN, 1);
 			var func = tables[funcName];
 			params.unshift(dbConnection);
@@ -177,14 +189,19 @@ exports.migrateOne = function(dbConnection, revision, callback) {
 	], callback);
 };
 
-exports.migrate = function(dbConnection, dest_revision, callback) {
-	if (!callback) // if dest_revision is omitted
+exports.migrate = function(dbConnection, dest_revision, for_tables, callback) {
+	switch (arguments.length)
 	{
+	case 2:
 		callback = dest_revision;
 		dest_revision = exports.getNewestRevision();
-	}
-	else
-	{
+		break;
+	case 3:
+		callback = for_tables;
+		for_tables = undefined;
+		/* jshint -W086 */
+	default: //no break here!
+		/* jshint +W086 */
 		dest_revision = Math.min(dest_revision, exports.getNewestRevision());
 	}
 	async.waterfall([
@@ -196,7 +213,7 @@ exports.migrate = function(dbConnection, dest_revision, callback) {
 			async.whilst(
 				function() {return i<=dest_revision;},
 				function(veryInnerCallback) {
-					justMigrate(dbConnection, i++, veryInnerCallback);
+					justMigrate(dbConnection, i++, for_tables, veryInnerCallback);
 				},
 				innerCallback
 			);
