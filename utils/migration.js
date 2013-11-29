@@ -137,11 +137,11 @@ exports.setRevision = function(dbConnection, revision, callback) {
 	);
 };
 
-function justMigrate(dbConnection, revision, for_tables, callback) {
+function justMigrate(dbConnection, revision, table, callback) {
 	if (arguments.length == 3)
 	{
-		callback = for_tables;
-		for_tables = undefined;
+		callback = table;
+		table = undefined;
 	}
 	var migration = exports.getMigrationsData()[revision];
 	var i = 0;
@@ -150,7 +150,7 @@ function justMigrate(dbConnection, revision, for_tables, callback) {
 		function(callback) {
 			var params = migration[i++].slice();
 			//mb convert for_tables to hashmap?
-			if (for_tables && for_tables.indexOf(params[TABLE_NAME_COLUMN]) == -1)
+			if (table && table!=params[TABLE_NAME_COLUMN])
 			{
 				callback(null, null);
 				return;
@@ -189,7 +189,7 @@ exports.migrateOne = function(dbConnection, revision, callback) {
 	], callback);
 };
 
-exports.migrate = function(dbConnection, dest_revision, for_tables, callback) {
+exports.migrate = function(dbConnection, dest_revision, table, callback) {
 	switch (arguments.length)
 	{
 	case 2:
@@ -197,8 +197,8 @@ exports.migrate = function(dbConnection, dest_revision, for_tables, callback) {
 		dest_revision = exports.getNewestRevision();
 		break;
 	case 3:
-		callback = for_tables;
-		for_tables = undefined;
+		callback = table;
+		table = undefined;
 		/* jshint -W086 */
 	default: //no break here!
 		/* jshint +W086 */
@@ -213,7 +213,7 @@ exports.migrate = function(dbConnection, dest_revision, for_tables, callback) {
 			async.whilst(
 				function() {return i<=dest_revision;},
 				function(veryInnerCallback) {
-					justMigrate(dbConnection, i++, for_tables, veryInnerCallback);
+					justMigrate(dbConnection, i++, table, veryInnerCallback);
 				},
 				innerCallback
 			);

@@ -218,7 +218,7 @@ exports.migrate = {
 	},
 	'testTables': function(test) {
 		async.series([
-				function(callback) {mg.migrate(conn, 0, ['test_table'], callback);},
+				function(callback) {mg.migrate(conn, 0, 'test_table', callback);},
 				function(callback) {conn.query("DESCRIBE test_table", callback);},
 				function(callback) {tables.tableExists(conn, "other_table", callback);},
 			],
