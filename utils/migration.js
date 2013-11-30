@@ -62,7 +62,7 @@ var migrationData = [
 			'description TEXT, '+
 			'area INT, '+
 			'picture TINYTEXT, '+
-			'default TINYINT(1) DEFAULT 0'],
+			'`default` TINYINT(1) DEFAULT 0'],
 
 		/************** areas ****************/
 		['areas', 'create', 'id INT, PRIMARY KEY (id), '+
@@ -81,6 +81,15 @@ var migrationData = [
 			'volition INT, '+
 			'health_max INT, '+
 			'mana_max INT'],
+		
+		/************** monsters ****************/
+		['monsters', 'create', 'incarn_id INT AUTO_INCREMENT, PRIMARY KEY (incarn_id), '+
+			'id INT, '+
+			'location INT, '+
+			'health INT, '+
+			'mana INT, '+
+			'effects TEXT, '+
+			'attack_chance INT'],
 	],
 	[
 		/************** stats ****************/
@@ -93,8 +102,8 @@ var migrationData = [
 	],
 	[
 		/************** monsters ****************/
-		['monsters', 'rename', 'id', 'prototype'],
-		['monsters', 'rename', 'incarn_id', 'id'],
+		['monsters', 'renameCol', 'id', 'prototype'],
+		['monsters', 'renameCol', 'incarn_id', 'id'],
 	],
 ];
 

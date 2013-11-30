@@ -61,7 +61,7 @@ exports.renameCol = function (dbConnection, table, colOld, colNew, callback) {
 			alter: ['columnData', function (callback, results) {
 				if (results.columnData.rowCount === 0)
 				{
-					callback('No such table/column', null);
+					callback('Rename error: no such table/column ('+table+'/'+colOld+')', null);
 				}
 				else
 				{

@@ -34,6 +34,21 @@ var options = [
 		type: 'bool',
 		help: 'Show current revision and status.'
 	},
+	{
+		names: ['create-database', 'C'],
+		type: 'string',
+		help: 'Create "test" or "main" database. Or "both".'
+	},
+	{
+		names: ['drop-database', 'D'],
+		type: 'string',
+		help: 'Drop "test" or "main" database. Or "both".'
+	},
+	{
+		names: ['migrate-tables', 'm'],
+		type: 'bool',
+		help: 'Migrate to latest revision.'
+	},
 ];
 
 var parser = dashdash.createParser({options: options});
@@ -57,6 +72,15 @@ if (opts._args.length > 0)
 if (opts._order.length === 0)
 {
 	opts.help = true;
+}
+
+function checkError(error, dontExit)
+{
+	if (!!error)
+	{
+		console.log(error);
+		if (!dontExit) process.exit(1);
+	}
 }
 
 //console.log("# opts:", opts); // debug
@@ -101,10 +125,10 @@ if (opts.help === true)
 }
 
 var anyDB = require('any-db');
-var mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL);
 
 if (opts.info === true)
 {
+	var mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL);
 	utils.migration.getCurrentRevision(mysqlConnection, function (error, result) {
 		if (!!error)
 		{
@@ -122,3 +146,68 @@ if (opts.info === true)
 		}
 	});
 }
+
+if (opts.create_database !== undefined)
+{
+	var func_count = 0;
+	var create = function(db_url) {
+		func_count++;
+		var db_path = db_url.match(/.+\//)[0];
+		var db_name = db_url.match(/[^\/]+$/)[0];
+		var conn = anyDB.createConnection(db_path);
+		conn.query('CREATE DATABASE '+db_name, [], function(error, result) {
+			func_count--;
+			checkError(error, func_count !== 0);
+			console.log(db_name+' created.');
+			if (func_count === 0) process.exit(0);
+		});
+	};
+	
+	if (opts.create_database === "main" || opts.create_database === "both")
+	{
+		create(config.MYSQL_DATABASE_URL);
+	}
+	if (opts.create_database === "test" || opts.create_database === "both")
+	{
+		create(config.MYSQL_DATABASE_URL_TEST);
+	}
+}
+
+if (opts.drop_database !== undefined)
+{
+	var func_count = 0;
+	var drop = function(db_url) {
+		func_count++;
+		var db_path = db_url.match(/.+\//)[0];
+		var db_name = db_url.match(/[^\/]+$/)[0];
+		var conn = anyDB.createConnection(db_path);
+		conn.query('DROP DATABASE '+db_name, [], function(error, result) {
+			func_count--;
+			checkError(error, func_count !== 0);
+			console.log(db_name+' dropped.');
+			if (func_count === 0) process.exit(0);
+		});
+	};
+	
+	if (opts.drop_database === "main" || opts.drop_database === "both")
+	{
+		drop(config.MYSQL_DATABASE_URL);
+	}
+	if (opts.drop_database === "test" || opts.drop_database === "both")
+	{
+		drop(config.MYSQL_DATABASE_URL_TEST);
+	}
+}
+
+if (opts.migrate_tables === true)
+{
+	var mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL);
+	utils.migration.migrate(mysqlConnection, function(error) {
+		checkError(error);
+		process.exit(0);
+	});
+}
+
+
+
+
