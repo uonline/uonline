@@ -7,13 +7,23 @@ A browser-based MMORPG game in a fantasy world.
 Requirements
 ------------
 
-* Node.js with npm;
-* PHP 5.4 or higher;
-* PHP-MySQL module;
-* PHP-CGI package;
-* MySQL or MariaDB;
-* MySQL user `anonymous` with password `nopassword`;
-* PostgreSQL (currently not used).
+### Current
+
+* Node.js with npm
+* CoffeeScript
+* Grunt
+* MySQL or MariaDB
+* MySQL user `anonymous` with password `nopassword`
+
+### Legacy
+
+* PHP 5.4 or higher
+* PHP-MySQL module
+* PHP-CGI package
+
+### Future
+
+* PostgreSQL
 
 
 How to set up
@@ -21,10 +31,10 @@ How to set up
 
 * Clone the repo.
 * Install packages: `npm install`, `./composer.phar install`.
-* Create keyring (for PHP). Run `./add-admin.php` (for example) to get help on format.
+* Create keyring (for PHP). You can run almost any PHP file to get help on format.
 * Fetch submodules: `git submodule init`, `git submodule update`.
 * Initialize database: `./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize`.
-* If you need to add an admin: `./add-admin.php username password`.
+* If you need to add an admin: `./add-admin.coffee username password`.
 
 
 How to run
@@ -64,7 +74,7 @@ To run PHP tests, run `make test`. Note that they cover not all the code.
 Programmers' guidelines
 -----------------------
 
-**Hint:** type `make lint` to check your code.
+**Hint:** Run `grunt` to check and test your code.
 
 * Use tabs, not spaces. Don't mix them and don't use smarttabs.
 * Place `use strict` in every file.
@@ -102,3 +112,4 @@ var numbers = [
 
 * Write tests for everything.
 * Write good assert comments: they should answer the question "What do this function should do?".
+* Keep things outside of main thread. Use asynchronous API.

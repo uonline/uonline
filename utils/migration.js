@@ -21,78 +21,89 @@ var async = require('async');
 
 var tables = require('./tables.js');
 
+var TABLE_NAME_COLUMN = 0;
 var FUNC_NAME_COLUMN = 1;
 var migrationData = [
 	[
 		/************** uniusers ****************/
-		['uniusers', 'create', 'id INT AUTO_INCREMENT, PRIMARY KEY (id)'],
-		['uniusers', 'addCol', 'location INT DEFAULT 1'],
-		['uniusers', 'addCol', 'permissions INT DEFAULT 0'],
-		['uniusers', 'addCol', 'user TINYTEXT'],
-		['uniusers', 'addCol', 'mail TINYTEXT'],
-		['uniusers', 'addCol', 'salt TINYTEXT'],
-		['uniusers', 'addCol', 'hash TINYTEXT'],
-		['uniusers', 'addCol', 'sessid TINYTEXT'],
-		['uniusers', 'addCol', 'sessexpire DATETIME'],
-		['uniusers', 'addCol', 'reg_time DATETIME'],
+		['uniusers', 'create',
+			'id INT AUTO_INCREMENT, PRIMARY KEY (id), '+
+			'location INT DEFAULT 1, '+
+			'permissions INT DEFAULT 0, '+
+			'user TINYTEXT, '+
+			'mail TINYTEXT, '+
+			'salt TINYTEXT, '+
+			'hash TINYTEXT, '+
+			'sessid TINYTEXT, '+
+			'sessexpire DATETIME, '+
+			'reg_time DATETIME, '+
 
-		['uniusers', 'addCol', 'fight_mode INT DEFAULT 0'],
-		['uniusers', 'addCol', 'autoinvolved_fm INT DEFAULT 0'],
-		['uniusers', 'addCol', 'level INT DEFAULT 1'],
-		['uniusers', 'addCol', 'health INT DEFAULT 200'],
-		['uniusers', 'addCol', 'health_max INT DEFAULT 200'],
-		['uniusers', 'addCol', 'mana INT DEFAULT 100'],
-		['uniusers', 'addCol', 'mana_max INT DEFAULT 100'],
-		['uniusers', 'addCol', 'energy INT DEFAULT 50'],
-		['uniusers', 'addCol', 'power INT DEFAULT 3'],
-		['uniusers', 'addCol', 'defense INT DEFAULT 3'],
-		['uniusers', 'addCol', 'agility INT DEFAULT 3'], //ловкость
-		['uniusers', 'addCol', 'accuracy INT DEFAULT 3'], //точность
-		['uniusers', 'addCol', 'intelligence INT DEFAULT 5'], //интеллект
-		['uniusers', 'addCol', 'initiative INT DEFAULT 5'], //инициатива
-		['uniusers', 'addCol', 'exp INT DEFAULT 0'],
-		['uniusers', 'addCol', 'effects TEXT'],
+			'fight_mode INT DEFAULT 0, '+
+			'autoinvolved_fm INT DEFAULT 0, '+
+			'level INT DEFAULT 1, '+
+			'health INT DEFAULT 200, '+
+			'health_max INT DEFAULT 200, '+
+			'mana INT DEFAULT 100, '+
+			'mana_max INT DEFAULT 100, '+
+			'energy INT DEFAULT 50, '+
+			'power INT DEFAULT 3, '+
+			'defense INT DEFAULT 3, '+
+			'agility INT DEFAULT 3, '+ //ловкость
+			'accuracy INT DEFAULT 3, '+ //точность
+			'intelligence INT DEFAULT 5, '+ //интеллект
+			'initiative INT DEFAULT 5, '+ //инициатива
+			'exp INT DEFAULT 0, '+
+			'effects TEXT'],
 
 		/************** locations ****************/
-		['locations', 'create', 'id INT, PRIMARY KEY (id)'],
-		['locations', 'addCol', 'title TINYTEXT'],
-		['locations', 'addCol', 'goto TINYTEXT'],
-		['locations', 'addCol', 'description TEXT'],
-		['locations', 'addCol', 'area INT'],
-		['locations', 'addCol', 'picture TINYTEXT'],
-		['locations', 'addCol', 'default TINYINT(1) DEFAULT 0'],
+		['locations', 'create', 'id INT, PRIMARY KEY (id), '+
+			'title TINYTEXT, '+
+			'goto TINYTEXT, '+
+			'description TEXT, '+
+			'area INT, '+
+			'picture TINYTEXT, '+
+			'`default` TINYINT(1) DEFAULT 0'],
 
 		/************** areas ****************/
-		['areas', 'create', 'id INT, PRIMARY KEY (id)'],
-		['areas', 'addCol', 'title TINYTEXT'],
-		['areas', 'addCol', 'description TEXT'],
+		['areas', 'create', 'id INT, PRIMARY KEY (id), '+
+			'title TINYTEXT, '+
+			'description TEXT'],
 
 		/************** monster_prototypes ****************/
-		['monster_prototypes', 'create', 'id INT AUTO_INCREMENT, PRIMARY KEY (id)'],
-		['monster_prototypes', 'addCol', 'name TINYTEXT'],
-		['monster_prototypes', 'addCol', 'level INT'],
-		['monster_prototypes', 'addCol', 'power INT'],
-		['monster_prototypes', 'addCol', 'agility INT'],
-		['monster_prototypes', 'addCol', 'endurance INT'],
-		['monster_prototypes', 'addCol', 'intelligence INT'],
-		['monster_prototypes', 'addCol', 'wisdom INT'],
-		['monster_prototypes', 'addCol', 'volition INT'],
-		['monster_prototypes', 'addCol', 'health_max INT'],
-		['monster_prototypes', 'addCol', 'mana_max INT'],
+		['monster_prototypes', 'create', 'id INT AUTO_INCREMENT, PRIMARY KEY (id), '+
+			'name TINYTEXT, '+
+			'level INT, '+
+			'power INT, '+
+			'agility INT, '+
+			'endurance INT, '+
+			'intelligence INT, '+
+			'wisdom INT, '+
+			'volition INT, '+
+			'health_max INT, '+
+			'mana_max INT'],
+		
+		/************** monsters ****************/
+		['monsters', 'create', 'incarn_id INT AUTO_INCREMENT, PRIMARY KEY (incarn_id), '+
+			'id INT, '+
+			'location INT, '+
+			'health INT, '+
+			'mana INT, '+
+			'effects TEXT, '+
+			'attack_chance INT'],
 	],
 	[
 		/************** stats ****************/
-		['stats', 'create', 'time TIMESTAMP DEFAULT CURRENT_TIMESTAMP'],
-		['stats', 'addCol', 'gen_time DOUBLE'],
-		['stats', 'addCol', 'instance TINYTEXT'],
-		['stats', 'addCol', 'ip TINYTEXT'],
-		['stats', 'addCol', 'uagent TINYTEXT'],
-		['stats', 'addCol', 'url TEXT'],
+		['stats', 'create', 'time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, '+
+			'gen_time DOUBLE, '+
+			'instance TINYTEXT, '+
+			'ip TINYTEXT, '+
+			'uagent TINYTEXT, '+
+			'url TEXT'],
 	],
 	[
 		/************** monsters ****************/
-		['monsters', 'rename', 'id', 'prototype'],
-		['monsters', 'rename', 'incarn_id', 'id'],
+		['monsters', 'renameCol', 'id', 'prototype'],
+		['monsters', 'renameCol', 'incarn_id', 'id'],
 	],
 ];
 
@@ -109,21 +120,50 @@ exports.getNewestRevision = function() {
 	return exports.getMigrationsData().length-1;
 };
 
-exports.getCurrentRevision = function() {
-	return 0;
+exports.getCurrentRevision = function(dbConnection, callback) {
+	dbConnection.query("SELECT revision FROM revision", [], function(error, result) {
+		if (!!error)
+		{
+			callback(null, -1);
+		}
+		else
+		{
+			callback(null, result.rows[0].revision);
+		}
+	});
 };
 
-exports.setRevision = function() {
-	
+exports.setRevision = function(dbConnection, revision, callback) {
+	async.series([
+			function(callback) {
+				dbConnection.query('CREATE TABLE IF NOT EXISTS revision (revision INT NOT NULL)', [], callback);},
+			function(callback) {dbConnection.query('DELETE FROM revision', [], callback);},
+			function(callback) {dbConnection.query('INSERT INTO revision VALUES (?)', [revision], callback);}
+		],
+		function(error) {
+			callback(error);
+		}
+	);
 };
 
-exports.migrate = function(dbConnection, migration_id, callback) {
-	var migration = exports.getMigrationsData()[migration_id];
+function justMigrate(dbConnection, revision, table, callback) {
+	if (arguments.length == 3)
+	{
+		callback = table;
+		table = undefined;
+	}
+	var migration = exports.getMigrationsData()[revision];
 	var i = 0;
 	async.whilst(
 		function() {return i < migration.length;},
 		function(callback) {
 			var params = migration[i++].slice();
+			//mb convert for_tables to hashmap?
+			if (table && table!=params[TABLE_NAME_COLUMN])
+			{
+				callback(null, null);
+				return;
+			}
 			var funcName = params.splice(FUNC_NAME_COLUMN, 1);
 			var func = tables[funcName];
 			params.unshift(dbConnection);
@@ -132,18 +172,64 @@ exports.migrate = function(dbConnection, migration_id, callback) {
 		},
 		callback
 	);
+}
+
+exports.migrateOne = function(dbConnection, revision, callback) {
+	async.waterfall([
+		function(innerCallback) {
+			exports.getCurrentRevision(dbConnection, innerCallback);
+		},
+		function(curRevision, innerCallback) {
+			if (curRevision == revision)
+			{
+				callback(null);
+				return;
+			}
+			if (curRevision != revision-1)
+			{
+				callback("Can't migrate to revision <"+revision+"> from current <"+curRevision+">");
+				return;
+			}
+			justMigrate(dbConnection, revision, innerCallback);
+		},
+		function(innerCallback) {
+			exports.setRevision(dbConnection, revision, callback);
+		},
+	], callback);
 };
 
-exports.migrateAll = function(dbConnection, callback) {
-	var current = exports.getCurrentRevision();
-	var last = exports.getNewestRevision();
-	var i = current;
-	async.whilst(
-		function() {return i<=last;},
-		function(callback) {
-			exports.migrate(dbConnection, i++, callback);
+exports.migrate = function(dbConnection, dest_revision, table, callback) {
+	switch (arguments.length)
+	{
+	case 2:
+		callback = dest_revision;
+		dest_revision = exports.getNewestRevision();
+		break;
+	case 3:
+		callback = table;
+		table = undefined;
+		/* jshint -W086 */
+	default: //no break here!
+		/* jshint +W086 */
+		dest_revision = Math.min(dest_revision, exports.getNewestRevision());
+	}
+	async.waterfall([
+		function(innerCallback) {
+			exports.getCurrentRevision(dbConnection, innerCallback);
 		},
-		callback
-	);
+		function(current, innerCallback) {
+			var i = current+1;
+			async.whilst(
+				function() {return i<=dest_revision;},
+				function(veryInnerCallback) {
+					justMigrate(dbConnection, i++, table, veryInnerCallback);
+				},
+				innerCallback
+			);
+		},
+		function(innerCallback) {
+			exports.setRevision(dbConnection, dest_revision, callback);
+		},
+	], callback);
 };
 
