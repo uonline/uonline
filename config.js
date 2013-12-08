@@ -26,6 +26,13 @@ exports.MYSQL_DATABASE_URL = process.env.MYSQL_DATABASE_URL ||
 exports.MYSQL_DATABASE_URL_TEST = process.env.MYSQL_DATABASE_URL_TEST ||
 	'mysql://anonymous:nopassword@localhost/uonline_test';
 
+/*
+exports.MYSQL_URL = exports.MYSQL_DATABASE_URL.match(/.+\//)[0];
+exports.MYSQL_DATABASE_NAME = exports.MYSQL_DATABASE_URL.match(/[^\/]+$/)[0];
+exports.MYSQL_URL_TEST = exports.MYSQL_DATABASE_URL_TEST.match(/.+\//)[0];
+exports.MYSQL_DATABASE_NAME_TEST = exports.MYSQL_DATABASE_URL_TEST.match(/[^\/]+$/)[0];
+*/
+
 exports.sessionLength = 64;
 exports.sessionExpireTime = 3600; // seconds
 
