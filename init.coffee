@@ -32,6 +32,60 @@ utils = require './utils.js'
 async = require 'async'
 dashdash = require 'dashdash'
 
+
+createDatabase = (arg, callback) ->
+	checkArgs opts.create_database, ['main', 'test', 'both']
+	
+	create = (db_url, callback) ->
+		db_path = db_url.match(/.+\//)[0]
+		db_name = db_url.match(/[^\/]+$/)[0]
+		conn = anyDB.createConnection(db_path)
+		conn.query 'CREATE DATABASE ' + db_name, [], (error, result) ->
+			if error?
+				if error.code != 'ER_DB_CREATE_EXISTS'
+					callback error
+					return
+				console.log "#{db_name} already exists."
+			else
+				console.log "#{db_name} created."
+			callback null
+	
+	funcs = []
+	funcs.push((callback) -> create config.MYSQL_DATABASE_URL, callback) if arg is 'main' or arg is 'both'
+	funcs.push((callback) -> create config.MYSQL_DATABASE_URL_TEST, callback) if arg is 'test' or arg is 'both'
+	
+	async.parallel funcs, callback
+
+
+dropDatabase = (arg, callback) ->
+	checkArgs opts.drop_database, ['main', 'test', 'both']
+	
+	drop = (db_url, callback) ->
+		db_path = db_url.match(/.+\//)[0]
+		db_name = db_url.match(/[^\/]+$/)[0]
+		conn = anyDB.createConnection(db_path)
+		conn.query 'DROP DATABASE ' + db_name, [], (error, result) ->
+			if error?
+				if error.code != 'ER_DB_DROP_EXISTS'
+					callback error
+					return
+				console.log "#{db_name} already dropped."
+			else
+				console.log "#{db_name} dropped."
+			callback null
+	
+	funcs = []
+	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL, callback) if arg is 'main' or arg is 'both'
+	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL_TEST, callback) if arg is 'test' or arg is 'both'
+	
+	async.parallel funcs, callback
+
+
+migrateTables = (callback) ->
+	mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL)
+	utils.migration.migrate mysqlConnection, callback
+
+
 options = [
 	names: [
 		'help'
@@ -53,6 +107,7 @@ options = [
 	]
 	type: 'string'
 	help: 'Create database: "main", "test" or "both".'
+	action: createDatabase
 ,
 	names: [
 		'drop-database'
@@ -60,6 +115,7 @@ options = [
 	]
 	type: 'string'
 	help: 'Drop database: "main", "test" or "both".'
+	action: dropDatabase
 ,
 	names: [
 		'migrate-tables'
@@ -67,7 +123,11 @@ options = [
 	]
 	type: 'bool'
 	help: 'Migrate to the latest revision.'
+	action: migrateTables
 ]
+
+actions = {}
+options.forEach( (op) -> actions[(op.name || op.names[0]).replace(/-/g,'_')] = op.action if op.action )
 
 parser = dashdash.createParser(options: options)
 
@@ -162,54 +222,12 @@ if opts.info is true
 #	create config.MYSQL_DATABASE_URL if opts.create_database is 'main' or opts.create_database is 'both'
 #	create config.MYSQL_DATABASE_URL_TEST if opts.create_database is 'test' or opts.create_database is 'both'
 
-if opts.create_database?
-	checkArgs opts.create_database, ['main', 'test', 'both']
-	
-	create = (db_url, callback) ->
-		db_path = db_url.match(/.+\//)[0]
-		db_name = db_url.match(/[^\/]+$/)[0]
-		conn = anyDB.createConnection(db_path)
-		conn.query 'CREATE DATABASE ' + db_name, [], (error, result) ->
-			if error?
-				if error.code != 'ER_DB_CREATE_EXISTS'
-					callback error
-					return
-				console.log "#{db_name} already exists."
-			else
-				console.log "#{db_name} created."
-			callback null
-	
-	funcs = []
-	if opts.create_database is 'main' or opts.create_database is 'both'
-		funcs.push((callback) -> create config.MYSQL_DATABASE_URL, callback)
-	if opts.create_database is 'test' or opts.create_database is 'both'
-		funcs.push((callback) -> create config.MYSQL_DATABASE_URL_TEST, callback)
-	
-	async.parallel funcs,
-		(error, result) ->
-			checkError error
-			process.exit 0
-
-
-if opts.drop_database?
-	checkArgs opts.drop_database, ['main', 'test', 'both']
-	
-	func_count = 0
-	drop = (db_url) ->
-		func_count++
-		db_path = db_url.match(/.+\//)[0]
-		db_name = db_url.match(/[^\/]+$/)[0]
-		conn = anyDB.createConnection(db_path)
-		conn.query 'DROP DATABASE ' + db_name, [], (error, result) ->
-			func_count--
-			checkError error, func_count isnt 0
-			console.log "#{db_name} dropped."
-			process.exit 0 if func_count is 0
-	drop config.MYSQL_DATABASE_URL if opts.drop_database is 'main' or opts.drop_database is 'both'
-	drop config.MYSQL_DATABASE_URL_TEST if opts.drop_database is 'test' or opts.drop_database is 'both'
-
-if opts.migrate_tables is true
-	mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL)
-	utils.migration.migrate mysqlConnection, (error) ->
+i = 0
+iter = () ->
+	process.exit 0 if i >= opts._order.length
+	op = opts._order[i]
+	actions[op.key] op.value, (error) ->
 		checkError error
-		process.exit 0
+		i++
+		iter()
+iter()
