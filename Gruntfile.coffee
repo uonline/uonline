@@ -21,6 +21,7 @@ module.exports = (grunt) ->
 		nodeunit:
 			all: [
 				'tests_node/health-check.js'
+				'tests_node/health-check.coffee'
 				'tests_node/*.coffee'
 				'tests_node/*.js'
 			]
