@@ -22,7 +22,7 @@ checkError = (error, dontExit) ->
 		unless dontExit then process.exit 1
 
 checkArgs = (passed, avaliable) ->
-	if (avaliable.indexOf passed) == -1
+	unless passed in avaliable
 		console.log "Unknown arguent: #{passed}"
 		console.log "Avaliable: #{avaliable}"
 		process.exit 1
@@ -31,7 +31,25 @@ config = require './config.js'
 utils = require './utils.js'
 async = require 'async'
 dashdash = require 'dashdash'
+anyDB = require 'any-db'
 
+
+help = (arg, callback) ->
+	console.log "\nUsage: node init.js <commands>\n\n#{parser.help(includeEnv: true).trimRight()}"
+	process.exit 2
+
+info = (arg, callback) ->
+	mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL)
+	utils.migration.getCurrentRevision mysqlConnection, (error, result) ->
+		if error?
+			console.log error
+			process.exit 1
+		else
+			newest = utils.migration.getNewestRevision()
+			status = if result < newest then 'needs update' else 'up to date'
+			console.log "init.js with #{newest + 1} revisions on board."
+			console.log "Current revision is #{result} (#{status})."
+			process.exit 0
 
 createDatabase = (arg, callback) ->
 	checkArgs opts.create_database, ['main', 'test', 'both']
@@ -81,7 +99,7 @@ dropDatabase = (arg, callback) ->
 	async.parallel funcs, callback
 
 
-migrateTables = (callback) ->
+migrateTables = (arg, callback) ->
 	mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL)
 	utils.migration.migrate mysqlConnection, callback
 
@@ -93,6 +111,7 @@ options = [
 	]
 	type: 'bool'
 	help: 'Print this help and exit.'
+	action: help
 ,
 	names: [
 		'info'
@@ -100,6 +119,7 @@ options = [
 	]
 	type: 'bool'
 	help: 'Show current revision and status.'
+	action: info
 ,
 	names: [
 		'create-database'
@@ -187,25 +207,6 @@ if opts._order.length is 0
 #			callback(null)
 #	],
 #	(err, res) -> console.log(err, res)
-
-if opts.help is true
-	console.log "\nUsage: node init.js <commands>\n\n#{parser.help(includeEnv: true).trimRight()}"
-	process.exit 2
-
-anyDB = require 'any-db'
-
-if opts.info is true
-	mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL)
-	utils.migration.getCurrentRevision mysqlConnection, (error, result) ->
-		if error?
-			console.log error
-			process.exit 1
-		else
-			newest = utils.migration.getNewestRevision()
-			status = if result < newest then 'needs update' else 'up to date'
-			console.log "init.js with #{newest + 1} revisions on board."
-			console.log "Current revision is #{result} (#{status})."
-			process.exit 0
 
 #if opts.create_database?
 #	func_count = 0
