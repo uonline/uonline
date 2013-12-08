@@ -14,11 +14,10 @@
 
 "use strict"
 
-reporter = require('nodeunit').reporters.default # may be: default, verbose, minimal, skip_passed
-reporter.run(['tests_node/'], null, (error) -> if error? then process.exit(1))
+reporter = require('nodeunit').reporters.default  # may be: default, verbose, minimal, skip_passed
+reporter.run ['tests_node/'], null, (error) -> if error? then process.exit 1
 
 jsc = require 'jscoverage'
-process.on('exit', () ->
+process.on 'exit', () ->
 	jsc.coverage() # print summary info, cover percent
 	jsc.coverageDetail() # print uncovered lines
-)
