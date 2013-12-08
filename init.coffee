@@ -21,6 +21,12 @@ checkError = (error, dontExit) ->
 		console.error error
 		unless dontExit then process.exit 1
 
+checkArgs = (passed, avaliable) ->
+	if (avaliable.indexOf passed) == -1
+		console.log "Unknown arguent: #{passed}"
+		console.log "Avaliable: #{avaliable}"
+		process.exit 1
+
 config = require './config.js'
 utils = require './utils.js'
 async = require 'async'
@@ -111,6 +117,17 @@ if opts._order.length is 0
 #	optimist.showHelp();
 # }
 
+#async.parallel [
+#		(callback) ->
+#			console.log(1)
+#			callback(null)
+#		,
+#		(callback) ->
+#			console.log(2)
+#			callback(null)
+#	],
+#	(err, res) -> console.log(err, res)
+
 if opts.help is true
 	console.log "\nUsage: node init.js <commands>\n\n#{parser.help(includeEnv: true).trimRight()}"
 	process.exit 2
@@ -130,22 +147,53 @@ if opts.info is true
 			console.log "Current revision is #{result} (#{status})."
 			process.exit 0
 
+#if opts.create_database?
+#	func_count = 0
+#	create = (db_url) ->
+#		func_count++
+#		db_path = db_url.match(/.+\//)[0]
+#		db_name = db_url.match(/[^\/]+$/)[0]
+#		conn = anyDB.createConnection(db_path)
+#		conn.query 'CREATE DATABASE ' + db_name, [], (error, result) ->
+#			func_count--
+#			checkError error, func_count isnt 0
+#			console.log "#{db_name} created."
+#			process.exit 0 if func_count is 0
+#	create config.MYSQL_DATABASE_URL if opts.create_database is 'main' or opts.create_database is 'both'
+#	create config.MYSQL_DATABASE_URL_TEST if opts.create_database is 'test' or opts.create_database is 'both'
+
 if opts.create_database?
-	func_count = 0
-	create = (db_url) ->
-		func_count++
+	checkArgs opts.create_database, ['main', 'test', 'both']
+	
+	create = (db_url, callback) ->
 		db_path = db_url.match(/.+\//)[0]
 		db_name = db_url.match(/[^\/]+$/)[0]
 		conn = anyDB.createConnection(db_path)
 		conn.query 'CREATE DATABASE ' + db_name, [], (error, result) ->
-			func_count--
-			checkError error, func_count isnt 0
-			console.log "#{db_name} created."
-			process.exit 0 if func_count is 0
-	create config.MYSQL_DATABASE_URL if opts.create_database is 'main' or opts.create_database is 'both'
-	create config.MYSQL_DATABASE_URL_TEST if opts.create_database is 'test' or opts.create_database is 'both'
+			if error?
+				if error.code != 'ER_DB_CREATE_EXISTS'
+					callback error
+					return
+				console.log "#{db_name} already exists."
+			else
+				console.log "#{db_name} created."
+			callback null
+	
+	funcs = []
+	if opts.create_database is 'main' or opts.create_database is 'both'
+		funcs.push((callback) -> create config.MYSQL_DATABASE_URL, callback)
+	if opts.create_database is 'test' or opts.create_database is 'both'
+		funcs.push((callback) -> create config.MYSQL_DATABASE_URL_TEST, callback)
+	
+	async.parallel funcs,
+		(error, result) ->
+			checkError error
+			process.exit 0
+
 
 if opts.drop_database?
+	checkArgs opts.drop_database, ['main', 'test', 'both']
+	
 	func_count = 0
 	drop = (db_url) ->
 		func_count++
