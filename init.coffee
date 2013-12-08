@@ -171,49 +171,16 @@ if opts._args.length > 0
 if opts._order.length is 0
 	opts.help = true
 
-#console.log("# opts:", opts); // debug
-
-#
-#var optimist = require('optimist');
-#var argv = optimist
-#	.alias('help', 'h')
-#	.alias('info', 'i')
-#	.alias('tables', 't')
-#	.alias('unify-validate', 'l')
-#	.alias('unify-export', 'u')
-#	.alias('optimize', 'o')
-#	.alias('optimize', 'O')
-#	.alias('test-monsters', 'm')
-#	.alias('drop', 'd')
-#	.usage('Usage: $0 <commands>')
-#	.describe('help', 'Show this text')
-#	.describe('info', 'Show current revision and status')
-#	.describe('tables', 'Migrate tables to the last revision')
-#	.describe('unify-validate', 'Validate unify files')
-#	.describe('unify-export', 'Parse unify files and push them to database')
-#	.describe('optimize', 'Optimize tables')
-#	.describe('test-monsters', 'Insert test monsters')
-#	.describe('drop', 'Drop all tables and set revision to -1')
-#	.boolean(['help','info','tables','unify-validate','unify-export','optimize','test-monsters','drop'])
-#	.argv;
-#
-#// [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]
-#
-#if (argv.help === true)
-# {
-#	optimist.showHelp();
-# }
-
-#async.parallel [
-#		(callback) ->
-#			console.log(1)
-#			callback(null)
-#		,
-#		(callback) ->
-#			console.log(2)
-#			callback(null)
-#	],
-#	(err, res) -> console.log(err, res)
+# Some other schema:
+#  'help', 'h', 'Show this text'
+#  'info', 'i', 'Show current revision and status'
+#  'tables', 't', 'Migrate tables to the last revision'
+#  'unify-validate', 'l', 'Validate unify files'
+#  'unify-export', 'u', 'Parse unify files and push them to database'
+#  'optimize', 'o', 'O', 'Optimize tables'
+#  'test-monsters', 'm', 'Insert test monsters'
+#  'drop', 'd', 'Drop all tables and set revision to -1'
+# [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]
 
 #if opts.create_database?
 #	func_count = 0
