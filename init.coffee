@@ -51,8 +51,8 @@ createDatabase = (arg, callback) ->
 			callback null
 	
 	funcs = []
-	funcs.push((callback) -> create config.MYSQL_DATABASE_URL, callback) if arg is 'main' or arg is 'both'
-	funcs.push((callback) -> create config.MYSQL_DATABASE_URL_TEST, callback) if arg is 'test' or arg is 'both'
+	funcs.push((callback) -> create config.MYSQL_DATABASE_URL, callback) if arg in ['main', 'both']
+	funcs.push((callback) -> create config.MYSQL_DATABASE_URL_TEST, callback) if arg in ['test', 'both']
 	
 	async.parallel funcs, callback
 
@@ -75,8 +75,8 @@ dropDatabase = (arg, callback) ->
 			callback null
 	
 	funcs = []
-	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL, callback) if arg is 'main' or arg is 'both'
-	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL_TEST, callback) if arg is 'test' or arg is 'both'
+	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL, callback) if arg in ['main', 'both']
+	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL_TEST, callback) if arg in ['test', 'both']
 	
 	async.parallel funcs, callback
 
@@ -222,12 +222,8 @@ if opts.info is true
 #	create config.MYSQL_DATABASE_URL if opts.create_database is 'main' or opts.create_database is 'both'
 #	create config.MYSQL_DATABASE_URL_TEST if opts.create_database is 'test' or opts.create_database is 'both'
 
-i = 0
-iter = () ->
-	process.exit 0 if i >= opts._order.length
-	op = opts._order[i]
-	actions[op.key] op.value, (error) ->
-		checkError error
-		i++
-		iter()
-iter()
+funcs = []
+opts._order.forEach (op) -> funcs.push( (callback) -> actions[op.key] op.value, callback )
+async.series funcs, (error) ->
+	checkError error
+	process.exit 0
