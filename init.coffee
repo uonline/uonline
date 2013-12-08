@@ -31,7 +31,10 @@ config = require './config.js'
 utils = require './utils.js'
 async = require 'async'
 dashdash = require 'dashdash'
-anyDB = require 'any-db'
+
+anyDB = null
+needAnyDB = () ->
+	anyDB = require 'any-db' unless anyDB?
 
 
 help = (arg, callback) ->
@@ -39,6 +42,7 @@ help = (arg, callback) ->
 	process.exit 2
 
 info = (arg, callback) ->
+	needAnyDB()
 	mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL)
 	utils.migration.getCurrentRevision mysqlConnection, (error, result) ->
 		if error?
@@ -52,6 +56,7 @@ info = (arg, callback) ->
 			process.exit 0
 
 createDatabase = (arg, callback) ->
+	needAnyDB()
 	checkArgs opts.create_database, ['main', 'test', 'both']
 	
 	create = (db_url, callback) ->
@@ -76,6 +81,7 @@ createDatabase = (arg, callback) ->
 
 
 dropDatabase = (arg, callback) ->
+	needAnyDB()
 	checkArgs opts.drop_database, ['main', 'test', 'both']
 	
 	drop = (db_url, callback) ->
@@ -100,6 +106,7 @@ dropDatabase = (arg, callback) ->
 
 
 migrateTables = (arg, callback) ->
+	needAnyDB()
 	mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL)
 	utils.migration.migrate mysqlConnection, callback
 
