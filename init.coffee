@@ -23,7 +23,7 @@ checkError = (error, dontExit) ->
 
 checkArgs = (passed, avaliable) ->
 	unless passed in avaliable
-		console.log "Unknown arguent: #{passed}"
+		console.log "Unknown argument: #{passed}"
 		console.log "Avaliable: #{avaliable}"
 		process.exit 1
 
@@ -58,7 +58,7 @@ info = (arg, callback) ->
 createDatabase = (arg, callback) ->
 	needAnyDB()
 	checkArgs opts.create_database, ['main', 'test', 'both']
-	
+
 	create = (db_url, callback) ->
 		db_path = db_url.match(/.+\//)[0]
 		db_name = db_url.match(/[^\/]+$/)[0]
@@ -72,18 +72,18 @@ createDatabase = (arg, callback) ->
 			else
 				console.log "#{db_name} created."
 			callback null
-	
+
 	funcs = []
 	funcs.push((callback) -> create config.MYSQL_DATABASE_URL, callback) if arg in ['main', 'both']
 	funcs.push((callback) -> create config.MYSQL_DATABASE_URL_TEST, callback) if arg in ['test', 'both']
-	
+
 	async.parallel funcs, callback
 
 
 dropDatabase = (arg, callback) ->
 	needAnyDB()
 	checkArgs opts.drop_database, ['main', 'test', 'both']
-	
+
 	drop = (db_url, callback) ->
 		db_path = db_url.match(/.+\//)[0]
 		db_name = db_url.match(/[^\/]+$/)[0]
@@ -97,11 +97,11 @@ dropDatabase = (arg, callback) ->
 			else
 				console.log "#{db_name} dropped."
 			callback null
-	
+
 	funcs = []
 	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL, callback) if arg in ['main', 'both']
 	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL_TEST, callback) if arg in ['test', 'both']
-	
+
 	async.parallel funcs, callback
 
 
