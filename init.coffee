@@ -21,10 +21,10 @@ checkError = (error, dontExit) ->
 		console.error error
 		unless dontExit then process.exit 1
 
-checkArgs = (passed, avaliable) ->
-	unless passed in avaliable
+checkArgs = (passed, available) ->
+	unless passed in available
 		console.log "Unknown argument: #{passed}"
-		console.log "Avaliable: #{avaliable}"
+		console.log "Available: #{available}"
 		process.exit 1
 
 config = require './config.js'
