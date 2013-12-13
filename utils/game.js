@@ -155,15 +155,9 @@ exports.getNearbyUsers = function(dbConnection, userid, locid, callback) {
 		locid,
 		function(error, result) {
 			if (!!error) callback(error, null);
-			// TODO: Array.filter() is better
-			for (var i=0; i<result.length; i++)
-			{
-				if (result[i].id === userid)
-				{
-					result.splice(i,1);
-					break;
-				}
-			}
+			result = result.filter(function (i) {
+				return i.id !== userid;
+			});
 			callback(null, result);
 		}
 	);
