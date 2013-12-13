@@ -32,7 +32,8 @@
     "any-db-postgres": "~1.0.0",
     "any-db-mysql": "~1.0.0",
     "load-grunt-tasks": "~0.2.0",
-    "dashdash": "~1.4.0"
+    "dashdash": "~1.4.0",
+    "sync": "~0.2.2"
   },
   "devDependencies": {
     "nodeunit": "~0.8.1",

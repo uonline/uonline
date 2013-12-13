@@ -20,6 +20,7 @@ mysqlConnection = anyDB.createPool config.MYSQL_DATABASE_URL, min: 2, max: 20
 utils = require './utils.js'
 async = require 'async'
 express = require 'express'
+sync = require 'sync'
 
 app = express()
 app.enable 'trust proxy'
@@ -44,27 +45,27 @@ app.engine 'twig', swig.renderFile
 app.engine 'swig', swig.renderFile
 app.set 'view engine', 'twig' # historical reasons
 app.set 'views', __dirname + '/templates'
+
 phpgate = require('./cgi.js').phpgate
+
 
 app.use (request, response, next) ->
 	response.header 'Content-Security-Policy-Report-Only',
 		"default-src 'self'; script-src 'self' http://code.jquery.com"
 	next()
 
-app.use (request, response, next) ->
+
+app.use ((request, response) ->
 	request.uonline = {}
 	request.uonline.basicOpts = {}
-	utils.user.sessionInfoRefreshing mysqlConnection, request.cookies.sessid, config.sessionExpireTime,
-		(error, result) ->
-			if error?
-				response.send 500
-			else
-				request.uonline.basicOpts.now = new Date()
-				request.uonline.basicOpts.loggedIn = result.sessionIsActive
-				request.uonline.basicOpts.login = result.username
-				request.uonline.basicOpts.admin = result.admin
-				request.uonline.basicOpts.userid = result.userid
-				next()
+	sessionData = utils.user.sessionInfoRefreshing.sync(null,
+		mysqlConnection, request.cookies.sessid, config.sessionExpireTime)
+	request.uonline.basicOpts.now = new Date()
+	request.uonline.basicOpts.loggedIn = sessionData.sessionIsActive
+	request.uonline.basicOpts.login = sessionData.username
+	request.uonline.basicOpts.admin = sessionData.admin
+	request.uonline.basicOpts.userid = sessionData.userid
+).asyncMiddleware()
 
 
 # routing routines
