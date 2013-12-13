@@ -227,7 +227,18 @@ app.get('/action/logout', function (request, response) {
 });
 
 app.get('/game/', phpgate);
-app.get('/action/go/:to', phpgate);
+
+app.get('/action/go/:to', function (request, response) {
+	utils.game.changeLocation(
+		mysqlConnection,
+		request.uonline.basicOpts.userid,
+		request.param('to'),
+		function (error, result) {
+			if (!!error) console.error(error);
+			response.redirect('/game/');
+		}
+	);
+});
 
 app.get('/action/attack', function (request, response) {
 	if (!request.uonline.basicOpts.loggedIn)
@@ -276,7 +287,7 @@ app.get('/ajax/isNickBusy/:nick', function (request, response) {
 	});
 });
 
-app.get('/stats/', phpgate);
+//app.get('/stats/', phpgate);
 //app.get('/world/', phpgate);
 //app.get('/development/', phpgate);
 
