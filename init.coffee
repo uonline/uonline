@@ -16,17 +16,6 @@
 
 'use strict'
 
-checkError = (error, dontExit) ->
-	if error?
-		console.error error
-		unless dontExit then process.exit 1
-
-checkArgs = (passed, available) ->
-	unless passed in available
-		console.log "Unknown argument: #{passed}"
-		console.log "Available: #{available}"
-		process.exit 1
-
 config = require './config.js'
 utils = require './utils.js'
 async = require 'async'
@@ -37,9 +26,23 @@ needAnyDB = () ->
 	anyDB = require 'any-db' unless anyDB?
 
 
+checkError = (error, dontExit) ->
+	if error?
+		console.error error
+		unless dontExit then process.exit 1
+
+
+checkArgs = (passed, available) ->
+	unless passed in available
+		console.log "Unknown argument: #{passed}"
+		console.log "Available: #{available}"
+		process.exit 1
+
+
 help = (arg, callback) ->
 	console.log "\nUsage: node init.js <commands>\n\n#{parser.help(includeEnv: true).trimRight()}"
 	process.exit 2
+
 
 info = (arg, callback) ->
 	needAnyDB()
@@ -54,6 +57,7 @@ info = (arg, callback) ->
 			console.log "init.js with #{newest + 1} revisions on board."
 			console.log "Current revision is #{result} (#{status})."
 			process.exit 0
+
 
 createDatabase = (arg, callback) ->
 	needAnyDB()
@@ -170,6 +174,7 @@ if opts._args.length > 0
 
 if opts._order.length is 0
 	opts.help = true
+	opts._order.push(key: 'help', value: true, from: 'argv')
 
 # Some other schema:
 #  'help', 'h', 'Show this text'
