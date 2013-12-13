@@ -16,17 +16,6 @@
 
 'use strict'
 
-checkError = (error, dontExit) ->
-	if error?
-		console.error error
-		unless dontExit then process.exit 1
-
-checkArgs = (passed, avaliable) ->
-	unless passed in avaliable
-		console.log "Unknown arguent: #{passed}"
-		console.log "Avaliable: #{avaliable}"
-		process.exit 1
-
 config = require './config.js'
 utils = require './utils.js'
 async = require 'async'
@@ -37,9 +26,23 @@ needAnyDB = () ->
 	anyDB = require 'any-db' unless anyDB?
 
 
+checkError = (error, dontExit) ->
+	if error?
+		console.error error
+		unless dontExit then process.exit 1
+
+
+checkArgs = (passed, available) ->
+	unless passed in available
+		console.log "Unknown argument: #{passed}"
+		console.log "Available: #{available}"
+		process.exit 1
+
+
 help = (arg, callback) ->
 	console.log "\nUsage: node init.js <commands>\n\n#{parser.help(includeEnv: true).trimRight()}"
 	process.exit 2
+
 
 info = (arg, callback) ->
 	needAnyDB()
@@ -55,10 +58,11 @@ info = (arg, callback) ->
 			console.log "Current revision is #{result} (#{status})."
 			process.exit 0
 
+
 createDatabase = (arg, callback) ->
 	needAnyDB()
 	checkArgs opts.create_database, ['main', 'test', 'both']
-	
+
 	create = (db_url, callback) ->
 		db_path = db_url.match(/.+\//)[0]
 		db_name = db_url.match(/[^\/]+$/)[0]
@@ -72,18 +76,18 @@ createDatabase = (arg, callback) ->
 			else
 				console.log "#{db_name} created."
 			callback null
-	
+
 	funcs = []
 	funcs.push((callback) -> create config.MYSQL_DATABASE_URL, callback) if arg in ['main', 'both']
 	funcs.push((callback) -> create config.MYSQL_DATABASE_URL_TEST, callback) if arg in ['test', 'both']
-	
+
 	async.parallel funcs, callback
 
 
 dropDatabase = (arg, callback) ->
 	needAnyDB()
 	checkArgs opts.drop_database, ['main', 'test', 'both']
-	
+
 	drop = (db_url, callback) ->
 		db_path = db_url.match(/.+\//)[0]
 		db_name = db_url.match(/[^\/]+$/)[0]
@@ -97,11 +101,11 @@ dropDatabase = (arg, callback) ->
 			else
 				console.log "#{db_name} dropped."
 			callback null
-	
+
 	funcs = []
 	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL, callback) if arg in ['main', 'both']
 	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL_TEST, callback) if arg in ['test', 'both']
-	
+
 	async.parallel funcs, callback
 
 
@@ -170,50 +174,18 @@ if opts._args.length > 0
 
 if opts._order.length is 0
 	opts.help = true
+	opts._order.push(key: 'help', value: true, from: 'argv')
 
-#console.log("# opts:", opts); // debug
-
-#
-#var optimist = require('optimist');
-#var argv = optimist
-#	.alias('help', 'h')
-#	.alias('info', 'i')
-#	.alias('tables', 't')
-#	.alias('unify-validate', 'l')
-#	.alias('unify-export', 'u')
-#	.alias('optimize', 'o')
-#	.alias('optimize', 'O')
-#	.alias('test-monsters', 'm')
-#	.alias('drop', 'd')
-#	.usage('Usage: $0 <commands>')
-#	.describe('help', 'Show this text')
-#	.describe('info', 'Show current revision and status')
-#	.describe('tables', 'Migrate tables to the last revision')
-#	.describe('unify-validate', 'Validate unify files')
-#	.describe('unify-export', 'Parse unify files and push them to database')
-#	.describe('optimize', 'Optimize tables')
-#	.describe('test-monsters', 'Insert test monsters')
-#	.describe('drop', 'Drop all tables and set revision to -1')
-#	.boolean(['help','info','tables','unify-validate','unify-export','optimize','test-monsters','drop'])
-#	.argv;
-#
-#// [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]
-#
-#if (argv.help === true)
-# {
-#	optimist.showHelp();
-# }
-
-#async.parallel [
-#		(callback) ->
-#			console.log(1)
-#			callback(null)
-#		,
-#		(callback) ->
-#			console.log(2)
-#			callback(null)
-#	],
-#	(err, res) -> console.log(err, res)
+# Some other schema:
+#  'help', 'h', 'Show this text'
+#  'info', 'i', 'Show current revision and status'
+#  'tables', 't', 'Migrate tables to the last revision'
+#  'unify-validate', 'l', 'Validate unify files'
+#  'unify-export', 'u', 'Parse unify files and push them to database'
+#  'optimize', 'o', 'O', 'Optimize tables'
+#  'test-monsters', 'm', 'Insert test monsters'
+#  'drop', 'd', 'Drop all tables and set revision to -1'
+# [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]
 
 #if opts.create_database?
 #	func_count = 0

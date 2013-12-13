@@ -77,10 +77,18 @@ Programmers' guidelines
 **Hint:** Run `grunt` to check and test your code.
 
 * Use tabs, not spaces. Don't mix them and don't use smarttabs.
+* Prefer single quotes. Use double quotes when you need to escape `'` itself.
 * Place `use strict` in every file.
-* Use `if (!!something)` when checking for null or undefined.
-* Use this style for requiring: `require('./utils.js');`.
+* Don't omit extension while requiring: `require('./utils.js');`.
 * Use async where it makes sense.
+* Write tests for everything.
+* Write good assert comments: they should answer the question "What do this function should do?".
+* Keep things outside of main thread. Use asynchronous API.
+
+
+### JS-specific
+
+* Use `if (!!something)` when checking for null or undefined.
 * Use semicolons even if they're optional.
 * Place figure brackets on the same line when you declare an anonymous function and on separate line otherwise.
 
@@ -110,6 +118,13 @@ var numbers = [
 ];
 ```
 
-* Write tests for everything.
-* Write good assert comments: they should answer the question "What do this function should do?".
-* Keep things outside of main thread. Use asynchronous API.
+
+### CoffeeScript-specific
+
+* Use `?` when checking for null or undefined: `if error? then ...`.
+* Leave two empty lines between function definitions.
+* `() ->` and `->` are both acceptable.
+* Use interpolation instead of concatenation.
+* Use `unless` instead of `if not`. Don't use `unless ... else` at all.
+* Use `is` instead of `==` when you don't mean calculations.
+* Overall: don't try to make CS look like JS.

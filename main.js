@@ -41,6 +41,11 @@ app.use('/img', express.static(__dirname + '/img'));
 app.use('/browserified', express.static(__dirname + '/browserified'));
 
 var swig = require('swig');
+function stubFilter(input) { return input; }
+swig.setFilter('tf', stubFilter); // TODO: actually implement
+swig.setFilter('nl2p', stubFilter); // TODO: actually implement
+swig.setFilter('nl2br', stubFilter); // TODO: actually implement
+swig.setFilter('length', function(){ return 0; }); // TODO: actually implement
 app.engine('html', swig.renderFile);
 app.engine('twig', swig.renderFile);
 app.engine('swig', swig.renderFile);
@@ -227,7 +232,52 @@ app.get('/action/logout', function (request, response) {
 });
 
 app.get('/game/', phpgate);
-app.get('/action/go/:to', phpgate);
+app.get('/node-game/', function (request, response) {
+	if (!request.uonline.basicOpts.loggedIn)
+	{
+		response.redirect('/login/');
+	}
+	else
+	{
+		var options = request.uonline.basicOpts;
+		options.instance = 'game';
+		utils.game.getUserLocation(mysqlConnection, request.uonline.basicOpts.userid, function (error, result) {
+			if (!!error)
+			{
+				throw new Error(error);
+			}
+			options.location_name = result.title;
+			options.area_name = 'FIXME! FIXME! FIXME!'; // TODO: FIXME
+			if (!!options.picture) options.pic = options.picture;
+			options.description = result.description;
+			options.ways = result.goto;
+			options.ways.forEach(function (i) { // facepalm
+				i.name = i.text;
+				i.to = i.id;
+			});
+			options.players_list = []; // TODO: broken
+			options.monsters_list = []; // TODO: broken
+			options.fight_mode = false; // TODO: broken
+			options.autoinvolved_fm = false; // TODO: broken
+			response.render('game', options);
+		});
+	}
+});
+
+app.get('/action/go/:to', function (request, response) {
+	utils.game.changeLocation(
+		mysqlConnection,
+		request.uonline.basicOpts.userid,
+		request.param('to'),
+		function (error, result) {
+			if (!!error)
+			{
+				throw new Error(error);
+			}
+			response.redirect('/game/');
+		}
+	);
+});
 
 app.get('/action/attack', function (request, response) {
 	if (!request.uonline.basicOpts.loggedIn)
@@ -276,7 +326,7 @@ app.get('/ajax/isNickBusy/:nick', function (request, response) {
 	});
 });
 
-app.get('/stats/', phpgate);
+//app.get('/stats/', phpgate);
 //app.get('/world/', phpgate);
 //app.get('/development/', phpgate);
 
