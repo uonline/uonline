@@ -246,19 +246,19 @@ app.get('/node-game/', function (request, response) {
 			{
 				throw new Error(error);
 			}
-			options['location_name'] = result.title;
-			options['area_name'] = 'FIXME! FIXME! FIXME!'; // TODO: FIXME
-			if (!!options.picture) options['pic'] = options.picture;
-			options['description'] = result.description;
-			options['ways'] = result['goto'];
-			options['ways'].forEach(function (i) { // facepalm
+			options.location_name = result.title;
+			options.area_name = 'FIXME! FIXME! FIXME!'; // TODO: FIXME
+			if (!!options.picture) options.pic = options.picture;
+			options.description = result.description;
+			options.ways = result.goto;
+			options.ways.forEach(function (i) { // facepalm
 				i.name = i.text;
 				i.to = i.id;
 			});
-			options['players_list'] = []; // TODO: broken
-			options['monsters_list'] = []; // TODO: broken
-			options['fight_mode'] = false; // TODO: broken
-			options['autoinvolved_fm'] = false; // TODO: broken
+			options.players_list = []; // TODO: broken
+			options.monsters_list = []; // TODO: broken
+			options.fight_mode = false; // TODO: broken
+			options.autoinvolved_fm = false; // TODO: broken
 			response.render('game', options);
 		});
 	}
