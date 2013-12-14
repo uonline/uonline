@@ -34,6 +34,26 @@ if (in_array("--info", $argv) || in_array("-i", $argv))
 	die;
 }
 
+foreach ($argv as $key => $value)
+{
+	if ($key === 0) continue;
+	if (!in_array($value, array(
+		"--help", "-h",
+		"--info", "-i",
+		"--database", "-d",
+		"--tables", "-t",
+		"--unify-validate", "-uv",
+		"--unify-export", "-ue",
+		"--test-monsters", "-tm",
+		"--optimize", "-o",
+		"--drop", "-dr"
+	)))
+	{
+		writeln('Unknown option: '.$value);
+		die;
+	}
+}
+
 writeln('Starting init.');
 $init = new Init();
 if (in_array("--database", $argv) || in_array("-d", $argv)) $init->database();
