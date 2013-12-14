@@ -112,42 +112,28 @@ app.get '/register/', (request, response) ->
 app.post '/register/', (request, response) ->
 	options = request.uonline.basicOpts
 	options.instance = 'register'
-	async.auto
-		usernameIsValid: (callback, results) ->
-			callback null, utils.validation.usernameIsValid(request.body.user)
-
-		passwordIsValid: (callback, results) ->
-			callback null, utils.validation.passwordIsValid(request.body.pass)
-
-		userExists: ['usernameIsValid', (callback, results) ->
-			utils.user.userExists mysqlConnection, request.body.user, callback
-		]
-		register: ['usernameIsValid', 'passwordIsValid', 'userExists', (callback, results) ->
-			if results.usernameIsValid is true and results.passwordIsValid is true and results.userExists is false
-				utils.user.registerUser(
-					mysqlConnection
-					request.body.user
-					request.body.pass
-					config.PERMISSIONS_USER
-					callback
-				)
-			else
-				callback null, 'validation fail'
-		],
-		(error, results) ->
-			if !!error or results.register is 'validation fail'
-				options.error = true # TODO: report mysql errors explicitly
-				# TODO: simplify template params
-				options.invalidLogin = not results.usernameIsValid
-				options.invalidPass = not results.passwordIsValid
-				options.loginIsBusy = results.userExists
-				options.user = request.body.user
-				options.pass = request.body.pass
-				response.render 'register', options
-			else
-				# TODO: set sessid
-				#response.redirect(config.defaultInstanceForUsers);
-				response.redirect '/login/'
+	usernameIsValid = utils.validation.usernameIsValid(request.body.user)
+	passwordIsValid = utils.validation.passwordIsValid(request.body.pass)
+	userExists = utils.user.userExists.sync(null, mysqlConnection, request.body.user)
+	if (usernameIsValid is true) and (passwordIsValid is true) and (userExists is false)
+		utils.user.registerUser.sync(
+			null
+			mysqlConnection
+			request.body.user
+			request.body.pass
+			config.PERMISSIONS_USER
+		)
+		# TODO: set sessid
+		#response.redirect(config.defaultInstanceForUsers)
+		response.redirect '/login/'
+	else
+		options.error = true
+		options.invalidLogin = !usernameIsValid
+		options.invalidPass = !passwordIsValid
+		options.loginIsBusy = userExists
+		options.user = request.body.user
+		options.pass = request.body.pass
+		response.render 'register', options
 
 
 app.get '/login/', (request, response) ->

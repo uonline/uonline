@@ -159,7 +159,7 @@ exports.createSalt = function(sess_length) {
 };
 
 exports.registerUser = function (dbConnection, user, password, permissions, callback) {
-	var salt = this.createSalt(16);
+	var salt = exports.createSalt(16);
 	/*crypto.pbkdf2(password, salt, 4096, 256, function(error, cryptedPassword){
 		if (!!error) callback(error, undefined);
 		dbConnection.query(
