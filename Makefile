@@ -35,7 +35,7 @@ serve:
 	php -S localhost:8080 -t .
 
 nodemon:
-	./node_modules/nodemon/nodemon.js -e '.js|.twig|.css' main.js
+	./node_modules/nodemon/nodemon.js -e '.js|.twig|.css' main.coffee
 
 grunt:
 	./node_modules/grunt-cli/bin/grunt

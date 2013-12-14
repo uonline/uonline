@@ -20,6 +20,7 @@ mysqlConnection = anyDB.createPool config.MYSQL_DATABASE_URL, min: 2, max: 20
 utils = require './utils.js'
 async = require 'async'
 express = require 'express'
+sync = require 'sync'
 
 app = express()
 app.enable 'trust proxy'
@@ -44,27 +45,27 @@ app.engine 'twig', swig.renderFile
 app.engine 'swig', swig.renderFile
 app.set 'view engine', 'twig' # historical reasons
 app.set 'views', __dirname + '/templates'
+
 phpgate = require('./cgi.js').phpgate
+
 
 app.use (request, response, next) ->
 	response.header 'Content-Security-Policy-Report-Only',
 		"default-src 'self'; script-src 'self' http://code.jquery.com"
 	next()
 
-app.use (request, response, next) ->
+
+app.use ((request, response) ->
 	request.uonline = {}
 	request.uonline.basicOpts = {}
-	utils.user.sessionInfoRefreshing mysqlConnection, request.cookies.sessid, config.sessionExpireTime,
-		(error, result) ->
-			if error?
-				response.send 500
-			else
-				request.uonline.basicOpts.now = new Date()
-				request.uonline.basicOpts.loggedIn = result.sessionIsActive
-				request.uonline.basicOpts.login = result.username
-				request.uonline.basicOpts.admin = result.admin
-				request.uonline.basicOpts.userid = result.userid
-				next()
+	sessionData = utils.user.sessionInfoRefreshing.sync(null,
+		mysqlConnection, request.cookies.sessid, config.sessionExpireTime)
+	request.uonline.basicOpts.now = new Date()
+	request.uonline.basicOpts.loggedIn = sessionData.sessionIsActive
+	request.uonline.basicOpts.login = sessionData.username
+	request.uonline.basicOpts.admin = sessionData.admin
+	request.uonline.basicOpts.userid = sessionData.userid
+).asyncMiddleware()
 
 
 # routing routines
@@ -111,42 +112,28 @@ app.get '/register/', (request, response) ->
 app.post '/register/', (request, response) ->
 	options = request.uonline.basicOpts
 	options.instance = 'register'
-	async.auto
-		usernameIsValid: (callback, results) ->
-			callback null, utils.validation.usernameIsValid(request.body.user)
-
-		passwordIsValid: (callback, results) ->
-			callback null, utils.validation.passwordIsValid(request.body.pass)
-
-		userExists: ['usernameIsValid', (callback, results) ->
-			utils.user.userExists mysqlConnection, request.body.user, callback
-		]
-		register: ['usernameIsValid', 'passwordIsValid', 'userExists', (callback, results) ->
-			if results.usernameIsValid is true and results.passwordIsValid is true and results.userExists is false
-				utils.user.registerUser(
-					mysqlConnection
-					request.body.user
-					request.body.pass
-					config.PERMISSIONS_USER
-					callback
-				)
-			else
-				callback null, 'validation fail'
-		],
-		(error, results) ->
-			if !!error or results.register is 'validation fail'
-				options.error = true # TODO: report mysql errors explicitly
-				# TODO: simplify template params
-				options.invalidLogin = not results.usernameIsValid
-				options.invalidPass = not results.passwordIsValid
-				options.loginIsBusy = results.userExists
-				options.user = request.body.user
-				options.pass = request.body.pass
-				response.render 'register', options
-			else
-				# TODO: set sessid
-				#response.redirect(config.defaultInstanceForUsers);
-				response.redirect '/login/'
+	usernameIsValid = utils.validation.usernameIsValid(request.body.user)
+	passwordIsValid = utils.validation.passwordIsValid(request.body.pass)
+	userExists = utils.user.userExists.sync(null, mysqlConnection, request.body.user)
+	if (usernameIsValid is true) and (passwordIsValid is true) and (userExists is false)
+		utils.user.registerUser.sync(
+			null
+			mysqlConnection
+			request.body.user
+			request.body.pass
+			config.PERMISSIONS_USER
+		)
+		# TODO: set sessid
+		#response.redirect(config.defaultInstanceForUsers)
+		response.redirect '/login/'
+	else
+		options.error = true
+		options.invalidLogin = !usernameIsValid
+		options.invalidPass = !passwordIsValid
+		options.loginIsBusy = userExists
+		options.user = request.body.user
+		options.pass = request.body.pass
+		response.render 'register', options
 
 
 app.get '/login/', (request, response) ->
@@ -249,13 +236,9 @@ app.get '/action/escape', (request, response) ->
 
 
 app.get '/ajax/isNickBusy/:nick', (request, response) ->
-	utils.user.userExists mysqlConnection, request.param('nick'), (error, result) ->
-		if error?
-			response.send 500
-			return
-		response.json
-			nick: request.param('nick')
-			isNickBusy: result
+	response.json
+		nick: request.param('nick')
+		isNickBusy: utils.user.userExists.sync null, mysqlConnection, request.param('nick')
 
 
 #app.get('/stats/', phpgate);

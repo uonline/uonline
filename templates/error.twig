@@ -1,7 +1,15 @@
 {% extends "layout.twig" %}
 
 {% block title %}
-	{% if code == 404 %}404 &mdash; Страница не найдена{% else %}Ошибка {{ code }}{% endif %}
+	{% if code == 404 %}
+	404 &mdash; Страница не найдена
+	{% else %}
+		{% if code == 500 %}
+		500 &mdash; Внутренняя ошибка сервера
+		{% else %}
+		Ошибка {{ code }}
+		{% endif %}
+	{% endif %}
 {% endblock title %}
 
 {% block content %}
@@ -9,7 +17,11 @@
 			{% if code == 404 %}
 				<h1>404 <small>Страница не найдена</small></h1>
 			{% else %}
-				<h1>Ошибка {{ code }}</h1>
+				{% if code == 500 %}
+					<h1>500 <small>Внутренняя ошибка сервера</small></h1>
+				{% else %}
+					<h1>Ошибка {{ code }}</h1>
+				{% endif %}
 			{% endif %}
 			</div>
 
