@@ -49,10 +49,13 @@ app.set 'views', __dirname + '/templates'
 phpgate = require('./cgi.js').phpgate
 
 
-app.use (request, response, next) ->
+app.use ((request, response) ->
+	# CSP
 	response.header 'Content-Security-Policy-Report-Only',
 		"default-src 'self'; script-src 'self' http://code.jquery.com"
-	next()
+	# Anti-clickjacking
+	response.header 'X-Frame-Options', 'DENY'
+).asyncMiddleware()
 
 
 app.use ((request, response) ->
