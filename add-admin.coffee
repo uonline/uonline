@@ -40,25 +40,21 @@ if !utils.validation.passwordIsValid(p)
 	process.exit 1
 
 config = require './config.js'
-async = require 'async'
+sync = require 'sync'
 anyDB = require 'any-db'
 conn = anyDB.createConnection config.MYSQL_DATABASE_URL
 
 
-utils.user.userExists(conn, u, (error, result) ->
-	if error?
-		console.log 'Error: '+require('util').inspect(error)
+sync ->
+	try
+		exists = utils.user.userExists.sync null, conn, u
+		if exists is true
+			console.log "User `#{u}` already exists."
+			process.exit 1
+
+		utils.user.registerUser.sync null, conn, u, p, config.PERMISSIONS_ADMIN
+		console.log "New admin `#{u}` registered successfully."
+		process.exit 0
+	catch ex
+		console.error ex.stack
 		process.exit 1
-	else if result == true
-		console.log "User `#{u}` already exists."
-		process.exit 1
-	else
-		utils.user.registerUser(conn, u, p, config.PERMISSIONS_ADMIN, (error, result) ->
-			if error?
-				console.log 'Error: '+require('util').inspect(error)
-				process.exit 1
-			else
-				console.log "New admin `#{u}` registered successfully."
-				process.exit 0
-		)
-)
