@@ -236,13 +236,9 @@ app.get '/action/escape', (request, response) ->
 
 
 app.get '/ajax/isNickBusy/:nick', (request, response) ->
-	utils.user.userExists mysqlConnection, request.param('nick'), (error, result) ->
-		if error?
-			response.send 500
-			return
-		response.json
-			nick: request.param('nick')
-			isNickBusy: result
+	response.json
+		nick: request.param('nick')
+		isNickBusy: utils.user.userExists.sync null, mysqlConnection, request.param('nick')
 
 
 #app.get('/stats/', phpgate);
