@@ -48,15 +48,12 @@ info = (arg, callback) ->
 	needAnyDB()
 	mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL)
 	utils.migration.getCurrentRevision mysqlConnection, (error, result) ->
-		if error?
-			console.log error
-			process.exit 1
-		else
-			newest = utils.migration.getNewestRevision()
-			status = if result < newest then 'needs update' else 'up to date'
-			console.log "init.js with #{newest + 1} revisions on board."
-			console.log "Current revision is #{result} (#{status})."
-			process.exit 0
+		checkError error
+		newest = utils.migration.getNewestRevision()
+		status = if result < newest then 'needs update' else 'up to date'
+		console.log "init.js with #{newest + 1} revisions on board."
+		console.log "Current revision is #{result} (#{status})."
+		process.exit 0
 
 
 createDatabase = (arg, callback) ->
