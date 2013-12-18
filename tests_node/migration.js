@@ -69,7 +69,7 @@ exports.getCurrentRevision = {
 			function(error, result) {
 				test.ifError(error);
 				test.strictEqual(result[0], -1, 'should return default value if revision table is not created');
-				test.strictEqual(result[3], 945, 'should return correct value if revision table is created');
+				test.strictEqual(result[3], 945, 'should return current revision number');
 				test.done();
 			}
 		);
@@ -79,7 +79,7 @@ exports.getCurrentRevision = {
 				function (callback) { mg.getCurrentRevision('nonsense', callback); },
 			],
 			function(error, result) {
-				test.ok(!!error, 'should fail');
+				test.ok(!!error, 'should fail on exceptions');
 				test.done();
 			}
 		);
@@ -90,7 +90,7 @@ exports.getCurrentRevision = {
 				function (callback) { mg.getCurrentRevision(fakeConn, callback); },
 			],
 			function(error, result) {
-				test.ok(!!error, 'should fail');
+				test.ok(!!error, 'should fail on connection errors');
 				test.done();
 			}
 		);
