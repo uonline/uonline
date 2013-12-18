@@ -81,7 +81,7 @@ var migrationData = [
 			'volition INT, '+
 			'health_max INT, '+
 			'mana_max INT'],
-		
+
 		/************** monsters ****************/
 		['monsters', 'create', 'incarn_id INT AUTO_INCREMENT, PRIMARY KEY (incarn_id), '+
 			'id INT, '+
@@ -121,16 +121,30 @@ exports.getNewestRevision = function() {
 };
 
 exports.getCurrentRevision = function(dbConnection, callback) {
-	dbConnection.query("SELECT revision FROM revision", [], function(error, result) {
-		if (!!error)
-		{
-			callback(null, -1);
-		}
-		else
-		{
-			callback(null, result.rows[0].revision);
-		}
-	});
+	try
+	{
+		dbConnection.query("SELECT revision FROM revision", [], function (error, result) {
+			if (!!error)
+			{
+				if (error.code === 'ER_NO_SUCH_TABLE')
+				{
+					callback(null, -1);
+				}
+				else
+				{
+					callback(error, null);
+				}
+			}
+			else
+			{
+				callback(null, result.rows[0].revision);
+			}
+		});
+	}
+	catch (ex)
+	{
+		callback(ex, null);
+	}
 };
 
 exports.setRevision = function(dbConnection, revision, callback) {
