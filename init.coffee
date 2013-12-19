@@ -36,8 +36,8 @@ checkError = (error, dontExit) ->
 
 checkArgs = (passed, available) ->
 	unless passed in available
-		console.log "Unknown argument: #{passed}"
-		console.log "Available: #{available}"
+		console.error "Unknown argument: #{passed}"
+		console.error "Available: #{available}"
 		process.exit 1
 
 
