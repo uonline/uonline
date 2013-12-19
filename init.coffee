@@ -19,11 +19,13 @@
 config = require './config.js'
 utils = require './utils.js'
 async = require 'async'
+Sync = require 'sync'
 dashdash = require 'dashdash'
 
 anyDB = null
-needAnyDB = () ->
+createAnyDBConnection = (url) ->
 	anyDB = require 'any-db' unless anyDB?
+	anyDB.createConnection(url)
 
 
 checkError = (error, dontExit) ->
@@ -39,79 +41,6 @@ checkArgs = (passed, available) ->
 		process.exit 1
 
 
-help = (arg, callback) ->
-	console.log "\nUsage: node init.js <commands>\n\n#{parser.help(includeEnv: true).trimRight()}"
-	process.exit 2
-
-
-info = (arg, callback) ->
-	needAnyDB()
-	mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL)
-	utils.migration.getCurrentRevision mysqlConnection, (error, result) ->
-		checkError error
-		newest = utils.migration.getNewestRevision()
-		status = if result < newest then 'needs update' else 'up to date'
-		console.log "init.js with #{newest + 1} revisions on board."
-		console.log "Current revision is #{result} (#{status})."
-		process.exit 0
-
-
-createDatabase = (arg, callback) ->
-	needAnyDB()
-	checkArgs opts.create_database, ['main', 'test', 'both']
-
-	create = (db_url, callback) ->
-		db_path = db_url.match(/.+\//)[0]
-		db_name = db_url.match(/[^\/]+$/)[0]
-		conn = anyDB.createConnection(db_path)
-		conn.query 'CREATE DATABASE ' + db_name, [], (error, result) ->
-			if error?
-				if error.code != 'ER_DB_CREATE_EXISTS'
-					callback error
-					return
-				console.log "#{db_name} already exists."
-			else
-				console.log "#{db_name} created."
-			callback null
-
-	funcs = []
-	funcs.push((callback) -> create config.MYSQL_DATABASE_URL, callback) if arg in ['main', 'both']
-	funcs.push((callback) -> create config.MYSQL_DATABASE_URL_TEST, callback) if arg in ['test', 'both']
-
-	async.parallel funcs, callback
-
-
-dropDatabase = (arg, callback) ->
-	needAnyDB()
-	checkArgs opts.drop_database, ['main', 'test', 'both']
-
-	drop = (db_url, callback) ->
-		db_path = db_url.match(/.+\//)[0]
-		db_name = db_url.match(/[^\/]+$/)[0]
-		conn = anyDB.createConnection(db_path)
-		conn.query 'DROP DATABASE ' + db_name, [], (error, result) ->
-			if error?
-				if error.code != 'ER_DB_DROP_EXISTS'
-					callback error
-					return
-				console.log "#{db_name} already dropped."
-			else
-				console.log "#{db_name} dropped."
-			callback null
-
-	funcs = []
-	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL, callback) if arg in ['main', 'both']
-	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL_TEST, callback) if arg in ['test', 'both']
-
-	async.parallel funcs, callback
-
-
-migrateTables = (arg, callback) ->
-	needAnyDB()
-	mysqlConnection = anyDB.createConnection(config.MYSQL_DATABASE_URL)
-	utils.migration.migrate mysqlConnection, callback
-
-
 options = [
 	names: [
 		'help'
@@ -119,7 +48,6 @@ options = [
 	]
 	type: 'bool'
 	help: 'Print this help and exit.'
-	action: help
 ,
 	names: [
 		'info'
@@ -127,7 +55,6 @@ options = [
 	]
 	type: 'bool'
 	help: 'Show current revision and status.'
-	action: info
 ,
 	names: [
 		'create-database'
@@ -135,7 +62,6 @@ options = [
 	]
 	type: 'string'
 	help: 'Create database: "main", "test" or "both".'
-	action: createDatabase
 ,
 	names: [
 		'drop-database'
@@ -143,7 +69,6 @@ options = [
 	]
 	type: 'string'
 	help: 'Drop database: "main", "test" or "both".'
-	action: dropDatabase
 ,
 	names: [
 		'migrate-tables'
@@ -151,11 +76,8 @@ options = [
 	]
 	type: 'bool'
 	help: 'Migrate to the latest revision.'
-	action: migrateTables
 ]
 
-actions = {}
-options.forEach( (op) -> actions[(op.name || op.names[0]).replace(/-/g,'_')] = op.action if op.action )
 
 parser = dashdash.createParser(options: options)
 
@@ -199,8 +121,78 @@ if opts._order.length is 0
 #	create config.MYSQL_DATABASE_URL if opts.create_database is 'main' or opts.create_database is 'both'
 #	create config.MYSQL_DATABASE_URL_TEST if opts.create_database is 'test' or opts.create_database is 'both'
 
-funcs = []
-opts._order.forEach (op) -> funcs.push( (callback) -> actions[op.key] op.value, callback )
-async.series funcs, (error) ->
-	checkError error
+help = () ->
+	console.log "\nUsage: node init.js <commands>\n\n#{parser.help(includeEnv: true).trimRight()}"
+	process.exit 2
+
+
+info = (callback) ->
+	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
+	utils.migration.getCurrentRevision mysqlConnection, (error, result) ->
+		checkError error
+		newest = utils.migration.getNewestRevision()
+		status = if result < newest then 'needs update' else 'up to date'
+		console.log "init.js with #{newest + 1} revisions on board."
+		console.log "Current revision is #{result} (#{status})."
+		process.exit 0
+
+
+createDatabase = (arg, callback) ->
+	checkArgs arg, ['main', 'test', 'both']
+
+	create = (db_url, callback) ->
+		db_path = db_url.match(/.+\//)[0]
+		db_name = db_url.match(/[^\/]+$/)[0]
+		conn = createAnyDBConnection(db_path)
+		conn.query 'CREATE DATABASE ' + db_name, [], (error, result) ->
+			if error?
+				if error.code != 'ER_DB_CREATE_EXISTS'
+					callback error
+					return
+				console.log "#{db_name} already exists."
+			else
+				console.log "#{db_name} created."
+			callback null
+
+	funcs = []
+	funcs.push((callback) -> create config.MYSQL_DATABASE_URL, callback) if arg in ['main', 'both']
+	funcs.push((callback) -> create config.MYSQL_DATABASE_URL_TEST, callback) if arg in ['test', 'both']
+
+	async.parallel funcs, callback
+
+
+dropDatabase = (arg, callback) ->
+	checkArgs opts.drop_database, ['main', 'test', 'both']
+
+	drop = (db_url, callback) ->
+		db_path = db_url.match(/.+\//)[0]
+		db_name = db_url.match(/[^\/]+$/)[0]
+		conn = createAnyDBConnection(db_path)
+		conn.query 'DROP DATABASE ' + db_name, [], (error, result) ->
+			if error?
+				if error.code != 'ER_DB_DROP_EXISTS'
+					callback error
+					return
+				console.log "#{db_name} already dropped."
+			else
+				console.log "#{db_name} dropped."
+			callback null
+
+	funcs = []
+	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL, callback) if arg in ['main', 'both']
+	funcs.push((callback) -> drop config.MYSQL_DATABASE_URL_TEST, callback) if arg in ['test', 'both']
+
+	async.parallel funcs, callback
+
+
+migrateTables = (callback) ->
+	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
+	utils.migration.migrate mysqlConnection, callback
+
+Sync () ->
+	help() if opts.help
+	info.sync(null) if opts.info
+	dropDatabase.sync(null, opts.drop_database) if opts.drop_database
+	createDatabase.sync(null, opts.create_database) if opts.create_database
+	migrateTables.sync(null) if opts.migrate_tables
 	process.exit 0
