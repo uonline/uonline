@@ -76,6 +76,13 @@ options = [
 	]
 	type: 'bool'
 	help: 'Migrate to the latest revision.'
+,
+	names: [
+		'optimize-tables'
+		'o'
+	]
+	type: 'bool'
+	hrlp: 'Optimize tables.'
 ]
 
 
@@ -180,12 +187,31 @@ migrateTables = () ->
 	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
 	utils.migration.migrate.sync null, mysqlConnection
 
+
+optimize = () ->
+	conn = createAnyDBConnection(config.MYSQL_DATABASE_URL)
+	db_name = config.MYSQL_DATABASE_URL.match(/[^\/]+$/)[0]
+	
+	result = conn.query.sync conn,
+		"SELECT TABLE_NAME "+
+		"FROM information_schema.TABLES "+
+		"WHERE TABLE_SCHEMA='#{db_name}'"
+	
+	for row in result.rows
+		optRes = conn.query.sync conn, "OPTIMIZE TABLE #{row.TABLE_NAME}"
+		console.log row.TABLE_NAME+":"
+		
+		for optRow in optRes.rows
+			console.log "  #{optRow.Op} #{optRow.Msg_type}: #{optRow.Msg_text}"
+
+
 sync () ->
 		help() if opts.help
 		info() if opts.info
 		dropDatabase(opts.drop_database) if opts.drop_database
 		createDatabase(opts.create_database) if opts.create_database
 		migrateTables() if opts.migrate_tables
+		optimize() if opts.optimize_tables
 		process.exit 0
 	,
 		(error) -> throw error if (error) #КАСТЫЛЬ
