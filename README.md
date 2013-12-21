@@ -40,7 +40,7 @@ How to set up
 How to run
 ----------
 
-If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `node main.js`.
+If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`.
 
 If you wanna run legacy PHP version - you know the way.
 
