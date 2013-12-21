@@ -123,7 +123,7 @@ var numbers = [
 
 * Use `?` when checking for null or undefined: `if error? then ...`.
 * Leave two empty lines between function definitions.
-* `() ->` and `->` are both acceptable.
+* `() ->` and `->` are both acceptable, `->` is preferred.
 * Use interpolation instead of concatenation.
 * Use `unless` instead of `if not`. Don't use `unless ... else` at all.
 * Use `is` instead of `==` when you don't mean calculations.
