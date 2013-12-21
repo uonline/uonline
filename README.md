@@ -80,7 +80,7 @@ Programmers' guidelines
 * Prefer single quotes. Use double quotes when you need to escape `'` itself.
 * Place `use strict` in every file.
 * Don't omit extension while requiring: `require('./utils.js');`.
-* Use async where it makes sense.
+* Sync is better than async. Async is better than callbacks.
 * Write tests for everything.
 * Write good assert comments: they should answer the question "What do this function should do?".
 * Keep things outside of main thread. Use asynchronous API.
