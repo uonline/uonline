@@ -113,21 +113,6 @@ if opts._order.length is 0
 #  'drop', 'd', 'Drop all tables and set revision to -1'
 # [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]
 
-#if opts.create_database?
-#	func_count = 0
-#	create = (db_url) ->
-#		func_count++
-#		db_path = db_url.match(/.+\//)[0]
-#		db_name = db_url.match(/[^\/]+$/)[0]
-#		conn = anyDB.createConnection(db_path)
-#		conn.query 'CREATE DATABASE ' + db_name, [], (error, result) ->
-#			func_count--
-#			checkError error, func_count isnt 0
-#			console.log "#{db_name} created."
-#			process.exit 0 if func_count is 0
-#	create config.MYSQL_DATABASE_URL if opts.create_database is 'main' or opts.create_database is 'both'
-#	create config.MYSQL_DATABASE_URL_TEST if opts.create_database is 'test' or opts.create_database is 'both'
-
 help = () ->
 	console.log "\nUsage: node init.js <commands>\n\n#{parser.help(includeEnv: true).trimRight()}"
 	process.exit 2
@@ -145,7 +130,7 @@ info = () ->
 
 createDatabase = (arg) ->
 	checkArgs arg, ['main', 'test', 'both']
-	
+
 	create = (db_url) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
 		conn = createAnyDBConnection(db_path)
@@ -156,14 +141,14 @@ createDatabase = (arg) ->
 			if error.code != 'ER_DB_CREATE_EXISTS'
 				throw error
 			console.log "#{db_name} already exists."
-	
+
 	create config.MYSQL_DATABASE_URL if arg in ['main', 'both']
 	create config.MYSQL_DATABASE_URL_TEST if arg in ['test', 'both']
 
 
 dropDatabase = (arg) ->
 	checkArgs opts.drop_database, ['main', 'test', 'both']
-	
+
 	drop = (db_url, callback) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
 		conn = createAnyDBConnection(db_path)
@@ -176,7 +161,7 @@ dropDatabase = (arg) ->
 			else
 				console.log "#{db_name} dropped."
 			callback null
-	
+
 	fut = []
 	fut.push(drop.future null, config.MYSQL_DATABASE_URL) if arg in ['main', 'both']
 	fut.push(drop.future null, config.MYSQL_DATABASE_URL_TEST) if arg in ['test', 'both']
@@ -191,21 +176,22 @@ migrateTables = () ->
 optimize = () ->
 	conn = createAnyDBConnection(config.MYSQL_DATABASE_URL)
 	db_name = config.MYSQL_DATABASE_URL.match(/[^\/]+$/)[0]
-	
+
 	result = conn.query.sync conn,
 		"SELECT TABLE_NAME "+
 		"FROM information_schema.TABLES "+
 		"WHERE TABLE_SCHEMA='#{db_name}'"
-	
+
 	for row in result.rows
 		optRes = conn.query.sync conn, "OPTIMIZE TABLE #{row.TABLE_NAME}"
 		console.log row.TABLE_NAME+":"
-		
+
 		for optRow in optRes.rows
 			console.log "  #{optRow.Op} #{optRow.Msg_type}: #{optRow.Msg_text}"
 
 
-sync () ->
+sync(
+	->
 		help() if opts.help
 		info() if opts.info
 		dropDatabase(opts.drop_database) if opts.drop_database
@@ -213,6 +199,6 @@ sync () ->
 		migrateTables() if opts.migrate_tables
 		optimize() if opts.optimize_tables
 		process.exit 0
-	,
-		(error) -> throw error if (error) #КАСТЫЛЬ
-
+	(ex) ->
+		if ex? then throw ex
+)
