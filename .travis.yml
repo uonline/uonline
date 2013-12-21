@@ -25,11 +25,11 @@ before_script:
   - ./init.php --drop
   - ./init.php --info
   - # init.coffee test
-  - ./init.coffee --info
+  - ./init.coffee --info || true
   - ./init.coffee --create-database both --migrate-tables --optimize-tables
   - ./init.coffee --info
   - ./init.coffee --drop-database both
-  - ./init.coffee --info
+  - ./init.coffee --info || true
   - # Create test database
   - mysql -e 'create database uonline_test;'
 script:
