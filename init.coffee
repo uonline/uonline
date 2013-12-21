@@ -82,7 +82,7 @@ options = [
 		'o'
 	]
 	type: 'bool'
-	hrlp: 'Optimize tables.'
+	help: 'Optimize tables.'
 ]
 
 
@@ -113,19 +113,17 @@ if opts._order.length is 0
 #  'drop', 'd', 'Drop all tables and set revision to -1'
 # [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]
 
-help = () ->
+help = ->
 	console.log "\nUsage: node init.js <commands>\n\n#{parser.help(includeEnv: true).trimRight()}"
-	process.exit 2
 
 
-info = () ->
+info = ->
 	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
 	current = utils.migration.getCurrentRevision.sync(null, mysqlConnection)
 	newest = utils.migration.getNewestRevision()
 	status = if current < newest then 'needs update' else 'up to date'
 	console.log "init.js with #{newest + 1} revisions on board."
 	console.log "Current revision is #{current} (#{status})."
-	process.exit 0
 
 
 createDatabase = (arg) ->
@@ -152,28 +150,24 @@ dropDatabase = (arg) ->
 	drop = (db_url, callback) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
 		conn = createAnyDBConnection(db_path)
-		conn.query 'DROP DATABASE ' + db_name, [], (error, result) ->
-			if error?
-				if error.code != 'ER_DB_DROP_EXISTS'
-					callback error
-					return
-				console.log "#{db_name} already dropped."
-			else
-				console.log "#{db_name} dropped."
-			callback null
+		try
+			conn.query.sync(conn, 'DROP DATABASE ' + db_name, [])
+			console.log "#{db_name} dropped."
+		catch error
+			if error.code != 'ER_DB_DROP_EXISTS'
+				throw error
+			console.log "#{db_name} already dropped."
 
-	fut = []
-	fut.push(drop.future null, config.MYSQL_DATABASE_URL) if arg in ['main', 'both']
-	fut.push(drop.future null, config.MYSQL_DATABASE_URL_TEST) if arg in ['test', 'both']
-	fut.forEach (f) -> f.result
+	drop config.MYSQL_DATABASE_URL if arg in ['main', 'both']
+	drop config.MYSQL_DATABASE_URL_TEST if arg in ['test', 'both']
 
 
-migrateTables = () ->
+migrateTables = ->
 	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
 	utils.migration.migrate.sync null, mysqlConnection
 
 
-optimize = () ->
+optimize = ->
 	conn = createAnyDBConnection(config.MYSQL_DATABASE_URL)
 	db_name = config.MYSQL_DATABASE_URL.match(/[^\/]+$/)[0]
 
@@ -192,8 +186,14 @@ optimize = () ->
 
 sync(
 	->
-		help() if opts.help
-		info() if opts.info
+		if opts.help
+			help()
+			process.exit 2
+		
+		if opts.info
+			info()
+			process.exit 0
+		
 		dropDatabase(opts.drop_database) if opts.drop_database
 		createDatabase(opts.create_database) if opts.create_database
 		migrateTables() if opts.migrate_tables
