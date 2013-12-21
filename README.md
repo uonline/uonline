@@ -86,6 +86,17 @@ Programmers' guidelines
 * Keep things outside of main thread. Use asynchronous API.
 
 
+### CoffeeScript-specific
+
+* Use `?` when checking for null or undefined: `if error? then ...`.
+* Leave two empty lines between function definitions.
+* `->` is preferred, `() ->` is acceptable.
+* Use interpolation instead of concatenation.
+* Use `unless` instead of `if not`. Don't use `unless ... else` at all.
+* Use `is` instead of `==` when you don't mean calculations.
+* Overall: don't try to make CS look like JS.
+
+
 ### JS-specific
 
 * Use `if (!!something)` when checking for null or undefined.
@@ -117,14 +128,3 @@ var numbers = [
   4,
 ];
 ```
-
-
-### CoffeeScript-specific
-
-* Use `?` when checking for null or undefined: `if error? then ...`.
-* Leave two empty lines between function definitions.
-* `() ->` and `->` are both acceptable, `->` is preferred.
-* Use interpolation instead of concatenation.
-* Use `unless` instead of `if not`. Don't use `unless ... else` at all.
-* Use `is` instead of `==` when you don't mean calculations.
-* Overall: don't try to make CS look like JS.
