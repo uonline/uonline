@@ -28,6 +28,7 @@ before_script:
   - ./init.coffee --info || true
   - ./init.coffee --create-database both --migrate-tables --optimize-tables
   - ./init.coffee --info
+  - ./add-admin.coffee admin password
   - ./init.coffee --drop-database both
   - ./init.coffee --info || true
   - # Create test database
