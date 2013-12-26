@@ -14,6 +14,7 @@ Requirements
 * Grunt
 * MySQL or MariaDB
 * MySQL user `anonymous` with password `nopassword`
+* Two MySQL databases: `uonline` and `uonline_test`
 
 ### Legacy
 
