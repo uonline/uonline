@@ -113,7 +113,7 @@ exports.closeSession = function(dbConnection, sess, callback) {
 	else
 	{
 		dbConnection.query(
-			'UPDATE `uniusers` SET `sessexpire` = NOW() - INTERVAL 1 SECOND WHERE `sessid` = ?',
+			'UPDATE `uniusers` SET `sessexpire` = NOW() WHERE `sessid` = ?',
 			[sess], callback);
 	}
 };
