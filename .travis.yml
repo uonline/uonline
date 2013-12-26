@@ -16,7 +16,7 @@ before_script:
   - travis_retry npm install -g grunt-cli coffee-script
   - # PHP setup
   - composer --ansi diagnose || true
-  - travis_retry ./composer.phar install
+  - travis_retry composer install
   - # init.php test
   - echo "localhost|travis||uonline|off" > keyring
   - ./init.php --info
