@@ -44,8 +44,5 @@
     "coveralls": "~2.6.0",
     "browserify": "~3.14.1",
     "david": "~2.4.0"
-  },
-  "scripts": {
-    "test": "node test.js"
   }
 }
