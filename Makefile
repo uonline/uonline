@@ -2,9 +2,6 @@ all:
 	# No. Specify a target.
 
 
-pull:
-	git pull
-
 diagnose:
 	php composer.phar diagnose
 	php composer.phar validate
