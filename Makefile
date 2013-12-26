@@ -2,10 +2,6 @@ all:
 	# No. Specify a target.
 
 
-diagnose:
-	php composer.phar diagnose
-	php composer.phar validate
-
 phptest:
 	php vendor/bin/phpunit --strict --verbose `if $$(which test) x$${TRAVIS} '==' x; then echo --colors; fi` --coverage-html ./code-coverage-report tests_php/
 
