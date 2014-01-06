@@ -1,5 +1,7 @@
-uonline [![Build Status](https://travis-ci.org/uonline/uonline.png?branch=master)](https://travis-ci.org/uonline/uonline) [![Coverage Status](https://coveralls.io/repos/uonline/uonline/badge.png?branch=master)](https://coveralls.io/r/uonline/uonline?branch=master) [![Dependency Status](https://david-dm.org/uonline/uonline.png)](https://david-dm.org/uonline/uonline) [![devDependency Status](https://david-dm.org/uonline/uonline/dev-status.png)](https://david-dm.org/uonline/uonline#info=devDependencies)  [![Tasks for this week](https://badge.waffle.io/uonline/uonline.png?label=this%20week&title=Tasks)](http://waffle.io/uonline/uonline) 
+uonline
 =======
+
+[![Build Status](https://travis-ci.org/uonline/uonline.png?branch=master)](https://travis-ci.org/uonline/uonline) [![Coverage Status](https://coveralls.io/repos/uonline/uonline/badge.png?branch=master)](https://coveralls.io/r/uonline/uonline?branch=master) [![Dependency Status](https://david-dm.org/uonline/uonline.png)](https://david-dm.org/uonline/uonline) [![devDependency Status](https://david-dm.org/uonline/uonline/dev-status.png)](https://david-dm.org/uonline/uonline#info=devDependencies)  [![Code Climate](https://codeclimate.com/github/uonline/uonline.png)](https://codeclimate.com/github/uonline/uonline) [![Tasks for this week](https://badge.waffle.io/uonline/uonline.png?label=this%20week&title=Tasks)](http://waffle.io/uonline/uonline)
 
 A browser-based MMORPG game in a fantasy world.
 
