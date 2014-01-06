@@ -42,7 +42,6 @@
     "jscoverage": "~0.3.8",
     "nodemon": "~1.0.5",
     "coveralls": "~2.6.0",
-    "browserify": "~3.14.1",
     "david": "~2.4.0"
   }
 }
