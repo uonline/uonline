@@ -156,7 +156,11 @@ $app->get('/profile/', function () use ($app, $twig, $options, $s) {
 });
 
 $app->get('/profile/id/{id}/', function ($id) use ($app, $twig, $options, $s) {
-	if (!idExists($id)) return $twig->render('error.twig', $options);
+	if (!idExists($id))
+	{
+		$options['code'] = 404;
+		return $twig->render('error.twig', $options);
+	}
 	$chrs = userCharacters($id, 'id');
 	$options['profileIsMine'] = idBySession($s) === $id;
 	$options['instance'] = 'profile';
@@ -165,7 +169,11 @@ $app->get('/profile/id/{id}/', function ($id) use ($app, $twig, $options, $s) {
 ->assert('id', '\d+');
 
 $app->get('/profile/user/{user}/', function ($user) use ($app, $twig, $options, $s) {
-	if (!userExists($user)) return $twig->render('error.twig', $options);
+	if (!userExists($user))
+	{
+		$options['code'] = 404;
+		return $twig->render('error.twig', $options);
+	}
 	$chrs = userCharacters($user, 'user');
 	$options['profileIsMine'] = userBySession($s) === $user;
 	$options['instance'] = 'profile';
