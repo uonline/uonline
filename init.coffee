@@ -114,7 +114,7 @@ if opts._order.length is 0
 # [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]
 
 help = ->
-	console.log "\nUsage: node init.js <commands>\n\n#{parser.help(includeEnv: true).trimRight()}"
+	console.log "\nUsage: coffee init.coffee <commands>\n\n#{parser.help(includeEnv: true).trimRight()}"
 
 
 info = ->
@@ -189,11 +189,11 @@ sync(
 		if opts.help
 			help()
 			process.exit 2
-		
+
 		if opts.info
 			info()
 			process.exit 0
-		
+
 		dropDatabase(opts.drop_database) if opts.drop_database
 		createDatabase(opts.create_database) if opts.create_database
 		migrateTables() if opts.migrate_tables
