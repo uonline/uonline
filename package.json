@@ -13,7 +13,7 @@
   "private": true,
   "dependencies": {
     "express": "~3.4.3",
-    "pg": "~2.9.0",
+    "pg": "~2.10.0",
     "stream-stack": ">= 1.1.1",
     "header-stack": ">= 0.0.2",
     "mysql": "~2.0.0-alpha9",
