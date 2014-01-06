@@ -7,9 +7,6 @@ services:
   - postgresql
 env:
   - DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test" MYSQL_DATABASE_URL="mysql://travis:@localhost/uonline" MYSQL_DATABASE_URL_TEST="mysql://travis:@localhost/uonline_test"
-cache:
-  directories:
-    - node_modules
 before_script:
   - # Node.js setup
   - travis_retry sudo apt-get update
