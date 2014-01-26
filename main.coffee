@@ -192,7 +192,6 @@ app.get '/game/', (request, response) -> sync ->
 			i.name = i.user
 		options.players_list = tmpUsers
 		tmpMonsters = utils.game.getNearbyMonsters.sync null, mysqlConnection, result.id
-		console.log tmpMonsters
 		options.monsters_list = tmpMonsters
 		options.fight_mode = utils.game.isInFight.sync null, mysqlConnection, request.uonline.basicOpts.userid
 		options.autoinvolved_fm = utils.game.isAutoinvolved.sync null,
