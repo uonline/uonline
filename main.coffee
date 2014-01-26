@@ -146,29 +146,16 @@ app.get '/login/', (request, response) ->
 
 
 app.post '/login/', (request, response) ->
-	options = request.uonline.basicOpts
-	options.instance = 'login'
-	async.auto
-		accessGranted: (callback) ->
-			utils.user.accessGranted mysqlConnection, request.body.user, request.body.pass, callback
-		setSession: ['accessGranted', (callback, results) ->
-			if results.accessGranted is true
-				utils.user.setSession mysqlConnection, request.body.user, callback
-			else
-				callback 'access denied', null
-		]
-		cookie: ['setSession', (callback, results) ->
-			response.cookie 'sessid', results.setSession
-			callback null, null
-		],
-		(error, results) ->
-			if error?
-				# TODO: report mysql errors explicitly
-				options.error = true
-				options.user = request.body.user
-				response.render 'login', options
-			else
-				response.redirect '/'
+	if utils.user.accessGranted.sync null, mysqlConnection, request.body.user, request.body.pass
+		sessid = utils.user.setSession.sync null, mysqlConnection, request.body.user
+		response.cookie 'sessid', sessid
+		response.redirect '/'
+	else
+		options = request.uonline.basicOpts
+		options.instance = 'login'
+		options.error = true
+		options.user = request.body.user
+		response.render 'login', options
 
 
 app.get '/profile/', phpgate # PHP
