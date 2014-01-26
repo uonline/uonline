@@ -188,26 +188,28 @@ app.get '/action/logout', (request, response) ->
 app.get '/game/', phpgate # PHP
 
 
-app.get '/node-game/', (request, response) ->
+app.get '/node-game/', (request, response) -> sync ->
 	if request.uonline.basicOpts.loggedIn is true
 		options = request.uonline.basicOpts
 		options.instance = 'game'
 		tmpArea = utils.game.getUserArea.sync null, mysqlConnection, request.uonline.basicOpts.userid
-		utils.game.getUserLocation mysqlConnection, request.uonline.basicOpts.userid, (error, result) ->
-			if error? then throw new Error(error)
-			options.location_name = result.title
-			options.area_name = tmpArea.title
-			options.pic = options.picture  if options.picture?
-			options.description = result.description
-			options.ways = result.goto
-			options.ways.forEach (i) -> # facepalm
-				i.name = i.text
-				i.to = i.id
-			options.players_list = [] # TODO: broken
-			options.monsters_list = [] # TODO: broken
-			options.fight_mode = false # TODO: broken
-			options.autoinvolved_fm = false # TODO: broken
-			response.render 'game', options
+		result = utils.game.getUserLocation.sync null, mysqlConnection, request.uonline.basicOpts.userid
+		options.location_name = result.title
+		options.area_name = tmpArea.title
+		options.pic = options.picture  if options.picture?
+		options.description = result.description
+		options.ways = result.goto
+		options.ways.forEach (i) -> # Facepalm. #273
+			i.name = i.text
+			i.to = i.id
+		tmpUsers = utils.game.getUsersOnLocation.sync null, mysqlConnection, result.id
+		tmpUsers.forEach (i) -> # Facepalm. Refs #273 too.
+			i.name = i.user
+		options.players_list = tmpUsers
+		options.monsters_list = [] # TODO: broken
+		options.fight_mode = false # TODO: broken
+		options.autoinvolved_fm = false # TODO: broken
+		response.render 'game', options
 	else
 		response.redirect '/login/'
 
