@@ -40,7 +40,7 @@ stubFilter = (input) -> input
 swig.setFilter 'tf', stubFilter # TODO: actually implement
 swig.setFilter 'nl2p', stubFilter # TODO: actually implement
 swig.setFilter 'nl2br', stubFilter # TODO: actually implement
-swig.setFilter 'length', -> 0 # TODO: actually implement
+swig.setFilter 'length', (x) -> x.length
 
 app.engine 'html', swig.renderFile
 app.engine 'twig', swig.renderFile
@@ -202,11 +202,14 @@ app.get '/node-game/', (request, response) -> sync ->
 		options.ways.forEach (i) -> # Facepalm. #273
 			i.name = i.text
 			i.to = i.id
-		tmpUsers = utils.game.getUsersOnLocation.sync null, mysqlConnection, result.id
+		tmpUsers = utils.game.getNearbyUsers.sync null,
+			mysqlConnection, request.uonline.basicOpts.userid, result.id
 		tmpUsers.forEach (i) -> # Facepalm. Refs #273 too.
 			i.name = i.user
 		options.players_list = tmpUsers
-		options.monsters_list = [] # TODO: broken
+		tmpMonsters = utils.game.getNearbyMonsters.sync null, mysqlConnection, result.id
+		console.log tmpMonsters
+		options.monsters_list = tmpMonsters
 		options.fight_mode = false # TODO: broken
 		options.autoinvolved_fm = false # TODO: broken
 		response.render 'game', options
