@@ -414,6 +414,23 @@ exports.isInFight = function(test) {
 	);
 };
 
+exports.isAutoinvolved = function(test) {
+	async.series([
+			creationUniusersTableCallback,
+			insertCallback('uniusers', {"id":2, "fight_mode":1, "autoinvolved_fm":0}),
+			insertCallback('uniusers', {"id":4, "fight_mode":1, "autoinvolved_fm":1}),
+			function(callback){ game.isAutoinvolved(conn, 2, callback); },
+			function(callback){ game.isAutoinvolved(conn, 4, callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[3], false, 'should return false if user was not attacked');
+			test.strictEqual(result[4], true, 'should return true if user was attacked');
+			test.done();
+		}
+	);
+};
+
 exports.uninvolve = function(test) {
 	async.series([
 			creationUniusersTableCallback,

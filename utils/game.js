@@ -203,6 +203,13 @@ exports.isInFight = function(dbConnection, userid, callback) {
 	});
 };
 
+exports.isAutoinvolved = function(dbConnection, userid, callback) {
+	dbConnection.query("SELECT `autoinvolved_fm` FROM `uniusers` WHERE `id` = ?", [userid],
+		function (error, result) {
+			callback(error, error || (result.rows[0].autoinvolved_fm == 1));
+		}
+	);
+};
 
 exports.uninvolve = function(dbConnection, userid, callback) {
 	dbConnection.query("UPDATE uniusers SET autoinvolved_fm = 0 WHERE id = ?", [userid], callback);

@@ -208,7 +208,8 @@ app.get '/game/', (request, response) -> sync ->
 		console.log tmpMonsters
 		options.monsters_list = tmpMonsters
 		options.fight_mode = utils.game.isInFight.sync null, mysqlConnection, request.uonline.basicOpts.userid
-		options.autoinvolved_fm = false # TODO: broken
+		options.autoinvolved_fm = utils.game.isAutoinvolved.sync null,
+			mysqlConnection, request.uonline.basicOpts.userid
 		response.render 'game', options
 	else
 		response.redirect '/login/'
