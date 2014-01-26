@@ -197,6 +197,13 @@ exports.getNearbyMonsters = function(dbConnection, locid, callback) {
 	);
 };
 
+exports.isInFight = function(dbConnection, userid, callback) {
+	dbConnection.query("SELECT `fight_mode` FROM `uniusers` WHERE `id` = ?", [userid], function (error, result) {
+		callback(error, error || (result.rows[0].fight_mode == 1));
+	});
+};
+
+
 exports.uninvolve = function(dbConnection, userid, callback) {
 	dbConnection.query("UPDATE uniusers SET autoinvolved_fm = 0 WHERE id = ?", [userid], callback);
 };

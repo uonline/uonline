@@ -185,10 +185,7 @@ app.get '/action/logout', (request, response) ->
 			response.redirect '/'
 
 
-app.get '/game/', phpgate # PHP
-
-
-app.get '/node-game/', (request, response) -> sync ->
+app.get '/game/', (request, response) -> sync ->
 	if request.uonline.basicOpts.loggedIn is true
 		options = request.uonline.basicOpts
 		options.instance = 'game'
@@ -210,7 +207,7 @@ app.get '/node-game/', (request, response) -> sync ->
 		tmpMonsters = utils.game.getNearbyMonsters.sync null, mysqlConnection, result.id
 		console.log tmpMonsters
 		options.monsters_list = tmpMonsters
-		options.fight_mode = false # TODO: broken
+		options.fight_mode = utils.game.isInFight.sync null, mysqlConnection, request.uonline.basicOpts.userid
 		options.autoinvolved_fm = false # TODO: broken
 		response.render 'game', options
 	else

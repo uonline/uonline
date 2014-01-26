@@ -397,6 +397,23 @@ exports.getNearbyMonsters = function(test) {
 	);
 };
 
+exports.isInFight = function(test) {
+	async.series([
+			creationUniusersTableCallback,
+			insertCallback('uniusers', {"id":2, "fight_mode":0}),
+			insertCallback('uniusers', {"id":4, "fight_mode":1}),
+			function(callback){ game.isInFight(conn, 2, callback); },
+			function(callback){ game.isInFight(conn, 4, callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[3], false, 'should return false if user is not in fight mode');
+			test.strictEqual(result[4], true, 'should return true if user is in fight mode');
+			test.done();
+		}
+	);
+};
+
 exports.uninvolve = function(test) {
 	async.series([
 			creationUniusersTableCallback,
