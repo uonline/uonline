@@ -69,9 +69,9 @@ sudo apt-get install php5
 
 If you experience problems, try to run `make diagnose` to diagnose the most common problems.
 
-To correctly update uonline on production server, try `make deploy`. To update Composer, run `php composer.phar selfupdate`. To update third-party libraries, run `php composer.phar update`.
+To correctly update uonline on production server, try `make deploy`. To update third-party libraries, run `composer update`.
 
-To run PHP tests, run `make test`. Note that they cover not all the code.
+To run PHP tests, run `make test`. Note that they cover only some parts of the code.
 
 
 Programmers' guidelines
