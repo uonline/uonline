@@ -79,6 +79,27 @@ exports.getUserLocation = function(dbConnection, userid, callback) {
 	);
 };
 
+exports.getUserArea = function(dbConnection, userid, callback) {
+	dbConnection.query(
+		'SELECT areas.* FROM areas, locations, uniusers '+
+		'WHERE uniusers.id=? AND locations.id = uniusers.location AND areas.id = locations.area',
+		[userid],
+		function (error, result) {
+			if (!!result && result.rowCount === 0)
+			{
+				error = "Wrong user's id";
+			}
+			if (!!error)
+			{
+				callback(error, null);
+				return;
+			}
+			var res = result.rows[0];
+			callback(null, res);
+		}
+	);
+};
+
 /*exports.getAllowedZones = function(dbConnection, sessid, callback) {
 	dbConnection.query(
 		'SELECT locations.goto FROM locations, uniusers '+

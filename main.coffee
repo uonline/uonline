@@ -192,11 +192,12 @@ app.get '/node-game/', (request, response) ->
 	if request.uonline.basicOpts.loggedIn is true
 		options = request.uonline.basicOpts
 		options.instance = 'game'
+		tmpArea = utils.game.getUserArea.sync null, mysqlConnection, request.uonline.basicOpts.userid
 		utils.game.getUserLocation mysqlConnection, request.uonline.basicOpts.userid, (error, result) ->
 			if error? then throw new Error(error)
 			options.location_name = result.title
-			options.area_name = 'FIXME! FIXME! FIXME!' # TODO: FIXME
-			options.pic = options.picture  unless not options.picture
+			options.area_name = tmpArea.title
+			options.pic = options.picture  if options.picture?
 			options.description = result.description
 			options.ways = result.goto
 			options.ways.forEach (i) -> # facepalm

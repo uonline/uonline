@@ -29,7 +29,7 @@ var async = require('async');
 var anyDB = require('any-db');
 var conn = null;
 
-var usedTables = ['locations', 'uniusers', 'monsters', 'monster_prototypes'].join(', ');
+var usedTables = ['locations', 'uniusers', 'areas', 'monsters', 'monster_prototypes'].join(', ');
 
 exports.setUp = function (done) {
 	async.series([
@@ -58,6 +58,12 @@ function creationLocationsTableCallback(callback) {
 		//'`description` TEXT,'+
 		'`area` INT,'+
 		'`default` TINYINT(1) DEFAULT 0 )', callback);
+}
+function creationAreasTableCallback(callback) {
+	conn.query('CREATE TABLE areas ('+
+		'`id` INT, PRIMARY KEY (`id`),'+
+		'`title` TINYTEXT'+
+		' )', callback);
 }
 function creationUniusersTableCallback(callback) {
 	conn.query('CREATE TABLE uniusers ('+
@@ -213,7 +219,6 @@ exports.getUserLocation = {
 			test.done();
 		});
 	},
-	//а поидее, надо проверять валидность локаци при переходе юзера на неё, и тут это не должно имень смысла
 	"testWrongLocid": function(test) {
 		async.series([
 				insertCallback('locations', {"id":1, "area":5}),
@@ -225,6 +230,39 @@ exports.getUserLocation = {
 			}
 		);
 	}
+};
+
+exports.getUserArea = {
+	"setUp": function(callback) {
+		async.series([
+				creationUniusersTableCallback,
+				creationLocationsTableCallback,
+				creationAreasTableCallback,
+				insertCallback('uniusers', {"id":1, "location":3, "sessid":"someid"})
+			], callback);
+	},
+	'usual test': function(test) {
+		async.series([
+				insertCallback('locations', {
+					"id":3, "area":5, "title":"The Location", "goto":"Left=7|Forward=8|Right=9"}),
+				insertCallback('areas', {
+					"id":5, "title":"London"}),
+				function(callback){ game.getUserArea(conn, 1, callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.strictEqual(result[2].id, 5, "should return user's area id");
+				test.strictEqual(result[2].title, 'London', "should return user's area name");
+				test.done();
+			}
+		);
+	},
+	'wrong user id': function(test) {
+		game.getUserArea(conn, -1, function(error, result) {
+			test.strictEqual(error, "Wrong user's id", 'should fail on wrong id');
+			test.done();
+		});
+	},
 };
 
 exports.changeLocation = {
