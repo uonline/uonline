@@ -158,7 +158,21 @@ app.post '/login/', (request, response) ->
 		response.render 'login', options
 
 
-app.get '/profile/', phpgate # PHP
+app.get '/profile/', (request, response) -> sync ->
+	if request.uonline.basicOpts.loggedIn is true
+		options = request.uonline.basicOpts
+		options.instance = 'profile'
+		options.nickname = request.uonline.basicOpts.login
+		options.profileIsMine = true
+		options.id = request.uonline.basicOpts.userid
+		chars = utils.game.getUserCharacters.sync null, mysqlConnection, request.uonline.basicOpts.userid
+		for i of chars
+			options[i] = chars[i]
+		response.render 'profile', options
+	else
+		response.redirect '/login/'
+
+
 app.get '/profile/id/:id/', phpgate # PHP
 app.get '/profile/user/:user/', phpgate # PHP
 
