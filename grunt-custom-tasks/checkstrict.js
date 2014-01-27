@@ -25,16 +25,16 @@ module.exports = function(grunt) {
 		var fs = require('fs');
 		var async = require('async');
 		async.map(
-			this.files,
+			this.filesSrc,
 			function (item, callback) {
-				fs.readFile(item.src[0], function (error, data) {
+				fs.readFile(item, function (error, data) {
 					if (!!error)
 					{
 						callback(error, null);
 					}
 					else
 					{
-						callback(null, [item.src[0], ( /['"]use strict['"]\s*[;\n]/ ).test(data.toString())]);
+						callback(null, [item, ( /['"]use strict['"]\s*[;\n]/ ).test(data.toString())]);
 					}
 				});
 			},
