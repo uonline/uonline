@@ -23,6 +23,7 @@ Requirements
 * PHP 5.4 or higher
 * PHP-MySQL module
 * PHP-CGI package
+* Composer
 
 ### Future
 
@@ -33,7 +34,7 @@ How to set up
 -------------
 
 * Clone the repo.
-* Install packages: `npm install`, `./composer.phar install`.
+* Install packages: `npm install`, `composer install`.
 * Create keyring (for PHP). You can run almost any PHP file to get help on format.
 * Fetch submodules: `git submodule init`, `git submodule update`.
 * Initialize database: `./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize`.
