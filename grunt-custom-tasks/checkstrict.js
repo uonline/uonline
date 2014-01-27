@@ -39,6 +39,7 @@ module.exports = function(grunt) {
 				});
 			},
 			function (error, results) {
+				var count = results.length;
 				async.filter(
 					results,
 					function (item, callback) {
@@ -47,7 +48,7 @@ module.exports = function(grunt) {
 					function(results) {
 						if (results.length === 0)
 						{
-							grunt.log.ok('All files are strict.');
+							grunt.log.ok(count+' files are strict.');
 						}
 						else
 						{
