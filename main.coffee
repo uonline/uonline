@@ -175,27 +175,23 @@ app.get '/profile/', (request, response) -> sync ->
 
 app.get '/profile/id/:id/', (request, response) ->
 	id = parseInt request.param('id'), 10
-	utils.game.getUserCharacters mysqlConnection, id, (error, chars) ->
-		if error?
-			throw error
-		if chars is null
-			response.send 404
-			return
-		options = request.uonline.basicOpts
-		options.instance = 'profile'
-		options.profileIsMine = (options.loggedIn is true) and (id == options.userid)
-		for i of chars
-			options[i] = chars[i]
-		options.nickname = options.user # кастыль #273
-		response.render 'profile', options
+	chars = utils.game.getUserCharacters.sync null, mysqlConnection, id
+	if chars is null
+		throw new Error '404'
+	options = request.uonline.basicOpts
+	options.instance = 'profile'
+	options.profileIsMine = (options.loggedIn is true) and (id == options.userid)
+	for i of chars
+		options[i] = chars[i]
+	options.nickname = options.user # кастыль #273
+	response.render 'profile', options
 
 
 app.get '/profile/user/:nickname/', (request, response) ->
 	nickname = request.param('nickname')
 	chars = utils.game.getUserCharacters.sync null, mysqlConnection, nickname
 	if chars is null
-		response.send 404
-		return
+		throw new Error '404'
 	options = request.uonline.basicOpts
 	options.instance = 'profile'
 	options.profileIsMine = (options.loggedIn is true) and (chars.id == options.userid)
@@ -286,13 +282,16 @@ app.get '/ajax/isNickBusy/:nick', (request, response) ->
 
 # 404 handling
 app.get '*', (request, response) ->
-	quickRenderError request, response, 404
+	throw new Error '404'
 
 
 # Exception handling
 app.use (error, request, response, next) ->
-	console.error error.stack
-	quickRenderError request, response, 500
+	if error.message is '404'
+		quickRenderError request, response, 404
+	else
+		console.error error.stack
+		quickRenderError request, response, 500
 
 
 # main
