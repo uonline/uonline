@@ -173,8 +173,37 @@ app.get '/profile/', (request, response) -> sync ->
 		response.redirect '/login/'
 
 
-app.get '/profile/id/:id/', phpgate # PHP
-app.get '/profile/user/:user/', phpgate # PHP
+app.get '/profile/id/:id/', (request, response) ->
+	id = parseInt request.param('id'), 10
+	utils.game.getUserCharacters mysqlConnection, id, (error, chars) ->
+		if error?
+			throw error
+		if chars is null
+			response.send 404
+			return
+		options = request.uonline.basicOpts
+		options.instance = 'profile'
+		options.profileIsMine = (options.loggedIn is true) and (id == options.userid)
+		for i of chars
+			options[i] = chars[i]
+		options.nickname = options.user # кастыль #273
+		response.render 'profile', options
+
+
+app.get '/profile/user/:nickname/', (request, response) ->
+	nickname = request.param('nickname')
+	chars = utils.game.getUserCharacters.sync null, mysqlConnection, nickname
+	if chars is null
+		response.send 404
+		return
+	options = request.uonline.basicOpts
+	options.instance = 'profile'
+	options.profileIsMine = (options.loggedIn is true) and (chars.id == options.userid)
+	for i of chars
+		options[i] = chars[i]
+	options.nickname = options.user # кастыль #273
+	response.render 'profile', options
+.async()
 
 
 app.get '/action/logout', (request, response) ->
