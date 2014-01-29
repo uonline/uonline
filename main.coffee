@@ -48,8 +48,6 @@ app.engine 'swig', swig.renderFile
 app.set 'view engine', 'twig' # historical reasons
 app.set 'views', __dirname + '/templates'
 
-phpgate = require('./cgi.js').phpgate
-
 
 app.use ((request, response) ->
 	# CSP
@@ -273,11 +271,6 @@ app.get '/ajax/isNickBusy/:nick', (request, response) ->
 	response.json
 		nick: request.param('nick')
 		isNickBusy: utils.user.userExists.sync null, mysqlConnection, request.param('nick')
-
-
-#app.get('/stats/', phpgate);
-#app.get('/world/', phpgate);
-#app.get('/development/', phpgate);
 
 
 # 404 handling
