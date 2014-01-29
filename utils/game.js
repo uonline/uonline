@@ -216,6 +216,8 @@ exports.uninvolve = function(dbConnection, userid, callback) {
 };
 
 var characters = [
+	'id',
+	'user',
 	'health',
 	'health_max',
 	'mana',
@@ -231,10 +233,11 @@ var characters = [
 	'level',
 ];
 var joinedCharacters = characters.join(",");
-exports.getUserCharacters = function(dbConnection, userid, callback) {
+exports.getUserCharacters = function(dbConnection, userIdOrName, callback) {
+	var field = typeof userIdOrName === 'number' ? 'id' : 'user';
 	dbConnection.query(
-		"SELECT "+joinedCharacters+" FROM uniusers WHERE id = ?",
-		[userid],
+		'SELECT '+joinedCharacters+' FROM uniusers WHERE '+field+' = ?',
+		[userIdOrName],
 		function(error, result) {
 			if (!!error)
 			{
@@ -242,6 +245,11 @@ exports.getUserCharacters = function(dbConnection, userid, callback) {
 				return;
 			}
 			var res = result.rows[0];
+			if (res === undefined)
+			{
+				callback(null, null);
+				return;
+			}
 			res.health_percent = res.health * 100 / res.health_max;
 			res.mana_percent = res.mana * 100 / res.mana_max;
 			var expPrevMax = math.ap(config.EXP_MAX_START, res.level-1, config.EXP_STEP);

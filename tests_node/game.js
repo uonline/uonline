@@ -454,6 +454,7 @@ exports.getUserCharacters = {
 				creationUniusersTableCallback,
 				insertCallback('uniusers', {
 					id: 1,
+					user: 'someuser',
 					fight_mode: 1, autoinvolved_fm: 1,
 					health: 100,   health_max: 200,
 					mana: 50,      mana_max: 200,
@@ -467,10 +468,15 @@ exports.getUserCharacters = {
 					initiative: 6
 				}),
 				function(callback){ game.getUserCharacters(conn, 1, callback); },
+				function(callback){ game.getUserCharacters(conn, 'someuser', callback); },
+				function(callback){ game.getUserCharacters(conn, 2, callback); },
+				function(callback){ game.getUserCharacters(conn, 'anotheruser', callback); },
 			],
 			function(error, result) {
 				test.ifError(error);
-				test.deepEqual(result[2], {
+				var expectedData = {
+					id: 1,
+					user: 'someuser',
 					health: 100,   health_max: 200,    health_percent: 50,
 					mana: 50,      mana_max: 200,      mana_percent: 25,
 					level: 2,
@@ -482,7 +488,11 @@ exports.getUserCharacters = {
 					accuracy: 4,
 					intelligence: 5,
 					initiative: 6
-				}, "should return specific fields");
+				};
+				test.deepEqual(result[2], expectedData, "should return specific fields by id");
+				test.deepEqual(result[3], expectedData, "should return specific fields by nickname");
+				test.strictEqual(result[4], null, "should return null if no such user exists");
+				test.strictEqual(result[5], null, "should return null if no such user exists");
 				test.done();
 			}
 		);
