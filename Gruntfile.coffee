@@ -124,4 +124,4 @@ module.exports = (grunt) ->
 	grunt.registerTask 'ff', ['check', 'build']
 
 	# Default task.
-	grunt.registerTask 'default', ['check', 'build', 'test']
+	grunt.registerTask 'default', ['clean', 'check', 'coffee', 'build', 'test']
