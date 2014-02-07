@@ -18,7 +18,7 @@ module.exports = (grunt) ->
 	# Please see the Grunt documentation for more information regarding task
 	# creation: http://gruntjs.com/creating-tasks
 	grunt.registerTask 'jscoverage_report', 'Show jscoverage report.', ->
-		grunt.task.requires 'nodeunit'
+		#grunt.task.requires 'nodeunit'
 		jsc = require 'jscoverage'
 		# TODO: make these two options
 		#jsc.coverage() # print summary info, cover percent
