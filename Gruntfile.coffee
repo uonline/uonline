@@ -118,7 +118,9 @@ module.exports = (grunt) ->
 	# Basic tasks.
 	grunt.registerTask 'check', ['checkstrict', 'checklicense', 'coffeelint', 'jshint:all']
 	grunt.registerTask 'build', ['browserify', 'uglify']
-	grunt.registerTask 'test', ['nodeunit', 'jscoverage_report']
+	grunt.registerTask 'test', ['nodeunit:all', 'jscoverage_report']
+	if grunt.option('target')?
+		grunt.config.set 'nodeunit.one', [ 'tests_node/'+grunt.option('target') ]
 
 	# Custom one.
 	grunt.registerTask 'ff', ['check', 'build']
