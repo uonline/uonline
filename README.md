@@ -78,7 +78,7 @@ To run PHP tests, run `make test`. Note that they cover only some parts of the c
 Programmers' guidelines
 -----------------------
 
-**Hint:** Run `grunt` to check and test your code.
+**Hint:** Run `grunt` to check and test your code. Run something like `grunt nodeunit --target health-check.coffee` to run a single testsuite.
 
 * Use tabs, not spaces. Don't mix them and don't use smarttabs.
 * Prefer single quotes. Use double quotes when you need to escape `'` itself.
