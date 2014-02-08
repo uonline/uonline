@@ -9,7 +9,7 @@ makeId = (str) ->
 warn = (pointer, str) ->
 	if typeof pointer == 'number'
 		pointer = "line #{pointer}"
-	console.warn "WARN: #{pointer}: #{str}"
+	console.warn "Warning: #{pointer}: #{str}"
 
 
 error = (pointer, str) ->
@@ -20,7 +20,7 @@ error = (pointer, str) ->
 		if typeof pointer == 'number'
 			pointer = "line #{pointer}"
 		pointer += ': '
-	throw new Erorr("#{pointer}#{str}")
+	throw new Error("#{pointer}#{str}")
 
 
 checkSpaces = (line, lineNumber) ->
@@ -36,47 +36,43 @@ isEmpty = (line, lineNumber) ->
 		warn lineNumber, 'line of spaces'
 		return true
 	
-	return line == ''
+	return line is ''
 
 
 makeMarkChecker = (re, mark) ->
 	warnText = "starting '#{mark}' with no space after"
 	(line, lineNumber) ->
-		unless line.matches(re)
+		unless line.match(re)
 			return false
 	
 		unless line[mark.length] == ' '
-			warn lineNumber, warnText
+			warn lineNumber, warnText+line
 			return false
 	
 		return true
 
-isAreaLabel = makeMarkChecker /^#/, '#'
+isAreaLabel = makeMarkChecker /^#[^#]/, '#'
 
 isLocationLabel = makeMarkChecker /^###/, '###'
 
-isListItem = makeMarkChecker /^\*/, '*'
+isListItem = makeMarkChecker /^\*[^\*]/, '*'
 
 
-Area = ->
+class Area
 	constructor: (@name, @label) ->
-		console.log "New area #{@name}(#{@label})"
 		@id = makeId @label
 		@description = ''
 		@locations = []
-	return
 
 
-Location = ->
+class Location
 	constructor: (@name, @label, @area) ->
 		@id = makeId @label
 		@description = ''
-		@actions = []
-	return
+		@actions = {}
 
 
 processMap = (filename, areaName, areaLabel) ->
-	console.log "processing", filename
 	lines = fs.readFileSync(filename, 'utf-8').split('\n')
 	area = null
 	location = null
@@ -84,54 +80,72 @@ processMap = (filename, areaName, areaLabel) ->
 	for line, i in lines
 		checkSpaces line, i
 		
-		if isEmpty(line, i)?
+		if isEmpty(line, i)
 			blankLines++
 			continue
-		blankLines = 0
 		
-		if isAreaLabel(line, i)?
+		if isAreaLabel(line, i)
 			if area? # error N
 				error i, "area has been already defined"
 			
-			if blankLines > 0 # warn 7
-				warn i, "#{blankLines} empty line(s) before area"
+			if blankLines < i # warn 7
+				warn i, "#{i-blankLines} skipped line(s) before area"
 			
 			localAreaName = line.substr(2)
 			if areaName != localAreaName # error 5
 				error i, "names from folder <#{areaName}> and from file <#{localAreaName}> don't match"
 			
 			area = new Area(areaName, areaLabel)
-			areas.push(area)
+			exports.areas.push(area)
 			location = null
-			continue
-		else
-			error i, "non-empty line before area defenition"
-		
-		if isLocationLabel(line, i)?
+		else if not area?
+			# ...
+		else if isLocationLabel(line, i)
 			[name, label, prop] = line.substr(4).split(/\s*`\s*/)
 			
-			if prop.trim() is '(default)' and defaultLocation? # error 11
-				error i, "second default location found"
+			unless '/' in label
+				label = area.label + '/' + label
 			
 			location = new Location(name, label, area)
+			
+			if prop.trim() is '(default)'
+				error i, "second default location found" if exports.defaultLocation? # error 11
+				exports.defaultLocation = location
+			
 			area.locations.push(location)
-			locations.push(location)
+			exports.locations.push(location)
+		else if isListItem(line, i)
+			unless location?
+				error i, "actions are only avaliable for locations"
+			
+			[name, target, rem] = line.substr(2).split(/\s*`\s*/)
+			
+			if rem is not ''
+				warn i, "text after target label will be ignored (#{rem})"
+			
+			unless '/' in target
+				target = location.area.label + '/' + target
+			
+			location.actions[target] = name
+		else
+			curObj = location || area
+			curObj.description += '\n' if blankLines >= 1 and curObj.description isnt ''
+			curObj.description += line
 		
-		if isListItem(line, i)?
-			continue
-		
-		curObj = location || area
-		error(i, "this should NEVER happen") unless curObj
-		curObj.description += '\n' if blankLines > 1
-		curObj.description += line
+		blankLines = 0
 
-areas = []
-locations = []
-defaultLocation = null
-exports.processDir = (dir) ->
+
+exports.reset = () ->
+	exports.areas = []
+	exports.locations = []
+	exports.defaultLocation = null
+exports.reset()
+
+exports.processDir = (dir, parentLabel='') ->
 	unless t = dir.match /\/([^\/]+)\s-\s([^\/]+)\/?$/ # error N
 		error "wrong directory path <#{dir}>, folder must have name like 'Area name - label'"
 	[_, name, label] = t
+	label = parentLabel + '-' + label unless parentLabel is ''
 	
 	checkSpaces name, 'name in folder name'
 	checkSpaces label, 'label in folder name'
@@ -140,10 +154,8 @@ exports.processDir = (dir) ->
 	for filename in files
 		filepath = "#{dir}/#{filename}"
 		if fs.statSync(filepath).isDirectory()
-			processDir(filepath)
+			exports.processDir(filepath, label)
 		else
-			processMap(filepath)
-	
-	return
+			processMap(filepath, name, label) if filename is 'map.ht.md' #.match /\.ht\.md$/
 
-exports.processDir 'unify/Кронт - kront'
+#exports.processDir 'unify/Кронт - kront'
