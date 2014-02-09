@@ -19,9 +19,6 @@ jsc.enableCoverage true
 fs = require 'fs'
 
 
-deepIn = (actual, expected, message) ->
-	test.fail(actual, expected, arguments.callee, "deepIn", message)
-
 parser = require '../utils/locparse.coffee'
 
 
@@ -34,6 +31,7 @@ krontShouldBeLike =
 		id: 0
 		area: null
 		name: 'Другая голубая улица'
+		image: null
 		label: 'kront/bluestreet'
 		description: 'Здесь стоят гомосеки и немного пидарасов.'
 		actions:
@@ -50,6 +48,7 @@ outerShouldBeLike =
 		id: 0
 		area: null
 		name: 'Голубая улица'
+		image: null
 		label: 'kront-outer/bluestreet'
 		description: 'Здесь сидят гомосеки.'
 		actions:
@@ -58,6 +57,7 @@ outerShouldBeLike =
 		id: 0
 		area: null
 		name: 'Зелёная улица'
+		image: 'животноводство.png'
 		label: 'kront-outer/greenstreet'
 		description: 'Здесь посажены деревья.\nИ грибы.\nИ животноводство.'
 		actions:
@@ -90,13 +90,15 @@ rmR = (dir) ->
 	fs.rmdirSync dir
 
 
-sed = (oldStr, newStr, file) ->
-	data = fs.readFileSync(file, 'utf-8').replace(oldStr, newStr)
+sed = (pairs, file) ->
+	data = fs.readFileSync(file, 'utf-8')
+	for pair in pairs
+		[oldStr, newStr] = pair
+		data = data.replace(oldStr, newStr)
 	fs.writeFileSync file, data, 'utf-8'
 
 
 exports.setUp = (done) ->
-	parser.reset()
 	rmR 'tests_node/loctests_tmp' if fs.existsSync 'tests_node/loctests_tmp'
 	done()
 
@@ -105,40 +107,52 @@ exports.tearDown = (done) ->
 	done()
 
 
-exports.correct_test = (test) ->
-	parser.processDir 'tests_node/loctests/Кронт - kront' #'unify/Кронт - kront'
-	[first, second] = parser.areas
+commonTest = (test, result) ->
+	test.strictEqual result.areas.length, 2, 'all areas should have been parsed'
+	test.strictEqual result.locations.length, 3, 'all locations should have been parsed'
 	
-	for obj in parser.areas.concat parser.locations
-		test.ok(obj.id >= 0 and obj.id < 0x80000000)
+	[first, second] = result.areas
+	
+	for obj in result.areas.concat result.locations
+		test.ok(obj.id >= 0 and obj.id < 0x80000000, 'id should fit DB int key')
 		obj.id = 0
 	
-	for area in parser.areas
+	for area in result.areas
 		for loc in area.locations
-			test.strictEqual area, loc.area
+			test.strictEqual area, loc.area, 'locations should have references to their areas'
 			loc.area = null
 	
-	test.deepEqual krontShouldBeLike, first
-	test.deepEqual outerShouldBeLike, second
+	test.deepEqual krontShouldBeLike, first, 'area should have been parsed correctly (1)'
+	test.deepEqual outerShouldBeLike, second, 'area should have been parsed correctly (2)'
+
+
+exports.correct_test = (test) ->
+	result = parser.processDir 'tests_node/loctests/Кронт - kront' #'unify/Кронт - kront'
+	
+	test.strictEqual result.warnings.length, 0, 'should receive no warnings'
+	test.strictEqual result.errors.length, 0, 'should receive no errors'
+	commonTest test, result
 	
 	test.done()
 
 
 exports.warnings_test = (test) ->
 	cpR 'tests_node/loctests', 'tests_node/loctests_tmp'
-	parser.processDir 'tests_node/loctests_tmp/Кронт - kront' #'unify/Кронт - kront'
-	[first, second] = parser.areas
+	sed([
+			["Здесь убивают слоников", "#Здесь warning"] #1
+			["Здесь стоят гомосеки", "###Здесь стоит warning\n\n*А тут - ещё один"] #2 3
+			["bluestreet`", "bluestreet`   \n   "] #4 5
+			["Большой и ленивый город.", "   Большой и ненужный отступ."] #6
+			["# Кронт", "непустая строка\n# Кронт"] #7
+			["Пойти на Зелёную улицу", "Пойти на Зелёную улицу через точку."] #8
+			["`kront-outer/bluestreet`", "`kront-outer/greenstreet`"] #9
+		], "tests_node/loctests_tmp/Кронт - kront/map.ht.md"
+	)
+	result = parser.processDir 'tests_node/loctests_tmp/Кронт - kront', true #'unify/Кронт - kront'
 	
-	for obj in parser.areas.concat parser.locations
-		test.ok(obj.id >= 0 and obj.id < 0x80000000)
-		obj.id = 0
-	
-	for area in parser.areas
-		for loc in area.locations
-			test.strictEqual area, loc.area
-			loc.area = null
-	
-	test.deepEqual krontShouldBeLike, first
-	test.deepEqual outerShouldBeLike, second
+	test.strictEqual result.warnings.length, 9, 'shoulg generate all warnings'
+	test.ok(result.warnings.some((w) -> w.id == "W#{i}"), "should generate warning number#{i}") for i in [1..9]
+	test.strictEqual result.errors.length, 0, 'should receive no errors'
 	
 	test.done()
+
