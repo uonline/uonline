@@ -34,7 +34,8 @@
     "load-grunt-tasks": "~0.3.0",
     "dashdash": "~1.4.0",
     "sync": "~0.2.2",
-    "coffee-script": "~1.7.0"
+    "coffee-script": "~1.7.0",
+    "grunt-coffee-coverage": "~0.1.3"
   },
   "devDependencies": {
     "nodeunit": "~0.8.1",
