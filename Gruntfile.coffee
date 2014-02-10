@@ -19,10 +19,12 @@ module.exports = (grunt) ->
 	# Project configuration.
 	grunt.initConfig
 		nodeunit:
-			all: [
+			js: [
 				'tests_node/health-check.js'
-				'tests_node/health-check.coffee'
 				'tests_node/*.js'
+			]
+			coffee: [
+				'tests_node/health-check.coffee'
 				'tests_node/*.coffee'
 			]
 
@@ -129,7 +131,11 @@ module.exports = (grunt) ->
 	# Basic tasks.
 	grunt.registerTask 'check', ['checkstrict', 'checklicense', 'coffeelint', 'jshint:all']
 	grunt.registerTask 'build', ['browserify', 'uglify']
-	grunt.registerTask 'test', ['jscoverage', 'coffeeCoverage', 'nodeunit:all', 'jscoverage_report']
+	grunt.registerTask 'test', [
+		'jscoverage', 'coffeeCoverage',    # order is important
+		'nodeunit:js', 'nodeunit:coffee',  # order is important
+		'jscoverage_report'
+	]
 	if grunt.option('target')?
 		grunt.config.set 'nodeunit.one', [ 'tests_node/'+grunt.option('target') ]
 
