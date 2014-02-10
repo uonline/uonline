@@ -17,10 +17,10 @@
 'use strict'
 
 
-utils = require './utils.js'
+lib = require './lib.js'
 
 console.log "Warning: PHP and Node.js have different hashing algorithms.\n" +
-	utils.prettyprint.spaces(9) + "Don't try to use them together."
+	lib.prettyprint.spaces(9) + "Don't try to use them together."
 
 if process.argv.length != 4
 	console.log 'Usage: <username> <password>'
@@ -29,12 +29,12 @@ if process.argv.length != 4
 u = process.argv[2]
 p = process.argv[3]
 
-if !utils.validation.usernameIsValid(u)
+if !lib.validation.usernameIsValid(u)
 	console.log 'Incorrect username.'
 	console.log 'Must be: 2-32 symbols, [a-zA-Z0-9а-яА-ЯёЁйЙру _-].'
 	process.exit 1
 
-if !utils.validation.passwordIsValid(p)
+if !lib.validation.passwordIsValid(p)
 	console.log 'Incorrect password.'
 	console.log 'Must be: 4-32 symbols, [!@#$%^&*()_+A-Za-z0-9].'
 	process.exit 1
@@ -47,12 +47,12 @@ conn = anyDB.createConnection config.MYSQL_DATABASE_URL
 
 sync ->
 	try
-		exists = utils.user.userExists.sync null, conn, u
+		exists = lib.user.userExists.sync null, conn, u
 		if exists is true
 			console.log "User `#{u}` already exists."
 			process.exit 1
 
-		utils.user.registerUser.sync null, conn, u, p, config.PERMISSIONS_ADMIN
+		lib.user.registerUser.sync null, conn, u, p, config.PERMISSIONS_ADMIN
 		console.log "New admin `#{u}` registered successfully."
 		process.exit 0
 	catch ex
