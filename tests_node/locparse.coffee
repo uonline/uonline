@@ -152,4 +152,3 @@ exports.warnings_test = (test) ->
 	test.strictEqual result.errors.length, 0, 'should receive no errors'
 
 	test.done()
-

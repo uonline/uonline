@@ -22,8 +22,8 @@ module.exports = (grunt) ->
 			all: [
 				'tests_node/health-check.js'
 				'tests_node/health-check.coffee'
-				'tests_node/*.coffee'
 				'tests_node/*.js'
+				'tests_node/*.coffee'
 			]
 
 		jshint:
@@ -119,6 +119,7 @@ module.exports = (grunt) ->
 			options:
 				inputDirectory: 'lib'
 				outputDirectory: 'lib-cov'
+				exclude: 'locparse.coffee'
 
 
 	# These plugins provide necessary tasks.
@@ -128,7 +129,7 @@ module.exports = (grunt) ->
 	# Basic tasks.
 	grunt.registerTask 'check', ['checkstrict', 'checklicense', 'coffeelint', 'jshint:all']
 	grunt.registerTask 'build', ['browserify', 'uglify']
-	grunt.registerTask 'test', ['coffeeCoverage', 'jscoverage', 'nodeunit:all', 'jscoverage_report']
+	grunt.registerTask 'test', ['jscoverage', 'coffeeCoverage', 'nodeunit:all', 'jscoverage_report']
 	if grunt.option('target')?
 		grunt.config.set 'nodeunit.one', [ 'tests_node/'+grunt.option('target') ]
 
