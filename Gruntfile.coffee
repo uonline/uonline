@@ -32,7 +32,7 @@ module.exports = (grunt) ->
 					jshintrc: '.jshintrc'
 				src: [
 					'*.js'
-					'utils/*.js'
+					'lib/*.js'
 					'tests_node/*.js'
 					'grunt-custom-tasks/*.js'
 				]
@@ -42,14 +42,14 @@ module.exports = (grunt) ->
 					reporter: './node_modules/jshint/src/reporters/non_error.js'
 				src: [
 					'*.js'
-					'utils/*.js'
+					'lib/*.js'
 					'tests_node/*.js'
 					'grunt-custom-tasks/*.js'
 				]
 
 		browserify:
 			all:
-				src: './utils/validation.js'
+				src: './lib/validation.js'
 				dest: './browserified/validation.js'
 				options:
 					standalone: 'validation'
@@ -63,11 +63,11 @@ module.exports = (grunt) ->
 			all:
 				src: [
 					'*.js'
-					'utils/*.js'
+					'lib/*.js'
 					'tests_node/*.js'
 					'grunt-custom-tasks/*.js'
 					'*.coffee'
-					'utils/*.coffee'
+					'lib/*.coffee'
 					'tests_node/*.coffee'
 					'grunt-custom-tasks/*.coffee'
 				]
@@ -76,11 +76,11 @@ module.exports = (grunt) ->
 			all:
 				src: [
 					'*.js'
-					'utils/*.js'
+					'lib/*.js'
 					'tests_node/*.js'
 					'grunt-custom-tasks/*.js'
 					'*.coffee'
-					'utils/*.coffee'
+					'lib/*.coffee'
 					'tests_node/*.coffee'
 					'grunt-custom-tasks/*.coffee'
 				]
@@ -89,7 +89,7 @@ module.exports = (grunt) ->
 			all:
 				expand: true
 				src: [
-					'utils/*.coffee'
+					'lib/*.coffee'
 				]
 				ext: '.js'
 
@@ -98,13 +98,13 @@ module.exports = (grunt) ->
 
 		clean:
 			coffee: [
-				'utils/validation.js'
+				'lib/validation.js'
 			]
 
 		coffeelint:
 			all: [
 				'*.coffee'
-				'utils/*.coffee'
+				'lib/*.coffee'
 				'tests_node/*.coffee'
 				'grunt-custom-tasks/*.coffee'
 			]

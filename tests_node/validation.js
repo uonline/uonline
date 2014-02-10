@@ -20,7 +20,7 @@
 var jsc = require('jscoverage');
 jsc.enableCoverage(true);
 
-var validation = jsc.require(module, '../utils/validation.js');
+var validation = jsc.require(module, '../lib/validation.js');
 
 exports.usernameIsValid = function (test) {
 	test.strictEqual(validation.usernameIsValid('m1kc'), true, 'should pass good names');
