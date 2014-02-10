@@ -19,7 +19,7 @@ jsc.enableCoverage true
 fs = require 'fs'
 
 
-parser = require '../utils/locparse.coffee'
+parser = require '../lib/locparse.coffee'
 
 
 krontShouldBeLike =
@@ -104,6 +104,7 @@ exports.setUp = (done) ->
 
 
 exports.tearDown = (done) ->
+	rmR 'tests_node/loctests_tmp' if fs.existsSync 'tests_node/loctests_tmp'
 	done()
 
 
