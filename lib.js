@@ -17,7 +17,7 @@
 
 "use strict";
 
-var list = require('fs').readdirSync('./utils');
+var list = require('fs').readdirSync('./lib');
 for (var i in list)
 {
 	i = list[i];
@@ -25,6 +25,6 @@ for (var i in list)
 	var ext = i.substring(i.length-3);
 	if (ext === '.js')
 	{
-		exports[name] = require('./utils/'+i);
+		exports[name] = require('./lib/'+i);
 	}
 }

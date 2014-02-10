@@ -17,7 +17,7 @@
 'use strict'
 
 config = require './config.js'
-utils = require './utils.js'
+lib = require './lib.js'
 async = require 'async'
 sync = require 'sync'
 dashdash = require 'dashdash'
@@ -119,8 +119,8 @@ help = ->
 
 info = ->
 	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
-	current = utils.migration.getCurrentRevision.sync(null, mysqlConnection)
-	newest = utils.migration.getNewestRevision()
+	current = lib.migration.getCurrentRevision.sync(null, mysqlConnection)
+	newest = lib.migration.getNewestRevision()
 	status = if current < newest then 'needs update' else 'up to date'
 	console.log "init.js with #{newest + 1} revisions on board."
 	console.log "Current revision is #{current} (#{status})."
@@ -164,7 +164,7 @@ dropDatabase = (arg) ->
 
 migrateTables = ->
 	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
-	utils.migration.migrate.sync null, mysqlConnection
+	lib.migration.migrate.sync null, mysqlConnection
 
 
 optimize = ->

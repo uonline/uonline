@@ -22,7 +22,7 @@ var config = require('../config.js');
 var jsc = require('jscoverage');
 jsc.enableCoverage(true);
 
-var game = jsc.require(module, '../utils/game.js');
+var game = jsc.require(module, '../lib/game.js');
 
 var async = require('async');
 

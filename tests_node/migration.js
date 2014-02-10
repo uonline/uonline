@@ -19,12 +19,12 @@
 
 var config = require('../config.js');
 
-var tables = require('../utils/tables.js');
+var tables = require('../lib/tables.js');
 
 var jsc = require('jscoverage');
 jsc.enableCoverage(true);
 
-var mg = jsc.require(module, '../utils/migration.js');
+var mg = jsc.require(module, '../lib/migration.js');
 
 var async = require('async');
 

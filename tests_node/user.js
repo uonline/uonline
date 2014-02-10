@@ -22,7 +22,7 @@ var config = require('../config.js');
 var jsc = require('jscoverage');
 jsc.enableCoverage(true);
 
-var users = jsc.require(module, '../utils/user.js');
+var users = jsc.require(module, '../lib/user.js');
 
 var async = require('async');
 

@@ -20,7 +20,7 @@
 var jsc = require('jscoverage');
 jsc.enableCoverage(true);
 
-var math = jsc.require(module, '../utils/math.js');
+var math = jsc.require(module, '../lib/math.js');
 
 exports.ap = function (test) {
 	test.strictEqual(153, math.ap(3,6,9), 'should calculate result');

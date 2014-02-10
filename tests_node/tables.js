@@ -22,7 +22,7 @@ var config = require('../config.js');
 var jsc = require('jscoverage');
 jsc.enableCoverage(true);
 
-var tables = jsc.require(module, '../utils/tables.js');
+var tables = jsc.require(module, '../lib/tables.js');
 
 var async = require('async');
 
