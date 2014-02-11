@@ -17,10 +17,7 @@
 
 "use strict";
 
-var jsc = require('jscoverage');
-jsc.enableCoverage(true);
-
-var validation = jsc.require(module, '../lib/validation.js');
+var validation = require('../lib-cov/validation');
 
 exports.usernameIsValid = function (test) {
 	test.strictEqual(validation.usernameIsValid('m1kc'), true, 'should pass good names');

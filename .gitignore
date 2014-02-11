@@ -6,6 +6,7 @@ templates_cache/
 
 # Used by tests
 test/
+lib-cov/
 
 # Third-party tools
 node_modules/
