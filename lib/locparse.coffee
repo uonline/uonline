@@ -70,18 +70,6 @@ postCheck = (log) ->
 	log.setFilename 'post processing'
 	res = log.result
 	
-#	ids = {}
-#	for area in res.areas
-#		if area.id of ids
-#			log.error 'areas', 'N/a', "both '#{ids[area.id]}' and '#{area}' have same id <#{area.id}>" # error N
-#		ids[area.id] = area
-	
-#	ids = {}
-#	for loc in res.locations
-#		if loc.id of ids
-#			log.error 'locations', 'N/a', "both '#{ids[loc.id]}' and '#{loc}' have same id <#{loc.id}>" # error N
-#		ids[location.id] = location
-	
 	checkPropUniqueness res.areas, 'areas', 'N/a', 'id', log # error N
 	checkPropUniqueness res.locations, 'locations', 'N/a', 'id', log # error N
 	checkPropUniqueness res.locations, 'locations', 'N/a', 'label', log # error 6
@@ -92,13 +80,7 @@ postCheck = (log) ->
 	for loc in res.locations
 		for target of loc.actions
 			continue if target of labels
-			log.error 'actions', 'E1', "action's (#{loc.actions[target]}) target (#{target}) does not exist" # error 1
-	
-#	labels = {}
-#	for loc in res.locations
-#		if loc.label of labels
-#			log.error 'locations', 'N/a', "both '#{labels[loc.label]}' and '#{loc}' have same label <#{loc.label}>" #error 7
-#		labels[location.label] = location
+			log.error 'actions', 'E1', "target <#{target}> does not exist" # error 1
 
 
 class Area
@@ -193,7 +175,7 @@ processMap = (filename, areaName, areaLabel, log) ->
 			
 			localAreaName = line.substr(2)
 			if areaName != localAreaName
-				log.error i, 'E5', "names from folder <#{areaName}> and from file <#{localAreaName}> don't match" # error 5
+				log.error i, 'E5', "names <#{areaName}>(folder) and <#{localAreaName}>(file) don't match" # error 5
 			
 			area = new Area(areaName, areaLabel)
 			log.result.areas.push(area)
@@ -248,7 +230,8 @@ processMap = (filename, areaName, areaLabel, log) ->
 			log.error i, 'E9', "location's image has been doubled" if location.image? # error 9
 			
 			[_, path, path2] = imageDescr
-			log.error i, 'E10', "image paths are not equal: '#{path}', '#{path2}'" if path isnt path2 # error 10
+			if path isnt path2
+				log.error i, 'E10', "image paths are not equal: '#{path}', '#{path2}'" # error 10
 			
 			location.image = path
 		
@@ -264,7 +247,7 @@ processDir = (dir, parentLabel, log) ->
 	log.setFilename dir
 	
 	unless t = dir.match /\/([^\/]+)\s-\s([^\/]+)\/?$/
-		log.error 'dirname', 'E4', "wrong directory path <#{dir}>, folder must have name like 'Area name - label'" # error 4
+		log.error 'dirname', 'E4', "wrong path <#{dir}>, folder must have name like 'Area name - label'" # error 4
 	[_, name, label] = t
 	label = parentLabel + '-' + label unless parentLabel is ''
 	
