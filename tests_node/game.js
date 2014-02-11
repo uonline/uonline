@@ -19,10 +19,7 @@
 
 var config = require('../config.js');
 
-var jsc = require('jscoverage');
-jsc.enableCoverage(true);
-
-var game = jsc.require(module, '../lib/game.js');
+var game = require('../lib-cov/game');
 
 var async = require('async');
 

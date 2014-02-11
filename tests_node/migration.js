@@ -21,10 +21,7 @@ var config = require('../config.js');
 
 var tables = require('../lib/tables.js');
 
-var jsc = require('jscoverage');
-jsc.enableCoverage(true);
-
-var mg = jsc.require(module, '../lib/migration.js');
+var mg = require('../lib-cov/migration');
 
 var async = require('async');
 
