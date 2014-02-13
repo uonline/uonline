@@ -72,8 +72,8 @@ postCheck = (log) ->
 	
 	checkPropUniqueness res.areas, 'areas', 'N/a', 'id', log # error N
 	checkPropUniqueness res.locations, 'locations', 'N/a', 'id', log # error N
-	checkPropUniqueness res.locations, 'locations', 'N/a', 'label', log # error 6
-	log.error 'locations', 'E6', "default was not found" unless res.defaultLocation? # error 7
+	checkPropUniqueness res.locations, 'locations', 'E7', 'label', log # error 7
+	log.error 'locations', 'E6', "default was not found" unless res.defaultLocation? # error 6
 	
 	labels = {}
 	labels[loc.label] = loc for loc in res.locations
@@ -156,6 +156,7 @@ class Result
 processMap = (filename, areaName, areaLabel, log) ->
 	log.setFilename filename
 	lines = fs.readFileSync(filename, 'utf-8').split('\n')
+	#throw new Error(lines)
 	area = null
 	location = null
 	blankLines = 0
@@ -186,9 +187,13 @@ processMap = (filename, areaName, areaLabel, log) ->
 		
 		else if isLocationLabel(line, i, log)
 			[name, label, prop] = line.substr(4).split(/\s*`\s*/)
-			prop = prop.trim()
 			
-			log.error i, 'E3', "location should have `label` after name" unless label? # error 3
+			unless label?
+				log.error i, 'E3', "location should have `label` after name" # error 3
+				label = ''
+				prop = ''
+			
+			prop = prop.trim()
 			
 			label = area.label + '/' + label unless '/' in label
 			
@@ -210,7 +215,9 @@ processMap = (filename, areaName, areaLabel, log) ->
 			
 			[name, target, rem] = line.substr(2).split(/\s*`\s*/)
 			
-			log.error i, 'E2', "action should have `label` after name" unless target? # error 2
+			unless target?
+				log.error i, 'E2', "action should have `label` after name" # error 2
+				target = ''
 			
 			log.warn i, 'W8', "Unnecessary trailing dot" if name[name.length-1] is '.' # warn 8
 			
@@ -248,6 +255,8 @@ processDir = (dir, parentLabel, log) ->
 	
 	unless t = dir.match /\/([^\/]+)\s-\s([^\/]+)\/?$/
 		log.error 'dirname', 'E4', "wrong path <#{dir}>, folder must have name like 'Area name - label'" # error 4
+		t = [null, dir, 'error'] # пусть хоть как-то дальше парсит, м.б. ещё какие ошибки нйдёт
+	
 	[_, name, label] = t
 	label = parentLabel + '-' + label unless parentLabel is ''
 	
@@ -266,4 +275,5 @@ processDir = (dir, parentLabel, log) ->
 exports.processDir = (dir, verbose=false) ->
 	log = new Logger(new Result(), verbose)
 	processDir dir, '', log
+	postCheck log
 	log.result
