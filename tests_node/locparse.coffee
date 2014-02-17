@@ -30,8 +30,8 @@ krontShouldBeLike =
 		id: 0
 		area: null
 		name: 'Другая голубая улица'
-		image: null
 		label: 'kront/bluestreet'
+		picture: null
 		description: 'Здесь стоят гомосеки и немного пидарасов.'
 		actions:
 			'kront-outer/greenstreet': 'Пойти на Зелёную улицу'
@@ -47,8 +47,8 @@ outerShouldBeLike =
 		id: 0
 		area: null
 		name: 'Голубая улица'
-		image: null
 		label: 'kront-outer/bluestreet'
+		picture: null
 		description: 'Здесь сидят гомосеки.'
 		actions:
 			'kront-outer/greenstreet': 'Пойти на Зелёную улицу'
@@ -56,8 +56,8 @@ outerShouldBeLike =
 		id: 0
 		area: null
 		name: 'Зелёная улица'
-		image: 'животноводство.png'
 		label: 'kront-outer/greenstreet'
+		picture: 'животноводство.png'
 		description: 'Здесь посажены деревья.\nИ грибы.\nИ животноводство.'
 		actions:
 			'kront/bluestreet': 'Пойти на Голубую улицу'
@@ -231,4 +231,5 @@ exports.error_E11_test = (test) ->
 		"### Другая голубая улица `bluestreet`"
 		"### Другая голубая улица `bluestreet` (default)"
 	)
+
 

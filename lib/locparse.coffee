@@ -16,6 +16,7 @@
 
 crypto = require 'crypto'
 fs = require 'fs'
+sync = require 'sync'
 
 
 makeId = (str) ->
@@ -95,7 +96,7 @@ class Location
 		@id = makeId @label
 		@description = ''
 		@actions = {}
-		@image = null
+		@picture = null
 
 
 class Logger
@@ -149,8 +150,23 @@ class Result
 		@files = {}
 	
 	save: (dbConnection) ->
-		throw new Error("Can't save with errors.") if @errors?
-		# ...
+		throw new Error("Can't save with errors.") if @errors.length > 0
+		
+		for area in @areas
+			dbConnection.query.sync(
+				dbConnection
+				"REPLACE areas (id, title, description) VALUES(?, ?, ?)"
+				[area.id, area.description, area.title]
+			)
+		
+		for loc in @locations
+			goto = ("#{v}=#{@locations[k].id}" for k,v in loc.actions)
+			console.log [loc.id, loc.name, loc.description, loc.area.id, loc is @defaultLocation, goto.join('|'), loc.picture]
+			dbConnection.query.sync(
+				dbConnection
+				"REPLACE locations (id, title, description, area, `default`, goto, picture) VALUES(?,?,?,?,?,?,?)"
+				[loc.id, loc.name, loc.description, loc.area.id, loc is @defaultLocation, goto.join('|'), loc.picture]
+			)
 
 
 processMap = (filename, areaName, areaLabel, log) ->
@@ -234,13 +250,13 @@ processMap = (filename, areaName, areaLabel, log) ->
 				log.error i, 'N/a', "images are only avaliable for locations" # error N
 				continue
 			
-			log.error i, 'E9', "location's image has been doubled" if location.image? # error 9
+			log.error i, 'E9', "location's image has been doubled" if location.picture? # error 9
 			
 			[_, path, path2] = imageDescr
 			if path isnt path2
 				log.error i, 'E10', "image paths are not equal: '#{path}', '#{path2}'" # error 10
 			
-			location.image = path
+			location.picture = path
 		
 		else
 			curObj = location || area
@@ -265,6 +281,7 @@ processDir = (dir, parentLabel, log) ->
 	
 	files = fs.readdirSync(dir)
 	for filename in files
+		continue if filename[0] is '.' # what is hidden should be hidden
 		filepath = "#{dir}/#{filename}"
 		if fs.statSync(filepath).isDirectory()
 			processDir(filepath, label, log)

@@ -83,6 +83,20 @@ options = [
 	]
 	type: 'bool'
 	help: 'Optimize tables.'
+,
+	names: [
+		'unify-validate'
+		'u'
+	]
+	type: 'bool'
+	help: 'Validate locations.'
+,
+	names: [
+		'unify-export'
+		'U'
+	]
+	type: 'bool'
+	help: 'Parse and save locations to DB.'
 ]
 
 
@@ -184,6 +198,17 @@ optimize = ->
 			console.log "  #{optRow.Op} #{optRow.Msg_type}: #{optRow.Msg_text}"
 
 
+unifyValidate = ->
+	console.log 'Coming soon...'
+
+
+unifyExport = ->
+	dbConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
+	locparse = require './lib/locparse'
+	result = locparse.processDir('./unify/Кронт - kront', true)
+	result.save(dbConnection)
+
+
 sync(
 	->
 		if opts.help
@@ -198,6 +223,8 @@ sync(
 		createDatabase(opts.create_database) if opts.create_database
 		migrateTables() if opts.migrate_tables
 		optimize() if opts.optimize_tables
+		unifyValidate() if opts.unify_validate
+		unifyExport() if opts.unify_export
 		process.exit 0
 	(ex) ->
 		if ex? then throw ex
