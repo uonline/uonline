@@ -14,7 +14,7 @@
 
 'use strict'
 
-parser = require '../lib/locparse'
+parser = require '../lib-cov/locparse'
 
 
 class Log

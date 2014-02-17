@@ -159,9 +159,11 @@ class Result
 				[area.id, area.description, area.title]
 			)
 		
+		locByLabel = {}
+		locByLabel[loc.label] = loc for loc in @locations
+		
 		for loc in @locations
-			goto = ("#{v}=#{@locations[k].id}" for k,v in loc.actions)
-			console.log [loc.id, loc.name, loc.description, loc.area.id, loc is @defaultLocation, goto.join('|'), loc.picture]
+			goto = ("#{v}=#{locByLabel[k].id}" for k,v of loc.actions)
 			dbConnection.query.sync(
 				dbConnection
 				"REPLACE locations (id, title, description, area, `default`, goto, picture) VALUES(?,?,?,?,?,?,?)"

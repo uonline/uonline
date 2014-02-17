@@ -15,7 +15,7 @@
 'use strict'
 
 fs = require 'fs'
-parser = require '../lib/locparse'
+parser = require '../lib-cov/locparse'
 rmrf = require 'rmrf'
 copy = require('ncp').ncp
 copy.limit = 16 #concurrency limit
