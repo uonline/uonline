@@ -277,3 +277,13 @@ exports.processDir = (dir, verbose=false) ->
 	processDir dir, '', log
 	postCheck log
 	log.result
+
+
+exports.makeId = makeId
+exports.isAreaLabel = isAreaLabel
+exports.isLocationLabel = isLocationLabel
+exports.isListItem = isListItem
+exports.isEmpty = isEmpty
+exports.checkSpaces = checkSpaces
+exports.checkPropUniqueness = checkPropUniqueness
+exports.postCheck = postCheck

@@ -15,7 +15,10 @@
 'use strict'
 
 fs = require 'fs'
-parser = require '../lib-cov/locparse'
+parser = require '../lib/locparse'
+rmrf = require 'rmrf'
+copy = require('ncp').ncp
+copy.limit = 16 #concurrency limit
 TMP_DIR = 'tests_node/loctests_tmp'
 
 krontShouldBeLike =
@@ -62,30 +65,6 @@ outerShouldBeLike =
 	]
 
 
-cpR = (src, dst) ->
-	fs.mkdirSync dst
-	srcFiles = fs.readdirSync(src)
-	for srcName in srcFiles
-		srcPath = "#{src}/#{srcName}"
-		dstPath = "#{dst}/#{srcName}"
-		if fs.statSync(srcPath).isDirectory()
-			cpR srcPath, dstPath
-		else
-			fs.writeFileSync dstPath, fs.readFileSync(srcPath)
-			#fs.createReadStream(srcPath).pipe(fs.createWriteStream(dstPath))
-
-
-rmR = (dir) ->
-	files = fs.readdirSync(dir)
-	for name in files
-		path = "#{dir}/#{name}"
-		if fs.statSync(path).isDirectory()
-			rmR path
-		else
-			fs.unlinkSync path
-	fs.rmdirSync dir
-
-
 sed = (pairs, file) ->
 	data = fs.readFileSync(file, 'utf-8')
 	for pair in pairs
@@ -95,13 +74,14 @@ sed = (pairs, file) ->
 
 
 exports.setUp = (done) ->
-	rmR TMP_DIR if fs.existsSync TMP_DIR
-	cpR 'tests_node/loctests', TMP_DIR
-	done()
+	rmrf TMP_DIR if fs.existsSync TMP_DIR
+	copy 'tests_node/loctests', TMP_DIR, (error) ->
+		throw error if error?
+		done()
 
 
 exports.tearDown = (done) ->
-	rmR TMP_DIR if fs.existsSync TMP_DIR
+	rmrf TMP_DIR if fs.existsSync TMP_DIR
 	done()
 
 
