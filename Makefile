@@ -19,3 +19,6 @@ david:
 
 david-update:
 	./node_modules/david/bin/david.js update
+
+whattodo:
+	( find -name '*.js'; find -name '*.coffee' ) | grep -v node_modules | grep -v server.js | xargs grep TODO -n
