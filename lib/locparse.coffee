@@ -47,7 +47,7 @@ isEmpty = (line, lineNumber, log) ->
 	if line.match /^\s+$/
 		log.warn lineNumber, 'W4', 'line of spaces' # warn 4
 		return true
-	
+
 	return line is ''
 
 checkSpaces = (line, lineNumber, log) ->
@@ -70,12 +70,12 @@ checkPropUniqueness = (objs, pointer, errId, propName, log) ->
 postCheck = (log) ->
 	log.setFilename 'post processing'
 	res = log.result
-	
+
 	checkPropUniqueness res.areas, 'areas', 'N/a', 'id', log # error N
 	checkPropUniqueness res.locations, 'locations', 'N/a', 'id', log # error N
 	checkPropUniqueness res.locations, 'locations', 'E7', 'label', log # error 7
 	log.error 'locations', 'E6', "default was not found" unless res.defaultLocation? # error 6
-	
+
 	labels = {}
 	labels[loc.label] = loc for loc in res.locations
 	for loc in res.locations
@@ -102,18 +102,18 @@ class Location
 class Logger
 	constructor: (@result, @verbose) ->
 		@filename = undefined
-	
+
 	_add: (toWhere, what) ->
 		toWhere.push what
 		if @filename of @result.files
 			@result.files[@filename].push what
 		else
 			@result.files[@filename] = [what]
-	
+
 	setFilename: (filename) ->
 		@filename = filename
 		console.log " --- #{filename}:" if @verbose
-	
+
 	warn: (pointer, id, message) ->
 		pointer = "line #{pointer+1}" if typeof pointer == 'number'
 		console.warn "Warning(#{id}): #{pointer}: #{message}" if @verbose
@@ -124,7 +124,7 @@ class Logger
 			pointer: pointer
 			message: message
 		)
-	
+
 	error: (pointer, id, message) ->
 		pointer = "line #{pointer+1}" if typeof pointer == 'number'
 		console.warn "Error(#{id}): #{pointer}: #{message}" if @verbose
@@ -140,7 +140,7 @@ class Logger
 class Result
 	verbose = false
 	filename = undefined
-	
+
 	constructor: () ->
 		@areas = []
 		@locations = []
@@ -148,20 +148,20 @@ class Result
 		@errors = []
 		@warnings = []
 		@files = {}
-	
+
 	save: (dbConnection) ->
 		throw new Error("Can't save with errors.") if @errors.length > 0
-		
+
 		for area in @areas
 			dbConnection.query.sync(
 				dbConnection
 				"REPLACE areas (id, title, description) VALUES(?, ?, ?)"
-				[area.id, area.description, area.title]
+				[area.id, area.name, area.description]
 			)
-		
+
 		locByLabel = {}
 		locByLabel[loc.label] = loc for loc in @locations
-		
+
 		for loc in @locations
 			goto = ("#{v}=#{locByLabel[k].id}" for k,v of loc.actions)
 			dbConnection.query.sync(
@@ -180,107 +180,107 @@ processMap = (filename, areaName, areaLabel, log) ->
 	blankLines = 0
 	for line, i in lines
 		checkSpaces line, i, log
-		
+
 		if isEmpty(line, i, log)
 			blankLines++
 			continue
-		
+
 		if isAreaLabel(line, i, log)
 			if area?
 				log.error i, 'N/a', "area has been already defined" # error N
-			
+
 			if blankLines < i
 				log.warn i, 'W7', "#{i-blankLines} skipped non-empty line(s) before area" # warn 7
-			
+
 			localAreaName = line.substr(2)
 			if areaName != localAreaName
 				log.error i, 'E5', "names <#{areaName}>(folder) and <#{localAreaName}>(file) don't match" # error 5
-			
+
 			area = new Area(areaName, areaLabel)
 			log.result.areas.push(area)
 			location = null
-		
+
 		else if not area?
 			continue # so we don't drop blankLines counter (for non-empty lines count, it's warn 7)
-		
+
 		else if isLocationLabel(line, i, log)
 			[name, label, prop] = line.substr(4).split(/\s*`\s*/)
-			
+
 			unless label?
 				log.error i, 'E3', "location should have `label` after name" # error 3
 				label = ''
 				prop = ''
-			
+
 			prop = prop.trim()
-			
+
 			label = area.label + '/' + label unless '/' in label
-			
+
 			location = new Location(name, label, area)
-			
+
 			if prop is '(default)'
 				log.error i, 'E11', "second default location found" if log.result.defaultLocation? # error 11
 				log.result.defaultLocation = location
 			else if prop isnt ''
 				log.warn i, 'N/a', "text after location label will be ignored (#{prop})" # warn N
-			
+
 			area.locations.push(location)
 			log.result.locations.push(location)
-		
+
 		else if isListItem(line, i, log)
 			unless location?
 				log.error i, 'N/a', "actions are only avaliable for locations" # error N
 				continue
-			
+
 			[name, target, rem] = line.substr(2).split(/\s*`\s*/)
-			
+
 			unless target?
 				log.error i, 'E2', "action should have `label` after name" # error 2
 				target = ''
-			
+
 			log.warn i, 'W8', "Unnecessary trailing dot" if name[name.length-1] is '.' # warn 8
-			
+
 			log.warn i, 'N/a', "text after target label will be ignored (#{rem})" if rem is not '' # warn N
-			
+
 			target = location.area.label + '/' + target unless '/' in target
-			
+
 			log.warn i, 'W9', "action `#{target}` has been doubled" if target of location.actions # warn 9
-			
+
 			location.actions[target] = name
-		
+
 		else if imageDescr=line.match /!\[(.+)\]\((.+)\)/
 			unless location?
 				log.error i, 'N/a', "images are only avaliable for locations" # error N
 				continue
-			
+
 			log.error i, 'E9', "location's image has been doubled" if location.picture? # error 9
-			
+
 			[_, path, path2] = imageDescr
 			if path isnt path2
 				log.error i, 'E10', "image paths are not equal: '#{path}', '#{path2}'" # error 10
-			
+
 			location.picture = path
-		
+
 		else
 			curObj = location || area
 			curObj.description += '\n' if blankLines >= 1 and curObj.description isnt ''
 			curObj.description += line
-		
+
 		blankLines = 0
 
 
 processDir = (dir, parentLabel, log) ->
 	log.setFilename dir
-	
+
 	unless t = dir.match /\/([^\/]+)\s-\s([^\/]+)\/?$/
 		log.error 'dirname', 'E4', "wrong path <#{dir}>, folder must have name like 'Area name - label'" # error 4
 		t = [null, dir, 'error'] # пусть хоть как-то дальше парсит, м.б. ещё какие ошибки нйдёт
-	
+
 	[_, name, label] = t
 	label = parentLabel + '-' + label unless parentLabel is ''
-	
+
 	checkSpaces name, 'name in folder name'
 	checkSpaces label, 'label in folder name'
-	
+
 	files = fs.readdirSync(dir)
 	for filename in files
 		continue if filename[0] is '.' # what is hidden should be hidden
