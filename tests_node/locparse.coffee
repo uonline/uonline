@@ -16,7 +16,10 @@
 
 fs = require 'fs'
 parser = require '../lib-cov/locparse'
-
+rmrf = require 'rmrf'
+copy = require('ncp').ncp
+copy.limit = 16 #concurrency limit
+TMP_DIR = 'tests_node/loctests_tmp'
 
 krontShouldBeLike =
 	id: 0
@@ -27,8 +30,8 @@ krontShouldBeLike =
 		id: 0
 		area: null
 		name: 'Другая голубая улица'
-		image: null
 		label: 'kront/bluestreet'
+		picture: null
 		description: 'Здесь стоят гомосеки и немного пидарасов.'
 		actions:
 			'kront-outer/greenstreet': 'Пойти на Зелёную улицу'
@@ -44,8 +47,8 @@ outerShouldBeLike =
 		id: 0
 		area: null
 		name: 'Голубая улица'
-		image: null
 		label: 'kront-outer/bluestreet'
+		picture: null
 		description: 'Здесь сидят гомосеки.'
 		actions:
 			'kront-outer/greenstreet': 'Пойти на Зелёную улицу'
@@ -53,37 +56,13 @@ outerShouldBeLike =
 		id: 0
 		area: null
 		name: 'Зелёная улица'
-		image: 'животноводство.png'
 		label: 'kront-outer/greenstreet'
+		picture: 'животноводство.png'
 		description: 'Здесь посажены деревья.\nИ грибы.\nИ животноводство.'
 		actions:
 			'kront/bluestreet': 'Пойти на Голубую улицу'
 			'kront-outer/bluestreet': 'Пойти на другую Голубую улицу'
 	]
-
-
-cpR = (src, dst) ->
-	fs.mkdirSync dst
-	srcFiles = fs.readdirSync(src)
-	for srcName in srcFiles
-		srcPath = "#{src}/#{srcName}"
-		dstPath = "#{dst}/#{srcName}"
-		if fs.statSync(srcPath).isDirectory()
-			cpR srcPath, dstPath
-		else
-			fs.writeFileSync dstPath, fs.readFileSync(srcPath)
-			#fs.createReadStream(srcPath).pipe(fs.createWriteStream(dstPath))
-
-
-rmR = (dir) ->
-	files = fs.readdirSync(dir)
-	for name in files
-		path = "#{dir}/#{name}"
-		if fs.statSync(path).isDirectory()
-			rmR path
-		else
-			fs.unlinkSync path
-	fs.rmdirSync dir
 
 
 sed = (pairs, file) ->
@@ -95,12 +74,14 @@ sed = (pairs, file) ->
 
 
 exports.setUp = (done) ->
-	rmR 'tests_node/loctests_tmp' if fs.existsSync 'tests_node/loctests_tmp'
-	done()
+	rmrf TMP_DIR if fs.existsSync TMP_DIR
+	copy 'tests_node/loctests', TMP_DIR, (error) ->
+		throw error if error?
+		done()
 
 
 exports.tearDown = (done) ->
-	rmR 'tests_node/loctests_tmp' if fs.existsSync 'tests_node/loctests_tmp'
+	rmrf TMP_DIR if fs.existsSync TMP_DIR
 	done()
 
 
@@ -126,15 +107,14 @@ commonTest = (test, result) ->
 exports.correct_test = (test) ->
 	result = parser.processDir 'tests_node/loctests/Кронт - kront' #'unify/Кронт - kront'
 
-	test.strictEqual result.warnings.length, 0, 'should receive no warnings'
-	test.strictEqual result.errors.length, 0, 'should receive no errors'
+	test.deepEqual result.warnings, [], 'should receive no warnings'
+	test.deepEqual result.errors, [], 'should receive no errors'
 	commonTest test, result
 
 	test.done()
 
 
 exports.warnings_test = (test) ->
-	cpR 'tests_node/loctests', 'tests_node/loctests_tmp'
 	sed([
 			["Здесь убивают слоников", "#Здесь warning"] #1
 			["Здесь стоят гомосеки", "###Здесь стоит warning\n\n*А тут - ещё один"] #2 3
@@ -143,12 +123,113 @@ exports.warnings_test = (test) ->
 			["# Кронт", "непустая строка\n# Кронт"] #7
 			["Пойти на Зелёную улицу", "Пойти на Зелёную улицу через точку."] #8
 			["`kront-outer/bluestreet`", "`kront-outer/greenstreet`"] #9
-		], "tests_node/loctests_tmp/Кронт - kront/map.ht.md"
+		], "#{TMP_DIR}/Кронт - kront/map.ht.md"
 	)
-	result = parser.processDir 'tests_node/loctests_tmp/Кронт - kront', true #'unify/Кронт - kront'
+	result = parser.processDir "#{TMP_DIR}/Кронт - kront" #'unify/Кронт - kront'
 
-	test.strictEqual result.warnings.length, 9, 'shoulg generate all warnings'
 	test.ok(result.warnings.some((w) -> w.id == "W#{i}"), "should generate warning number#{i}") for i in [1..9]
-	test.strictEqual result.errors.length, 0, 'should receive no errors'
+	test.strictEqual result.warnings.length, 9, 'should generate all warnings'
+	test.deepEqual result.errors, [], 'should receive no errors'
 
 	test.done()
+
+
+testOneError = (test, errId, sedWhat, sedByWhat, sedWhere="#{TMP_DIR}/Кронт - kront/map.ht.md") ->
+	sed [[sedWhat, sedByWhat]], sedWhere
+	result = parser.processDir "#{TMP_DIR}/Кронт - kront"
+	
+	test.ok result.errors.some((e) -> e.id == errId), 'should return specific error'
+	#test.strictEqual result.errors.length, 1, 'should not generate extra errors'
+	test.deepEqual result.warnings, [], 'should receive no warnings'
+	
+	test.done()
+
+
+exports.error_E1_test = (test) ->
+	testOneError(
+		test, 'E1'
+		"`kront-outer/bluestreet`"
+		"`kront-outer/no-such-street`"
+	)
+
+
+exports.error_E2_test = (test) ->
+	testOneError(
+		test, 'E2'
+		"* Пойти на Зелёную улицу `kront-outer/greenstreet`"
+		"* Пойти на Зелёную улицу без метки"
+	)
+
+
+exports.error_E3_test = (test) ->
+	testOneError(
+		test, 'E3'
+		"### Другая голубая улица `bluestreet`"
+		"### Другая голубая улица и тоже без метки"
+	)
+
+
+exports.error_E4_test = (test) ->
+	fs.renameSync "#{TMP_DIR}/Кронт - kront", "#{TMP_DIR}/Кронт"
+	result = parser.processDir "#{TMP_DIR}/Кронт"
+	
+	test.ok result.errors.some((e) -> e.id == 'E4'), 'should return specific error'
+	test.deepEqual result.warnings, [], 'should receive no warnings'
+	
+	test.done()
+
+
+exports.error_E5_test = (test) ->
+	testOneError(
+		test, 'E5'
+		"# Кронт"
+		"# Тнорк"
+	)
+
+
+exports.error_E6_test = (test) ->
+	testOneError(
+		test, 'E6'
+		"### Зелёная улица `greenstreet` (default)"
+		"### Зелёная улица `greenstreet`"
+		"#{TMP_DIR}/Кронт - kront/Окрестности Кронта - outer/map.ht.md"
+	)
+
+
+exports.error_E7_test = (test) ->
+	testOneError(
+		test, 'E7'
+		"### Голубая улица `bluestreet`"
+		"### Голубая улица `greenstreet`"
+		"#{TMP_DIR}/Кронт - kront/Окрестности Кронта - outer/map.ht.md"
+	)
+
+
+exports.error_E8_test = (test) ->
+	test.done() #the hardest one
+
+
+exports.error_E9_test = (test) ->
+	testOneError(
+		test, 'E9'
+		"### Другая голубая улица `bluestreet`"
+		"### Другая голубая улица `bluestreet`\n![img](img)\n![moar](moat)"
+	)
+
+
+exports.error_E10_test = (test) ->
+	testOneError(
+		test, 'E10'
+		"### Другая голубая улица `bluestreet`"
+		"### Другая голубая улица `bluestreet`\n![paths_are](different.png)"
+	)
+
+
+exports.error_E11_test = (test) ->
+	testOneError(
+		test, 'E11'
+		"### Другая голубая улица `bluestreet`"
+		"### Другая голубая улица `bluestreet` (default)"
+	)
+
+

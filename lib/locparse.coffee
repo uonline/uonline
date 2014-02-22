@@ -16,6 +16,7 @@
 
 crypto = require 'crypto'
 fs = require 'fs'
+sync = require 'sync'
 
 
 makeId = (str) ->
@@ -72,8 +73,8 @@ postCheck = (log) ->
 	
 	checkPropUniqueness res.areas, 'areas', 'N/a', 'id', log # error N
 	checkPropUniqueness res.locations, 'locations', 'N/a', 'id', log # error N
-	checkPropUniqueness res.locations, 'locations', 'N/a', 'label', log # error 6
-	log.error 'locations', 'E6', "default was not found" unless res.defaultLocation? # error 7
+	checkPropUniqueness res.locations, 'locations', 'E7', 'label', log # error 7
+	log.error 'locations', 'E6', "default was not found" unless res.defaultLocation? # error 6
 	
 	labels = {}
 	labels[loc.label] = loc for loc in res.locations
@@ -95,7 +96,7 @@ class Location
 		@id = makeId @label
 		@description = ''
 		@actions = {}
-		@image = null
+		@picture = null
 
 
 class Logger
@@ -149,13 +150,31 @@ class Result
 		@files = {}
 	
 	save: (dbConnection) ->
-		throw new Error("Can't save with errors.") if @errors?
-		# ...
+		throw new Error("Can't save with errors.") if @errors.length > 0
+		
+		for area in @areas
+			dbConnection.query.sync(
+				dbConnection
+				"REPLACE areas (id, title, description) VALUES(?, ?, ?)"
+				[area.id, area.description, area.title]
+			)
+		
+		locByLabel = {}
+		locByLabel[loc.label] = loc for loc in @locations
+		
+		for loc in @locations
+			goto = ("#{v}=#{locByLabel[k].id}" for k,v of loc.actions)
+			dbConnection.query.sync(
+				dbConnection
+				"REPLACE locations (id, title, description, area, `default`, goto, picture) VALUES(?,?,?,?,?,?,?)"
+				[loc.id, loc.name, loc.description, loc.area.id, loc is @defaultLocation, goto.join('|'), loc.picture]
+			)
 
 
 processMap = (filename, areaName, areaLabel, log) ->
 	log.setFilename filename
 	lines = fs.readFileSync(filename, 'utf-8').split('\n')
+	#throw new Error(lines)
 	area = null
 	location = null
 	blankLines = 0
@@ -186,9 +205,13 @@ processMap = (filename, areaName, areaLabel, log) ->
 		
 		else if isLocationLabel(line, i, log)
 			[name, label, prop] = line.substr(4).split(/\s*`\s*/)
-			prop = prop.trim()
 			
-			log.error i, 'E3', "location should have `label` after name" unless label? # error 3
+			unless label?
+				log.error i, 'E3', "location should have `label` after name" # error 3
+				label = ''
+				prop = ''
+			
+			prop = prop.trim()
 			
 			label = area.label + '/' + label unless '/' in label
 			
@@ -210,7 +233,9 @@ processMap = (filename, areaName, areaLabel, log) ->
 			
 			[name, target, rem] = line.substr(2).split(/\s*`\s*/)
 			
-			log.error i, 'E2', "action should have `label` after name" unless target? # error 2
+			unless target?
+				log.error i, 'E2', "action should have `label` after name" # error 2
+				target = ''
 			
 			log.warn i, 'W8', "Unnecessary trailing dot" if name[name.length-1] is '.' # warn 8
 			
@@ -227,13 +252,13 @@ processMap = (filename, areaName, areaLabel, log) ->
 				log.error i, 'N/a', "images are only avaliable for locations" # error N
 				continue
 			
-			log.error i, 'E9', "location's image has been doubled" if location.image? # error 9
+			log.error i, 'E9', "location's image has been doubled" if location.picture? # error 9
 			
 			[_, path, path2] = imageDescr
 			if path isnt path2
 				log.error i, 'E10', "image paths are not equal: '#{path}', '#{path2}'" # error 10
 			
-			location.image = path
+			location.picture = path
 		
 		else
 			curObj = location || area
@@ -248,6 +273,8 @@ processDir = (dir, parentLabel, log) ->
 	
 	unless t = dir.match /\/([^\/]+)\s-\s([^\/]+)\/?$/
 		log.error 'dirname', 'E4', "wrong path <#{dir}>, folder must have name like 'Area name - label'" # error 4
+		t = [null, dir, 'error'] # пусть хоть как-то дальше парсит, м.б. ещё какие ошибки нйдёт
+	
 	[_, name, label] = t
 	label = parentLabel + '-' + label unless parentLabel is ''
 	
@@ -256,6 +283,7 @@ processDir = (dir, parentLabel, log) ->
 	
 	files = fs.readdirSync(dir)
 	for filename in files
+		continue if filename[0] is '.' # what is hidden should be hidden
 		filepath = "#{dir}/#{filename}"
 		if fs.statSync(filepath).isDirectory()
 			processDir(filepath, label, log)
@@ -266,4 +294,15 @@ processDir = (dir, parentLabel, log) ->
 exports.processDir = (dir, verbose=false) ->
 	log = new Logger(new Result(), verbose)
 	processDir dir, '', log
+	postCheck log
 	log.result
+
+
+exports.makeId = makeId
+exports.isAreaLabel = isAreaLabel
+exports.isLocationLabel = isLocationLabel
+exports.isListItem = isListItem
+exports.isEmpty = isEmpty
+exports.checkSpaces = checkSpaces
+exports.checkPropUniqueness = checkPropUniqueness
+exports.postCheck = postCheck
