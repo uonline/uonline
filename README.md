@@ -11,19 +11,12 @@ Requirements
 
 ### Current
 
-* Node.js with npm
+* Node.js 0.10 with npm
 * CoffeeScript
 * Grunt
 * MySQL or MariaDB
 * MySQL user `anonymous` with password `nopassword`
 * Two MySQL databases: `uonline` and `uonline_test`
-
-### Legacy
-
-* PHP 5.4 or higher
-* PHP-MySQL module
-* PHP-CGI package
-* Composer
 
 ### Future
 
@@ -34,10 +27,9 @@ How to set up
 -------------
 
 * Clone the repo.
-* Install packages: `npm install`, `composer install`.
-* Create keyring (for PHP). You can run almost any PHP file to get help on format.
+* Install packages: `npm install`.
 * Fetch submodules: `git submodule init`, `git submodule update`.
-* Initialize database: `./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize`.
+* Initialize database: `./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize`. Errrm, now you should use init.coffee, but I'm too lazy to fix the command.
 * If you need to add an admin: `./add-admin.coffee username password`.
 
 
@@ -45,34 +37,6 @@ How to run
 ----------
 
 If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`.
-
-If you wanna run legacy PHP version - you know the way.
-
-
-Tips and tricks for PHP version
--------------------------------
-
-* MySQL package in Debian is called `mysql-server`. Don't forget to run `mysql_secure_installation`.
-* Apache package in Debian is called `apache2`. Configure virtual hosts if you need it.
-* PHP package in Debian is called `php5`. Warning: it's pretty outdated. To fetch the latest:
-
-```
-sudo add-apt-repository ppa:ondrej/php5
-sudo apt-get update
-sudo apt-get install php5
-```
-
-* 404 at main page? `.htaccess` problem. Enable `mod_rewrite`, edit your apache config and tell it the magic phrase `AllowOverride All`.
-* In case of database problems, make sure that `mysql` and `mysqli` extensions are enabled in php.ini. In Debian, you will also need a package named `php5-mysql`.
-* It is designed to run with xcache/opcache and native Twig extension. But they're both optional. Just in case: package `php5-xcache` in Debian for xcache, package `php5-dev` to build ext. `vendor/twig/twig/ext/twig`. [How to build](http://twig.sensiolabs.org/doc/intro.html#installing-the-c-extension).
-* Turn caching on in keyring. It helps a lot, too.
-* And the last. If you want to see code coverage reports, install xdebug (package `php5-xdebug` in Debian).
-
-If you experience problems, try to run `make diagnose` to diagnose the most common problems.
-
-To correctly update uonline on production server, try `make deploy`. To update third-party libraries, run `composer update`.
-
-To run PHP tests, run `make test`. Note that they cover only some parts of the code.
 
 
 Programmers' guidelines
