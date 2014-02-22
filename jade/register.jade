@@ -17,13 +17,13 @@ block content
 		#user-control-group.control-group(class=((invalidLogin || loginIsBusy)?'error':''))
 			label.control-label(for='user') Логин
 			.controls
-				input#user(type='text', name='user', maxlength='32', value=user)
+				input#user(type='text', name='user', maxlength='32', value=user, required, autofocus)
 				span.help-inline
 					small От 2 до 32 символов, [a-zA-Z0-9а-яА-Я_- ].
 		#password-control-group.control-group(class=(invalidPass?'error':''))
 			label.control-label(for='pass') Пароль
 			.controls
-				input#pass(type='password', name='pass', maxlength='32')
+				input#pass(type='password', name='pass', maxlength='32', required)
 				span.help-inline
 					a#revealpass.btn.btn-small(title='Показать пароль')
 						i.icon-eye-open
