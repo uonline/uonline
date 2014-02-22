@@ -15,4 +15,4 @@ david-update:
 	./node_modules/david/bin/david.js update
 
 whattodo:
-	( find -name '*.js'; find -name '*.coffee' ) | grep -v node_modules | grep -v server.js | xargs grep TODO -n
+	( find -name '*.js' -or -name '*.coffee' -or -name '*.jade' ) | grep -v node_modules | xargs grep TODO -n --color
