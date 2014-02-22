@@ -14,6 +14,8 @@
 
 'use strict'
 
+fs = require 'fs'
+
 module.exports = (grunt) ->
 
 	# Project configuration.
@@ -110,7 +112,7 @@ module.exports = (grunt) ->
 				'tests_node/*.coffee'
 				'grunt-custom-tasks/*.coffee'
 			]
-			options: JSON.parse require('fs').readFileSync('.coffeelintrc').toString()
+			options: JSON.parse fs.readFileSync('.coffeelintrc', 'utf-8')
 
 		coffeeCoverage:
 			all:
