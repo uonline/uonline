@@ -19,17 +19,14 @@
 
 var config = require('../config.js');
 
-var jsc = require('jscoverage');
-jsc.enableCoverage(true);
-
-var game = jsc.require(module, '../utils/game.js');
+var game = require('../lib-cov/game');
 
 var async = require('async');
 
 var anyDB = require('any-db');
 var conn = null;
 
-var usedTables = ['locations', 'uniusers', 'monsters', 'monster_prototypes'].join(', ');
+var usedTables = ['locations', 'uniusers', 'areas', 'monsters', 'monster_prototypes'].join(', ');
 
 exports.setUp = function (done) {
 	async.series([
@@ -58,6 +55,12 @@ function creationLocationsTableCallback(callback) {
 		//'`description` TEXT,'+
 		'`area` INT,'+
 		'`default` TINYINT(1) DEFAULT 0 )', callback);
+}
+function creationAreasTableCallback(callback) {
+	conn.query('CREATE TABLE areas ('+
+		'`id` INT, PRIMARY KEY (`id`),'+
+		'`title` TINYTEXT'+
+		' )', callback);
 }
 function creationUniusersTableCallback(callback) {
 	conn.query('CREATE TABLE uniusers ('+
@@ -213,7 +216,6 @@ exports.getUserLocation = {
 			test.done();
 		});
 	},
-	//а поидее, надо проверять валидность локаци при переходе юзера на неё, и тут это не должно имень смысла
 	"testWrongLocid": function(test) {
 		async.series([
 				insertCallback('locations', {"id":1, "area":5}),
@@ -225,6 +227,39 @@ exports.getUserLocation = {
 			}
 		);
 	}
+};
+
+exports.getUserArea = {
+	"setUp": function(callback) {
+		async.series([
+				creationUniusersTableCallback,
+				creationLocationsTableCallback,
+				creationAreasTableCallback,
+				insertCallback('uniusers', {"id":1, "location":3, "sessid":"someid"})
+			], callback);
+	},
+	'usual test': function(test) {
+		async.series([
+				insertCallback('locations', {
+					"id":3, "area":5, "title":"The Location", "goto":"Left=7|Forward=8|Right=9"}),
+				insertCallback('areas', {
+					"id":5, "title":"London"}),
+				function(callback){ game.getUserArea(conn, 1, callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.strictEqual(result[2].id, 5, "should return user's area id");
+				test.strictEqual(result[2].title, 'London', "should return user's area name");
+				test.done();
+			}
+		);
+	},
+	'wrong user id': function(test) {
+		game.getUserArea(conn, -1, function(error, result) {
+			test.strictEqual(error, "Wrong user's id", 'should fail on wrong id');
+			test.done();
+		});
+	},
 };
 
 exports.changeLocation = {
@@ -359,6 +394,40 @@ exports.getNearbyMonsters = function(test) {
 	);
 };
 
+exports.isInFight = function(test) {
+	async.series([
+			creationUniusersTableCallback,
+			insertCallback('uniusers', {"id":2, "fight_mode":0}),
+			insertCallback('uniusers', {"id":4, "fight_mode":1}),
+			function(callback){ game.isInFight(conn, 2, callback); },
+			function(callback){ game.isInFight(conn, 4, callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[3], false, 'should return false if user is not in fight mode');
+			test.strictEqual(result[4], true, 'should return true if user is in fight mode');
+			test.done();
+		}
+	);
+};
+
+exports.isAutoinvolved = function(test) {
+	async.series([
+			creationUniusersTableCallback,
+			insertCallback('uniusers', {"id":2, "fight_mode":1, "autoinvolved_fm":0}),
+			insertCallback('uniusers', {"id":4, "fight_mode":1, "autoinvolved_fm":1}),
+			function(callback){ game.isAutoinvolved(conn, 2, callback); },
+			function(callback){ game.isAutoinvolved(conn, 4, callback); },
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[3], false, 'should return false if user was not attacked');
+			test.strictEqual(result[4], true, 'should return true if user was attacked');
+			test.done();
+		}
+	);
+};
+
 exports.uninvolve = function(test) {
 	async.series([
 			creationUniusersTableCallback,
@@ -382,6 +451,7 @@ exports.getUserCharacters = {
 				creationUniusersTableCallback,
 				insertCallback('uniusers', {
 					id: 1,
+					user: 'someuser',
 					fight_mode: 1, autoinvolved_fm: 1,
 					health: 100,   health_max: 200,
 					mana: 50,      mana_max: 200,
@@ -395,10 +465,15 @@ exports.getUserCharacters = {
 					initiative: 6
 				}),
 				function(callback){ game.getUserCharacters(conn, 1, callback); },
+				function(callback){ game.getUserCharacters(conn, 'someuser', callback); },
+				function(callback){ game.getUserCharacters(conn, 2, callback); },
+				function(callback){ game.getUserCharacters(conn, 'anotheruser', callback); },
 			],
 			function(error, result) {
 				test.ifError(error);
-				test.deepEqual(result[2], {
+				var expectedData = {
+					id: 1,
+					user: 'someuser',
 					health: 100,   health_max: 200,    health_percent: 50,
 					mana: 50,      mana_max: 200,      mana_percent: 25,
 					level: 2,
@@ -410,7 +485,11 @@ exports.getUserCharacters = {
 					accuracy: 4,
 					intelligence: 5,
 					initiative: 6
-				}, "should return specific fields");
+				};
+				test.deepEqual(result[2], expectedData, "should return specific fields by id");
+				test.deepEqual(result[3], expectedData, "should return specific fields by nickname");
+				test.strictEqual(result[4], null, "should return null if no such user exists");
+				test.strictEqual(result[5], null, "should return null if no such user exists");
 				test.done();
 			}
 		);

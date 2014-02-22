@@ -17,9 +17,14 @@
 
 "use strict";
 
-var math = require('../lib-cov/math');
-
-exports.ap = function (test) {
-	test.strictEqual(153, math.ap(3,6,9), 'should calculate result');
-	test.done();
-};
+var list = require('fs').readdirSync('./lib');
+for (var i in list)
+{
+	i = list[i];
+	var name = i.substring(0, i.length-3); // ".js".length === 3
+	var ext = i.substring(i.length-3);
+	if (ext === '.js')
+	{
+		exports[name] = require('./lib/'+i);
+	}
+}

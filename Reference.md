@@ -6,7 +6,7 @@ Template options
 * admin (`true` or `false`)
 * loggedIn (`true` or `false`)
 * login (string or `false`)
-* mail_count (number)
+* now (Date)
 
 ### Specific
 
