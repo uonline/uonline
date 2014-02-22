@@ -1,0 +1,62 @@
+// DIRTY! DIRTY! DIRTY!
+
+extends layout
+block title
+	| Профиль игрока #{nickname}
+block content
+	.page-header
+		h1 #{nickname}#{' '}
+			small Уровень #{level}, ##{id}
+	.row
+		.span5
+			h3 Здоровье
+			.progress
+				.bar.bar-success(style='width: '+health_percent+'%;')
+			| #{ health }/#{ health_max }
+			h3 Мана
+			.progress
+				.bar(style='width: '+mana_percent+'%;')
+			| #{ mana }/#{ mana_max }
+			h3 Опыт
+			.progress.bar-warning
+				.bar(style='width: '+exp_percent+'%;')
+			| #{ exp }/#{ exp_max }
+		.span1
+		.span6
+			h3 Характеристики
+			table.table.table-striped.table-hover
+				tr
+					td Энергия
+					td #{ energy }#{' '}
+						//
+							a.btn.btn-mini(href='javascript://') &plus;
+				tr
+					td Сила
+					td #{ power }#{' '}
+						//
+							a.btn.btn-mini(href='javascript://') &plus;
+				tr
+					td Защита
+					td #{ defense }#{' '}
+						//
+							a.btn.btn-mini(href='javascript://') &plus;
+				tr
+					td Ловкость
+					td #{ agility }#{' '}
+						//
+							a.btn.btn-mini(href='javascript://') &plus;
+				tr
+					td Точность
+					td #{ accuracy }#{' '}
+						//
+							a.btn.btn-mini(href='javascript://') &plus;
+				tr
+					td Интеллект
+					td #{ intelligence }#{' '}
+						//
+							a.btn.btn-mini(href='javascript://') &plus;
+				tr
+					td Инициатива
+					td #{ initiative }#{' '}
+						//
+							a.btn.btn-mini(href='javascript://') &plus;
