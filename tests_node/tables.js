@@ -19,10 +19,7 @@
 
 var config = require('../config.js');
 
-var jsc = require('jscoverage');
-jsc.enableCoverage(true);
-
-var tables = jsc.require(module, '../lib/tables.js');
+var tables = require('../lib-cov/tables');
 
 var async = require('async');
 
@@ -139,7 +136,7 @@ exports.renameCol = {
 				test.done();
 			}
 		);
-		
+
 	}
 };
 
