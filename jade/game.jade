@@ -27,12 +27,17 @@ block content
 					when 1
 						| Рядом с вами стоит#{' '}
 					default
-						| На этой локации находятся:#{' '}
-				each i in players_list
-					//- TODO: запятые
+						| Рядом с вами стоят#{' '}
+				each i,index in players_list
 					| #{' '}
 					a(href="/profile/id/"+i.id+"/") #{i.name}
+					if index == players_list.length-2
+						| #{' '}и
+					if index < players_list.length-2
+						| ,
 				| #{'.'}
+				if players_list.length >= 15
+					| #{' '}И откуда здесь столько народа?
 
 // cut --- cut --- cut --- cut
 html
