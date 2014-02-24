@@ -38,32 +38,25 @@ block content
 				| #{'.'}
 				if players_list.length >= 15
 					| #{' '}И откуда здесь столько народа?
-
-// cut --- cut --- cut --- cut
-html
-	body
-
 		p
 			small
-				| {% if monsters_list|length > 0 %}
-				| Монстры на этой локации:
-				| {% for i in monsters_list %}
-				a(href="#") {{ i.name }}
-				| {% if not loop.last %}, {% endif %}
-				| {% endfor %}
-				// dirty layout
-				p
-					| {% if autoinvolved_fm %}
+				if monsters_list.length > 0
+					| Монстры:
+					each i,index in monsters_list
+						| #{' '}#{i.name}
+						if index < monsters_list.length-1
+							| ,
+					| #{'.'}
+				else
+					| На этой локации нет монстров.
+		p
+			small
+				if autoinvolved_fm == true
 					b Вас атаковали!
-					| {% endif %}
-				p
-					| {% if fight_mode %}
+		p
+			small
+				if fight_mode == true
 					a(href="/action/escape") Свалить
-					| {% else %}
+				else
 					a(href="/action/attack") Атаковать
-					| {% endif %}
-				| {% else %}
-				| На этой локации нет монстров.
-				| {% endif %}
-		div(style="clear: both;")
-		| {% endblock content %}
+	div(style="clear: both;")
