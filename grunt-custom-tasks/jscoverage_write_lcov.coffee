@@ -37,7 +37,6 @@ module.exports = (grunt) ->
 			output = "#{output}#{x}\n"
 		Object.keys(cov).forEach (filename) ->
 			data = cov[filename]
-			if filename.endsWith('.coffee') then filename = "lib/#{filename}" # DIRTY HACK
 			reportFile(filename, data, log)
 		try
 			require('fs').writeFileSync('./report.lcov', output)

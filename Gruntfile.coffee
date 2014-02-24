@@ -115,15 +115,20 @@ module.exports = (grunt) ->
 			options: JSON.parse fs.readFileSync('.coffeelintrc', 'utf-8')
 
 		coffeeCoverage:
+			options:
+				path: 'relative'
 			all:
-				src: 'lib/'
+				expand: true
+				cwd: 'lib/'
+				src: ['*.coffee']
 				dest: 'lib-cov/'
+				ext: '.js'
 
 		jscoverage:
 			options:
 				inputDirectory: 'lib'
 				outputDirectory: 'lib-cov'
-				exclude: 'locparse.coffee'
+				exclude: 'locparse.coffee,strings.coffee'
 
 
 	# These plugins provide necessary tasks.
