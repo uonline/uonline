@@ -1,5 +1,7 @@
-mixin instanceLink(name, url, text, icon)
-	li(class = (instance === name ? 'active' : false))
+mixin instanceLink(name, url, text, icon, forceNotActive)
+	- var activity = (instance === name);
+	- if (forceNotActive) activity = false;
+	li(class = (activity ? 'active' : false))
 		if icon != null
 			a(href=url) <i class="#{icon}"></i> #{text}
 		else
@@ -32,10 +34,8 @@ html
 								a(href='/profile/')
 									i(class=(admin?'icon-certificate':'icon-user'))
 									| #{' '}#{login}
-							//- TODO: profile && profileIsMine
-							//- <li {% if instance == 'profile' and profileIsMine == true %} class="active" {% endif %}><a href="/profile/">Профиль</a></li>
-							//- TODO: game
-							//- <li {% if instance == 'game' %} class="active" {% endif %}><a href="/game/">Игра</a></li>
+							+instanceLink('profile', '/profile/', 'Профиль', null, !profileIsMine)
+							+instanceLink('game', '/game/', 'Игра')
 							li
 								a(href='/action/logout') Выйти
 						else
