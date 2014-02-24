@@ -17,16 +17,21 @@
 module.exports = (grunt) ->
 	# Please see the Grunt documentation for more information regarding task
 	# creation: http://gruntjs.com/creating-tasks
-	grunt.registerMultiTask 'checkstrict', 'Check if every file is in strict mode.', ->
+	grunt.registerMultiTask 'mustcontain', 'Check if every file contains specified things.', ->
 		done = @async()
 		fs = require 'fs'
 		async = require 'async'
+		regex = @data.regex
+		success = @data.success
+		fail = @data.fail
+		fatal = @data.fatal
+
 		async.map @filesSrc, ((item, callback) ->
 			fs.readFile item, (error, data) ->
 				if error?
 					callback error, null
 				else
-					callback null, [item, ( /['"]use strict['"]\s*[;\n]/ ).test(data.toString())]
+					callback null, [item, regex.test(data.toString())]
 		), (error, results) ->
 			if error?
 				grunt.log.error error
@@ -34,8 +39,17 @@ module.exports = (grunt) ->
 			count = results.length
 			results = results.filter (item) -> item[1] is false
 			if results.length is 0
-				grunt.log.ok "#{count} files are strict."
+				msg = success.replace /\{n\}/g, "#{count}"
+				if count == 1 or (count > 20 and count % 10 == 1)
+					msg = msg.replace /\{s\}/g, ''
+					msg = msg.replace /\{\!s\}/g, 's'
+				else
+					msg = msg.replace /\{s\}/g, 's'
+					msg = msg.replace /\{\!s\}/g, ''
+				grunt.log.ok msg
+				done()
 			else
 				for i in results
-					grunt.log.warn "#{i[0]} is not strict."
-			done()
+					msg = fail.replace /\{filename\}/g, "#{i[0]}"
+					grunt.log.warn msg
+				done(not fatal)

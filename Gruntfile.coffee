@@ -63,8 +63,8 @@ module.exports = (grunt) ->
 				src: './browserified/validation.js'
 				dest: './browserified/validation.min.js'
 
-		checklicense:
-			all:
+		mustcontain:
+			license:
 				src: [
 					'*.js'
 					'lib/*.js'
@@ -75,9 +75,11 @@ module.exports = (grunt) ->
 					'tests_node/*.coffee'
 					'grunt-custom-tasks/*.coffee'
 				]
-
-		checkstrict:
-			all:
+				regex: /WARRANTY/
+				success: '{n} file{s} contain{!s} a license.'
+				fail: '{filename} does not contain a license.'
+				fatal: false
+			strict:
 				src: [
 					'*.js'
 					'lib/*.js'
@@ -88,6 +90,10 @@ module.exports = (grunt) ->
 					'tests_node/*.coffee'
 					'grunt-custom-tasks/*.coffee'
 				]
+				regex: /['"]use strict['"]\s*[;\n]/
+				success: '{n} file{s} in strict mode.'
+				fail: '{filename} is not strict.'
+				fatal: false
 
 		coffee:
 			all:
@@ -135,7 +141,7 @@ module.exports = (grunt) ->
 	grunt.loadTasks './grunt-custom-tasks/'
 
 	# Custom tasks.
-	grunt.registerTask 'check', ['checkstrict', 'checklicense', 'coffeelint', 'jshint:all']
+	grunt.registerTask 'check', ['mustcontain', 'coffeelint', 'jshint:all']
 	grunt.registerTask 'build', ['browserify', 'uglify']
 
 	testTask = ['jscoverage', 'clean:shit', 'coffeeCoverage']  # order is important
