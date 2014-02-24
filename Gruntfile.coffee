@@ -134,24 +134,18 @@ module.exports = (grunt) ->
 	require('load-grunt-tasks')(grunt)
 	grunt.loadTasks './grunt-custom-tasks/'
 
-	# Basic tasks.
+	# Custom tasks.
 	grunt.registerTask 'check', ['checkstrict', 'checklicense', 'coffeelint', 'jshint:all']
 	grunt.registerTask 'build', ['browserify', 'uglify']
-	grunt.registerTask 'test', [
-		'jscoverage', 'clean:shit', 'coffeeCoverage',  # order is important
-		'nodeunit:js', 'nodeunit:coffee',  # order is important
-		'jscoverage_report'
-	]
-	if grunt.option('single')?
-		grunt.config.set 'nodeunit.one', [ 'tests_node/'+grunt.option('single') ]
-		grunt.registerTask 'test', [
-			'jscoverage', 'clean:shit', 'coffeeCoverage',  # order is important
-			'nodeunit:one',
-			'jscoverage_report'
-		]
 
-	# Custom one.
-	grunt.registerTask 'ff', ['check', 'build']
+	testTask = ['jscoverage', 'clean:shit', 'coffeeCoverage']  # order is important
+	if grunt.option('single')?  # allow to test a single file, see Readme
+		grunt.config.set 'nodeunit.one', [ 'tests_node/'+grunt.option('single') ]
+		testTask.push 'nodeunit:one'
+	else
+		testTask = testTask.concat ['nodeunit:js', 'nodeunit:coffee']  # order is important
+	testTask.push 'jscoverage_report'
+	grunt.registerTask 'test', testTask
 
 	# Default task.
 	grunt.registerTask 'default', ['check', 'build', 'test']
