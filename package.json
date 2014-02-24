@@ -18,7 +18,6 @@
     "header-stack": ">= 0.0.2",
     "mysql": "~2.0.0-alpha9",
     "async": "~0.2.9",
-    "swig": "~1.2.2",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.9",
     "grunt-contrib-nodeunit": "~0.3.0",
@@ -36,7 +35,8 @@
     "sync": "~0.2.2",
     "coffee-script": "~1.7.0",
     "grunt-coffee-coverage": "~0.1.4",
-    "grunt-jscoverage": "0.0.3"
+    "grunt-jscoverage": "0.0.3",
+    "jade": "~0.35.0"
   },
   "devDependencies": {
     "nodeunit": "~0.8.1",

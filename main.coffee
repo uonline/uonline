@@ -35,18 +35,22 @@ app.use '/bootstrap', express.static(__dirname + '/bootstrap')
 app.use '/img', express.static(__dirname + '/img')
 app.use '/browserified', express.static(__dirname + '/browserified')
 
-swig = require 'swig'
-stubFilter = (input) -> input
-swig.setFilter 'tf', stubFilter # TODO: actually implement
-swig.setFilter 'nl2p', stubFilter # TODO: actually implement
-swig.setFilter 'nl2br', stubFilter # TODO: actually implement
-swig.setFilter 'length', (x) -> x.length
+# swig = require 'swig'
+# stubFilter = (input) -> input
+# swig.setFilter 'tf', stubFilter # TODO: actually implement
+# swig.setFilter 'nl2p', stubFilter # TODO: actually implement
+# swig.setFilter 'nl2br', stubFilter # TODO: actually implement
+# swig.setFilter 'length', (x) -> x.length
 
-app.engine 'html', swig.renderFile
-app.engine 'twig', swig.renderFile
-app.engine 'swig', swig.renderFile
-app.set 'view engine', 'twig' # historical reasons
-app.set 'views', __dirname + '/templates'
+# app.engine 'html', swig.renderFile
+# app.engine 'twig', swig.renderFile
+# app.engine 'swig', swig.renderFile
+# app.set 'view engine', 'twig' # historical reasons
+# app.set 'views', __dirname + '/templates'
+
+app.set 'view engine', 'jade'
+app.locals.pretty = true
+app.set 'views', __dirname + '/jade'
 
 
 app.use ((request, response) ->
