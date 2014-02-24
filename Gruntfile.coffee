@@ -138,8 +138,13 @@ module.exports = (grunt) ->
 		'nodeunit:js', 'nodeunit:coffee',  # order is important
 		'jscoverage_report'
 	]
-	if grunt.option('target')?
-		grunt.config.set 'nodeunit.one', [ 'tests_node/'+grunt.option('target') ]
+	if grunt.option('single')?
+		grunt.config.set 'nodeunit.one', [ 'tests_node/'+grunt.option('single') ]
+		grunt.registerTask 'test', [
+			'jscoverage', 'coffeeCoverage',    # order is important
+			'nodeunit:one',
+			'jscoverage_report'
+		]
 
 	# Custom one.
 	grunt.registerTask 'ff', ['check', 'build']

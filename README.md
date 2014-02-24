@@ -42,7 +42,7 @@ If you have Heroku Toolbelt, run `foreman start` to get the server running. If n
 Programmers' guidelines
 -----------------------
 
-**Hint:** Run `grunt` to check and test your code. Run something like `grunt nodeunit:one --target health-check.coffee` to run a single testsuite.
+**Hint:** Run `grunt` to check and test your code. Run something like `grunt test --single health-check.coffee` to run a single testsuite.
 
 * Use tabs, not spaces. Don't mix them and don't use smarttabs.
 * Prefer single quotes. Use double quotes when you need to escape `'` itself.
