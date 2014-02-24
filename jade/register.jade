@@ -53,21 +53,10 @@ block content
 
 		# Validate username
 		usernameField.change ->
+			usernameControlGroup.removeClass 'error'
 			if validation.usernameIsValid(usernameField.val())
-				usernameControlGroup.removeClass 'error'
+				$.getJSON "/ajax/isNickBusy/#{encodeURIComponent(usernameField.val())}", (data) ->
+					if data.isNickBusy and data.nick == usernameField.val()
+						usernameControlGroup.addClass 'error'
 			else
 				usernameControlGroup.addClass 'error'
-	script.
-		// You know what? I don't like it.
-		/* $("input[name=user]").change(function(){
-			$.getJSON("/ajax/isNickBusy/"+encodeURIComponent($("input[name=user]").val()), function(data){
-				if (data.isNickBusy && (data.nick == $("input[name=user]").val()))
-				{
-					$("#user-control-group").addClass("error");
-				}
-				else
-				{
-					$("#user-control-group").removeClass("error");
-				}
-			});
-		}); */
