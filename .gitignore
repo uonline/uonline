@@ -5,6 +5,7 @@ report.lcov
 
 # Third-party tools
 node_modules/
+bower_components/
 
 # Browserified Node modules
 browserified/
