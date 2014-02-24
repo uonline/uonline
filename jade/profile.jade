@@ -1,3 +1,10 @@
+mixin tr_td_ch(name, value)
+	tr
+		td= name
+		td= value
+			//- | #{' '}
+			//- a.btn.btn-mini(href='javascript://') &plus;
+
 extends layout
 block title
 	| Профиль игрока #{nickname}
@@ -23,38 +30,10 @@ block content
 		.span6
 			h3 Характеристики
 			table.table.table-striped.table-hover
-				tr
-					td Энергия
-					td #{ energy }#{' '}
-						//
-							a.btn.btn-mini(href='javascript://') &plus;
-				tr
-					td Сила
-					td #{ power }#{' '}
-						//
-							a.btn.btn-mini(href='javascript://') &plus;
-				tr
-					td Защита
-					td #{ defense }#{' '}
-						//
-							a.btn.btn-mini(href='javascript://') &plus;
-				tr
-					td Ловкость
-					td #{ agility }#{' '}
-						//
-							a.btn.btn-mini(href='javascript://') &plus;
-				tr
-					td Точность
-					td #{ accuracy }#{' '}
-						//
-							a.btn.btn-mini(href='javascript://') &plus;
-				tr
-					td Интеллект
-					td #{ intelligence }#{' '}
-						//
-							a.btn.btn-mini(href='javascript://') &plus;
-				tr
-					td Инициатива
-					td #{ initiative }#{' '}
-						//
-							a.btn.btn-mini(href='javascript://') &plus;
+				+tr_td_ch('Энергия', energy)
+				+tr_td_ch('Сила', power)
+				+tr_td_ch('Защита', defense)
+				+tr_td_ch('Ловкость', agility)
+				+tr_td_ch('Точность', accuracy)
+				+tr_td_ch('Интеллект', intelligence)
+				+tr_td_ch('Инициатива', initiative)
