@@ -9,7 +9,7 @@ test/
 
 # Third-party tools
 node_modules/
-vendor/
+bower_components/
 
 # PHPUnit reports
 code-coverage-report/

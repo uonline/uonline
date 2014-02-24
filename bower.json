@@ -1,0 +1,15 @@
+{
+  "name": "uonline",
+  "version": "1.0.0",
+  "homepage": "https://github.com/uonline/uonline",
+  "authors": [
+    "m1kc (Max Musatov) <m1kc@yandex.ru>"
+  ],
+  "description": "MMORPG game in a fantasy world",
+  "license": "AGPLv3",
+  "private": true,
+  "dependencies": {
+    "bootstrap": "~3.1.1",
+    "jquery": ">=1.10.2"
+  }
+}
