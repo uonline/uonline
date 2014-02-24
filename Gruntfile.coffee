@@ -91,7 +91,7 @@ module.exports = (grunt) ->
 					'grunt-custom-tasks/*.coffee'
 				]
 				regex: /['"]use strict['"]\s*[;\n]/
-				success: '{n} file{s} in strict mode.'
+				success: '{n} file{s} {is/are} strict.'
 				fail: '{filename} is not strict.'
 				fatal: false
 

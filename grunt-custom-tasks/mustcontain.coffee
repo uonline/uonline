@@ -43,9 +43,11 @@ module.exports = (grunt) ->
 				if count == 1 or (count > 20 and count % 10 == 1)
 					msg = msg.replace /\{s\}/g, ''
 					msg = msg.replace /\{\!s\}/g, 's'
+					msg = msg.replace /\{is\/are\}/g, 'is'
 				else
 					msg = msg.replace /\{s\}/g, 's'
 					msg = msg.replace /\{\!s\}/g, ''
+					msg = msg.replace /\{is\/are\}/g, 'are'
 				grunt.log.ok msg
 				done()
 			else
