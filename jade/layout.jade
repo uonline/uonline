@@ -1,11 +1,9 @@
-mixin instanceLink(name, url, text)
-	//- warning: text is not escaped
-	if instance === name
-		li.active
-			a(href=url) !{text}
-	else
-		li
-			a(href=url) !{text}
+mixin instanceLink(name, url, text, icon)
+	li(class = (instance === name ? 'active' : false))
+		if icon != null
+			a(href=url) <i class="#{icon}"></i> #{text}
+		else
+			a(href=url) #{text}
 
 doctype 5
 html
@@ -41,7 +39,7 @@ html
 							li
 								a(href='/action/logout') Выйти
 						else
-							+instanceLink('login', '/login/', '<i class="icon-chevron-right"></i> Вход')
+							+instanceLink('login', '/login/', 'Вход', 'icon-chevron-right')
 							+instanceLink('register', '/register/', 'Регистрация')
 						if admin === true
 							li.divider-vertical
