@@ -18,7 +18,6 @@
     "header-stack": ">= 0.0.2",
     "mysql": "~2.0.0-alpha9",
     "async": "~0.2.9",
-    "swig": "~1.2.2",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.9",
     "grunt-contrib-nodeunit": "~0.3.0",
