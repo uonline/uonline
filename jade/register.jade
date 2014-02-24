@@ -32,38 +32,34 @@ block content
 			.controls
 				button.btn(type='submit') Зарегистрироваться
 	script(src='/browserified/validation.min.js')
+	:coffee
+		# Common variables
+		usernameField = $('input[name=user]')
+		usernameControlGroup = $('#user-control-group')
+		passwordField = $('input[name=pass]')
+		passwordControlGroup = $('#password-control-group')
+		revealPasswordButton = $('#revealpass')
+
+		# Reveal password
+		revealPasswordButton.click ->
+			passwordField.prop 'type', (if passwordField.prop('type') is 'password' then 'text' else 'password')
+
+		# Validate password
+		passwordField.change ->
+			if validation.passwordIsValid(passwordField.val())
+				passwordControlGroup.removeClass 'error'
+			else
+				passwordControlGroup.addClass 'error'
+
+		# Validate username
+		usernameField.change ->
+			if validation.usernameIsValid(usernameField.val())
+				usernameControlGroup.removeClass 'error'
+			else
+				usernameControlGroup.addClass 'error'
 	script.
-		$("#revealpass").click(function(){
-			if ($("input[name=pass]").prop("type")=="password")
-			{
-				$("input[name=pass]").prop("type","text");
-			}
-			else
-			{
-				$("input[name=pass]").prop("type","password");
-			}
-		});
-		$("input[name=user]").change(function(){
-			if (validation.usernameIsValid($("input[name=user]").val()))
-			{
-				$("#user-control-group").removeClass("error");
-			}
-			else
-			{
-				$("#user-control-group").addClass("error");
-			}
-		});
-		$("input[name=pass]").change(function(){
-			if (validation.passwordIsValid($("input[name=pass]").val()))
-			{
-				$("#password-control-group").removeClass("error");
-			}
-			else
-			{
-				$("#password-control-group").addClass("error");
-			}
-		});
-		$("input[name=user]").change(function(){
+		// You know what? I don't like it.
+		/* $("input[name=user]").change(function(){
 			$.getJSON("/ajax/isNickBusy/"+encodeURIComponent($("input[name=user]").val()), function(data){
 				if (data.isNickBusy && (data.nick == $("input[name=user]").val()))
 				{
@@ -74,4 +70,4 @@ block content
 					$("#user-control-group").removeClass("error");
 				}
 			});
-		});
+		}); */
