@@ -101,8 +101,8 @@ module.exports = (grunt) ->
 				bare: true
 
 		clean:
-			coffee: [
-				'lib/validation.js'
+			shit: [
+				'lib-cov/*.coffee'
 			]
 
 		coffeelint:
@@ -128,7 +128,6 @@ module.exports = (grunt) ->
 			options:
 				inputDirectory: 'lib'
 				outputDirectory: 'lib-cov'
-				exclude: 'locparse.coffee,strings.coffee'
 
 
 	# These plugins provide necessary tasks.
@@ -139,14 +138,14 @@ module.exports = (grunt) ->
 	grunt.registerTask 'check', ['checkstrict', 'checklicense', 'coffeelint', 'jshint:all']
 	grunt.registerTask 'build', ['browserify', 'uglify']
 	grunt.registerTask 'test', [
-		'jscoverage', 'coffeeCoverage',    # order is important
+		'jscoverage', 'clean:shit', 'coffeeCoverage',  # order is important
 		'nodeunit:js', 'nodeunit:coffee',  # order is important
 		'jscoverage_report'
 	]
 	if grunt.option('single')?
 		grunt.config.set 'nodeunit.one', [ 'tests_node/'+grunt.option('single') ]
 		grunt.registerTask 'test', [
-			'jscoverage', 'coffeeCoverage',    # order is important
+			'jscoverage', 'clean:shit', 'coffeeCoverage',  # order is important
 			'nodeunit:one',
 			'jscoverage_report'
 		]
