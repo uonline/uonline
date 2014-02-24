@@ -17,6 +17,6 @@ before_script:
   - # Create test database
   - mysql -e 'create database uonline_test;'
 script:
-  - grunt
+  - grunt default jscoverage_write_lcov
 after_script:
-  - ./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter lcov | travis_retry ./node_modules/coveralls/bin/coveralls.js
+  - cat report.lcov | ./node_modules/coveralls/bin/coveralls.js
