@@ -1,6 +1,7 @@
 # Used by tests
 test/
 lib-cov/
+report.lcov
 
 # Third-party tools
 node_modules/

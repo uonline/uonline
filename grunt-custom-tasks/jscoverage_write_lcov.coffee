@@ -14,28 +14,32 @@
 
 'use strict'
 
+require '../lib/strings'
+
+
+reportFile = (filename, data, log) ->
+	log "SF:#{filename}"
+	data.source.forEach (line, num) ->
+		# increase the line number, as JS arrays are zero-based
+		num++
+		if data[num] isnt undefined
+			log "DA:#{num},#{data[num]}"
+	log 'end_of_record'
+
+
 module.exports = (grunt) ->
 	# Please see the Grunt documentation for more information regarding task
 	# creation: http://gruntjs.com/creating-tasks
-	grunt.registerMultiTask 'checkstrict', 'Check if every file is in strict mode.', ->
-		done = @async()
-		fs = require 'fs'
-		async = require 'async'
-		async.map @filesSrc, ((item, callback) ->
-			fs.readFile item, (error, data) ->
-				if error?
-					callback error, null
-				else
-					callback null, [item, ( /['"]use strict['"]\s*[;\n]/ ).test(data.toString())]
-		), (error, results) ->
-			if error?
-				grunt.log.error error
-				done(false)
-			count = results.length
-			results = results.filter (item) -> item[1] is false
-			if results.length is 0
-				grunt.log.ok "#{count} files are strict."
-			else
-				for i in results
-					grunt.log.warn "#{i[0]} is not strict."
-			done()
+	grunt.registerTask 'jscoverage_write_lcov', 'Write jscoverage report in lcov format to file.', ->
+		cov = (global or window)._$jscoverage or {}
+		output = ''
+		log = (x) ->
+			output = "#{output}#{x}\n"
+		Object.keys(cov).forEach (filename) ->
+			data = cov[filename]
+			reportFile(filename, data, log)
+		try
+			require('fs').writeFileSync('./report.lcov', output)
+			grunt.log.ok 'report.lcov'
+		catch error
+			grunt.fail.warn(error)

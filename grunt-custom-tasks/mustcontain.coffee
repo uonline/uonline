@@ -17,16 +17,21 @@
 module.exports = (grunt) ->
 	# Please see the Grunt documentation for more information regarding task
 	# creation: http://gruntjs.com/creating-tasks
-	grunt.registerMultiTask 'checklicense', 'Check if every file contains a license.', ->
+	grunt.registerMultiTask 'mustcontain', 'Check if every file contains specified things.', ->
 		done = @async()
 		fs = require 'fs'
 		async = require 'async'
+		regex = @data.regex
+		success = @data.success
+		fail = @data.fail
+		fatal = @data.fatal
+
 		async.map @filesSrc, ((item, callback) ->
 			fs.readFile item, (error, data) ->
 				if error?
 					callback error, null
 				else
-					callback null, [item, ( /WARRANTY/ ).test(data.toString())]
+					callback null, [item, regex.test(data.toString())]
 		), (error, results) ->
 			if error?
 				grunt.log.error error
@@ -34,8 +39,19 @@ module.exports = (grunt) ->
 			count = results.length
 			results = results.filter (item) -> item[1] is false
 			if results.length is 0
-				grunt.log.ok "#{count} files contain a license."
+				msg = success.replace /\{n\}/g, "#{count}"
+				if count == 1 or (count > 20 and count % 10 == 1)
+					msg = msg.replace /\{s\}/g, ''
+					msg = msg.replace /\{\!s\}/g, 's'
+					msg = msg.replace /\{is\/are\}/g, 'is'
+				else
+					msg = msg.replace /\{s\}/g, 's'
+					msg = msg.replace /\{\!s\}/g, ''
+					msg = msg.replace /\{is\/are\}/g, 'are'
+				grunt.log.ok msg
+				done()
 			else
 				for i in results
-					grunt.log.warn "#{i[0]} does not contain a license."
-			done()
+					msg = fail.replace /\{filename\}/g, "#{i[0]}"
+					grunt.log.warn msg
+				done(not fatal)
