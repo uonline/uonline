@@ -31,22 +31,11 @@ app.use express.cookieParser()
 app.use express.json()
 app.use express.urlencoded()
 app.use express.compress()
-app.use '/bootstrap', express.static(__dirname + '/bootstrap')
-app.use '/img', express.static(__dirname + '/img')
-app.use '/browserified', express.static(__dirname + '/browserified')
 
-# swig = require 'swig'
-# stubFilter = (input) -> input
-# swig.setFilter 'tf', stubFilter # TODO: actually implement
-# swig.setFilter 'nl2p', stubFilter # TODO: actually implement
-# swig.setFilter 'nl2br', stubFilter # TODO: actually implement
-# swig.setFilter 'length', (x) -> x.length
-
-# app.engine 'html', swig.renderFile
-# app.engine 'twig', swig.renderFile
-# app.engine 'swig', swig.renderFile
-# app.set 'view engine', 'twig' # historical reasons
-# app.set 'views', __dirname + '/templates'
+app.use '/static/bootstrap', express.static(__dirname + '/bootstrap')
+#app.use '/img', express.static(__dirname + '/img')
+app.use '/static/browserified', express.static(__dirname + '/browserified')
+app.use '/static/bower_components', express.static(__dirname + '/bower_components')
 
 app.set 'view engine', 'jade'
 app.locals.pretty = true
