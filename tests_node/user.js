@@ -319,7 +319,7 @@ exports.accessGranted = {
 	},
 };
 
-exports.setSession = {
+exports.createSession = {
 	'testNoErrors': function (test) {
 		async.series([
 				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers ('+
@@ -331,7 +331,7 @@ exports.setSession = {
 				function(callback){ conn.query("INSERT INTO locations VALUES (2, 1)", [], callback); },
 				function(callback){ users.registerUser(conn, "TheUser", "password", 1, callback); },
 				function(callback){ conn.query('SELECT sessid FROM uniusers', [], callback);},
-				function(callback){ users.setSession(conn, 'TheUser', callback); },//5
+				function(callback){ users.createSession(conn, 'TheUser', callback); },//5
 				function(callback){ conn.query('SELECT sessid, sessexpire FROM uniusers', [], callback);},
 			],
 			function(error, result) {
@@ -343,7 +343,7 @@ exports.setSession = {
 		);
 	},
 	'testErrors': function (test) {
-		users.setSession(conn, 1, function(error, result) {
+		users.createSession(conn, 1, function(error, result) {
 			test.ok(error);
 			test.done();
 		});

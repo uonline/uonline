@@ -138,7 +138,7 @@ app.get '/login/', (request, response) ->
 
 app.post '/login/', (request, response) ->
 	if lib.user.accessGranted.sync null, mysqlConnection, request.body.user, request.body.pass
-		sessid = lib.user.setSession.sync null, mysqlConnection, request.body.user
+		sessid = lib.user.createSession.sync null, mysqlConnection, request.body.user
 		response.cookie 'sessid', sessid
 		response.redirect '/'
 	else
