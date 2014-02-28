@@ -274,8 +274,10 @@ exports.registerUser = function (test) {
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[4].rowCount, 1, 'one registration - one user');
+			var registration = result[3];
 			var user = result[4].rows[0];
+			test.strictEqual(registration.sessid, user.sessid, 'registration should return sessid');
+			test.strictEqual(result[4].rowCount, 1, 'one registration - one user');
 			test.ok(user.salt.length > 0, 'salt should be set');
 			test.ok(user.hash.length > 0, 'hash should be set');
 			test.ok(user.sessid.length > 0, 'sessid should be set');
