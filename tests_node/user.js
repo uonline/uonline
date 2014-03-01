@@ -21,6 +21,8 @@ var config = require('../config.js');
 
 var users = require('../lib-cov/user');
 
+var mg = require('../lib/migration');
+
 var async = require('async');
 
 var anyDB = require('any-db');
@@ -104,21 +106,21 @@ exports.sessionExists = {
 exports.sessionInfoRefreshing = {
 	'testNoErrors': function (test) {
 		async.series([
-				function(callback){ conn.query('CREATE TABLE uniusers '+
-					'(id INT, user TINYTEXT, permissions INT, sessid TEXT, sessexpire DATETIME)', [], callback); },
-				function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-					"(8, 'user0', ?, 'someid', NOW() - INTERVAL 3600 SECOND )",
+				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
+				function(callback){ conn.query("INSERT INTO uniusers "+
+					"(id, user, permissions, sessid, sess_time) "+
+					"VALUES (8, 'user0', ?, 'expiredid', NOW() - INTERVAL 3600 SECOND )",
 					[config.PERMISSIONS_ADMIN], callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
-				function(callback){ conn.query("UPDATE uniusers "+
-					"SET sessexpire = NOW() + INTERVAL 3600 SECOND", [], callback); },
-				function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },//5
+				function(callback){ conn.query("UPDATE uniusers SET sessid = 'someid'", [], callback); },
+				function(callback){ conn.query("SELECT sess_time FROM uniusers", [], callback); },//5
 				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
-				function(callback){ conn.query("SELECT sessexpire FROM uniusers", [], callback); },
+				function(callback){ conn.query("SELECT sess_time FROM uniusers", [], callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, undefined, 7200, callback); },
-				function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-					"(99, 'user1', ?, 'otherid', NOW() + INTERVAL 3600 SECOND )",
+				function(callback){ conn.query("INSERT INTO uniusers "+
+					"(id, user, permissions, sessid, sess_time) "+
+					"VALUES (99, 'user1', ?, 'otherid', NOW() + INTERVAL 3600 SECOND )",
 					[config.PERMISSIONS_USER], callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, "otherid", 7200, callback); },//10
 				function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
@@ -140,15 +142,15 @@ exports.sessionInfoRefreshing = {
 				test.deepEqual(result[8], {
 						sessionIsActive: false
 					}, 'should not fail on empty sessid');
-				var timeBefore = new Date(result[5].rows[0].sessexpire);
-				var timeAfter = new Date(result[7].rows[0].sessexpire);
+				var timeBefore = new Date(result[5].rows[0].sess_time);
+				var timeAfter = new Date(result[7].rows[0].sess_time);
 				test.deepEqual(result[10], {
 						sessionIsActive: true,
 						username: 'user1',
 						admin: false,
 						userid: 99
 					}, 'if user is NOT admin, he is NOT admin');
-				test.ok(timeBefore < timeAfter, "session expire time should have been updated");
+				test.ok(timeBefore < timeAfter, "session timestamp should have been updated");
 				test.done();
 			}
 		);
@@ -230,17 +232,17 @@ exports.idBySession = {
 
 exports.closeSession = function (test) {
 	async.series([
-			function(callback){ conn.query('CREATE TABLE uniusers '+
-				'(sessid TINYTEXT, sessexpire DATETIME)', [], callback); },//0
-			function(callback){ conn.query("INSERT INTO uniusers VALUES "+
-				"('someid', NOW() + INTERVAL 3600 SECOND )", [], callback); },
+			function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },//0
+			function(callback){ conn.query("INSERT INTO uniusers "+
+				"(sessid, sess_time) "+
+				"VALUES ('someid', NOW() )", [], callback); },
 			function(callback){ users.closeSession(conn, 'someid', callback); },
-			function(callback){ conn.query('SELECT sessexpire > NOW() AS active FROM uniusers', callback); },
+			function(callback){ users.sessionInfoRefreshing(conn, 'someid', 3600, callback); },
 			function(callback){ users.closeSession(conn, undefined, callback); },
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[3].rows[0].active, 0, 'session should have expired');
+			test.strictEqual(result[3].sessionIsActive, false, 'session should have expired');
 			test.strictEqual(result[4], 'Not closing: empty sessid', 'false sessid should have been detected');
 			test.done();
 		}
@@ -263,26 +265,21 @@ exports.createSalt = function (test) {
 
 exports.registerUser = function (test) {
 	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers ('+
-				'user TINYTEXT, salt TINYTEXT, hash TINYTEXT, sessid TINYTEXT, reg_time DATETIME,'+
-				'sessexpire DATETIME, location INT DEFAULT 1, permissions INT DEFAULT 0)', [], callback); },
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS locations'+
-				'(id INT, `default` TINYINT(1))', [], callback);},
-			function(callback){ conn.query("INSERT INTO locations VALUES (2, 1)", [], callback); },
+			function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
+			function(callback){ mg.migrate(conn, Infinity, 'locations', callback); },
+			function(callback){ conn.query("INSERT INTO locations (id,`default`) VALUES (2, 1)", [], callback); },
 			function(callback){ users.registerUser(conn, "TheUser", "password", 1, callback); },
 			function(callback){ conn.query('SELECT * FROM uniusers', callback); },
 		],
 		function(error, result) {
 			test.ifError(error);
-			var registration = result[3];
-			var user = result[4].rows[0];
-			test.strictEqual(registration.sessid, user.sessid, 'registration should return sessid');
 			test.strictEqual(result[4].rowCount, 1, 'one registration - one user');
+			var user = result[4].rows[0];
 			test.ok(user.salt.length > 0, 'salt should be set');
 			test.ok(user.hash.length > 0, 'hash should be set');
 			test.ok(user.sessid.length > 0, 'sessid should be set');
 			test.ok(user.reg_time <= new Date(), 'should not put registration time in future');
-			test.ok(user.sessexpire > new Date(), 'session should not have been expired');
+			test.ok(user.sess_time <= new Date(), 'session timestamp should not point to future');
 			test.strictEqual(user.location, 2, 'user should have been spawned on default location');
 			test.strictEqual(user.permissions, 1, 'user should have specified permissions');
 			test.done();
@@ -293,12 +290,9 @@ exports.registerUser = function (test) {
 exports.accessGranted = {
 	'testNoErrors': function (test) {
 		async.series([
-				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers ('+
-					'user TINYTEXT, salt TINYTEXT, hash TINYTEXT, sessid TINYTEXT, reg_time DATETIME,'+
-					'sessexpire DATETIME, location INT DEFAULT 1, permissions INT DEFAULT 0)', [], callback); },
-				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS locations'+
-					'(id INT, `default` TINYINT(1))', [], callback);},
-				function(callback){ conn.query("INSERT INTO locations VALUES (2, 1)", [], callback); },
+				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
+				function(callback){ mg.migrate(conn, Infinity, 'locations', callback); },
+				function(callback){ conn.query("INSERT INTO locations (id,`default`) VALUES (2, 1)", callback); },
 				function(callback){ users.registerUser(conn, "TheUser", "password", 1, callback); },
 				function(callback){ users.accessGranted(conn, "TheUser", "password", callback); },
 				function(callback){ users.accessGranted(conn, "WrongUser", "password", callback); },
@@ -324,22 +318,19 @@ exports.accessGranted = {
 exports.createSession = {
 	'testNoErrors': function (test) {
 		async.series([
-				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers ('+
-					'id INT AUTO_INCREMENT, PRIMARY KEY (id), user TINYTEXT, '+
-					'salt TINYTEXT, hash TINYTEXT, sessid TINYTEXT, reg_time DATETIME, '+
-					'sessexpire DATETIME, location INT DEFAULT 1, permissions INT DEFAULT 0)', [], callback); },//0
-				function(callback){ conn.query('CREATE TABLE IF NOT EXISTS locations'+
-					'(id INT, `default` TINYINT(1))', [], callback);},
-				function(callback){ conn.query("INSERT INTO locations VALUES (2, 1)", [], callback); },
+				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },//0
+				function(callback){ mg.migrate(conn, Infinity, 'locations', callback); },
+				function(callback){ conn.query("INSERT INTO locations (id,`default`) VALUES (2, 1)", callback); },
 				function(callback){ users.registerUser(conn, "TheUser", "password", 1, callback); },
 				function(callback){ conn.query('SELECT sessid FROM uniusers', [], callback);},
 				function(callback){ users.createSession(conn, 'TheUser', callback); },//5
-				function(callback){ conn.query('SELECT sessid, sessexpire FROM uniusers', [], callback);},
+				function(callback){ conn.query('SELECT sessid, sess_time FROM uniusers', [], callback);},
 			],
 			function(error, result) {
 				test.ifError(error);
 				test.ok(result[4].rows[0].sessid !== result[6].rows[0].sessid, "Sessid should have changed");
-				test.ok(result[6].rows[0].sessexpire > new Date(), 'session should not have been expired');
+				test.ok(result[6].rows[0].sess_time.getTime() > new Date().getTime() - 60000,
+					'session timestamp should have been updated');
 				test.done();
 			}
 		);

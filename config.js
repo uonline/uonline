@@ -35,6 +35,7 @@ exports.MYSQL_DATABASE_NAME_TEST = exports.MYSQL_DATABASE_URL_TEST.match(/[^\/]+
 
 exports.sessionLength = 64;
 exports.sessionExpireTime = 3600; // seconds
+exports.userOnlineTimeout = 300; // seconds
 
 exports.defaultInstanceForGuests = '/about/';
 exports.defaultInstanceForUsers = '/game/';
