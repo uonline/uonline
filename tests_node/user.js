@@ -44,8 +44,8 @@ exports.userExists = function (test) {
 	});
 
 	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (user TINYTEXT)', [], callback); },
-			function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', ['m1kc'], callback); },
+			function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
+			function(callback){ conn.query('INSERT INTO uniusers (user) VALUES ( ? )', ['m1kc'], callback); },
 			function(callback){ users.userExists(conn, 'm1kc', callback); },
 			function(callback){ conn.query("TRUNCATE uniusers", [], callback); },
 			function(callback){ users.userExists(conn, 'm1kc', callback); },
@@ -62,8 +62,8 @@ exports.userExists = function (test) {
 
 exports.idExists = function (test) {
 	async.series([
-			function(callback){ conn.query('CREATE TABLE IF NOT EXISTS uniusers (id INT)', [], callback); },
-			function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', [ 114 ], callback); },
+			function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
+			function(callback){ conn.query('INSERT INTO uniusers (id) VALUES ( ? )', [ 114 ], callback); },
 			function(callback){ users.idExists(conn, 114, callback); },
 			function(callback){ users.idExists(conn, 9000, callback); },
 			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
@@ -80,9 +80,8 @@ exports.idExists = function (test) {
 exports.sessionExists = {
 	'testNoErrors': function (test) {
 		async.series([
-				function(callback){ conn.query(
-					'CREATE TABLE IF NOT EXISTS uniusers (sessid TINYTEXT)', [], callback); },
-				function(callback){ conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid" ], callback); },
+				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
+				function(callback){ conn.query('INSERT INTO uniusers (sessid) VALUES ("someid")', callback); },
 				function(callback){ users.sessionExists(conn, "someid", callback); },
 				function(callback){ users.sessionExists(conn, "wrongid", callback); },
 				function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
@@ -171,10 +170,9 @@ exports.generateSessId = {
 			return "someid" + (++i);
 		};
 		async.series([
-				function (callback) {
-					conn.query('CREATE TABLE IF NOT EXISTS uniusers (sessid TINYTEXT)', [], callback); },
-				function (callback) { conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid1" ], callback); },
-				function (callback) { conn.query('INSERT INTO uniusers VALUES ( ? )', [ "someid2" ], callback); },
+				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
+				function (callback) { conn.query('INSERT INTO uniusers (sessid) VALUES ("someid1")', callback); },
+				function (callback) { conn.query('INSERT INTO uniusers (sessid) VALUES ("someid2")', callback); },
 				function (callback) { users.generateSessId(conn, 16, callback); },
 				function (callback) { conn.query('DROP TABLE uniusers', [], callback); },
 			],
@@ -197,10 +195,9 @@ exports.generateSessId = {
 exports.idBySession = {
 	'testNoErrors': function (test) {
 		async.series([
-				function (callback) {
-					conn.query('CREATE TABLE IF NOT EXISTS uniusers (id INT, sessid TINYTEXT)', [], callback); },
-				function (callback) { conn.query('INSERT INTO uniusers VALUES ( 3, "someid" )', [], callback); },
-				function (callback) { users.idBySession(conn, "someid", callback); },
+				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
+				function(callback){ conn.query('INSERT INTO uniusers (id,sessid)VALUES(3,"someid")', callback); },
+				function(callback){ users.idBySession(conn, "someid", callback); },
 			],
 			function (error, result) {
 				test.ifError(error);
@@ -211,8 +208,7 @@ exports.idBySession = {
 	},
 	'testWrongSessid': function (test) {
 		async.series([
-				function (callback) {
-					conn.query('CREATE TABLE IF NOT EXISTS uniusers (id INT, sessid TINYTEXT)', [], callback); },
+				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
 				function (callback) { users.idBySession(conn, "someid", callback); },
 				function (callback) { conn.query('DROP TABLE uniusers', [], callback); },
 			],
