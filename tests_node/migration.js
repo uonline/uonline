@@ -238,16 +238,19 @@ exports.migrate = {
 	},
 	'testTables': function(test) {
 		async.series([
+				function(callback) {mg.getCurrentRevision(conn, callback);},
 				function(callback) {mg.migrate(conn, 0, 'test_table', callback);},
+				function(callback) {mg.getCurrentRevision(conn, callback);},
 				function(callback) {conn.query("DESCRIBE test_table", callback);},
 				function(callback) {tables.tableExists(conn, "other_table", callback);},
 			],
 			function(error, result) {
 				test.ifError(error);
+				test.strictEqual(result[0], result[2], "should not change version for one table");
 				test.ok(
-					result[1].rows.length === 1 &&
-					result[1].rows[0].Field === 'id', 'should correctly perform migration for specified table');
-				test.ok(!result[2], 'migration for other tables should not have been performed');
+					result[3].rows.length === 1 &&
+					result[3].rows[0].Field === 'id', 'should correctly perform migration for specified table');
+				test.ok(!result[4], 'migration for other tables should not have been performed');
 				test.done();
 			}
 		);
