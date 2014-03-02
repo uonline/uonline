@@ -17,10 +17,7 @@
 'use strict'
 
 
-lib = require './lib.js'
-
-console.log "Warning: PHP and Node.js have different hashing algorithms.\n" +
-	lib.prettyprint.spaces(9) + "Don't try to use them together."
+lib = require './lib.coffee'
 
 if process.argv.length != 4
 	console.log 'Usage: <username> <password>'
@@ -29,12 +26,12 @@ if process.argv.length != 4
 u = process.argv[2]
 p = process.argv[3]
 
-if !lib.validation.usernameIsValid(u)
+unless lib.validation.usernameIsValid(u)
 	console.log 'Incorrect username.'
 	console.log 'Must be: 2-32 symbols, [a-zA-Z0-9а-яА-ЯёЁйЙру _-].'
 	process.exit 1
 
-if !lib.validation.passwordIsValid(p)
+unless lib.validation.passwordIsValid(p)
 	console.log 'Incorrect password.'
 	console.log 'Must be: 4-32 symbols, [!@#$%^&*()_+A-Za-z0-9].'
 	process.exit 1
