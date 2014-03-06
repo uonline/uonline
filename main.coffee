@@ -54,9 +54,9 @@ app.use ((request, response) ->
 app.use ((request, response) ->
 	request.uonline = {}
 	request.uonline.basicOpts = {}
+	request.uonline.basicOpts.now = new Date()
 	sessionData = lib.user.sessionInfoRefreshing.sync(null,
 		mysqlConnection, request.cookies.sessid, config.sessionExpireTime)
-	request.uonline.basicOpts.now = new Date()
 	request.uonline.basicOpts.loggedIn = sessionData.sessionIsActive
 	request.uonline.basicOpts.login = sessionData.username
 	request.uonline.basicOpts.admin = sessionData.admin
