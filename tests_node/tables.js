@@ -150,13 +150,16 @@ exports.renameCol = {
 
 exports.changeCol = function (test) {
 	async.series([
-			function(callback){ tables.create(conn, 'test_table', 'id INT', callback); },
-			function(callback){ tables.changeCol(conn, 'test_table', 'id', 'int(1)', callback); },
-			function(callback){ conn.query('DESCRIBE test_table', [], callback); },
+			function(callback){ tables.create(conn, 'test_table', 'id SMALLINT', callback); },
+			function(callback){ tables.changeCol(conn, 'test_table', 'id', 'INTEGER', callback); },
+			function(callback){ conn.query(
+				"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'test_table'",
+				[], callback);
+			},
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[2].rows[0].Type, 'int(1)', 'column type should have changed');
+			test.strictEqual(result[2].rows[0].data_type, 'integer', 'column type should have changed');
 			test.done();
 		}
 	);
@@ -164,15 +167,18 @@ exports.changeCol = function (test) {
 
 exports.dropCol = function (test) {
 	async.series([
-			function(callback){ tables.create(conn, 'test_table', 'id INT', callback); },
-			function(callback){ tables.addCol(conn, 'test_table', 'col INT(10)', callback); },
+			function(callback){ tables.create(conn, 'test_table', 'id INTEGER', callback); },
+			function(callback){ tables.addCol(conn, 'test_table', 'col INTEGER', callback); },
 			function(callback){ tables.dropCol(conn, 'test_table', 'col', callback); },
-			function(callback){ conn.query('DESCRIBE test_table', [], callback); },
+			function(callback){ conn.query(
+				"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'test_table'",
+				[], callback);
+			},
 		],
 		function(error, result) {
 			test.ifError(error);
 			test.strictEqual(result[3].rows.length, 1, 'column shold have been removed');
-			test.strictEqual(result[3].rows[0].Field, 'id', 'correct column shold have been removed');
+			test.strictEqual(result[3].rows[0].column_name, 'id', 'correct column shold have been removed');
 			test.done();
 		}
 	);
