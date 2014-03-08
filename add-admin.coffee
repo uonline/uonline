@@ -17,10 +17,7 @@
 'use strict'
 
 
-lib = require './lib.js'
-
-console.log "Warning: PHP and Node.js have different hashing algorithms.\n" +
-	lib.prettyprint.spaces(9) + "Don't try to use them together."
+lib = require './lib.coffee'
 
 if process.argv.length != 4
 	console.log 'Usage: <username> <password>'
@@ -42,7 +39,7 @@ if !lib.validation.passwordIsValid(p)
 config = require './config.js'
 sync = require 'sync'
 anyDB = require 'any-db'
-conn = anyDB.createConnection config.MYSQL_DATABASE_URL
+conn = anyDB.createConnection config.DATABASE_URL
 
 
 sync ->
