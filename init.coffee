@@ -193,20 +193,22 @@ migrateTables = ->
 
 
 optimize = ->
-	conn = createAnyDBConnection(config.MYSQL_DATABASE_URL)
-	db_name = config.MYSQL_DATABASE_URL.match(/[^\/]+$/)[0]
+	conn = createAnyDBConnection(config.DATABASE_URL)
+	db_name = config.DATABASE_URL.match(/[^\/]+$/)[0]
 
 	result = conn.query.sync conn,
-		"SELECT TABLE_NAME "+
-		"FROM information_schema.TABLES "+
-		"WHERE TABLE_SCHEMA='#{db_name}'"
+		"SELECT table_name "+
+		"FROM information_schema.tables "+
+		"WHERE table_schema = 'public'"  # move to subquery, maybe?
 
 	for row in result.rows
-		optRes = conn.query.sync conn, "OPTIMIZE TABLE #{row.TABLE_NAME}"
-		console.log row.TABLE_NAME+":"
-
-		for optRow in optRes.rows
-			console.log "  #{optRow.Op} #{optRow.Msg_type}: #{optRow.Msg_text}"
+		#lib.prettyprint.action "Optimizing table `#{row.table_name}`"
+		console.log "Optimizing table `#{row.table_name}`..."
+		try
+			optRes = conn.query.sync conn, "VACUUM FULL ANALYZE #{row.table_name}"
+			console.log "ok"
+		catch ex
+			console.trace ex
 
 
 unifyValidate = ->
