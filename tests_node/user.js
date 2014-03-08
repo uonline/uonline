@@ -19,7 +19,7 @@
 
 var config = require('../config.js');
 
-var users = require('../lib-cov/user');
+var users = require('../lib/user');
 
 var mg = require('../lib/migration');
 
@@ -29,7 +29,7 @@ var anyDB = require('any-db');
 var conn = null;
 
 exports.setUp = function (done) {
-	conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
+	conn = anyDB.createConnection(config.DATABASE_URL_TEST);
 	conn.query('DROP TABLE IF EXISTS uniusers, locations', [], done);
 };
 
@@ -45,7 +45,7 @@ exports.userExists = function (test) {
 
 	async.series([
 			function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
-			function(callback){ conn.query('INSERT INTO uniusers (user) VALUES ( ? )', ['m1kc'], callback); },
+			function(callback){ conn.query('INSERT INTO uniusers ("user") VALUES ( $1 )', ['m1kc'], callback); },
 			function(callback){ users.userExists(conn, 'm1kc', callback); },
 			function(callback){ conn.query("TRUNCATE uniusers", [], callback); },
 			function(callback){ users.userExists(conn, 'm1kc', callback); },
@@ -63,7 +63,7 @@ exports.userExists = function (test) {
 exports.idExists = function (test) {
 	async.series([
 			function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
-			function(callback){ conn.query('INSERT INTO uniusers (id) VALUES ( ? )', [ 114 ], callback); },
+			function(callback){ conn.query('INSERT INTO uniusers (id) VALUES ( $1 )', [ 114 ], callback); },
 			function(callback){ users.idExists(conn, 114, callback); },
 			function(callback){ users.idExists(conn, 9000, callback); },
 			function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
@@ -81,7 +81,7 @@ exports.sessionExists = {
 	'testNoErrors': function (test) {
 		async.series([
 				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
-				function(callback){ conn.query('INSERT INTO uniusers (sessid) VALUES ("someid")', callback); },
+				function(callback){ conn.query('INSERT INTO uniusers (sessid) VALUES (\'someid\')', callback); },
 				function(callback){ users.sessionExists(conn, "someid", callback); },
 				function(callback){ users.sessionExists(conn, "wrongid", callback); },
 				function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
@@ -107,8 +107,8 @@ exports.sessionInfoRefreshing = {
 		async.series([
 				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
 				function(callback){ conn.query("INSERT INTO uniusers "+
-					"(id, user, permissions, sessid, sess_time) "+
-					"VALUES (8, 'user0', ?, 'expiredid', NOW() - INTERVAL 3600 SECOND )",
+					'(id, "user", permissions, sessid, sess_time) '+
+					"VALUES (8, 'user0', $1, 'expiredid', NOW() - INTERVAL '3600 SECOND' )",
 					[config.PERMISSIONS_ADMIN], callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 7200, callback); },
@@ -118,8 +118,8 @@ exports.sessionInfoRefreshing = {
 				function(callback){ conn.query("SELECT sess_time FROM uniusers", [], callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, undefined, 7200, callback); },
 				function(callback){ conn.query("INSERT INTO uniusers "+
-					"(id, user, permissions, sessid, sess_time) "+
-					"VALUES (99, 'user1', ?, 'otherid', NOW() + INTERVAL 3600 SECOND )",
+					'(id, "user", permissions, sessid, sess_time) '+
+					"VALUES (99, 'user1', $1, 'otherid', NOW() + INTERVAL '3600 SECOND' )",
 					[config.PERMISSIONS_USER], callback); },
 				function(callback){ users.sessionInfoRefreshing(conn, "otherid", 7200, callback); },//10
 				function(callback){ conn.query('DROP TABLE uniusers', [], callback); },
@@ -171,8 +171,8 @@ exports.generateSessId = {
 		};
 		async.series([
 				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
-				function (callback) { conn.query('INSERT INTO uniusers (sessid) VALUES ("someid1")', callback); },
-				function (callback) { conn.query('INSERT INTO uniusers (sessid) VALUES ("someid2")', callback); },
+				function (callback) { conn.query("INSERT INTO uniusers (sessid) VALUES ('someid1')", callback); },
+				function (callback) { conn.query("INSERT INTO uniusers (sessid) VALUES ('someid2')", callback); },
 				function (callback) { users.generateSessId(conn, 16, callback); },
 				function (callback) { conn.query('DROP TABLE uniusers', [], callback); },
 			],
@@ -196,7 +196,7 @@ exports.idBySession = {
 	'testNoErrors': function (test) {
 		async.series([
 				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
-				function(callback){ conn.query('INSERT INTO uniusers (id,sessid)VALUES(3,"someid")', callback); },
+				function(callback){ conn.query("INSERT INTO uniusers (id,sessid)VALUES(3,'someid')", callback); },
 				function(callback){ users.idBySession(conn, "someid", callback); },
 			],
 			function (error, result) {
@@ -263,7 +263,7 @@ exports.registerUser = function (test) {
 	async.series([
 			function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
 			function(callback){ mg.migrate(conn, Infinity, 'locations', callback); },
-			function(callback){ conn.query("INSERT INTO locations (id,`default`) VALUES (2, 1)", [], callback); },
+			function(callback){ conn.query('INSERT INTO locations (id,"default") VALUES (2, 1)', [], callback); },
 			function(callback){ users.registerUser(conn, "TheUser", "password", 1, callback); },
 			function(callback){ conn.query('SELECT * FROM uniusers', callback); },
 		],
@@ -288,7 +288,7 @@ exports.accessGranted = {
 		async.series([
 				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
 				function(callback){ mg.migrate(conn, Infinity, 'locations', callback); },
-				function(callback){ conn.query("INSERT INTO locations (id,`default`) VALUES (2, 1)", callback); },
+				function(callback){ conn.query('INSERT INTO locations (id,"default") VALUES (2, 1)', callback); },
 				function(callback){ users.registerUser(conn, "TheUser", "password", 1, callback); },
 				function(callback){ users.accessGranted(conn, "TheUser", "password", callback); },
 				function(callback){ users.accessGranted(conn, "WrongUser", "password", callback); },
@@ -316,7 +316,7 @@ exports.createSession = {
 		async.series([
 				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },//0
 				function(callback){ mg.migrate(conn, Infinity, 'locations', callback); },
-				function(callback){ conn.query("INSERT INTO locations (id,`default`) VALUES (2, 1)", callback); },
+				function(callback){ conn.query('INSERT INTO locations (id,"default") VALUES (2, 1)', callback); },
 				function(callback){ users.registerUser(conn, "TheUser", "password", 1, callback); },
 				function(callback){ conn.query('SELECT sessid FROM uniusers', [], callback);},
 				function(callback){ users.createSession(conn, 'TheUser', callback); },//5
