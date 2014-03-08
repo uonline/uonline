@@ -79,12 +79,15 @@ exports.create = function (test) {
 	async.series([
 			function(callback){ tables.create(conn, 'test_table', 'id INT', callback); },
 			function(callback){ tables.tableExists(conn, 'test_table', callback); },
-			function(callback){ conn.query('DESCRIBE test_table', [], callback); },
+			function(callback){ conn.query(
+				"SELECT column_name AS result FROM information_schema.columns WHERE table_name = 'test_table'",
+				[], callback);
+			},
 		],
 		function(error, result) {
 			test.ifError(error);
 			test.strictEqual(result[1], true, 'table should exist after created');
-			test.strictEqual(result[2].rows[0].Field, 'id', 'first column should exist');
+			test.strictEqual(result[2].rows[0].result, 'id', 'first column should exist');
 			test.done();
 		}
 	);
