@@ -116,7 +116,8 @@ exports.renameCol = {
 				function(callback){ tables.create(conn, 'test_table', 'id INTEGER', callback); },
 				function(callback){ tables.renameCol(conn, 'test_table', 'id', 'col', callback); },
 				function(callback){ conn.query(
-					"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'test_table'",
+					"SELECT column_name, data_type FROM information_schema.columns "+
+					"WHERE table_name = 'test_table'",
 					[], callback);
 				},
 			],

@@ -223,7 +223,8 @@ unifyExport = ->
 
 
 insertTestMonsters = ->
-	dbConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+
 	prototypes = [
 		[1, 'Гигантская улитка', 1, 1, 1, 1, 1, 1, 1, 1, 3]
 		[2, 'Червь-хищник', 2, 1, 2, 2, 1, 1, 2, 1, 1]
@@ -233,16 +234,19 @@ insertTestMonsters = ->
 		[6, 'Дикий кабан', 1, 2, 1, 2, 1, 1, 1, 2, 1]
 		[7, 'Тарантул', 3, 1, 4, 2, 1, 2, 4, 1, 1]
 	]
+
+	dbConnection.query.sync(dbConnection, "TRUNCATE monster_prototypes", [])
 	for i in prototypes
 		dbConnection.query.sync(
 			dbConnection
-			"REPLACE INTO `monster_prototypes` "+
-				"(`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, "+
-				"`wisdom`, `volition`, `health_max`, `mana_max`) "+
+			"INSERT INTO monster_prototypes "+
+				"(id, name, level, power, agility, endurance, intelligence, "+
+				"wisdom, volition, health_max, mana_max) "+
 				"VALUES "+
-				"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+				"($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
 			i
 		)
+
 	monsters = [
 		[1, 6, 774449300, 1, 1, null, 16]
 		[2, 5, 648737395, 1, 1, null, 5]
@@ -295,13 +299,15 @@ insertTestMonsters = ->
 		[49, 2, 774449300, 1, 1, null, 8]
 		[50, 6, 446105458, 1, 1, null, 19]
 	]
+
+	dbConnection.query.sync(dbConnection, "TRUNCATE monsters", [])
 	for i in monsters
 		dbConnection.query.sync(
 			dbConnection
-			"REPLACE INTO `monsters` "+
-				"(`id`, `prototype`, `location`, `health`, `mana`, `effects`, `attack_chance`) "+
+			"INSERT INTO monsters "+
+				"(id, prototype, location, health, mana, effects, attack_chance) "+
 				"VALUES "+
-				"(?, ?, ?, ?, ?, ?, ?)"
+				"($1, $2, $3, $4, $5, $6, $7)"
 			i
 		)
 
