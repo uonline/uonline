@@ -139,8 +139,8 @@ help = ->
 
 
 info = ->
-	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
-	current = lib.migration.getCurrentRevision.sync(null, mysqlConnection)
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+	current = lib.migration.getCurrentRevision.sync(null, dbConnection)
 	newest = lib.migration.getNewestRevision()
 	status = if current < newest then 'needs update' else 'up to date'
 	console.log "init.js with #{newest + 1} revisions on board."
