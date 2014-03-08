@@ -152,17 +152,19 @@ createDatabase = (arg) ->
 
 	create = (db_url) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
+		db_path += '/postgres'  # PostgreSQL requires database to be specified.
 		conn = createAnyDBConnection(db_path)
 		try
-			conn.query.sync(conn, 'CREATE DATABASE ' + db_name, [])
+			conn.query.sync(conn, "CREATE DATABASE #{db_name}", [])
 			console.log "#{db_name} created."
 		catch error
-			if error.code != 'ER_DB_CREATE_EXISTS'
+			if error.code is 'ER_DB_CREATE_EXISTS' or error.code is '42P04'  # MySQL, PostgreSQL
+				console.log "#{db_name} already exists."
+			else
 				throw error
-			console.log "#{db_name} already exists."
 
-	create config.MYSQL_DATABASE_URL if arg in ['main', 'both']
-	create config.MYSQL_DATABASE_URL_TEST if arg in ['test', 'both']
+	create config.DATABASE_URL if arg in ['main', 'both']
+	create config.DATABASE_URL_TEST if arg in ['test', 'both']
 
 
 dropDatabase = (arg) ->
@@ -170,17 +172,19 @@ dropDatabase = (arg) ->
 
 	drop = (db_url, callback) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
+		db_path += '/postgres'  # PostgreSQL requires database to be specified.
 		conn = createAnyDBConnection(db_path)
 		try
-			conn.query.sync(conn, 'DROP DATABASE ' + db_name, [])
+			conn.query.sync(conn, "DROP DATABASE #{db_name}", [])
 			console.log "#{db_name} dropped."
 		catch error
-			if error.code != 'ER_DB_DROP_EXISTS'
+			if error.code is 'ER_DB_DROP_EXISTS' or error.code is '3D000'  # MySQL, PostgreSQL
+				console.log "#{db_name} does not exist."
+			else
 				throw error
-			console.log "#{db_name} already dropped."
 
-	drop config.MYSQL_DATABASE_URL if arg in ['main', 'both']
-	drop config.MYSQL_DATABASE_URL_TEST if arg in ['test', 'both']
+	drop config.DATABASE_URL if arg in ['main', 'both']
+	drop config.DATABASE_URL_TEST if arg in ['test', 'both']
 
 
 migrateTables = ->
