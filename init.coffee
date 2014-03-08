@@ -188,8 +188,8 @@ dropDatabase = (arg) ->
 
 
 migrateTables = ->
-	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
-	lib.migration.migrate.sync null, mysqlConnection
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+	lib.migration.migrate.sync null, dbConnection
 
 
 optimize = ->

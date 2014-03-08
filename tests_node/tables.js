@@ -27,7 +27,7 @@ var anyDB = require('any-db');
 var conn = null;
 
 exports.setUp = function (done) {
-	conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
+	conn = anyDB.createConnection(config.DATABASE_URL_TEST);
 	conn.query("DROP TABLE IF EXISTS test_table", done);
 	//done();
 };
