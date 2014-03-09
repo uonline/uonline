@@ -2,11 +2,12 @@ language: node_js
 node_js:
   - "0.10"
 services:
+  - mysql
   - postgresql
 env:
-  - DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test"
+  - DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test" MYSQL_DATABASE_URL="mysql://travis:@localhost/uonline" MYSQL_DATABASE_URL_TEST="mysql://travis:@localhost/uonline_test"
 before_script:
-  - # test scripts
+  - # init.coffee test
   - ./init.coffee --info || true
   - ./init.coffee --create-database both --migrate-tables --optimize-tables --test-monsters
   - ./init.coffee --info
@@ -14,7 +15,7 @@ before_script:
   - ./init.coffee --drop-database both
   - ./init.coffee --info || true
   - # Create test database
-  - psql -c 'create database uonline_test;' -U postgres
+  - mysql -e 'create database uonline_test;'
 script:
   - grunt default jscoverage_write_lcov
 after_script:
