@@ -19,7 +19,7 @@
 
 var config = require('../config.js');
 
-var game = require('../lib-cov/game');
+var game = require('../lib/game');
 
 var mg = require('../lib/migration');
 
@@ -33,7 +33,7 @@ var usedTables = ['locations', 'uniusers', 'areas', 'monsters', 'monster_prototy
 exports.setUp = function (done) {
 	async.series([
 		function(callback) {
-			conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
+			conn = anyDB.createConnection(config.DATABASE_URL_TEST);
 			conn.query("DROP TABLE IF EXISTS "+usedTables, callback);
 		},
 	], done);
@@ -43,8 +43,11 @@ exports.tearDown = function (done) {
 	async.series([
 		function(callback) {
 			conn.query("DROP TABLE IF EXISTS "+usedTables, callback);
-			conn.end();
 		},
+		function(callback) {
+			conn.end();
+			callback();
+		}
 	], done);
 };
 
@@ -53,10 +56,16 @@ function insertCallback(dbName, fields) { //НЕ для использовани
 	var params=[], values=[];
 	for (var i in fields) {
 		params.push(i);
-		values.push(JSON.stringify(fields[i]));
+		values.push(typeof fields[i] === 'string' ? "'"+fields[i]+"'" : fields[i]);
 	}
 	var query = 'INSERT INTO '+dbName+' ('+params.join(', ')+') VALUES ('+values.join(', ')+')';
-	return function(callback) {conn.query(query, callback);};
+	return function(callback) {
+		//console.log(query);
+		conn.query(query, function(e,r) {
+			//console.log("done", e);
+			callback(e,r);
+		});
+	};
 }
 
 exports.getDefaultLocation = {
@@ -64,7 +73,7 @@ exports.getDefaultLocation = {
 		async.series([
 				function(callback){ mg.migrate(conn, Infinity, 'locations', callback); },
 				insertCallback('locations', {"id":1}),
-				insertCallback('locations', {"id":2, "`default`":1}),
+				insertCallback('locations', {"id":2, '"default"':1}),
 				insertCallback('locations', {"id":3}),
 				function(callback){ game.getDefaultLocation(conn, callback); },
 			],
@@ -93,8 +102,8 @@ exports.getDefaultLocation = {
 		async.series([
 				function(callback){ mg.migrate(conn, Infinity, 'locations', callback); },
 				insertCallback('locations', {"id":1}),
-				insertCallback('locations', {"id":2, "`default`":1}),
-				insertCallback('locations', {"id":3, "`default`":1}),
+				insertCallback('locations', {"id":2, '"default"':1}),
+				insertCallback('locations', {"id":3, '"default"':1}),
 				insertCallback('locations', {"id":4}),
 				function(callback){ game.getDefaultLocation(conn, callback); },
 			],
@@ -110,8 +119,8 @@ exports.getUserLocationId = {
 	"testValidData": function(test) {
 		async.series([
 				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
-				insertCallback('uniusers', {"id":1, "location":3}),
-				insertCallback('uniusers', {"id":2, "location":1}),
+				insertCallback('uniusers', {"id":1, '"location"':3}),
+				insertCallback('uniusers', {"id":2, '"location"':1}),
 				function(callback){ game.getUserLocationId(conn, 1, callback); },
 				function(callback){ game.getUserLocationId(conn, 2, callback); },
 			],
@@ -297,11 +306,11 @@ exports.getNearbyUsers = {
 		async.series([
 				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
 				function(callback){ mg.migrate(conn, Infinity, 'locations', callback); },
-				insertCallback('uniusers', {"id":1, "user":"someuser",  "location":1, "sess_time":now}),
-				insertCallback('uniusers', {"id":2, "user":"otheruser", "location":1, "sess_time":now}),
-				insertCallback('uniusers', {"id":3, "user":"thirduser", "location":1, "sess_time":now}),
-				insertCallback('uniusers', {"id":4, "user":"AFKuser",   "location":1, "sess_time":"1980-01-01"}),
-				insertCallback('uniusers', {"id":5, "user":"aloneuser", "location":2, "sess_time":now}),
+				insertCallback('uniusers', {"id":1, '"user"':"someuser",  "location":1, "sess_time":now}),
+				insertCallback('uniusers', {"id":2, '"user"':"otheruser", "location":1, "sess_time":now}),
+				insertCallback('uniusers', {"id":3, '"user"':"thirduser", "location":1, "sess_time":now}),
+				insertCallback('uniusers', {"id":4, '"user"':"AFKuser",   "location":1, "sess_time":"1980-01-01"}),
+				insertCallback('uniusers', {"id":5, '"user"':"aloneuser", "location":2, "sess_time":now}),
 				insertCallback('locations', {"id":1}),
 			], callback);
 	},
@@ -403,7 +412,7 @@ exports.getUserCharacters = {
 				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
 				insertCallback('uniusers', {
 					id: 1,
-					user: 'someuser',
+					'"user"': 'someuser',
 					fight_mode: 1, autoinvolved_fm: 1,
 					health: 100,   health_max: 200,
 					mana: 50,      mana_max: 200,
@@ -448,7 +457,7 @@ exports.getUserCharacters = {
 	},
 	'testErrors': function(test) {
 		game.getUserCharacters(conn, 1, function(error, result) {
-			test.ok(error);
+			test.ok(!!error);
 			test.done();
 		});
 	},
