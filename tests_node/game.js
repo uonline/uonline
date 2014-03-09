@@ -19,7 +19,7 @@
 
 var config = require('../config.js');
 
-var game = require('../lib/game');
+var game = require('../lib-cov/game');
 
 var mg = require('../lib/migration');
 

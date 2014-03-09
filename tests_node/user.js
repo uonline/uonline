@@ -19,7 +19,7 @@
 
 var config = require('../config.js');
 
-var users = require('../lib/user');
+var users = require('../lib-cov/user');
 
 var mg = require('../lib/migration');
 
