@@ -169,7 +169,8 @@ class Result
 			dbConnection.query.sync(
 				dbConnection
 				'INSERT INTO locations (id, title, description, area, "default", goto, picture) VALUES($1,$2,$3,$4,$5,$6,$7)'
-				[loc.id, loc.name, loc.description, loc.area.id, (if loc is @defaultLocation then 1 else 0), goto.join('|'), loc.picture]
+				[loc.id, loc.name, loc.description, loc.area.id, (if loc is @defaultLocation then 1 else 0),
+					goto.join('|'), loc.picture]
 			)
 
 
