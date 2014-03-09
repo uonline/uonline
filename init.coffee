@@ -216,7 +216,7 @@ unifyValidate = ->
 
 
 unifyExport = ->
-	dbConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 	locparse = require './lib/locparse'
 	result = locparse.processDir('./unify/Кронт - kront', true)
 	result.save(dbConnection)

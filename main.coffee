@@ -18,7 +18,7 @@
 
 config = require './config.js'
 anyDB = require 'any-db'
-mysqlConnection = anyDB.createPool config.MYSQL_DATABASE_URL, min: 2, max: 20
+mysqlConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
 lib = require './lib.js'
 async = require 'async'
 express = require 'express'
@@ -54,9 +54,9 @@ app.use ((request, response) ->
 app.use ((request, response) ->
 	request.uonline = {}
 	request.uonline.basicOpts = {}
+	request.uonline.basicOpts.now = new Date()
 	sessionData = lib.user.sessionInfoRefreshing.sync(null,
 		mysqlConnection, request.cookies.sessid, config.sessionExpireTime)
-	request.uonline.basicOpts.now = new Date()
 	request.uonline.basicOpts.loggedIn = sessionData.sessionIsActive
 	request.uonline.basicOpts.login = sessionData.username
 	request.uonline.basicOpts.admin = sessionData.admin
