@@ -122,21 +122,25 @@ exports.migrateOne = {
 		async.series([
 				function(callback){ mg.migrateOne(conn, 0, callback); },
 				function(callback){ conn.query(
-					"SELECT column_name FROM information_schema.columns WHERE table_name = 'test_table' ORDER BY column_name",
+					"SELECT column_name FROM information_schema.columns "+
+					"WHERE table_name = 'test_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback){ conn.query(
-					"SELECT column_name FROM information_schema.columns WHERE table_name = 'other_table' ORDER BY column_name",
+					"SELECT column_name FROM information_schema.columns "+
+					"WHERE table_name = 'other_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback){ mg.migrateOne(conn, 1, callback); },
 				function(callback){ mg.migrateOne(conn, 1, callback); },
 				function(callback){ conn.query(
-					"SELECT column_name FROM information_schema.columns WHERE table_name = 'test_table' ORDER BY column_name",
+					"SELECT column_name FROM information_schema.columns "+
+					"WHERE table_name = 'test_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback){ conn.query(
-					"SELECT column_name FROM information_schema.columns WHERE table_name = 'other_table' ORDER BY column_name",
+					"SELECT column_name FROM information_schema.columns "+
+					"WHERE table_name = 'other_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback){ mg.getCurrentRevision(conn, callback); },
