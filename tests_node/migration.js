@@ -122,21 +122,21 @@ exports.migrateOne = {
 		async.series([
 				function(callback){ mg.migrateOne(conn, 0, callback); },
 				function(callback){ conn.query(
-					"SELECT column_name FROM information_schema.columns WHERE table_name = 'test_table'",
+					"SELECT column_name FROM information_schema.columns WHERE table_name = 'test_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback){ conn.query(
-					"SELECT column_name FROM information_schema.columns WHERE table_name = 'other_table'",
+					"SELECT column_name FROM information_schema.columns WHERE table_name = 'other_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback){ mg.migrateOne(conn, 1, callback); },
 				function(callback){ mg.migrateOne(conn, 1, callback); },
 				function(callback){ conn.query(
-					"SELECT column_name FROM information_schema.columns WHERE table_name = 'test_table'",
+					"SELECT column_name FROM information_schema.columns WHERE table_name = 'test_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback){ conn.query(
-					"SELECT column_name FROM information_schema.columns WHERE table_name = 'other_table'",
+					"SELECT column_name FROM information_schema.columns WHERE table_name = 'other_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback){ mg.getCurrentRevision(conn, callback); },
@@ -152,9 +152,9 @@ exports.migrateOne = {
 
 				test.ok(
 					result[5].rows.length === 3 &&
-					result[5].rows[0].column_name === 'id' &&
-					result[5].rows[1].column_name === 'col0' &&
-					result[5].rows[2].column_name === 'col1' &&
+					result[5].rows[0].column_name === 'col0' &&
+					result[5].rows[1].column_name === 'col1' &&
+					result[5].rows[2].column_name === 'id' &&
 					result[6].rows.length === 1 &&
 					result[6].rows[0].column_name === 'id', 'should correctly add second migration');
 
@@ -206,24 +206,24 @@ exports.migrate = {
 				function(callback){ mg.migrate(conn, 1, callback); },
 				function(callback){ conn.query(
 					"SELECT column_name, data_type FROM information_schema.columns "+
-					"WHERE table_name = 'test_table'",
+					"WHERE table_name = 'test_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback){ conn.query(
 					"SELECT column_name, data_type FROM information_schema.columns "+
-					"WHERE table_name = 'other_table'",
+					"WHERE table_name = 'other_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback){ mg.getCurrentRevision(conn, callback); },
 				function(callback){ mg.migrate(conn, callback); },
 				function(callback){ conn.query(
 					"SELECT column_name, data_type FROM information_schema.columns "+
-					"WHERE table_name = 'test_table'",
+					"WHERE table_name = 'test_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback){ conn.query(
 					"SELECT column_name, data_type FROM information_schema.columns "+
-					"WHERE table_name = 'other_table'",
+					"WHERE table_name = 'other_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback){ mg.getCurrentRevision(conn, callback); },
@@ -235,9 +235,9 @@ exports.migrate = {
 				var orows = result[2].rows;
 				test.ok(
 					rows.length === 3 &&
-					rows[0].column_name === 'id' &&
-					rows[1].column_name === 'col0' &&
-					rows[2].column_name === 'col1' &&
+					rows[0].column_name === 'col0' &&
+					rows[1].column_name === 'col1' &&
+					rows[2].column_name === 'id' &&
 					rows[0].data_type === 'integer' &&
 					rows[1].data_type === 'integer' &&
 					rows[2].data_type === 'integer' &&
@@ -250,17 +250,17 @@ exports.migrate = {
 				orows = result[6].rows;
 				test.ok(
 					rows.length === 4 &&
-					rows[0].column_name === 'id' &&
-					rows[1].column_name === 'col0' &&
-					rows[2].column_name === 'col1' &&
-					rows[3].column_name === 'col2' &&
+					rows[0].column_name === 'col0' &&
+					rows[1].column_name === 'col1' &&
+					rows[2].column_name === 'col2' &&
+					rows[3].column_name === 'id' &&
 					rows[0].data_type === 'integer' &&
 					rows[1].data_type === 'integer' &&
 					rows[2].data_type === 'integer' &&
 					rows[3].data_type === 'integer' &&
 					orows.length === 2 &&
-					orows[0].column_name === 'id' &&
-					orows[1].column_name === 'col0' &&
+					orows[0].column_name === 'col0' &&
+					orows[1].column_name === 'id' &&
 					orows[0].data_type === 'integer' &&
 					orows[1].data_type === 'integer', 'should correctly perform all remaining migrations');
 				test.strictEqual(result[7], 3, 'should set correct revision');
@@ -276,7 +276,7 @@ exports.migrate = {
 				function(callback) {mg.getCurrentRevision(conn, callback);},
 				function(callback){ conn.query(
 					"SELECT column_name, data_type FROM information_schema.columns "+
-					"WHERE table_name = 'test_table'",
+					"WHERE table_name = 'test_table' ORDER BY column_name",
 					[], callback);
 				},
 				function(callback) {tables.tableExists(conn, "other_table", callback);},
