@@ -12,7 +12,7 @@
   "author": "m1kc <m1kc@yandex.ru>",
   "private": true,
   "dependencies": {
-    "express": "~3.4.3",
+    "express": "^3.5.0",
     "pg": "~2.10.0",
     "stream-stack": ">= 1.1.1",
     "header-stack": ">= 0.0.2",
@@ -23,7 +23,7 @@
     "grunt-contrib-nodeunit": "~0.3.0",
     "grunt-contrib-jshint": "~0.8.0",
     "grunt-browserify": "~1.3.0",
-    "grunt-contrib-uglify": "~0.3.2",
+    "grunt-contrib-uglify": "^0.4.0",
     "grunt-contrib-coffee": "^0.10.1",
     "grunt-contrib-clean": "~0.5.0",
     "any-db": "~1.0.0",
@@ -45,7 +45,7 @@
     "jscoverage": "~0.3.8",
     "nodemon": "~1.0.5",
     "coveralls": "^2.8.0",
-    "david": "~2.4.0",
+    "david": "^3.1.0",
     "rmrf": "~1.0.2",
     "ncp": "~0.5.0"
   }
