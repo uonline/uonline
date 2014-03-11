@@ -14,4 +14,9 @@
 
 'use strict'
 
+
+# Calculate n-th number in an arithmetical progression.
+# @param a1 [Number] initial value
+# @param n [Number] position
+# @param step [Number] step
 exports.ap = (a1, n, step) -> (2 * a1 + (n-1) * step) * n / 2

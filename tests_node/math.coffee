@@ -17,5 +17,6 @@
 math = require '../lib-cov/math'
 
 exports.ap = (test) ->
-	test.strictEqual math.ap(3,6,9), 153, 'should calculate arithmetical progression'
+	test.strictEqual math.ap(1,2,3), 5, 'should return n-th number in arithmetical progression'
+	test.strictEqual math.ap(3,6,9), 153, 'should return n-th number in arithmetical progression'
 	test.done()
