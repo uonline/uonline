@@ -34,17 +34,17 @@ var migrationData = [
 		['other_table', 'create', 'id INT'],
 	],
 	[
-		['test_table', 'addCol', 'col0 INT'],
-		['test_table', 'addCol', 'col1 INT'],
+		['test_table', 'addCol', 'col0 BOX'],
+		['test_table', 'addCol', 'col1 JSON'],
 	],
 	[
 		['test_table', 'addCol', 'col3 INT'],
-		['test_table', 'changeCol', 'col3', 'INT'],
+		['test_table', 'changeCol', 'col3', 'BIGINT'],
 		['test_table', 'renameCol', 'col3', 'col2'],
-		['other_table', 'addCol', 'col0 INT'],
+		['other_table', 'addCol', 'col0 LSEG'],
 	],
 	[
-		['test_table', 'addCol', 'col3 INT'],
+		['test_table', 'addCol', 'col3 MONEY'],
 		['test_table', 'dropCol', 'col3'],
 	],
 ];
@@ -242,8 +242,8 @@ exports.migrate = {
 					rows[0].column_name === 'col0' &&
 					rows[1].column_name === 'col1' &&
 					rows[2].column_name === 'id' &&
-					rows[0].data_type === 'integer' &&
-					rows[1].data_type === 'integer' &&
+					rows[0].data_type === 'box' &&
+					rows[1].data_type === 'json' &&
 					rows[2].data_type === 'integer' &&
 					orows.length === 1 &&
 					orows[0].column_name === 'id' &&
@@ -258,14 +258,14 @@ exports.migrate = {
 					rows[1].column_name === 'col1' &&
 					rows[2].column_name === 'col2' &&
 					rows[3].column_name === 'id' &&
-					rows[0].data_type === 'integer' &&
-					rows[1].data_type === 'integer' &&
-					rows[2].data_type === 'integer' &&
+					rows[0].data_type === 'box' &&
+					rows[1].data_type === 'json' &&
+					rows[2].data_type === 'bigint' &&
 					rows[3].data_type === 'integer' &&
 					orows.length === 2 &&
 					orows[0].column_name === 'col0' &&
 					orows[1].column_name === 'id' &&
-					orows[0].data_type === 'integer' &&
+					orows[0].data_type === 'lseg' &&
 					orows[1].data_type === 'integer', 'should correctly perform all remaining migrations');
 				test.strictEqual(result[7], 3, 'should set correct revision');
 
