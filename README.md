@@ -12,7 +12,7 @@ Requirements
 * Node.js 0.10 with npm;
 * CoffeeScript;
 * Grunt (you may use local one, but why?);
-* PostgreSQL;
+* PostgreSQL 9.1 or higher;
 * DB user `anonymous` with password `nopassword`;
 * Two databases: `uonline` and `uonline_test`;
 * Globally installed jscoverage (temporary).
