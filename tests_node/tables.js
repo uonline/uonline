@@ -27,7 +27,7 @@ var anyDB = require('any-db');
 var conn = null;
 
 exports.setUp = function (done) {
-	conn = anyDB.createConnection(config.MYSQL_DATABASE_URL_TEST);
+	conn = anyDB.createConnection(config.DATABASE_URL_TEST);
 	conn.query("DROP TABLE IF EXISTS test_table", done);
 	//done();
 };
@@ -79,12 +79,15 @@ exports.create = function (test) {
 	async.series([
 			function(callback){ tables.create(conn, 'test_table', 'id INT', callback); },
 			function(callback){ tables.tableExists(conn, 'test_table', callback); },
-			function(callback){ conn.query('DESCRIBE test_table', [], callback); },
+			function(callback){ conn.query(
+				"SELECT column_name AS result FROM information_schema.columns WHERE table_name = 'test_table'",
+				[], callback);
+			},
 		],
 		function(error, result) {
 			test.ifError(error);
 			test.strictEqual(result[1], true, 'table should exist after created');
-			test.strictEqual(result[2].rows[0].Field, 'id', 'first column should exist');
+			test.strictEqual(result[2].rows[0].result, 'id', 'first column should exist');
 			test.done();
 		}
 	);
@@ -93,13 +96,15 @@ exports.create = function (test) {
 exports.addCol = function (test) {
 	async.series([
 			function(callback){ tables.create(conn, 'test_table', 'id INT', callback); },
-			function(callback){ tables.addCol(conn, 'test_table', 'col INT(10)', callback); },
-			function(callback){ conn.query('DESCRIBE test_table', [], callback); },
+			function(callback){ tables.addCol(conn, 'test_table', 'zoich INT', callback); },
+			function(callback){ conn.query(
+				"SELECT column_name AS result FROM information_schema.columns WHERE table_name = 'test_table'",
+				[], callback);
+			},
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[2].rows[1].Field, 'col', 'column shold exist after created');
-			test.strictEqual(result[2].rows[1].Type, 'int(10)', 'column type should be correct');
+			test.strictEqual(result[2].rows.length, 2, 'should create a new column');
 			test.done();
 		}
 	);
@@ -108,14 +113,18 @@ exports.addCol = function (test) {
 exports.renameCol = {
 	'testNoErrors': function (test) {
 		async.series([
-				function(callback){ tables.create(conn, 'test_table', 'id INT(9)', callback); },
+				function(callback){ tables.create(conn, 'test_table', 'id INTEGER', callback); },
 				function(callback){ tables.renameCol(conn, 'test_table', 'id', 'col', callback); },
-				function(callback){ conn.query('DESCRIBE test_table', [], callback); },
+				function(callback){ conn.query(
+					"SELECT column_name, data_type FROM information_schema.columns "+
+					"WHERE table_name = 'test_table'",
+					[], callback);
+				},
 			],
 			function(error, result) {
 				test.ifError(error);
-				test.strictEqual(result[2].rows[0].Field, 'col', 'column shold have been renamed');
-				test.strictEqual(result[2].rows[0].Type, 'int(9)', 'column type should be same');
+				test.strictEqual(result[2].rows[0].column_name, 'col', 'should rename column');
+				test.strictEqual(result[2].rows[0].data_type, 'integer', 'should not alter its type');
 				test.done();
 			}
 		);
@@ -142,13 +151,16 @@ exports.renameCol = {
 
 exports.changeCol = function (test) {
 	async.series([
-			function(callback){ tables.create(conn, 'test_table', 'id INT', callback); },
-			function(callback){ tables.changeCol(conn, 'test_table', 'id', 'int(1)', callback); },
-			function(callback){ conn.query('DESCRIBE test_table', [], callback); },
+			function(callback){ tables.create(conn, 'test_table', 'id SMALLINT', callback); },
+			function(callback){ tables.changeCol(conn, 'test_table', 'id', 'INTEGER', callback); },
+			function(callback){ conn.query(
+				"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'test_table'",
+				[], callback);
+			},
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[2].rows[0].Type, 'int(1)', 'column type should have changed');
+			test.strictEqual(result[2].rows[0].data_type, 'integer', 'column type should have changed');
 			test.done();
 		}
 	);
@@ -156,15 +168,18 @@ exports.changeCol = function (test) {
 
 exports.dropCol = function (test) {
 	async.series([
-			function(callback){ tables.create(conn, 'test_table', 'id INT', callback); },
-			function(callback){ tables.addCol(conn, 'test_table', 'col INT(10)', callback); },
+			function(callback){ tables.create(conn, 'test_table', 'id INTEGER', callback); },
+			function(callback){ tables.addCol(conn, 'test_table', 'col INTEGER', callback); },
 			function(callback){ tables.dropCol(conn, 'test_table', 'col', callback); },
-			function(callback){ conn.query('DESCRIBE test_table', [], callback); },
+			function(callback){ conn.query(
+				"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'test_table'",
+				[], callback);
+			},
 		],
 		function(error, result) {
 			test.ifError(error);
 			test.strictEqual(result[3].rows.length, 1, 'column shold have been removed');
-			test.strictEqual(result[3].rows[0].Field, 'id', 'correct column shold have been removed');
+			test.strictEqual(result[3].rows[0].column_name, 'id', 'correct column shold have been removed');
 			test.done();
 		}
 	);

@@ -9,18 +9,13 @@ A browser-based MMORPG game in a fantasy world.
 Requirements
 ------------
 
-### Current
-
-* Node.js 0.10 with npm
-* CoffeeScript
-* Grunt
-* MySQL or MariaDB
-* MySQL user `anonymous` with password `nopassword`
-* Two MySQL databases: `uonline` and `uonline_test`
-
-### Future
-
-* PostgreSQL
+* Node.js 0.10 with npm;
+* CoffeeScript;
+* Grunt (you may use local one, but why?);
+* PostgreSQL;
+* DB user `anonymous` with password `nopassword`;
+* Two databases: `uonline` and `uonline_test`;
+* Globally installed jscoverage (temporary).
 
 
 How to set up
@@ -36,7 +31,7 @@ How to set up
 How to run
 ----------
 
-If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`.
+If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`. If you need to restart server after every change in code - `make monitor`.
 
 
 Programmers' guidelines
