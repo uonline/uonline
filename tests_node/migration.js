@@ -35,7 +35,7 @@ var migrationData = [
 	],
 	[
 		['test_table', 'addCol', 'col0 BOX'],
-		['test_table', 'addCol', 'col1 JSON'],
+		['test_table', 'addCol', 'col1 MACADDR'],
 	],
 	[
 		['test_table', 'addCol', 'col3 INT'],
@@ -243,7 +243,7 @@ exports.migrate = {
 					rows[1].column_name === 'col1' &&
 					rows[2].column_name === 'id' &&
 					rows[0].data_type === 'box' &&
-					rows[1].data_type === 'json' &&
+					rows[1].data_type === 'macaddr' &&
 					rows[2].data_type === 'integer' &&
 					orows.length === 1 &&
 					orows[0].column_name === 'id' &&
@@ -259,7 +259,7 @@ exports.migrate = {
 					rows[2].column_name === 'col2' &&
 					rows[3].column_name === 'id' &&
 					rows[0].data_type === 'box' &&
-					rows[1].data_type === 'json' &&
+					rows[1].data_type === 'macaddr' &&
 					rows[2].data_type === 'bigint' &&
 					rows[3].data_type === 'integer' &&
 					orows.length === 2 &&
