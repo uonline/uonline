@@ -138,7 +138,7 @@ exports.getUserLocationId = {
 				function(callback) {game.getUserLocationId(conn, -1, callback);},
 			],
 			function(error, result) {
-				test.strictEqual(error, "Wrong user's id", 'should fail on wrong sessid');
+				test.ok(error, 'should fail on wrong sessid');
 				test.done();
 			}
 		);
@@ -172,7 +172,7 @@ exports.getUserLocation = {
 	},
 	"testWrongSessid": function(test) {
 		game.getUserLocation(conn, -1, function(error, result) {
-			test.strictEqual(error, "Wrong user's id", 'should fail on wrong id');
+			test.ok(error, 'should fail on wrong id');
 			test.done();
 		});
 	},
@@ -216,7 +216,7 @@ exports.getUserArea = {
 	},
 	'wrong user id': function(test) {
 		game.getUserArea(conn, -1, function(error, result) {
-			test.strictEqual(error, "Wrong user's id", 'should fail on wrong id');
+			test.ok(error, 'should fail on wrong id');
 			test.done();
 		});
 	},
