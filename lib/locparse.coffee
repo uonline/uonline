@@ -152,22 +152,25 @@ class Result
 	save: (dbConnection) ->
 		throw new Error("Can't save with errors.") if @errors.length > 0
 
+		dbConnection.query.sync(dbConnection, "TRUNCATE areas", [])
 		for area in @areas
 			dbConnection.query.sync(
 				dbConnection
-				"REPLACE areas (id, title, description) VALUES(?, ?, ?)"
+				"INSERT INTO areas (id, title, description) VALUES ($1, $2, $3)"
 				[area.id, area.name, area.description]
 			)
 
 		locByLabel = {}
 		locByLabel[loc.label] = loc for loc in @locations
 
+		dbConnection.query.sync(dbConnection, "TRUNCATE locations", [])
 		for loc in @locations
 			goto = ("#{v}=#{locByLabel[k].id}" for k,v of loc.actions)
 			dbConnection.query.sync(
 				dbConnection
-				"REPLACE locations (id, title, description, area, `default`, goto, picture) VALUES(?,?,?,?,?,?,?)"
-				[loc.id, loc.name, loc.description, loc.area.id, loc is @defaultLocation, goto.join('|'), loc.picture]
+				'INSERT INTO locations (id, title, description, area, "default", goto, picture) VALUES($1,$2,$3,$4,$5,$6,$7)'
+				[loc.id, loc.name, loc.description, loc.area.id, (if loc is @defaultLocation then 1 else 0),
+					goto.join('|'), loc.picture]
 			)
 
 

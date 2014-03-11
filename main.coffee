@@ -18,7 +18,7 @@
 
 config = require './config.js'
 anyDB = require 'any-db'
-mysqlConnection = anyDB.createPool config.MYSQL_DATABASE_URL, min: 2, max: 20
+mysqlConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
 lib = require './lib.js'
 async = require 'async'
 express = require 'express'
