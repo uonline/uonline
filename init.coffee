@@ -17,10 +17,10 @@
 'use strict'
 
 config = require './config.js'
-lib = require './lib.js'
-async = require 'async'
+lib = require './lib.coffee'
 sync = require 'sync'
 dashdash = require 'dashdash'
+
 
 anyDB = null
 createAnyDBConnection = (url) ->
