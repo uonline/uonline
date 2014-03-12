@@ -204,28 +204,35 @@ app.get '/action/logout', (request, response) ->
 
 app.get '/game/', (request, response) -> sync ->
 	if request.uonline.basicOpts.loggedIn is true
+		userid = request.uonline.basicOpts.userid
 		options = request.uonline.basicOpts
 		options.instance = 'game'
-		tmpArea = lib.game.getUserArea.sync null, mysqlConnection, request.uonline.basicOpts.userid
-		result = lib.game.getUserLocation.sync null, mysqlConnection, request.uonline.basicOpts.userid
-		options.location_name = result.title
-		options.area_name = tmpArea.title
+		
+		try
+			location = lib.game.getUserLocation.sync null, mysqlConnection, userid
+		catch e
+			console.log e.stack
+			location = lib.game.getDefaultLocation.sync null, mysqlConnection
+			lib.game.changeLocation.sync null, mysqlConnection, userid, location.id, true
+		
+		area = lib.game.getUserArea.sync null, mysqlConnection, userid
+		options.location_name = location.title
+		options.area_name = area.title
 		options.pic = options.picture  if options.picture?
-		options.description = result.description
-		options.ways = result.goto
+		options.description = location.description
+		options.ways = location.goto
 		options.ways.forEach (i) -> # Facepalm. #273
 			i.name = i.text
 			i.to = i.id
 		tmpUsers = lib.game.getNearbyUsers.sync null,
-			mysqlConnection, request.uonline.basicOpts.userid, result.id
+			mysqlConnection, userid, location.id
 		tmpUsers.forEach (i) -> # Facepalm. Refs #273 too.
 			i.name = i.user
 		options.players_list = tmpUsers
-		tmpMonsters = lib.game.getNearbyMonsters.sync null, mysqlConnection, result.id
+		tmpMonsters = lib.game.getNearbyMonsters.sync null, mysqlConnection, location.id
 		options.monsters_list = tmpMonsters
-		options.fight_mode = lib.game.isInFight.sync null, mysqlConnection, request.uonline.basicOpts.userid
-		options.autoinvolved_fm = lib.game.isAutoinvolved.sync null,
-			mysqlConnection, request.uonline.basicOpts.userid
+		options.fight_mode = lib.game.isInFight.sync null, mysqlConnection, userid
+		options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, mysqlConnection, userid
 		response.render 'game', options
 	else
 		response.redirect '/login/'
