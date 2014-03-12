@@ -18,7 +18,7 @@
 
 config = require './config.js'
 anyDB = require 'any-db'
-mysqlConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
+dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
 lib = require './lib.js'
 async = require 'async'
 express = require 'express'
@@ -56,7 +56,7 @@ app.use ((request, response) ->
 	request.uonline.basicOpts = {}
 	request.uonline.basicOpts.now = new Date()
 	sessionData = lib.user.sessionInfoRefreshing.sync(null,
-		mysqlConnection, request.cookies.sessid, config.sessionExpireTime)
+		dbConnection, request.cookies.sessid, config.sessionExpireTime)
 	request.uonline.basicOpts.loggedIn = sessionData.sessionIsActive
 	request.uonline.basicOpts.login = sessionData.username
 	request.uonline.basicOpts.admin = sessionData.admin
@@ -110,11 +110,11 @@ app.post '/register/', (request, response) ->
 	options.instance = 'register'
 	usernameIsValid = lib.validation.usernameIsValid(request.body.user)
 	passwordIsValid = lib.validation.passwordIsValid(request.body.pass)
-	userExists = lib.user.userExists.sync(null, mysqlConnection, request.body.user)
+	userExists = lib.user.userExists.sync(null, dbConnection, request.body.user)
 	if (usernameIsValid is true) and (passwordIsValid is true) and (userExists is false)
 		lib.user.registerUser.sync(
 			null
-			mysqlConnection
+			dbConnection
 			request.body.user
 			request.body.pass
 			config.PERMISSIONS_USER
@@ -137,8 +137,8 @@ app.get '/login/', (request, response) ->
 
 
 app.post '/login/', (request, response) ->
-	if lib.user.accessGranted.sync null, mysqlConnection, request.body.user, request.body.pass
-		sessid = lib.user.createSession.sync null, mysqlConnection, request.body.user
+	if lib.user.accessGranted.sync null, dbConnection, request.body.user, request.body.pass
+		sessid = lib.user.createSession.sync null, dbConnection, request.body.user
 		response.cookie 'sessid', sessid
 		response.redirect '/'
 	else
@@ -156,7 +156,7 @@ app.get '/profile/', (request, response) -> sync ->
 		options.nickname = request.uonline.basicOpts.login
 		options.profileIsMine = true
 		options.id = request.uonline.basicOpts.userid
-		chars = lib.game.getUserCharacters.sync null, mysqlConnection, request.uonline.basicOpts.userid
+		chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
 		for i of chars
 			options[i] = chars[i]
 		response.render 'profile', options
@@ -166,7 +166,7 @@ app.get '/profile/', (request, response) -> sync ->
 
 app.get '/profile/id/:id/', (request, response) ->
 	id = parseInt request.param('id'), 10
-	chars = lib.game.getUserCharacters.sync null, mysqlConnection, id
+	chars = lib.game.getUserCharacters.sync null, dbConnection, id
 	if chars is null
 		throw new Error '404'
 	options = request.uonline.basicOpts
@@ -180,7 +180,7 @@ app.get '/profile/id/:id/', (request, response) ->
 
 app.get '/profile/user/:nickname/', (request, response) ->
 	nickname = request.param('nickname')
-	chars = lib.game.getUserCharacters.sync null, mysqlConnection, nickname
+	chars = lib.game.getUserCharacters.sync null, dbConnection, nickname
 	if chars is null
 		throw new Error '404'
 	options = request.uonline.basicOpts
@@ -195,7 +195,7 @@ app.get '/profile/user/:nickname/', (request, response) ->
 
 app.get '/action/logout', (request, response) ->
 	# TODO: move sessid to uonline{}
-	lib.user.closeSession mysqlConnection, request.cookies.sessid, (error, result) ->
+	lib.user.closeSession dbConnection, request.cookies.sessid, (error, result) ->
 		if error?
 			response.send 500
 		else
@@ -207,15 +207,15 @@ app.get '/game/', (request, response) -> sync ->
 		userid = request.uonline.basicOpts.userid
 		options = request.uonline.basicOpts
 		options.instance = 'game'
-		
+
 		try
-			location = lib.game.getUserLocation.sync null, mysqlConnection, userid
+			location = lib.game.getUserLocation.sync null, dbConnection, userid
 		catch e
 			console.log e.stack
-			location = lib.game.getDefaultLocation.sync null, mysqlConnection
-			lib.game.changeLocation.sync null, mysqlConnection, userid, location.id, true
-		
-		area = lib.game.getUserArea.sync null, mysqlConnection, userid
+			location = lib.game.getDefaultLocation.sync null, dbConnection
+			lib.game.changeLocation.sync null, dbConnection, userid, location.id, true
+
+		area = lib.game.getUserArea.sync null, dbConnection, userid
 		options.location_name = location.title
 		options.area_name = area.title
 		options.pic = options.picture  if options.picture?
@@ -225,21 +225,21 @@ app.get '/game/', (request, response) -> sync ->
 			i.name = i.text
 			i.to = i.id
 		tmpUsers = lib.game.getNearbyUsers.sync null,
-			mysqlConnection, userid, location.id
+			dbConnection, userid, location.id
 		tmpUsers.forEach (i) -> # Facepalm. Refs #273 too.
 			i.name = i.user
 		options.players_list = tmpUsers
-		tmpMonsters = lib.game.getNearbyMonsters.sync null, mysqlConnection, location.id
+		tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, location.id
 		options.monsters_list = tmpMonsters
-		options.fight_mode = lib.game.isInFight.sync null, mysqlConnection, userid
-		options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, mysqlConnection, userid
+		options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
+		options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
 		response.render 'game', options
 	else
 		response.redirect '/login/'
 
 
 app.get '/action/go/:to', (request, response) ->
-	lib.game.changeLocation.sync null, mysqlConnection, request.uonline.basicOpts.userid, request.param('to')
+	lib.game.changeLocation.sync null, dbConnection, request.uonline.basicOpts.userid, request.param('to')
 	response.redirect '/game/'
 
 
@@ -247,7 +247,7 @@ app.get '/action/attack', (request, response) ->
 	unless request.uonline.basicOpts.loggedIn
 		response.redirect '/login/'
 	else
-		lib.game.goAttack.sync null, mysqlConnection, request.uonline.basicOpts.userid
+		lib.game.goAttack.sync null, dbConnection, request.uonline.basicOpts.userid
 		response.redirect '/game/'
 
 
@@ -255,14 +255,14 @@ app.get '/action/escape', (request, response) ->
 	unless request.uonline.basicOpts.loggedIn
 		response.redirect '/login/'
 	else
-		lib.game.goEscape.sync null, mysqlConnection, request.uonline.basicOpts.userid
+		lib.game.goEscape.sync null, dbConnection, request.uonline.basicOpts.userid
 		response.redirect '/game/'
 
 
 app.get '/ajax/isNickBusy/:nick', (request, response) ->
 	response.json
 		nick: request.param('nick')
-		isNickBusy: lib.user.userExists.sync null, mysqlConnection, request.param('nick')
+		isNickBusy: lib.user.userExists.sync null, dbConnection, request.param('nick')
 
 
 # 404 handling
