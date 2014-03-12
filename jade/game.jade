@@ -16,7 +16,7 @@ block content
 		p(style="line-height: 2.5em;")
 			each i in ways
 				//- TODO: typography
-				a.btn(href="/action/go/"+i.to) #{i.name}
+				a.pjax.btn(href="/action/go/"+i.to) #{i.name}
 				| #{'\n'}
 	div
 		p
