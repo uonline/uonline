@@ -19,7 +19,7 @@
 config = require './config.js'
 anyDB = require 'any-db'
 dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
-lib = require './lib.js'
+lib = require './lib.coffee'
 async = require 'async'
 express = require 'express'
 sync = require 'sync'
