@@ -80,6 +80,7 @@ exports.getDefaultLocation = {
 			function(error, result) {
 				test.ifError(error);
 				test.strictEqual(result[4].id, 2, 'should return id of default location');
+				test.ok(result[4].goto instanceof Array, 'should return parsed ways from location');
 				test.done();
 			}
 		);
