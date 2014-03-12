@@ -1,7 +1,7 @@
 mixin instanceLink(name, url, text, icon, forceNotActive)
 	- var activity = (instance === name);
 	- if (forceNotActive) activity = false;
-	li(class = (activity ? 'active' : false))
+	li.instance-link(class = (activity ? 'active' : null))
 		if icon != null
 			a.pjax(href=url) <i class="#{icon}"></i> #{text}
 		else
@@ -52,6 +52,11 @@ if !pjax
 				hr
 				footer
 					p.muted &copy; m1kc и К<sup>о</sup>, 2012&ndash;#{ now.getFullYear() }
+			:coffee
+				# Push buttons
+				$('.instance-link').click ->
+					$('.instance-link').removeClass 'active'
+					$(this).addClass 'active'
 else
 	title
 		block title
