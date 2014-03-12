@@ -41,14 +41,6 @@ html
 						else
 							+instanceLink('login', '/login/', 'Вход', 'icon-chevron-right')
 							+instanceLink('register', '/register/', 'Регистрация')
-						if admin === true
-							li.divider-vertical
-							if databaseIsOutdated === true
-								li.divider-vertical
-								li
-									p.navbar-text
-										i.icon-warning-sign
-										| #{' '}Нужно обновить БД
 
 		div.container
 			div#content
