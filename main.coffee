@@ -239,32 +239,24 @@ app.get '/game/', (request, response) -> sync ->
 
 
 app.get '/action/go/:to', (request, response) ->
-	lib.game.changeLocation mysqlConnection, request.uonline.basicOpts.userid, request.param('to'),
-		(error, result) ->
-			if error? then throw new Error(error)
-			response.redirect '/game/'
+	lib.game.changeLocation.sync null, mysqlConnection, request.uonline.basicOpts.userid, request.param('to')
+	response.redirect '/game/'
 
 
 app.get '/action/attack', (request, response) ->
 	unless request.uonline.basicOpts.loggedIn
 		response.redirect '/login/'
 	else
-		lib.game.goAttack mysqlConnection, request.uonline.basicOpts.userid, (error, result) ->
-			if error?
-				throw new Error(error)
-			else
-				response.redirect '/game/'
+		lib.game.goAttack.sync null, mysqlConnection, request.uonline.basicOpts.userid
+		response.redirect '/game/'
 
 
 app.get '/action/escape', (request, response) ->
 	unless request.uonline.basicOpts.loggedIn
 		response.redirect '/login/'
 	else
-		lib.game.goEscape mysqlConnection, request.uonline.basicOpts.userid, (error, result) ->
-			if error?
-				throw new Error(error)
-			else
-				response.redirect '/game/'
+		lib.game.goEscape.sync null, mysqlConnection, request.uonline.basicOpts.userid
+		response.redirect '/game/'
 
 
 app.get '/ajax/isNickBusy/:nick', (request, response) ->
