@@ -26,7 +26,7 @@ if !pjax
 			:coffee
 				$(document).ready ->
 					# Start up pjax
-					$(document).pjax('a.pjax', '#content')
+					$(document).pjax('a.pjax', '#content', timeout: 2000)
 					$(document).on 'pjax:send', ->
 						$('#content').animate opacity: 0.3, 'fast'
 					$(document).on 'pjax:complete', ->
