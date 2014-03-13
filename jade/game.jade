@@ -16,7 +16,7 @@ block content
 		p(style="line-height: 2.5em;")
 			each i in ways
 				//- TODO: typography
-				a.btn(href="/action/go/"+i.to) #{i.name}
+				a.pjax.btn(href="/action/go/"+i.to) #{i.name}
 				| #{'\n'}
 	div
 		p
@@ -56,7 +56,7 @@ block content
 		p
 			small
 				if fight_mode == true
-					a(href="/action/escape") Свалить
+					a.pjax(href="/action/escape") Свалить
 				else
-					a(href="/action/attack") Атаковать
+					a.pjax(href="/action/attack") Атаковать
 	div(style="clear: both;")

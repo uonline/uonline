@@ -43,24 +43,26 @@ app.set 'views', __dirname + '/jade'
 
 
 app.use ((request, response) ->
-	# CSP
-	response.header 'Content-Security-Policy-Report-Only',
-		"default-src 'self'; script-src 'self' http://code.jquery.com"
-	# Anti-clickjacking
-	response.header 'X-Frame-Options', 'DENY'
-).asyncMiddleware()
-
-
-app.use ((request, response) ->
+	# Read basic stuff
 	request.uonline = {}
 	request.uonline.basicOpts = {}
 	request.uonline.basicOpts.now = new Date()
+	request.uonline.basicOpts.pjax = false
 	sessionData = lib.user.sessionInfoRefreshing.sync(null,
 		dbConnection, request.cookies.sessid, config.sessionExpireTime)
 	request.uonline.basicOpts.loggedIn = sessionData.sessionIsActive
 	request.uonline.basicOpts.login = sessionData.username
 	request.uonline.basicOpts.admin = sessionData.admin
 	request.uonline.basicOpts.userid = sessionData.userid
+	# CSP
+	response.header 'Content-Security-Policy-Report-Only',
+		"default-src 'self'; script-src 'self' http://code.jquery.com"
+	# Anti-clickjacking
+	response.header 'X-Frame-Options', 'DENY'
+	# PJAX
+	if request.header('X-PJAX')?
+		request.uonline.basicOpts.pjax = true
+	return
 ).asyncMiddleware()
 
 
@@ -233,6 +235,7 @@ app.get '/game/', (request, response) -> sync ->
 		options.monsters_list = tmpMonsters
 		options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
 		options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
+		response.header 'X-PJAX-URL', '/game/'
 		response.render 'game', options
 	else
 		response.redirect '/login/'
