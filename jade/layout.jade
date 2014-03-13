@@ -24,11 +24,18 @@ if !pjax
 			script(src='/static/bootstrap/js/bootstrap.min.js')
 			script(src='/static/bower_components/jquery-pjax/jquery.pjax.js')
 			:coffee
-				$(document).pjax('a.pjax', '#content')
-				$(document).on 'pjax:send', ->
-					$('.waiter').show()
-				$(document).on 'pjax:complete', ->
-					$('.waiter').hide()
+				$(document).ready ->
+					# Start up pjax
+					$(document).pjax('a.pjax', '#content')
+					$(document).on 'pjax:send', ->
+						$('body').animate opacity: 0.3, 'fast'
+					$(document).on 'pjax:complete', ->
+						$('body').stop().css opacity: 1
+
+					# Push buttons
+					$('.instance-link').click ->
+						$('.instance-link').removeClass 'active'
+						$(this).addClass 'active'
 		body
 			div.navbar.navbar-fixed-top
 				div.navbar-inner
@@ -56,13 +63,6 @@ if !pjax
 				hr
 				footer
 					p.muted &copy; m1kc и К<sup>о</sup>, 2012&ndash;#{ now.getFullYear() }
-			div.waiter(style='position: fixed; width: 100%; height: 100%; background-color: #FFF; left: 0px; top: 0px; z-index: 10000; opacity: 0.7; display: none;')
-				| &nbsp;
-			:coffee
-				# Push buttons
-				$('.instance-link').click ->
-					$('.instance-link').removeClass 'active'
-					$(this).addClass 'active'
 else
 	title
 		block title
