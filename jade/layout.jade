@@ -28,9 +28,9 @@ if !pjax
 					# Start up pjax
 					$(document).pjax('a.pjax', '#content')
 					$(document).on 'pjax:send', ->
-						$('body').animate opacity: 0.3, 'fast'
+						$('#content').animate opacity: 0.3, 'fast'
 					$(document).on 'pjax:complete', ->
-						$('body').stop().css opacity: 1
+						$('#content').stop().css opacity: 1
 
 					# Push buttons
 					$('.instance-link').click ->
