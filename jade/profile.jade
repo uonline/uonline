@@ -12,6 +12,9 @@ block content
 	.page-header
 		h1 #{nickname}#{' '}
 			small Уровень #{level}, ##{id}
+			| #{' '}
+			if profileIsMine
+				span.label Это вы
 	.row
 		.span5
 			h3 Здоровье
