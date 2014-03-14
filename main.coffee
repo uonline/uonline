@@ -114,16 +114,15 @@ app.post '/register/', (request, response) ->
 	passwordIsValid = lib.validation.passwordIsValid(request.body.pass)
 	userExists = lib.user.userExists.sync(null, dbConnection, request.body.user)
 	if (usernameIsValid is true) and (passwordIsValid is true) and (userExists is false)
-		lib.user.registerUser.sync(
+		result = lib.user.registerUser.sync(
 			null
 			dbConnection
 			request.body.user
 			request.body.pass
 			config.PERMISSIONS_USER
 		)
-		# TODO: set sessid
-		#response.redirect(config.defaultInstanceForUsers)
-		response.redirect '/login/'
+		response.cookie 'sessid', result.sessid
+		response.redirect '/'
 	else
 		options.error = true
 		options.invalidLogin = !usernameIsValid
