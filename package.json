@@ -27,7 +27,8 @@
     "any-db": "~1.0.0",
     "any-db-postgres": "~1.0.0",
     "dashdash": "~1.4.0",
-    "jade": "~0.35.0"
+    "jade": "~0.35.0",
+    "stylus": "^0.42.3"
   },
   "devDependencies": {
     "david": "^3.1.0",
