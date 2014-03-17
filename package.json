@@ -34,7 +34,7 @@
     "david": "^3.1.0",
     "grunt-contrib-clean": "~0.5.0",
     "grunt-contrib-nodeunit": "~0.3.0",
-    "grunt-contrib-jshint": "~0.8.0",
+    "grunt-contrib-jshint": "^0.9.2",
     "grunt-contrib-coffee": "^0.10.1",
     "grunt-coffeelint": "0.0.8",
     "grunt-coffee-coverage": "~0.1.4",
