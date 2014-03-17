@@ -241,8 +241,11 @@ app.get '/game/', (request, response) -> sync ->
 
 
 app.get '/action/go/:to', (request, response) ->
-	lib.game.changeLocation.sync null, dbConnection, request.uonline.basicOpts.userid, request.param('to')
-	response.redirect '/game/'
+	unless request.uonline.basicOpts.loggedIn
+		response.redirect '/login/'
+	else
+		lib.game.changeLocation.sync null, dbConnection, request.uonline.basicOpts.userid, request.param('to')
+		response.redirect '/game/'
 
 
 app.get '/action/attack', (request, response) ->
