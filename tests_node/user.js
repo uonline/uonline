@@ -226,23 +226,31 @@ exports.idBySession = {
 	},
 };
 
-exports.closeSession = function (test) {
-	async.series([
-			function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },//0
-			function(callback){ conn.query("INSERT INTO uniusers "+
-				"(sessid, sess_time) "+
-				"VALUES ('someid', NOW() )", [], callback); },
-			function(callback){ users.closeSession(conn, 'someid', callback); },
-			function(callback){ users.sessionInfoRefreshing(conn, 'someid', 3600, callback); },
-			function(callback){ users.closeSession(conn, undefined, callback); },
-		],
-		function(error, result) {
-			test.ifError(error);
-			test.strictEqual(result[3].sessionIsActive, false, 'session should have expired');
-			test.strictEqual(result[4], 'Not closing: empty sessid', 'false sessid should have been detected');
+exports.closeSession = {
+	'testNoErrors': function (test) {
+		async.series([
+				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },//0
+				function(callback){ conn.query("INSERT INTO uniusers "+
+					"(sessid, sess_time) "+
+					"VALUES ('someid', NOW() )", [], callback); },
+				function(callback){ users.closeSession(conn, 'someid', callback); },
+				function(callback){ users.sessionInfoRefreshing(conn, 'someid', 3600, callback); },
+				function(callback){ users.closeSession(conn, undefined, callback); },
+			],
+			function(error, result) {
+				test.ifError(error);
+				test.strictEqual(result[3].sessionIsActive, false, 'session should have expired');
+				test.strictEqual(result[4], 'Not closing: empty sessid', 'false sessid should have been detected');
+				test.done();
+			}
+		);
+	},
+	'testErrors': function(test) {
+		users.closeSession(conn, 'someid', function(error, result) {
+			test.ok(error, "should return error without table");
 			test.done();
-		}
-	);
+		});
+	}
 };
 
 exports.createSalt = function (test) {

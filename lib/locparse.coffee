@@ -190,10 +190,11 @@ processMap = (filename, areaName, areaLabel, log) ->
 
 		if isAreaLabel(line, i, log)
 			if area?
-				log.error i, 'N/a', "area has been already defined" # error N
+				log.error i, 'E12', "area has been already defined" # error 12
+				i = blankLines # and W7 will not be spawned
 
 			if blankLines < i
-				log.warn i, 'W7', "#{i-blankLines} skipped non-empty line(s) before area" # warn 7
+				log.warn i, 'W7', "skipped #{i-blankLines} non-empty line(s) before area" # warn 7
 
 			localAreaName = line.substr(2)
 			if areaName != localAreaName
@@ -224,14 +225,14 @@ processMap = (filename, areaName, areaLabel, log) ->
 				log.error i, 'E11', "second default location found" if log.result.defaultLocation? # error 11
 				log.result.defaultLocation = location
 			else if prop isnt ''
-				log.warn i, 'N/a', "text after location label will be ignored (#{prop})" # warn N
+				log.warn i, 'W10', "text after location label will be ignored (#{prop})" # warn 10
 
 			area.locations.push(location)
 			log.result.locations.push(location)
 
 		else if isListItem(line, i, log)
 			unless location?
-				log.error i, 'N/a', "actions are only avaliable for locations" # error N
+				log.error i, 'E13', "actions are only avaliable for locations" # error 13
 				continue
 
 			[name, target, rem] = line.substr(2).split(/\s*`\s*/)
@@ -242,7 +243,7 @@ processMap = (filename, areaName, areaLabel, log) ->
 
 			log.warn i, 'W8', "Unnecessary trailing dot" if name[name.length-1] is '.' # warn 8
 
-			log.warn i, 'N/a', "text after target label will be ignored (#{rem})" if rem is not '' # warn N
+			log.warn i, 'W10',"text after target label will be ignored (#{rem})" if rem? and rem isnt '' # warn 10
 
 			target = location.area.label + '/' + target unless '/' in target
 
@@ -252,7 +253,7 @@ processMap = (filename, areaName, areaLabel, log) ->
 
 		else if imageDescr=line.match /!\[(.+)\]\((.+)\)/
 			unless location?
-				log.error i, 'N/a', "images are only avaliable for locations" # error N
+				log.error i, 'E14', "images are only avaliable for locations" # error 14
 				continue
 
 			log.error i, 'E9', "location's image has been doubled" if location.picture? # error 9
@@ -280,6 +281,9 @@ processDir = (dir, parentLabel, log) ->
 
 	[_, name, label] = t
 	label = parentLabel + '-' + label unless parentLabel is ''
+
+	if log.result.areas.some((area) -> area.label == label)
+		log.error 'loc.label', 'E15', "location with label <#{label}> already exists" # error 15
 
 	checkSpaces name, 'name in folder name'
 	checkSpaces label, 'label in folder name'

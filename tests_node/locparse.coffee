@@ -16,6 +16,9 @@
 
 fs = require 'fs'
 parser = require '../lib-cov/locparse'
+anyDB = require 'any-db'
+mg = require '../lib/migration'
+config = require '../config.js'
 rmrf = require 'rmrf'
 copy = require('ncp').ncp
 copy.limit = 16 #concurrency limit
@@ -114,24 +117,39 @@ exports.correct_test = (test) ->
 	test.done()
 
 
-exports.warnings_test = (test) ->
-	sed([
-			["Здесь убивают слоников", "#Здесь warning"] #1
-			["Здесь стоят гомосеки", "###Здесь стоит warning\n\n*А тут - ещё один"] #2 3
-			["bluestreet`", "bluestreet`   \n   "] #4 5
-			["Большой и ленивый город.", "   Большой и ненужный отступ."] #6
-			["# Кронт", "непустая строка\n# Кронт"] #7
-			["Пойти на Зелёную улицу", "Пойти на Зелёную улицу через точку."] #8
-			["`kront-outer/bluestreet`", "`kront-outer/greenstreet`"] #9
-		], "#{TMP_DIR}/Кронт - kront/map.ht.md"
-	)
-	result = parser.processDir "#{TMP_DIR}/Кронт - kront" #'unify/Кронт - kront'
+exports.warnings_test =
+	'W1-W9': (test) ->
+		sed([
+				["Здесь убивают слоников", "#Здесь warning"] #1
+				["Здесь стоят гомосеки", "###Здесь стоит warning\n\n*А тут - ещё один"] #2 3
+				["bluestreet`", "bluestreet`   \n   "] #4 5
+				["Большой и ленивый город.", "   Большой и ненужный отступ."] #6
+				["# Кронт", "непустая строка\n# Кронт"] #7
+				["Пойти на Зелёную улицу", "Пойти на Зелёную улицу через точку."] #8
+				["`kront-outer/bluestreet`", "`kront-outer/greenstreet`"] #9
+			], "#{TMP_DIR}/Кронт - kront/map.ht.md"
+		)
+		result = parser.processDir "#{TMP_DIR}/Кронт - kront" #'unify/Кронт - kront'
 
-	test.ok(result.warnings.some((w) -> w.id == "W#{i}"), "should generate warning number#{i}") for i in [1..9]
-	test.strictEqual result.warnings.length, 9, 'should generate all warnings'
-	test.deepEqual result.errors, [], 'should receive no errors'
+		test.ok(result.warnings.some((w) -> w.id == "W#{i}"), "should generate warning number#{i}") for i in [1..9]
+		test.strictEqual result.warnings.length, 9, 'should generate all warnings'
+		test.deepEqual result.errors, [], 'should receive no errors'
 
-	test.done()
+		test.done()
+	'W10': (test) ->
+		sed([
+				["`kront-outer/greenstreet`", "`kront-outer/greenstreet` text"] #10
+				["### Другая голубая улица `bluestreet`", "### Другая голубая улица `bluestreet` text"] #10
+			], "#{TMP_DIR}/Кронт - kront/map.ht.md"
+		)
+		result = parser.processDir "#{TMP_DIR}/Кронт - kront" #'unify/Кронт - kront'
+		
+		test.strictEqual result.warnings[0].id, 'W10', 'should get warn 10'
+		test.strictEqual result.warnings[1].id, 'W10', 'should get another warn 10'
+		test.strictEqual result.warnings.length, 2, 'should generate warnings for both cases'
+		test.deepEqual result.errors, [], 'should receive no errors'
+		
+		test.done()
 
 
 testOneError = (test, errId, sedWhat, sedByWhat, sedWhere="#{TMP_DIR}/Кронт - kront/map.ht.md") ->
@@ -232,4 +250,58 @@ exports.error_E11_test = (test) ->
 		"### Другая голубая улица `bluestreet` (default)"
 	)
 
+exports.error_E12_test = (test) ->
+	testOneError(
+		test, 'E12'
+		"# Кронт"
+		"# Кронт\n# Кронта много не бывает"
+	)
+
+exports.error_E13_test = (test) ->
+	testOneError(
+		test, 'E13'
+		"# Кронт"
+		"# Кронт\n* какой-то переход `куда-то`"
+	)
+
+exports.error_E14_test = (test) ->
+	testOneError(
+		test, 'E14'
+		"Большой и ленивый город."
+		"Большой и ленивый город.\n![image](image)"
+	)
+
+exports.error_E15_test = (test) ->
+	copy(
+		"#{TMP_DIR}/Кронт - kront/Окрестности Кронта - outer"
+		"#{TMP_DIR}/Кронт - kront/Окрестности Кронта2 - outer"
+		(error) ->
+			throw error if error
+			
+			testOneError(
+				test, 'E15'
+				"# Окрестности Кронта"
+				"# Окрестности Кронта2"
+				"#{TMP_DIR}/Кронт - kront/Окрестности Кронта2 - outer/map.ht.md"
+			)
+	)
+
+
+exports.save = ((test) ->
+	try
+		parseResult = parser.processDir "#{TMP_DIR}/Кронт - kront"
+		conn = anyDB.createConnection config.DATABASE_URL_TEST
+		conn.query.sync conn, "DROP TABLE IF EXISTS areas, locations"
+		mg.migrate.sync null, conn, Infinity, 'areas'
+		mg.migrate.sync null, conn, Infinity, 'locations'
+		parseResult.save(conn)
+		
+		result = conn.query.sync conn, 'SELECT count(*) AS cnt FROM areas'
+		test.equal result.rows[0].cnt, parseResult.areas.length, 'should save all areas'
+		result = conn.query.sync conn, 'SELECT count(*) AS cnt FROM locations'
+		test.equal result.rows[0].cnt, parseResult.locations.length, 'should save all locations'
+	catch e
+		console.error(e)
+	test.done()
+).async()
 

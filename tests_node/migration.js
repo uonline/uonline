@@ -86,8 +86,10 @@ exports.getCurrentRevision = {
 			}
 		);
 	},
-	/* 'connection errors': function (test) {
-		var fakeConn = anyDB.createConnection('postgres://nobody:nothing@127.0.0.1:11111/nowhere');
+	'connection errors': function (test) {
+		var fakeConn = {
+			query: function(text, args, callback){ callback('THE_VERY_STRANGE_ERROR'); }
+		};
 		async.parallel([
 				function (callback) { mg.getCurrentRevision(fakeConn, callback); },
 			],
@@ -96,7 +98,7 @@ exports.getCurrentRevision = {
 				test.done();
 			}
 		);
-	}, */
+	},
 };
 
 exports.setRevision = function(test) {
