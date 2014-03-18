@@ -24,7 +24,7 @@ How to set up
 * Clone the repo.
 * Install packages: `npm install`.
 * Fetch submodules: `git submodule init`, `git submodule update`.
-* Initialize database: `./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize`. Errrm, now you should use init.coffee, but I'm too lazy to fix the command.
+* Initialize database: `./init.coffee --migrate-tables --unify-export --test-monsters --optimize-tables`.
 * If you need to add an admin: `./add-admin.coffee username password`.
 
 
