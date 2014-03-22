@@ -154,7 +154,7 @@ app.get '/profile/', (request, response) -> sync ->
 	if request.uonline.basicOpts.loggedIn is true
 		options = request.uonline.basicOpts
 		options.instance = 'profile'
-		options.nickname = request.uonline.basicOpts.login
+		options.username = request.uonline.basicOpts.login
 		options.profileIsMine = true
 		options.id = request.uonline.basicOpts.userid
 		chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
@@ -165,23 +165,9 @@ app.get '/profile/', (request, response) -> sync ->
 		response.redirect '/login/'
 
 
-app.get '/profile/id/:id/', (request, response) ->
-	id = parseInt request.param('id'), 10
-	chars = lib.game.getUserCharacters.sync null, dbConnection, id
-	if chars is null
-		throw new Error '404'
-	options = request.uonline.basicOpts
-	options.instance = 'profile'
-	options.profileIsMine = (options.loggedIn is true) and (id == options.userid)
-	for i of chars
-		options[i] = chars[i]
-	options.nickname = options.user # кастыль #273
-	response.render 'profile', options
-
-
-app.get '/profile/user/:nickname/', (request, response) ->
-	nickname = request.param('nickname')
-	chars = lib.game.getUserCharacters.sync null, dbConnection, nickname
+app.get '/profile/:username/', (request, response) ->
+	username = request.param('username')
+	chars = lib.game.getUserCharacters.sync null, dbConnection, username
 	if chars is null
 		throw new Error '404'
 	options = request.uonline.basicOpts
@@ -189,7 +175,7 @@ app.get '/profile/user/:nickname/', (request, response) ->
 	options.profileIsMine = (options.loggedIn is true) and (chars.id == options.userid)
 	for i of chars
 		options[i] = chars[i]
-	options.nickname = options.user # кастыль #273
+	options.username = username
 	response.render 'profile', options
 .async()
 

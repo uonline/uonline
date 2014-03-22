@@ -7,11 +7,11 @@ mixin tr_td_ch(name, value)
 
 extends layout
 block title
-	| Профиль игрока #{nickname}
+	| Профиль игрока #{username}
 block content
 	.page-header
-		h1 #{nickname}#{' '}
-			small Уровень #{level}, ##{id}
+		h1 #{username}&nbsp;&nbsp;
+			small орк #{level}-го уровня
 			| #{' '}
 			if profileIsMine
 				span.label Это вы
