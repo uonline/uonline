@@ -53,10 +53,11 @@ block content
 			small
 				if autoinvolved_fm == true
 					b Вас атаковали!
-		p
-			small
-				if fight_mode == true
-					a.pjax(href="/action/escape") Свалить
-				else
-					a.pjax(href="/action/attack") Атаковать
+		if monsters_list.length > 0
+			p
+				small
+					if fight_mode == true
+						a.pjax(href="/action/escape") Свалить
+					else
+						a.pjax(href="/action/attack") Атаковать
 	div(style="clear: both;")
