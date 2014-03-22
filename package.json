@@ -38,7 +38,7 @@
     "grunt-contrib-coffee": "^0.10.1",
     "grunt-coffeelint": "0.0.8",
     "grunt-coffee-coverage": "~0.1.4",
-    "grunt-jscoverage": "0.0.3",
+    "grunt-jscoverage": "^0.1.0",
     "nodeunit": "~0.8.1",
     "jshint": "~2.4.0",
     "jscoverage": "~0.3.8",
