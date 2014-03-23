@@ -14,11 +14,17 @@
 
 'use strict'
 
+
+# Check if a string starts with a given substring.
+# @return [Boolean]
 String::startsWith = (x) ->
 	if x.length > this.length
 		return false
 	return this.substring(0,x.length) == x
 
+
+# Check if a string ends with a given substring.
+# @return [Boolean]
 String::endsWith = (x) ->
 	if x.length > this.length
 		return false

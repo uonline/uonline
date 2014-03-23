@@ -135,6 +135,14 @@ module.exports = (grunt) ->
 		clean:
 			lib_cov: 'lib-cov/'
 
+		codo:
+			options:
+				title: 'uonline documentation'
+				output: 'docs'
+				inputs: [
+					'lib'
+				]
+
 
 	# These plugins provide necessary tasks.
 	require('load-grunt-tasks')(grunt)
@@ -143,6 +151,7 @@ module.exports = (grunt) ->
 	# Custom tasks.
 	grunt.registerTask 'check', ['mustcontain', 'coffeelint', 'jshint:all']
 	grunt.registerTask 'build', ['browserify', 'uglify']
+	grunt.registerTask 'docs', ['codo']
 
 	testTask = ['clean:lib_cov', 'jscoverage', 'coffeeCoverage']
 	if grunt.option('single')?  # allow to test a single file, see Readme
@@ -154,4 +163,4 @@ module.exports = (grunt) ->
 	grunt.registerTask 'test', testTask
 
 	# Default task.
-	grunt.registerTask 'default', ['check', 'build', 'test']
+	grunt.registerTask 'default', ['check', 'build', 'docs', 'test']

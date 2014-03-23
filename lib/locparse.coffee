@@ -19,42 +19,59 @@ fs = require 'fs'
 sync = require 'sync'
 
 
+# Create location's numeric id from its label. Based on SHA-1.
+# @return [Number]
 makeId = (str) ->
 	sum = crypto.createHash 'sha1'
 	sum.update str
 	(new Buffer(sum.digest('binary')).readUInt32LE(0)/2)|0
 
 
+# Check if a given string is an area definition.
+# @return [Boolean]
 isAreaLabel = (line, lineNumber, log) ->
 	return false unless line.match /^#[^#]/
 	return true if line[1] is ' '
 	log.warn(lineNumber, 'W1', "starting '#' with no space after") # warn 1
 	return false
 
+
+# Check if a given string is a location definition.
+# @return [Boolean]
 isLocationLabel = (line, lineNumber, log) ->
 	return false unless line.match /^###/
 	return true if line[3] is ' '
 	log.warn(lineNumber, 'W2', "starting '###' with no space after") # warn 2
 	return false
 
+
+# Check if a given string is a list item definition.
+# @return [Boolean]
 isListItem = (line, lineNumber, log) ->
 	return false if line[0] isnt '*'
 	return true if line[1] is ' '
 	log.warn(lineNumber, 'W3', "starting '*' with no space after") # warn 3
 	return false
 
+
+# Check if a given string is empty or contains only whitespaces.
+# @return [Boolean]
 isEmpty = (line, lineNumber, log) ->
 	if line.match /^\s+$/
 		log.warn lineNumber, 'W4', 'line of spaces' # warn 4
 		return true
-
 	return line is ''
 
+
+# Check given string for trailing and leading whitespaces.
+# Writes results to log.
 checkSpaces = (line, lineNumber, log) ->
 	log.warn lineNumber, 'W5', 'trailing space(s)' if line.match /\S\s+$/ # warn 5
 	log.warn lineNumber, 'W6', 'starting space(s)' if line.match /^\s+\S/ # warn 6
 
-# check that all objects in array have different values in <propName>
+
+# Check that all objects in array have different values in `propName`
+# @return [Boolean]
 checkPropUniqueness = (objs, pointer, errId, propName, log) ->
 	propValuesSet = {}
 	for obj in objs
@@ -67,6 +84,9 @@ checkPropUniqueness = (objs, pointer, errId, propName, log) ->
 			)
 		propValuesSet[propValue] = obj
 
+
+# Check consistency of parsed data.
+# Writes results to log.
 postCheck = (log) ->
 	log.setFilename 'post processing'
 	res = log.result
@@ -84,14 +104,20 @@ postCheck = (log) ->
 			log.error 'actions', 'E1', "target <#{target}> does not exist" # error 1
 
 
+# Represents an area.
 class Area
+
+	# A constructor.
 	constructor: (@name, @label) ->
 		@id = makeId @label
 		@description = ''
 		@locations = []
 
 
+# Represents a location.
 class Location
+
+	# A constructor.
 	constructor: (@name, @label, @area) ->
 		@id = makeId @label
 		@description = ''
@@ -99,10 +125,14 @@ class Location
 		@picture = null
 
 
+# @todo Write something.
 class Logger
+
+	# A constructor.
 	constructor: (@result, @verbose) ->
 		@filename = undefined
 
+	# @todo Write something.
 	_add: (toWhere, what) ->
 		toWhere.push what
 		if @filename of @result.files
@@ -110,10 +140,12 @@ class Logger
 		else
 			@result.files[@filename] = [what]
 
+	# @todo Write something.
 	setFilename: (filename) ->
 		@filename = filename
 		console.log " --- #{filename}:" if @verbose
 
+	# @todo Write something.
 	warn: (pointer, id, message) ->
 		pointer = "line #{pointer+1}" if typeof pointer == 'number'
 		console.warn "Warning(#{id}): #{pointer}: #{message}" if @verbose
@@ -125,6 +157,7 @@ class Logger
 			message: message
 		)
 
+	# @todo Write something.
 	error: (pointer, id, message) ->
 		pointer = "line #{pointer+1}" if typeof pointer == 'number'
 		console.warn "Error(#{id}): #{pointer}: #{message}" if @verbose
@@ -137,10 +170,12 @@ class Logger
 		)
 
 
+# Represents parsed data.
 class Result
 	verbose = false
 	filename = undefined
 
+	# A constructor.
 	constructor: () ->
 		@areas = []
 		@locations = []
@@ -149,6 +184,7 @@ class Result
 		@warnings = []
 		@files = {}
 
+	# Save all the data to database using specified connection.
 	save: (dbConnection) ->
 		throw new Error("Can't save with errors.") if @errors.length > 0
 
@@ -174,6 +210,8 @@ class Result
 			)
 
 
+# Parse a `map.ht.md` file.
+# Writes results to log.
 processMap = (filename, areaName, areaLabel, log) ->
 	log.setFilename filename
 	lines = fs.readFileSync(filename, 'utf-8').split('\n')
@@ -272,6 +310,9 @@ processMap = (filename, areaName, areaLabel, log) ->
 		blankLines = 0
 
 
+# Process a directory with unify data.
+# Writes results into log.
+# For internal use.
 processDir = (dir, parentLabel, log) ->
 	log.setFilename dir
 
@@ -298,6 +339,8 @@ processDir = (dir, parentLabel, log) ->
 			processMap(filepath, name, label, log) if filename is 'map.ht.md' #.match /\.ht\.md$/
 
 
+# Process a directory with unify data.
+# For external use.
 exports.processDir = (dir, verbose=false) ->
 	log = new Logger(new Result(), verbose)
 	processDir dir, '', log
