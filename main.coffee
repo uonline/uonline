@@ -219,6 +219,11 @@ app.get '/game/', (request, response) -> sync ->
 		options.monsters_list = tmpMonsters
 		options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
 		options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
+		
+		chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
+		for i of chars
+			options[i] = chars[i]
+		
 		response.header 'X-PJAX-URL', '/game/'
 		response.render 'game', options
 	else

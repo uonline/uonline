@@ -9,15 +9,26 @@ block content
 			small #{ area_name }
 	if pic != null
 		img.img-polaroid(src=pic, style="float: right; margin-left: 1em; margin-bottom: 1em;")
-	div
-		//- TODO: {{ description | tf | nl2p | nl2br }}
-		p #{ description }
-	div
-		p(style="line-height: 2.5em;")
-			each i in ways
-				//- TODO: typography
-				a.pjax.btn(href="/action/go/"+i.to) #{i.name}
-				| #{'\n'}
+	if fight_mode == false
+		div
+			//- TODO: {{ description | tf | nl2p | nl2br }}
+			p #{ description }
+		div
+			p(style="line-height: 2.5em;")
+				each i in ways
+					//- TODO: typography
+					a.pjax.btn(href="/action/go/"+i.to) #{i.name}
+					| #{'\n'}
+	else
+		.span5
+			h4 Здоровье
+			.progress
+				.bar.bar-success(style='width: '+health_percent+'%;')
+					| #{ health }/#{ health_max }
+			h4 Мана
+			.progress
+				.bar(style='width: '+mana_percent+'%;')
+					| #{ mana }/#{ mana_max }
 	div
 		p
 			small
