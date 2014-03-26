@@ -143,6 +143,12 @@ module.exports = (grunt) ->
 					'lib'
 				]
 
+		coveralls:
+			all:
+				src: 'report.lcov'
+			options:
+				force: false
+
 
 	# These plugins provide necessary tasks.
 	require('load-grunt-tasks')(grunt)
@@ -164,3 +170,6 @@ module.exports = (grunt) ->
 
 	# Default task.
 	grunt.registerTask 'default', ['check', 'build', 'docs', 'test']
+
+	# And some additional CI stuff.
+	grunt.registerTask 'travis', ['default', 'jscoverage_write_lcov', 'coveralls']
