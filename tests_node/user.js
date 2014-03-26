@@ -277,7 +277,7 @@ exports.registerUser = function (test) {
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[4].rowCount, 1, 'one registration - one user');
+			test.strictEqual(result[4].rows.length, 1, 'one registration - one user');
 			var user = result[4].rows[0];
 			test.ok(user.salt.length > 0, 'salt should be set');
 			test.ok(user.hash.length > 0, 'hash should be set');
