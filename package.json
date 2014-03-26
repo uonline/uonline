@@ -43,9 +43,9 @@
     "jshint": "~2.4.0",
     "jscoverage": "~0.3.8",
     "nodemon": "~1.0.5",
-    "coveralls": "^2.8.0",
     "rmrf": "~1.0.2",
     "ncp": "~0.5.0",
-    "grunt-codo": "^0.1.0"
+    "grunt-codo": "^0.1.0",
+    "grunt-coveralls": "^0.3.0"
   }
 }

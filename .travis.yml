@@ -16,6 +16,4 @@ before_script:
   - # Create test database
   - psql -c 'create database uonline_test;' -U postgres
 script:
-  - grunt default jscoverage_write_lcov
-after_script:
-  - cat report.lcov | ./node_modules/coveralls/bin/coveralls.js
+  - grunt travis
