@@ -1,7 +1,12 @@
 uonline
 =======
 
-[![Build Status](https://travis-ci.org/uonline/uonline.png?branch=master)](https://travis-ci.org/uonline/uonline) [![Coverage Status](https://coveralls.io/repos/uonline/uonline/badge.png?branch=master)](https://coveralls.io/r/uonline/uonline?branch=master) [![Dependency Status](https://david-dm.org/uonline/uonline.png)](https://david-dm.org/uonline/uonline) [![devDependency Status](https://david-dm.org/uonline/uonline/dev-status.png)](https://david-dm.org/uonline/uonline#info=devDependencies)  [![Code Climate](https://codeclimate.com/github/uonline/uonline.png)](https://codeclimate.com/github/uonline/uonline) [![Tasks for this week](https://badge.waffle.io/uonline/uonline.png?label=this%20week&title=Tasks)](http://waffle.io/uonline/uonline)
+[![Build Status](https://travis-ci.org/uonline/uonline.svg?branch=master)](https://travis-ci.org/uonline/uonline)
+[![Coverage Status](https://coveralls.io/repos/uonline/uonline/badge.png?branch=master)](https://coveralls.io/r/uonline/uonline?branch=master)
+[![Dependency Status](https://david-dm.org/uonline/uonline.png)](https://david-dm.org/uonline/uonline)
+[![devDependency Status](https://david-dm.org/uonline/uonline/dev-status.png)](https://david-dm.org/uonline/uonline#info=devDependencies)
+[![Code Climate](https://codeclimate.com/github/uonline/uonline.png)](https://codeclimate.com/github/uonline/uonline)
+[![Tasks for this week](https://badge.waffle.io/uonline/uonline.png?label=this%20week&title=Tasks)](http://waffle.io/uonline/uonline)
 
 A browser-based MMORPG game in a fantasy world.
 
@@ -14,18 +19,17 @@ Requirements
 * Grunt (you may use local one, but why?);
 * PostgreSQL 9.1 or higher;
 * DB user `anonymous` with password `nopassword`;
-* Two databases: `uonline` and `uonline_test`;
-* Globally installed jscoverage (temporary).
+* Two databases: `uonline` and `uonline_test`.
 
 
 How to set up
 -------------
 
 * Clone the repo.
-* Install packages: `npm install`.
-* Fetch submodules: `git submodule init`, `git submodule update`.
-* Initialize database: `./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize`. Errrm, now you should use init.coffee, but I'm too lazy to fix the command.
-* If you need to add an admin: `./add-admin.coffee username password`.
+* Install packages: `npm install`
+* Fetch submodules: `git submodule init`, `git submodule update`
+* Initialize database: `./init.coffee --migrate-tables --unify-export --test-monsters --optimize-tables`
+* If you need to add an admin: `./add-admin.coffee username password`
 
 
 How to run

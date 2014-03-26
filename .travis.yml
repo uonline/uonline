@@ -8,7 +8,7 @@ env:
 before_script:
   - # test scripts
   - ./init.coffee --info || true
-  - ./init.coffee --create-database both --migrate-tables --optimize-tables --test-monsters
+  - ./init.coffee --create-database both --migrate-tables --unify-export --test-monsters --optimize-tables
   - ./init.coffee --info
   - ./add-admin.coffee admin password
   - ./init.coffee --drop-database both
@@ -16,6 +16,4 @@ before_script:
   - # Create test database
   - psql -c 'create database uonline_test;' -U postgres
 script:
-  - grunt default jscoverage_write_lcov
-after_script:
-  - cat report.lcov | ./node_modules/coveralls/bin/coveralls.js
+  - grunt travis

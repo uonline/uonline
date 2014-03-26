@@ -15,17 +15,10 @@
 'use strict'
 
 
-# Check if a string starts with a given substring.
-# @return [Boolean]
-String::startsWith = (x) ->
-	if x.length > this.length
-		return false
-	return this.substring(0,x.length) == x
+require '../lib-cov/arrays'
 
 
-# Check if a string ends with a given substring.
-# @return [Boolean]
-String::endsWith = (x) ->
-	if x.length > this.length
-		return false
-	return this.substring(this.length-x.length, this.length) == x
+exports.random = (test) ->
+	test.ok [1..5].random() in [1..5] for [1..10]
+	test.strictEqual null, [].random()
+	test.done()

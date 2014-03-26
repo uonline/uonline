@@ -300,8 +300,11 @@ insertTestMonsters = ->
 		[50, 6, 446105458, 1, 1, null, 19]
 	]
 
+	locs = dbConnection.query.sync(dbConnection, "SELECT id FROM locations").rows
+
 	dbConnection.query.sync(dbConnection, "TRUNCATE monsters", [])
 	for i in monsters
+		i[2] = locs.random().id
 		dbConnection.query.sync(
 			dbConnection
 			"INSERT INTO monsters "+

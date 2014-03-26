@@ -80,6 +80,7 @@ exports.getDefaultLocation = {
 			function(error, result) {
 				test.ifError(error);
 				test.strictEqual(result[4].id, 2, 'should return id of default location');
+				test.ok(result[4].goto instanceof Array, 'should return parsed ways from location');
 				test.done();
 			}
 		);
@@ -138,7 +139,7 @@ exports.getUserLocationId = {
 				function(callback) {game.getUserLocationId(conn, -1, callback);},
 			],
 			function(error, result) {
-				test.strictEqual(error, "Wrong user's id", 'should fail on wrong sessid');
+				test.ok(error, 'should fail on wrong sessid');
 				test.done();
 			}
 		);
@@ -172,7 +173,7 @@ exports.getUserLocation = {
 	},
 	"testWrongSessid": function(test) {
 		game.getUserLocation(conn, -1, function(error, result) {
-			test.strictEqual(error, "Wrong user's id", 'should fail on wrong id');
+			test.ok(error, 'should fail on wrong id');
 			test.done();
 		});
 	},
@@ -216,7 +217,7 @@ exports.getUserArea = {
 	},
 	'wrong user id': function(test) {
 		game.getUserArea(conn, -1, function(error, result) {
-			test.strictEqual(error, "Wrong user's id", 'should fail on wrong id');
+			test.ok(error, 'should fail on wrong id');
 			test.done();
 		});
 	},
@@ -306,11 +307,11 @@ exports.getNearbyUsers = {
 		async.series([
 				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
 				function(callback){ mg.migrate(conn, Infinity, 'locations', callback); },
-				insertCallback('uniusers', {"id":1, '"user"':"someuser",  "location":1, "sess_time":now}),
-				insertCallback('uniusers', {"id":2, '"user"':"otheruser", "location":1, "sess_time":now}),
-				insertCallback('uniusers', {"id":3, '"user"':"thirduser", "location":1, "sess_time":now}),
-				insertCallback('uniusers', {"id":4, '"user"':"AFKuser",   "location":1, "sess_time":"1980-01-01"}),
-				insertCallback('uniusers', {"id":5, '"user"':"aloneuser", "location":2, "sess_time":now}),
+				insertCallback('uniusers', {"id":1, 'username':"someuser",  "location":1, "sess_time":now}),
+				insertCallback('uniusers', {"id":2, 'username':"otheruser", "location":1, "sess_time":now}),
+				insertCallback('uniusers', {"id":3, 'username':"thirduser", "location":1, "sess_time":now}),
+				insertCallback('uniusers', {"id":4, 'username':"AFKuser", "location":1, "sess_time":"1980-01-01"}),
+				insertCallback('uniusers', {"id":5, 'username':"aloneuser", "location":2, "sess_time":now}),
 				insertCallback('locations', {"id":1}),
 			], callback);
 	},
@@ -322,8 +323,8 @@ exports.getNearbyUsers = {
 			function(error, result) {
 				test.ifError(error);
 				test.deepEqual(result[0], [
-					{id:2, user:'otheruser'},
-					{id:3, user:'thirduser'}], 'should return all online users on this location');
+					{id:2, username:'otheruser'},
+					{id:3, username:'thirduser'}], 'should return all online users on this location');
 				test.deepEqual(result[1], [], 'alone user should be alone. for now');
 				test.done();
 			}
@@ -412,7 +413,7 @@ exports.getUserCharacters = {
 				function(callback){ mg.migrate(conn, Infinity, 'uniusers', callback); },
 				insertCallback('uniusers', {
 					id: 1,
-					'"user"': 'someuser',
+					'username': 'someuser',
 					fight_mode: 1, autoinvolved_fm: 1,
 					health: 100,   health_max: 200,
 					mana: 50,      mana_max: 200,
@@ -434,7 +435,7 @@ exports.getUserCharacters = {
 				test.ifError(error);
 				var expectedData = {
 					id: 1,
-					user: 'someuser',
+					username: 'someuser',
 					health: 100,   health_max: 200,    health_percent: 50,
 					mana: 50,      mana_max: 200,      mana_percent: 25,
 					level: 2,

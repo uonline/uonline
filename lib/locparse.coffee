@@ -19,42 +19,59 @@ fs = require 'fs'
 sync = require 'sync'
 
 
+# Create area's and location's numeric id from its label. Based on SHA-1.
+# @return [Number]
 makeId = (str) ->
 	sum = crypto.createHash 'sha1'
 	sum.update str
 	(new Buffer(sum.digest('binary')).readUInt32LE(0)/2)|0
 
 
+# Check if a given string is an area definition.
+# @return [Boolean]
 isAreaLabel = (line, lineNumber, log) ->
 	return false unless line.match /^#[^#]/
 	return true if line[1] is ' '
 	log.warn(lineNumber, 'W1', "starting '#' with no space after") # warn 1
 	return false
 
+
+# Check if a given string is a location definition.
+# @return [Boolean]
 isLocationLabel = (line, lineNumber, log) ->
 	return false unless line.match /^###/
 	return true if line[3] is ' '
 	log.warn(lineNumber, 'W2', "starting '###' with no space after") # warn 2
 	return false
 
+
+# Check if a given string is a list item definition.
+# @return [Boolean]
 isListItem = (line, lineNumber, log) ->
 	return false if line[0] isnt '*'
 	return true if line[1] is ' '
 	log.warn(lineNumber, 'W3', "starting '*' with no space after") # warn 3
 	return false
 
+
+# Check if a given string is empty or contains only whitespaces.
+# @return [Boolean]
 isEmpty = (line, lineNumber, log) ->
 	if line.match /^\s+$/
 		log.warn lineNumber, 'W4', 'line of spaces' # warn 4
 		return true
-
 	return line is ''
 
+
+# Check given string for trailing and leading whitespaces.
+# Writes results to log.
 checkSpaces = (line, lineNumber, log) ->
 	log.warn lineNumber, 'W5', 'trailing space(s)' if line.match /\S\s+$/ # warn 5
 	log.warn lineNumber, 'W6', 'starting space(s)' if line.match /^\s+\S/ # warn 6
 
-# check that all objects in array have different values in <propName>
+
+# Check that all objects in array have different values in `propName`
+# @return [Boolean]
 checkPropUniqueness = (objs, pointer, errId, propName, log) ->
 	propValuesSet = {}
 	for obj in objs
@@ -67,6 +84,9 @@ checkPropUniqueness = (objs, pointer, errId, propName, log) ->
 			)
 		propValuesSet[propValue] = obj
 
+
+# Check consistency of parsed data.
+# Writes results to log.
 postCheck = (log) ->
 	log.setFilename 'post processing'
 	res = log.result
@@ -84,14 +104,20 @@ postCheck = (log) ->
 			log.error 'actions', 'E1', "target <#{target}> does not exist" # error 1
 
 
+# Represents an area.
 class Area
+
+	# A constructor.
 	constructor: (@name, @label) ->
 		@id = makeId @label
 		@description = ''
 		@locations = []
 
 
+# Represents a location.
 class Location
+
+	# A constructor.
 	constructor: (@name, @label, @area) ->
 		@id = makeId @label
 		@description = ''
@@ -99,10 +125,16 @@ class Location
 		@picture = null
 
 
+# Logger. Collect and store log data.
+# If verbose, prints warns and errors while collectiong.
+# Also stores object with parsed data (may be not the best idea but one extra argument has gone).
 class Logger
+
+	# A constructor.
 	constructor: (@result, @verbose) ->
 		@filename = undefined
 
+	# Adds "what" object in "toWhere" log group.
 	_add: (toWhere, what) ->
 		toWhere.push what
 		if @filename of @result.files
@@ -110,10 +142,16 @@ class Logger
 		else
 			@result.files[@filename] = [what]
 
+	# Set filename (or other string) to which next errors will be associated.
 	setFilename: (filename) ->
 		@filename = filename
 		console.log " --- #{filename}:" if @verbose
 
+	# Adds warning with:
+	#  * pointer - something that can give an idea of warning cause location
+	#  * id - identifier of warning (like "W1")
+	#  * message - actual warning message
+	# If verbose, prints it in console.
 	warn: (pointer, id, message) ->
 		pointer = "line #{pointer+1}" if typeof pointer == 'number'
 		console.warn "Warning(#{id}): #{pointer}: #{message}" if @verbose
@@ -125,6 +163,7 @@ class Logger
 			message: message
 		)
 
+	# Like warn but for errors.
 	error: (pointer, id, message) ->
 		pointer = "line #{pointer+1}" if typeof pointer == 'number'
 		console.warn "Error(#{id}): #{pointer}: #{message}" if @verbose
@@ -137,10 +176,12 @@ class Logger
 		)
 
 
+# Represents parsed data.
 class Result
 	verbose = false
 	filename = undefined
 
+	# A constructor.
 	constructor: () ->
 		@areas = []
 		@locations = []
@@ -149,6 +190,7 @@ class Result
 		@warnings = []
 		@files = {}
 
+	# Save all the data to database using specified connection.
 	save: (dbConnection) ->
 		throw new Error("Can't save with errors.") if @errors.length > 0
 
@@ -174,6 +216,8 @@ class Result
 			)
 
 
+# Parse a `map.ht.md` file.
+# Writes results to log.
 processMap = (filename, areaName, areaLabel, log) ->
 	log.setFilename filename
 	lines = fs.readFileSync(filename, 'utf-8').split('\n')
@@ -190,10 +234,11 @@ processMap = (filename, areaName, areaLabel, log) ->
 
 		if isAreaLabel(line, i, log)
 			if area?
-				log.error i, 'N/a', "area has been already defined" # error N
+				log.error i, 'E12', "area has been already defined" # error 12
+				i = blankLines # and W7 will not be spawned
 
 			if blankLines < i
-				log.warn i, 'W7', "#{i-blankLines} skipped non-empty line(s) before area" # warn 7
+				log.warn i, 'W7', "skipped #{i-blankLines} non-empty line(s) before area" # warn 7
 
 			localAreaName = line.substr(2)
 			if areaName != localAreaName
@@ -224,14 +269,14 @@ processMap = (filename, areaName, areaLabel, log) ->
 				log.error i, 'E11', "second default location found" if log.result.defaultLocation? # error 11
 				log.result.defaultLocation = location
 			else if prop isnt ''
-				log.warn i, 'N/a', "text after location label will be ignored (#{prop})" # warn N
+				log.warn i, 'W10', "text after location label will be ignored (#{prop})" # warn 10
 
 			area.locations.push(location)
 			log.result.locations.push(location)
 
 		else if isListItem(line, i, log)
 			unless location?
-				log.error i, 'N/a', "actions are only avaliable for locations" # error N
+				log.error i, 'E13', "actions are only avaliable for locations" # error 13
 				continue
 
 			[name, target, rem] = line.substr(2).split(/\s*`\s*/)
@@ -242,7 +287,7 @@ processMap = (filename, areaName, areaLabel, log) ->
 
 			log.warn i, 'W8', "Unnecessary trailing dot" if name[name.length-1] is '.' # warn 8
 
-			log.warn i, 'N/a', "text after target label will be ignored (#{rem})" if rem is not '' # warn N
+			log.warn i, 'W10',"text after target label will be ignored (#{rem})" if rem? and rem isnt '' # warn 10
 
 			target = location.area.label + '/' + target unless '/' in target
 
@@ -252,7 +297,7 @@ processMap = (filename, areaName, areaLabel, log) ->
 
 		else if imageDescr=line.match /!\[(.+)\]\((.+)\)/
 			unless location?
-				log.error i, 'N/a', "images are only avaliable for locations" # error N
+				log.error i, 'E14', "images are only avaliable for locations" # error 14
 				continue
 
 			log.error i, 'E9', "location's image has been doubled" if location.picture? # error 9
@@ -271,6 +316,9 @@ processMap = (filename, areaName, areaLabel, log) ->
 		blankLines = 0
 
 
+# Process a directory with unify data.
+# Writes results into log.
+# For internal use.
 processDir = (dir, parentLabel, log) ->
 	log.setFilename dir
 
@@ -280,6 +328,9 @@ processDir = (dir, parentLabel, log) ->
 
 	[_, name, label] = t
 	label = parentLabel + '-' + label unless parentLabel is ''
+
+	if log.result.areas.some((area) -> area.label == label)
+		log.error 'loc.label', 'E15', "location with label <#{label}> already exists" # error 15
 
 	checkSpaces name, 'name in folder name'
 	checkSpaces label, 'label in folder name'
@@ -294,6 +345,8 @@ processDir = (dir, parentLabel, log) ->
 			processMap(filepath, name, label, log) if filename is 'map.ht.md' #.match /\.ht\.md$/
 
 
+# Process a directory with unify data.
+# For external use.
 exports.processDir = (dir, verbose=false) ->
 	log = new Logger(new Result(), verbose)
 	processDir dir, '', log

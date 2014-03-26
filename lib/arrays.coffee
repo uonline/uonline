@@ -15,17 +15,8 @@
 'use strict'
 
 
-# Check if a string starts with a given substring.
-# @return [Boolean]
-String::startsWith = (x) ->
-	if x.length > this.length
-		return false
-	return this.substring(0,x.length) == x
-
-
-# Check if a string ends with a given substring.
-# @return [Boolean]
-String::endsWith = (x) ->
-	if x.length > this.length
-		return false
-	return this.substring(this.length-x.length, this.length) == x
+# Returns random element from array or null if array is empty
+# @return [Something]
+Array::random = ->
+	return null if this.length == 0
+	return this[Math.random()*this.length|0]

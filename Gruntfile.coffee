@@ -106,11 +106,6 @@ module.exports = (grunt) ->
 			options:
 				bare: true
 
-		clean:
-			shit: [
-				'lib-cov/*.coffee'
-			]
-
 		coffeelint:
 			all: [
 				'*.coffee'
@@ -131,9 +126,28 @@ module.exports = (grunt) ->
 				ext: '.js'
 
 		jscoverage:
+			all:
+				src: 'lib/'
+				dest: 'lib-cov/'
 			options:
-				inputDirectory: 'lib'
-				outputDirectory: 'lib-cov'
+				exclude: /^.*[.]coffee$/
+
+		clean:
+			lib_cov: 'lib-cov/'
+
+		codo:
+			options:
+				title: 'uonline documentation'
+				output: 'docs'
+				inputs: [
+					'lib'
+				]
+
+		coveralls:
+			all:
+				src: 'report.lcov'
+			options:
+				force: false
 
 
 	# These plugins provide necessary tasks.
@@ -143,8 +157,9 @@ module.exports = (grunt) ->
 	# Custom tasks.
 	grunt.registerTask 'check', ['mustcontain', 'coffeelint', 'jshint:all']
 	grunt.registerTask 'build', ['browserify', 'uglify']
+	grunt.registerTask 'docs', ['codo']
 
-	testTask = ['jscoverage', 'clean:shit', 'coffeeCoverage']  # order is important
+	testTask = ['clean:lib_cov', 'jscoverage', 'coffeeCoverage']
 	if grunt.option('single')?  # allow to test a single file, see Readme
 		grunt.config.set 'nodeunit.one', [ 'tests_node/'+grunt.option('single') ]
 		testTask.push 'nodeunit:one'
@@ -154,4 +169,7 @@ module.exports = (grunt) ->
 	grunt.registerTask 'test', testTask
 
 	# Default task.
-	grunt.registerTask 'default', ['check', 'build', 'test']
+	grunt.registerTask 'default', ['check', 'build', 'docs', 'test']
+
+	# And some additional CI stuff.
+	grunt.registerTask 'travis', ['default', 'jscoverage_write_lcov', 'coveralls']
