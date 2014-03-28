@@ -20,15 +20,14 @@ block content
 					a.pjax.btn(href="/action/go/"+i.to) #{i.name}
 					| #{'\n'}
 	else
-		.span5
-			h4 Здоровье
-			.progress
-				.bar.bar-success(style='width: '+health_percent+'%;')
-					| #{ health }/#{ health_max }
-			h4 Мана
-			.progress
-				.bar(style='width: '+mana_percent+'%;')
-					| #{ mana }/#{ mana_max }
+		h4 Здоровье
+		.progress
+			.bar.bar-success(style='width: '+health_percent+'%;')
+				| #{ health }/#{ health_max }
+		h4 Мана
+		.progress
+			.bar(style='width: '+mana_percent+'%;')
+				| #{ mana }/#{ mana_max }
 	div
 		p
 			small
@@ -50,16 +49,23 @@ block content
 				if players_list.length >= 15
 					| #{' '}И откуда здесь столько народа?
 		p
-			small
-				if monsters_list.length > 0
-					| Монстры:
+			if monsters_list.length > 0
+				| Монстры:
+				if fight_mode == true
+					each i,index in monsters_list
+						div(style="float:left;")
+							| #{i.name}:&nbsp;
+						.progress(style="margin-bottom:5px;")
+							.bar.bar-success(style='width: '+(i.health/i.health_max*100)+'%;')
+								| #{ i.health }/#{ i.health_max }
+				else
 					each i,index in monsters_list
 						| #{' '}#{i.name}
 						if index < monsters_list.length-1
 							| ,
 					| #{'.'}
-				else
-					| На этой локации нет монстров.
+			else
+				| На этой локации нет монстров.
 		p
 			small
 				if autoinvolved_fm == true
