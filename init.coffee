@@ -225,7 +225,7 @@ unifyExport = ->
 insertTestMonsters = ->
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 
-	console.log('Inserting test prototypes...');
+	console.log('Inserting test prototypes...')
 
 	prototypes = [
 		[1, 'Гигантская улитка', 1, 1, 1, 1, 1, 1, 1, 1, 3]
@@ -249,7 +249,7 @@ insertTestMonsters = ->
 			i
 		)
 
-	console.log('Inserting monsters...');
+	console.log('Inserting monsters...')
 
 	monsters = [
 		[1, 6, 774449300, 1, 1, null, 16]
@@ -320,7 +320,7 @@ insertTestMonsters = ->
 			i
 		)
 
-	console.log('Done.');
+	console.log('Done.')
 
 
 sync(
