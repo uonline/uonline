@@ -189,7 +189,7 @@ dropDatabase = (arg) ->
 
 migrateTables = ->
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
-	lib.migration.migrate.sync null, dbConnection
+	lib.migration.migrate.sync null, dbConnection, {verbose: true}
 
 
 optimize = ->
