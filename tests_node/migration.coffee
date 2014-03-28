@@ -189,7 +189,7 @@ exports.migrate =
 	'usual': (test) ->
 		async.series [
 			(callback) ->
-				mg.migrate conn, 1, callback
+				mg.migrate conn, {dest_revision: 1}, callback
 			(callback) ->
 				conn.query 'SELECT column_name, data_type FROM information_schema.columns ' +
 					"WHERE table_name = 'test_table' ORDER BY column_name", [], callback
@@ -249,7 +249,7 @@ exports.migrate =
 			(callback) ->
 				mg.getCurrentRevision conn, callback
 			(callback) ->
-				mg.migrate conn, 0, 'test_table', callback
+				mg.migrate conn, {dest_revision: 0, table: 'test_table'}, callback
 			(callback) ->
 				mg.getCurrentRevision conn, callback
 			(callback) ->
@@ -264,4 +264,14 @@ exports.migrate =
 				result[3].rows[0].column_name is 'id',
 				'should correctly perform migration for specified table'
 			test.ok not result[4], 'migration for other tables should not have been performed'
+			test.done()
+
+	'verbose': (test) ->
+		log = console.log
+		log_times = 0
+		console.log = (smth) -> log_times++
+		mg.migrate conn, {verbose: true}, (error) ->
+			console.log = log
+			test.ifError error
+			test.ok log_times>0, 'should say something'
 			test.done()

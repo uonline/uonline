@@ -292,8 +292,8 @@ exports.save = ((test) ->
 		parseResult = parser.processDir "#{TMP_DIR}/Кронт - kront"
 		conn = anyDB.createConnection config.DATABASE_URL_TEST
 		conn.query.sync conn, "DROP TABLE IF EXISTS areas, locations"
-		mg.migrate.sync null, conn, Infinity, 'areas'
-		mg.migrate.sync null, conn, Infinity, 'locations'
+		mg.migrate.sync null, conn, {table: 'areas'}
+		mg.migrate.sync null, conn, {table: 'locations'}
 		parseResult.save(conn)
 		
 		result = conn.query.sync conn, 'SELECT count(*) AS cnt FROM areas'
