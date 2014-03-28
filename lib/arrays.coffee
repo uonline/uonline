@@ -16,7 +16,6 @@
 
 
 # Returns random element from array or null if array is empty
-# @return [Something]
-Array::random = ->
+Array::pickRandom = ->
 	return null if this.length == 0
 	return this[Math.random()*this.length|0]
