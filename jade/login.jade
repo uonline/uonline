@@ -1,0 +1,24 @@
+extends layout
+block title
+	| Вход
+block content
+	div.page-header
+		h1 Вход
+
+	if error === true
+		div.alert.alert-danger
+			button.close(type="button", data-dismiss="alert", aria-hidden="true") &times;
+			b Неверный логин или пароль.
+			| #{' '}Проверьте&nbsp;&mdash; может, вы опечатались.
+
+	form(role='form', method='post', action='/login/')
+		div.row
+			div.col-sm-3
+				.form-group
+					label(for='username') Логин
+					input#username.form-control(type='text', maxlength='32', name='user', value=user, required, autofocus)
+				.form-group
+					label(for='password') Пароль
+					input#password.form-control(type='password', maxlength='32', name='pass', required)
+				.form-group
+					button.btn.btn-default(type='submit') Войти
