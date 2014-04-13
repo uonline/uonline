@@ -3,7 +3,9 @@ mixin instanceLink(name, url, text, icon, forceNotActive)
 	- if (forceNotActive) activity = false;
 	li.instance-link(class = (activity ? 'active' : null))
 		if icon != null
-			a.pjax(href=url) <i class="#{icon}"></i> #{text}
+			a.pjax(href=url)
+				i.glyphicon(class=icon)
+				| #{' '}#{text}
 		else
 			a.pjax(href=url) #{text}
 
@@ -12,18 +14,21 @@ if !pjax
 	html
 		head
 			meta(charset='utf-8')
+			meta(http-equiv="X-UA-Compatible", content="IE=edge")
 			meta(name='viewport', content='width=device-width, initial-scale=1.0')
 			title
 				block title
-			link(href='/static/bootstrap/css/bootstrap.min.css', rel='stylesheet', media='screen')
-			:stylus
-				body
-					padding-top: 60px
-			link(href='/static/bootstrap/css/bootstrap-responsive.min.css', rel='stylesheet', media='screen')
+			//- Bootstrap
+			link(href='/static/bower_components/bootstrap/dist/css/bootstrap.min.css', rel='stylesheet')
+			link(href='/static/bower_components/bootstrap/dist/css/bootstrap-theme.min.css', rel='stylesheet')
+			//- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries
+			//- WARNING: Respond.js doesn't work if you view the page via file://
 			// if lt IE 9
-				script(src='http://html5shim.googlecode.com/svn/trunk/html5.js')
+				script(src='https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js')
+				script(src='https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js')
+			//- TODO: maybe move scripts to bottom
 			script(src='/static/bower_components/jquery/dist/jquery.min.js')
-			script(src='/static/bootstrap/js/bootstrap.min.js')
+			script(src='/static/bower_components/bootstrap/dist/js/bootstrap.min.js')
 			script(src='/static/bower_components/jquery-pjax/jquery.pjax.js')
 			:coffee
 				$(document).ready ->
@@ -39,7 +44,51 @@ if !pjax
 						$('.instance-link').removeClass 'active'
 						$(this).addClass 'active'
 		body
-			div.navbar.navbar-fixed-top
+			div.navbar.navbar-default.navbar-static-top(role='navigation')
+				div.container
+					div.navbar-header
+						button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+							span.sr-only Toggle navigation
+							span.icon-bar
+							span.icon-bar
+							span.icon-bar
+						a.navbar-brand(href='/') uonline
+					div.navbar-collapse.collapse
+						ul.nav.navbar-nav
+							+instanceLink('about','/about/','Об игре')
+							//- Dropdown example
+							//- li.dropdown
+								a.dropdown-toggle(href='#', data-toggle='dropdown')
+									| Dropdown
+									b.caret
+								ul.dropdown-menu
+									li
+										a(href='#') Action
+									li
+										a(href='#') Another action
+									li
+										a(href='#') Something else here
+									li.divider
+									li.dropdown-header Nav header
+									li
+										a(href='#') Separated link
+									li
+										a(href='#') One more separated link
+						ul.nav.navbar-nav.navbar-right
+							if loggedIn === true
+								li
+									a(href='/profile/')
+										i.glyphicon(class=( admin ? 'glyphicon-certificate' : 'glyphicon-user' ))
+										| #{' '}#{login}
+								+instanceLink('profile', '/profile/', 'Профиль', null, !profileIsMine)
+								+instanceLink('game', '/game/', 'Игра')
+								li
+									a(href='/action/logout') Выйти
+							else
+								+instanceLink('login', '/login/', 'Вход', 'glyphicon-chevron-right')
+								+instanceLink('register', '/register/', 'Регистрация')
+
+			//div.navbar.navbar-fixed-top
 				div.navbar-inner
 					div.container
 						a.brand(href='/') uonline
@@ -60,11 +109,14 @@ if !pjax
 								+instanceLink('register', '/register/', 'Регистрация')
 
 			div.container
-				div#content
-					block content
-				hr
-				footer
-					p.muted &copy; m1kc и К<sup>о</sup>, 2012&ndash;#{ now.getFullYear() }
+				div.row
+					div.col-md-12#content
+						block content
+				div.row
+					div.col-md-12
+						hr
+						footer
+							p.muted &copy; m1kc и К<sup>о</sup>, 2012&ndash;#{ now.getFullYear() }
 else
 	title
 		block title
