@@ -181,7 +181,7 @@ module.exports = (grunt) ->
 	grunt.registerTask 'test', testTask
 
 	# Default task.
-	grunt.registerTask 'default', []#['check', 'build', 'docs', 'test']
+	grunt.registerTask 'default', ['check', 'build', 'docs', 'test']
 
 	# And some additional CI stuff.
 	grunt.registerTask 'travis', ['default', 'jscoverage_write_lcov', 'coveralls']
