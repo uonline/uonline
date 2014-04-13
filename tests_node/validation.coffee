@@ -25,12 +25,16 @@ exports.usernameIsValid = (test) ->
 	test.strictEqual validation.usernameIsValid('b'), false, 'not too short'
 	test.strictEqual validation.usernameIsValid('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'), false, 'not too long'
 	test.strictEqual validation.usernameIsValid('DROP TABLE `users`;'), false, 'no odd characters'
+	test.strictEqual validation.usernameIsValid(undefined), false, 'missing name can\'t be valid'
+	test.strictEqual validation.usernameIsValid(null), false, 'missing name can\'t be valid'
 	test.done()
 
 
 exports.emailIsValid = (test) ->
 	test.strictEqual validation.emailIsValid('security@mail.ru'), true, 'should pass good emails'
 	test.strictEqual validation.emailIsValid('wtf'), false, 'should not pass the shit'
+	test.strictEqual validation.emailIsValid(undefined), false, 'empty mail - invalid mail'
+	test.strictEqual validation.emailIsValid(null), false, 'empty mail - invalid mail'
 	test.done()
 
 
@@ -39,4 +43,6 @@ exports.passwordIsValid = (test) ->
 	test.strictEqual validation.passwordIsValid('вобла'), false, 'should not pass Russian'
 	test.strictEqual validation.passwordIsValid('b'), false, 'not too short'
 	test.strictEqual validation.passwordIsValid('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'), false, 'not too long'
+	test.strictEqual validation.passwordIsValid(undefined), false, 'not passed - not valid'
+	test.strictEqual validation.passwordIsValid(null), false, 'not passed - not valid'
 	test.done()

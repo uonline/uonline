@@ -137,3 +137,18 @@ exports.dropCol = (test) ->
 		test.strictEqual result[3].rows.length, 1, "column shold have been removed"
 		test.strictEqual result[3].rows[0].column_name, "id", "correct column shold have been removed"
 		test.done()
+
+
+exports.createIndex = (test) ->
+	async.series [
+		(callback) ->
+			tables.create conn, 'test_table', 'id INTEGER', callback
+		(callback) ->
+			tables.createIndex conn, 'test_table', 'id', callback
+		(callback) ->
+			conn.query "SELECT * FROM pg_indexes WHERE tablename='test_table' AND indexname='test_table_id'", callback
+	], (error, result) ->
+		test.ifError error
+		test.strictEqual result[2].rows.length, 1, 'index should have been created'
+		test.done()
+

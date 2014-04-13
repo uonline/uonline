@@ -17,8 +17,48 @@
 'use strict'
 
 config = require './config.js'
+
 anyDB = require 'any-db'
 dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
+
+# Attach profiler?
+if process.env.SQLPROF is 'true'
+	dbConnection._query = dbConnection.query
+	dbConnection.query = (q, data, cb) ->
+		logged = q
+		for value, index in data
+			index++
+			while logged.indexOf("$#{index}") isnt -1
+				logged = logged.replace "$#{index}", "<#{value}>"
+		Date start = new Date()
+		@_query q, data, (error, result) ->
+			time = new Date() - start
+			console.log "\n#{time} ms: #{logged}\n"
+			cb(error, result)
+	dbConnection._begin = dbConnection.begin
+	dbConnection.begin = ->
+		console.log "\nBEGIN TRANSACTION\n"
+		tx = @_begin()
+		tx.____start = new Date()
+		tx.__query = tx.query
+		tx.query = (q, data, cb) ->
+			logged = q
+			for value, index in data
+				index++
+				while logged.indexOf("$#{index}") isnt -1
+					logged = logged.replace "$#{index}", "<#{value}>"
+			Date start = new Date()
+			@__query q, data, (error, result) ->
+				time = new Date() - start
+				console.log "\n#{time} ms: t: #{logged}\n"
+				cb(error, result)
+		# doesn't work
+		#tx.__commit = tx.commit
+		#tx.commit = (a) ->
+			#console.log "\nCOMMIT, the whole thing took #{new Date() - tx.____start} ms\n"
+			#tx.__commit a
+		return tx
+
 lib = require './lib.coffee'
 async = require 'async'
 express = require 'express'
