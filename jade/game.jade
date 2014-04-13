@@ -30,24 +30,23 @@ block content
 				| #{ mana }/#{ mana_max }
 	div
 		p
-			small
-				case players_list.length
-					when 0
-						| На этой локации больше никого нет
-					when 1
-						| Рядом с вами стоит#{' '}
-					default
-						| Рядом с вами стоят#{' '}
-				each i,index in players_list
-					| #{' '}
-					a.pjax(href="/profile/"+i.name+"/") #{i.name}
-					if index == players_list.length-2
-						| #{' '}и
-					if index < players_list.length-2
-						| ,
-				| #{'.'}
-				if players_list.length >= 15
-					| #{' '}И откуда здесь столько народа?
+			case players_list.length
+				when 0
+					| На этой локации больше никого нет
+				when 1
+					| Рядом с вами стоит#{' '}
+				default
+					| Рядом с вами стоят#{' '}
+			each i,index in players_list
+				| #{' '}
+				a.pjax(href="/profile/"+i.name+"/") #{i.name}
+				if index == players_list.length-2
+					| #{' '}и
+				if index < players_list.length-2
+					| ,
+			| #{'.'}
+			if players_list.length >= 15
+				| #{' '}И откуда здесь столько народа?
 		p
 			if monsters_list.length > 0
 				| Монстры:
@@ -72,9 +71,17 @@ block content
 					b Вас атаковали!
 		if monsters_list.length > 0
 			p
-				small
-					if fight_mode == true
-						a.pjax(href="/action/escape") Свалить
-					else
-						a.pjax(href="/action/attack") Атаковать
+				if fight_mode == true
+					a.btn.disabled Атака
+					| #{' '}
+					a.btn.disabled Защита
+					| #{' '}
+					a.btn.disabled Инвентарь
+					| #{' '}
+					a.btn.disabled Магия
+					| #{' '}
+					a.btn.pjax(href="/action/escape") Сбежать
+				else
+					a.btn.pjax(href="/action/attack") Атаковать
+	//- fit picture
 	div(style="clear: both;")
