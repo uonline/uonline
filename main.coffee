@@ -214,7 +214,6 @@ app.get '/profile/:username/', (request, response) ->
 		options[i] = chars[i]
 	options.username = username
 	response.render 'profile', options
-.async()
 
 
 app.get '/action/logout', (request, response) ->

@@ -189,7 +189,7 @@ dropDatabase = (arg) ->
 
 migrateTables = ->
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
-	lib.migration.migrate.sync null, dbConnection
+	lib.migration.migrate.sync null, dbConnection, {verbose: true}
 
 
 optimize = ->
@@ -225,6 +225,8 @@ unifyExport = ->
 insertTestMonsters = ->
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 
+	console.log('Inserting test prototypes...')
+
 	prototypes = [
 		[1, 'Гигантская улитка', 1, 1, 1, 1, 1, 1, 1, 1, 3]
 		[2, 'Червь-хищник', 2, 1, 2, 2, 1, 1, 2, 1, 1]
@@ -246,6 +248,8 @@ insertTestMonsters = ->
 				"($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
 			i
 		)
+
+	console.log('Inserting monsters...')
 
 	monsters = [
 		[1, 6, 774449300, 1, 1, null, 16]
@@ -300,8 +304,13 @@ insertTestMonsters = ->
 		[50, 6, 446105458, 1, 1, null, 19]
 	]
 
+	locs = dbConnection.query.sync(dbConnection, "SELECT id FROM locations").rows
+	if (locs.length == 0)
+		throw new Error("No locations found. Forgot unify data?")
+
 	dbConnection.query.sync(dbConnection, "TRUNCATE monsters", [])
 	for i in monsters
+		i[2] = locs.pickRandom().id
 		dbConnection.query.sync(
 			dbConnection
 			"INSERT INTO monsters "+
@@ -310,6 +319,8 @@ insertTestMonsters = ->
 				"($1, $2, $3, $4, $5, $6, $7)"
 			i
 		)
+
+	console.log('Done.')
 
 
 sync(

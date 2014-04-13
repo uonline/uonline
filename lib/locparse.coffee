@@ -19,7 +19,7 @@ fs = require 'fs'
 sync = require 'sync'
 
 
-# Create location's numeric id from its label. Based on SHA-1.
+# Create area's and location's numeric id from its label. Based on SHA-1.
 # @return [Number]
 makeId = (str) ->
 	sum = crypto.createHash 'sha1'
@@ -125,14 +125,16 @@ class Location
 		@picture = null
 
 
-# @todo Write something.
+# Logger. Collect and store log data.
+# If verbose, prints warns and errors while collectiong.
+# Also stores object with parsed data (may be not the best idea but one extra argument has gone).
 class Logger
 
 	# A constructor.
 	constructor: (@result, @verbose) ->
 		@filename = undefined
 
-	# @todo Write something.
+	# Adds "what" object in "toWhere" log group.
 	_add: (toWhere, what) ->
 		toWhere.push what
 		if @filename of @result.files
@@ -140,12 +142,16 @@ class Logger
 		else
 			@result.files[@filename] = [what]
 
-	# @todo Write something.
+	# Set filename (or other string) to which next errors will be associated.
 	setFilename: (filename) ->
 		@filename = filename
 		console.log " --- #{filename}:" if @verbose
 
-	# @todo Write something.
+	# Adds warning with:
+	#  * pointer - something that can give an idea of warning cause location
+	#  * id - identifier of warning (like "W1")
+	#  * message - actual warning message
+	# If verbose, prints it in console.
 	warn: (pointer, id, message) ->
 		pointer = "line #{pointer+1}" if typeof pointer == 'number'
 		console.warn "Warning(#{id}): #{pointer}: #{message}" if @verbose
@@ -157,7 +163,7 @@ class Logger
 			message: message
 		)
 
-	# @todo Write something.
+	# Like warn but for errors.
 	error: (pointer, id, message) ->
 		pointer = "line #{pointer+1}" if typeof pointer == 'number'
 		console.warn "Error(#{id}): #{pointer}: #{message}" if @verbose
