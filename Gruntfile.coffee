@@ -22,12 +22,12 @@ module.exports = (grunt) ->
 	grunt.initConfig
 		nodeunit:
 			js: [
-				'tests_node/health-check.js'
-				'tests_node/*.js'
+				'tests/health-check.js'
+				'tests/*.js'
 			]
 			coffee: [
-				'tests_node/health-check.coffee'
-				'tests_node/*.coffee'
+				'tests/health-check.coffee'
+				'tests/*.coffee'
 			]
 
 		jshint:
@@ -37,7 +37,7 @@ module.exports = (grunt) ->
 				src: [
 					'*.js'
 					'lib/*.js'
-					'tests_node/*.js'
+					'tests/*.js'
 					'grunt-custom-tasks/*.js'
 				]
 			verbose:
@@ -47,7 +47,7 @@ module.exports = (grunt) ->
 				src: [
 					'*.js'
 					'lib/*.js'
-					'tests_node/*.js'
+					'tests/*.js'
 					'grunt-custom-tasks/*.js'
 				]
 
@@ -68,11 +68,11 @@ module.exports = (grunt) ->
 				src: [
 					'*.js'
 					'lib/*.js'
-					'tests_node/*.js'
+					'tests/*.js'
 					'grunt-custom-tasks/*.js'
 					'*.coffee'
 					'lib/*.coffee'
-					'tests_node/*.coffee'
+					'tests/*.coffee'
 					'grunt-custom-tasks/*.coffee'
 				]
 				regex: /WARRANTY/
@@ -83,11 +83,11 @@ module.exports = (grunt) ->
 				src: [
 					'*.js'
 					'lib/*.js'
-					'tests_node/*.js'
+					'tests/*.js'
 					'grunt-custom-tasks/*.js'
 					'*.coffee'
 					'lib/*.coffee'
-					'tests_node/*.coffee'
+					'tests/*.coffee'
 					'grunt-custom-tasks/*.coffee'
 				]
 				regex: /['"]use strict['"]\s*[;\n]/
@@ -110,7 +110,7 @@ module.exports = (grunt) ->
 			all: [
 				'*.coffee'
 				'lib/*.coffee'
-				'tests_node/*.coffee'
+				'tests/*.coffee'
 				'grunt-custom-tasks/*.coffee'
 			]
 			options: JSON.parse fs.readFileSync('.coffeelintrc', 'utf-8')
@@ -173,7 +173,7 @@ module.exports = (grunt) ->
 
 	testTask = ['clean:lib_cov', 'jscoverage', 'coffeeCoverage']
 	if grunt.option('single')?  # allow to test a single file, see Readme
-		grunt.config.set 'nodeunit.one', [ 'tests_node/'+grunt.option('single') ]
+		grunt.config.set 'nodeunit.one', [ 'tests/'+grunt.option('single') ]
 		testTask.push 'nodeunit:one'
 	else
 		testTask = testTask.concat ['nodeunit:js', 'nodeunit:coffee']  # order is important
