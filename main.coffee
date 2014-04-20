@@ -79,7 +79,7 @@ app.use '/static/bower_components', express.static(__dirname + '/bower_component
 
 app.set 'view engine', 'jade'
 app.locals.pretty = true
-app.set 'views', __dirname + '/jade'
+app.set 'views', __dirname + '/views'
 
 
 app.use ((request, response) ->
