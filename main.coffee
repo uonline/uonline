@@ -259,13 +259,24 @@ app.get '/game/', (request, response) -> sync ->
 		options.monsters_list = tmpMonsters
 		options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
 		options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
-		
+
 		chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
 		for i of chars
 			options[i] = chars[i]
-		
+
 		response.header 'X-PJAX-URL', '/game/'
 		response.render 'game', options
+	else
+		response.redirect '/login/'
+
+
+app.get '/inventory/', (request, response) ->
+	if request.uonline.basicOpts.loggedIn is true
+		userid = request.uonline.basicOpts.userid
+		options = request.uonline.basicOpts
+		options.instance = 'inventory'
+		options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
+		response.render 'inventory', options
 	else
 		response.redirect '/login/'
 
