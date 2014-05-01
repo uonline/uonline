@@ -336,10 +336,10 @@ sync(
 		dropDatabase(opts.drop_database) if opts.drop_database
 		createDatabase(opts.create_database) if opts.create_database
 		migrateTables() if opts.migrate_tables
-		optimize() if opts.optimize_tables
 		unifyValidate() if opts.unify_validate
 		unifyExport() if opts.unify_export
 		insertTestMonsters() if opts.test_monsters
+		optimize() if opts.optimize_tables
 		process.exit 0
 	(ex) ->
 		if ex? then throw ex

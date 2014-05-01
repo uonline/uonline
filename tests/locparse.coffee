@@ -22,7 +22,7 @@ config = require '../config.js'
 rmrf = require 'rmrf'
 copy = require('ncp').ncp
 copy.limit = 16 #concurrency limit
-TMP_DIR = 'tests_node/loctests_tmp'
+TMP_DIR = 'tests/loctests_tmp'
 
 krontShouldBeLike =
 	id: 0
@@ -78,7 +78,7 @@ sed = (pairs, file) ->
 
 exports.setUp = (done) ->
 	rmrf TMP_DIR if fs.existsSync TMP_DIR
-	copy 'tests_node/loctests', TMP_DIR, (error) ->
+	copy 'tests/loctests', TMP_DIR, (error) ->
 		throw error if error?
 		done()
 
@@ -108,7 +108,7 @@ commonTest = (test, result) ->
 
 
 exports.correct_test = (test) ->
-	result = parser.processDir 'tests_node/loctests/Кронт - kront' #'unify/Кронт - kront'
+	result = parser.processDir 'tests/loctests/Кронт - kront' #'unify/Кронт - kront'
 
 	test.deepEqual result.warnings, [], 'should receive no warnings'
 	test.deepEqual result.errors, [], 'should receive no errors'
