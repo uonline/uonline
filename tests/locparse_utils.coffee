@@ -154,9 +154,8 @@ exports.postCheck_test =
 	'correct': (test) ->
 		log = new Log
 		log.result.areas = [
-			id: 1
-		,
-			id: 2
+			{ id: 1 }
+			{ id: 2 }
 		]
 		log.result.locations = [
 			id: 1
@@ -173,15 +172,14 @@ exports.postCheck_test =
 		]
 		log.result.defaultLocation = log.result.areas[0]
 		parser.postCheck log
-		test.deepEqual log.all(), {}, 'should not cause warnings or errors'
+		test.deepEqual log.all(), {}, "should not produce warnings or errors if everything's ok"
 		test.done()
 	
 	'errors': (test) ->
 		log = new Log
 		log.result.areas = [
-			id: 1
-		,
-			id: 1
+			{ id: 1 }
+			{ id: 1 }
 		]
 		log.result.locations = [
 			id: 1
@@ -199,13 +197,12 @@ exports.postCheck_test =
 		log.result.defaultLocation = null
 		parser.postCheck log
 		log.testIfCorrect test, 'errors', [
-				{pointer:'actions', id:'E1'},
-				{pointer:'locations', id:'E6'},
-				{pointer:'locations', id:'E7'},
-				{pointer:'areas', id:'N/a'}, # same id
-				{pointer:'locations', id:'N/a'}, # same id
-			], 'should warn about spaces on each side'
-		test.deepEqual log.warns, {}, 'should not produce warnings'
+				{id: 'E1',  pointer: 'actions'}
+				{id: 'E6',  pointer: 'locations'}
+				{id: 'E7',  pointer: 'locations'}
+				{id: 'N/a', pointer: 'areas'}  # same id
+				{id: 'N/a', pointer: 'locations'}  # same id
+			], 'should generate errors when there are integrity issues'
+		test.deepEqual log.warns, {}, 'should not produce any warnings at all'
 		test.done()
-
 
