@@ -99,11 +99,11 @@ options = [
 	help: 'Parse and save locations to DB.'
 ,
 	names: [
-		'test-monsters'
-		't'
+		'monsters'
+		'M'
 	]
 	type: 'bool'
-	help: 'Insert test monsters.'
+	help: 'Insert monsters.'
 ]
 
 
@@ -222,7 +222,7 @@ unifyExport = ->
 	result.save(dbConnection)
 
 
-insertTestMonsters = ->
+insertMonsters = ->
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 
 	console.log('Inserting test prototypes...')
@@ -293,7 +293,7 @@ sync(
 		migrateTables() if opts.migrate_tables
 		unifyValidate() if opts.unify_validate
 		unifyExport() if opts.unify_export
-		insertTestMonsters() if opts.test_monsters
+		insertMonsters() if opts.monsters
 		optimize() if opts.optimize_tables
 		process.exit 0
 	(ex) ->
