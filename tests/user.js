@@ -341,7 +341,7 @@ exports.createSession = {
 	},
 	'testErrors': function (test) {
 		users.createSession(conn, 1, function(error, result) {
-			test.ok(error);
+			test.ok(error, 'should not crash if error has occured');
 			test.done();
 		});
 	},
