@@ -1,7 +1,12 @@
 uonline
 =======
 
-[![Build Status](https://travis-ci.org/uonline/uonline.png?branch=master)](https://travis-ci.org/uonline/uonline) [![Coverage Status](https://coveralls.io/repos/uonline/uonline/badge.png?branch=master)](https://coveralls.io/r/uonline/uonline?branch=master) [![Dependency Status](https://david-dm.org/uonline/uonline.png)](https://david-dm.org/uonline/uonline) [![devDependency Status](https://david-dm.org/uonline/uonline/dev-status.png)](https://david-dm.org/uonline/uonline#info=devDependencies)  [![Code Climate](https://codeclimate.com/github/uonline/uonline.png)](https://codeclimate.com/github/uonline/uonline) [![Tasks for this week](https://badge.waffle.io/uonline/uonline.png?label=this%20week&title=Tasks)](http://waffle.io/uonline/uonline)
+[![Build Status](https://travis-ci.org/uonline/uonline.svg?branch=master)](https://travis-ci.org/uonline/uonline)
+[![Coverage Status](https://coveralls.io/repos/uonline/uonline/badge.png?branch=master)](https://coveralls.io/r/uonline/uonline?branch=master)
+[![Dependency Status](https://david-dm.org/uonline/uonline.svg)](https://david-dm.org/uonline/uonline)
+[![devDependency Status](https://david-dm.org/uonline/uonline/dev-status.svg)](https://david-dm.org/uonline/uonline#info=devDependencies)
+[![Code Climate](https://codeclimate.com/github/uonline/uonline.png)](https://codeclimate.com/github/uonline/uonline)
+[![Tasks for this week](https://badge.waffle.io/uonline/uonline.png?label=this%20week&title=Tasks)](http://waffle.io/uonline/uonline)
 
 A browser-based MMORPG game in a fantasy world.
 
@@ -9,76 +14,34 @@ A browser-based MMORPG game in a fantasy world.
 Requirements
 ------------
 
-### Current
-
-* Node.js with npm
-* CoffeeScript
-* Grunt
-* MySQL or MariaDB
-* MySQL user `anonymous` with password `nopassword`
-* Two MySQL databases: `uonline` and `uonline_test`
-
-### Legacy
-
-* PHP 5.4 or higher
-* PHP-MySQL module
-* PHP-CGI package
-* Composer
-
-### Future
-
-* PostgreSQL
+* Node.js 0.10 with npm;
+* CoffeeScript;
+* Grunt (you may use local one, but why?);
+* PostgreSQL 9.1 or higher;
+* DB user `anonymous` with password `nopassword`;
+* Two databases: `uonline` and `uonline_test`.
 
 
 How to set up
 -------------
 
 * Clone the repo.
-* Install packages: `npm install`, `composer install`.
-* Create keyring (for PHP). You can run almost any PHP file to get help on format.
-* Fetch submodules: `git submodule init`, `git submodule update`.
-* Initialize database: `./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize`.
-* If you need to add an admin: `./add-admin.coffee username password`.
+* Install packages: `npm install`
+* Fetch submodules: `git submodule init`, `git submodule update`
+* Initialize database: `./init.coffee --migrate-tables --unify-export --test-monsters --optimize-tables`
+* If you need to add an admin: `./add-admin.coffee username password`
 
 
 How to run
 ----------
 
-If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`.
-
-If you wanna run legacy PHP version - you know the way.
-
-
-Tips and tricks for PHP version
--------------------------------
-
-* MySQL package in Debian is called `mysql-server`. Don't forget to run `mysql_secure_installation`.
-* Apache package in Debian is called `apache2`. Configure virtual hosts if you need it.
-* PHP package in Debian is called `php5`. Warning: it's pretty outdated. To fetch the latest:
-
-```
-sudo add-apt-repository ppa:ondrej/php5
-sudo apt-get update
-sudo apt-get install php5
-```
-
-* 404 at main page? `.htaccess` problem. Enable `mod_rewrite`, edit your apache config and tell it the magic phrase `AllowOverride All`.
-* In case of database problems, make sure that `mysql` and `mysqli` extensions are enabled in php.ini. In Debian, you will also need a package named `php5-mysql`.
-* It is designed to run with xcache/opcache and native Twig extension. But they're both optional. Just in case: package `php5-xcache` in Debian for xcache, package `php5-dev` to build ext. `vendor/twig/twig/ext/twig`. [How to build](http://twig.sensiolabs.org/doc/intro.html#installing-the-c-extension).
-* Turn caching on in keyring. It helps a lot, too.
-* And the last. If you want to see code coverage reports, install xdebug (package `php5-xdebug` in Debian).
-
-If you experience problems, try to run `make diagnose` to diagnose the most common problems.
-
-To correctly update uonline on production server, try `make deploy`. To update third-party libraries, run `composer update`.
-
-To run PHP tests, run `make test`. Note that they cover only some parts of the code.
+If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`. If you need to restart server after every change in code - `make monitor`.
 
 
 Programmers' guidelines
 -----------------------
 
-**Hint:** Run `grunt` to check and test your code. Run something like `grunt nodeunit:one --target health-check.coffee` to run a single testsuite.
+**Hint:** Run `grunt` to check and test your code. Run something like `grunt test --single health-check.coffee` to run a single testsuite.
 
 * Use tabs, not spaces. Don't mix them and don't use smarttabs.
 * Prefer single quotes. Use double quotes when you need to escape `'` itself.

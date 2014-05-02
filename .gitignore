@@ -1,23 +1,14 @@
-# Project-specific
-keyring
-tablestate
-maintenance
-templates_cache/
+# Generated docs
+docs/
 
 # Used by tests
 test/
 lib-cov/
+report.lcov
 
 # Third-party tools
 node_modules/
-vendor/
-
-# PHPUnit reports
-code-coverage-report/
-
-# For Windows, legacy
-htmlcompressor.jar
-yuicompressor.jar
+bower_components/
 
 # Browserified Node modules
 browserified/

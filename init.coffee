@@ -17,10 +17,10 @@
 'use strict'
 
 config = require './config.js'
-lib = require './lib.js'
-async = require 'async'
+lib = require './lib.coffee'
 sync = require 'sync'
 dashdash = require 'dashdash'
+
 
 anyDB = null
 createAnyDBConnection = (url) ->
@@ -139,8 +139,8 @@ help = ->
 
 
 info = ->
-	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
-	current = lib.migration.getCurrentRevision.sync(null, mysqlConnection)
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+	current = lib.migration.getCurrentRevision.sync(null, dbConnection)
 	newest = lib.migration.getNewestRevision()
 	status = if current < newest then 'needs update' else 'up to date'
 	console.log "init.js with #{newest + 1} revisions on board."
@@ -152,17 +152,19 @@ createDatabase = (arg) ->
 
 	create = (db_url) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
+		db_path += '/postgres'  # PostgreSQL requires database to be specified.
 		conn = createAnyDBConnection(db_path)
 		try
-			conn.query.sync(conn, 'CREATE DATABASE ' + db_name, [])
+			conn.query.sync(conn, "CREATE DATABASE #{db_name}", [])
 			console.log "#{db_name} created."
 		catch error
-			if error.code != 'ER_DB_CREATE_EXISTS'
+			if error.code is 'ER_DB_CREATE_EXISTS' or error.code is '42P04'  # MySQL, PostgreSQL
+				console.log "#{db_name} already exists."
+			else
 				throw error
-			console.log "#{db_name} already exists."
 
-	create config.MYSQL_DATABASE_URL if arg in ['main', 'both']
-	create config.MYSQL_DATABASE_URL_TEST if arg in ['test', 'both']
+	create config.DATABASE_URL if arg in ['main', 'both']
+	create config.DATABASE_URL_TEST if arg in ['test', 'both']
 
 
 dropDatabase = (arg) ->
@@ -170,39 +172,43 @@ dropDatabase = (arg) ->
 
 	drop = (db_url, callback) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
+		db_path += '/postgres'  # PostgreSQL requires database to be specified.
 		conn = createAnyDBConnection(db_path)
 		try
-			conn.query.sync(conn, 'DROP DATABASE ' + db_name, [])
+			conn.query.sync(conn, "DROP DATABASE #{db_name}", [])
 			console.log "#{db_name} dropped."
 		catch error
-			if error.code != 'ER_DB_DROP_EXISTS'
+			if error.code is 'ER_DB_DROP_EXISTS' or error.code is '3D000'  # MySQL, PostgreSQL
+				console.log "#{db_name} does not exist."
+			else
 				throw error
-			console.log "#{db_name} already dropped."
 
-	drop config.MYSQL_DATABASE_URL if arg in ['main', 'both']
-	drop config.MYSQL_DATABASE_URL_TEST if arg in ['test', 'both']
+	drop config.DATABASE_URL if arg in ['main', 'both']
+	drop config.DATABASE_URL_TEST if arg in ['test', 'both']
 
 
 migrateTables = ->
-	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
-	lib.migration.migrate.sync null, mysqlConnection
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+	lib.migration.migrate.sync null, dbConnection, {verbose: true}
 
 
 optimize = ->
-	conn = createAnyDBConnection(config.MYSQL_DATABASE_URL)
-	db_name = config.MYSQL_DATABASE_URL.match(/[^\/]+$/)[0]
+	conn = createAnyDBConnection(config.DATABASE_URL)
+	db_name = config.DATABASE_URL.match(/[^\/]+$/)[0]
 
 	result = conn.query.sync conn,
-		"SELECT TABLE_NAME "+
-		"FROM information_schema.TABLES "+
-		"WHERE TABLE_SCHEMA='#{db_name}'"
+		"SELECT table_name "+
+		"FROM information_schema.tables "+
+		"WHERE table_schema = 'public'"  # move to subquery, maybe?
 
 	for row in result.rows
-		optRes = conn.query.sync conn, "OPTIMIZE TABLE #{row.TABLE_NAME}"
-		console.log row.TABLE_NAME+":"
-
-		for optRow in optRes.rows
-			console.log "  #{optRow.Op} #{optRow.Msg_type}: #{optRow.Msg_text}"
+		#lib.prettyprint.action "Optimizing table `#{row.table_name}`"
+		console.log "Optimizing table `#{row.table_name}`..."
+		try
+			optRes = conn.query.sync conn, "VACUUM FULL ANALYZE #{row.table_name}"
+			console.log "ok"
+		catch ex
+			console.trace ex
 
 
 unifyValidate = ->
@@ -210,14 +216,17 @@ unifyValidate = ->
 
 
 unifyExport = ->
-	dbConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 	locparse = require './lib/locparse'
 	result = locparse.processDir('./unify/Кронт - kront', true)
 	result.save(dbConnection)
 
 
 insertTestMonsters = ->
-	dbConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+
+	console.log('Inserting test prototypes...')
+
 	prototypes = [
 		[1, 'Гигантская улитка', 1, 1, 1, 1, 1, 1, 1, 1, 3]
 		[2, 'Червь-хищник', 2, 1, 2, 2, 1, 1, 2, 1, 1]
@@ -227,16 +236,21 @@ insertTestMonsters = ->
 		[6, 'Дикий кабан', 1, 2, 1, 2, 1, 1, 1, 2, 1]
 		[7, 'Тарантул', 3, 1, 4, 2, 1, 2, 4, 1, 1]
 	]
+
+	dbConnection.query.sync(dbConnection, "TRUNCATE monster_prototypes", [])
 	for i in prototypes
 		dbConnection.query.sync(
 			dbConnection
-			"REPLACE INTO `monster_prototypes` "+
-				"(`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, "+
-				"`wisdom`, `volition`, `health_max`, `mana_max`) "+
+			"INSERT INTO monster_prototypes "+
+				"(id, name, level, power, agility, endurance, intelligence, "+
+				"wisdom, volition, health_max, mana_max) "+
 				"VALUES "+
-				"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+				"($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
 			i
 		)
+
+	console.log('Inserting monsters...')
+
 	monsters = [
 		[1, 6, 774449300, 1, 1, null, 16]
 		[2, 5, 648737395, 1, 1, null, 5]
@@ -289,15 +303,24 @@ insertTestMonsters = ->
 		[49, 2, 774449300, 1, 1, null, 8]
 		[50, 6, 446105458, 1, 1, null, 19]
 	]
+
+	locs = dbConnection.query.sync(dbConnection, "SELECT id FROM locations").rows
+	if (locs.length == 0)
+		throw new Error("No locations found. Forgot unify data?")
+
+	dbConnection.query.sync(dbConnection, "TRUNCATE monsters", [])
 	for i in monsters
+		i[2] = locs.pickRandom().id
 		dbConnection.query.sync(
 			dbConnection
-			"REPLACE INTO `monsters` "+
-				"(`id`, `prototype`, `location`, `health`, `mana`, `effects`, `attack_chance`) "+
+			"INSERT INTO monsters "+
+				"(id, prototype, location, health, mana, effects, attack_chance) "+
 				"VALUES "+
-				"(?, ?, ?, ?, ?, ?, ?)"
+				"($1, $2, $3, $4, $5, $6, $7)"
 			i
 		)
+
+	console.log('Done.')
 
 
 sync(
@@ -313,10 +336,10 @@ sync(
 		dropDatabase(opts.drop_database) if opts.drop_database
 		createDatabase(opts.create_database) if opts.create_database
 		migrateTables() if opts.migrate_tables
-		optimize() if opts.optimize_tables
 		unifyValidate() if opts.unify_validate
 		unifyExport() if opts.unify_export
 		insertTestMonsters() if opts.test_monsters
+		optimize() if opts.optimize_tables
 		process.exit 0
 	(ex) ->
 		if ex? then throw ex

@@ -21,10 +21,10 @@ var list = require('fs').readdirSync('./lib');
 for (var i in list)
 {
 	i = list[i];
-	var name = i.substring(0, i.length-3); // ".js".length === 3
-	var ext = i.substring(i.length-3);
+	var ext = i.substring(i.length-3); // ".js".length === 3
 	if (ext === '.js')
 	{
+		var name = i.substring(0, i.length-3);
 		exports[name] = require('./lib/'+i);
 	}
 }

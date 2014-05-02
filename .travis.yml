@@ -1,39 +1,19 @@
-language: php
-php:
-  - "5.5"
-  - "5.4"
+language: node_js
+node_js:
+  - "0.10"
 services:
-  - mysql
   - postgresql
 env:
-  - DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test" MYSQL_DATABASE_URL="mysql://travis:@localhost/uonline" MYSQL_DATABASE_URL_TEST="mysql://travis:@localhost/uonline_test"
+  - DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test"
 before_script:
-  - # Node.js setup
-  - travis_retry sudo apt-get update
-  - travis_retry sudo apt-get install nodejs
-  - node --version
-  - travis_retry npm install
-  - travis_retry npm install -g grunt-cli coffee-script
-  - # PHP setup
-  - composer --ansi diagnose || true
-  - travis_retry composer install
-  - # init.php test
-  - echo "localhost|travis||uonline|off" > keyring
-  - ./init.php --info
-  - ./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize
-  - ./init.php --info
-  - ./init.php --drop
-  - ./init.php --info
-  - # init.coffee test
+  - # test scripts
   - ./init.coffee --info || true
-  - ./init.coffee --create-database both --migrate-tables --optimize-tables
+  - ./init.coffee --create-database both --migrate-tables --unify-export --test-monsters --optimize-tables
   - ./init.coffee --info
   - ./add-admin.coffee admin password
   - ./init.coffee --drop-database both
   - ./init.coffee --info || true
   - # Create test database
-  - mysql -e 'create database uonline_test;'
+  - psql -c 'create database uonline_test;' -U postgres
 script:
-  - grunt
-after_script:
-  - ./node_modules/nodeunit/bin/nodeunit tests_node/ --reporter lcov | travis_retry ./node_modules/coveralls/bin/coveralls.js
+  - grunt travis

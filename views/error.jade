@@ -1,0 +1,31 @@
+extends layout
+block title
+	//- Этому кейсу по идее надо быть где-то выше, потому что description
+	//- используется и в следующем блоке. Но Jade не разрешает.
+	- var description = null
+	- var text = null
+	case code
+		when 404
+			- description = 'Страница не найдена'
+			- text = 'Возможно, вам дали неправильную ссылку, вы опечатались или такой страницы больше нет.'
+		when 500
+			- description = 'Внутренняя ошибка сервера'
+			- text = 'Что-то пошло не так. Попробуйте обновить страницу.'
+		default
+			//- do nothing
+
+	if description != null
+		| #{code} &mdash; #{description}
+	else
+		| Ошибка #{code}
+block content
+	div.page-header
+		if description != null
+			h1 #{code}#{' '}
+				small #{description}
+		else
+			h1 Ошибка #{code}
+	if text != null
+		p #{text}
+	p
+		a.btn(href='/') Перейти на главную
