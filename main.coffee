@@ -30,16 +30,16 @@ if process.env.SQLPROF is 'true'
 			index++
 			while logged.indexOf("$#{index}") isnt -1
 				logged = logged.replace "$#{index}", "<#{value}>"
-		Date start = new Date()
+		start = Date.now()
 		@_query q, data, (error, result) ->
-			time = new Date() - start
+			time = Date.now() - start
 			console.log "\n#{time} ms: #{logged}\n"
 			cb(error, result)
 	dbConnection._begin = dbConnection.begin
 	dbConnection.begin = ->
 		console.log "\nBEGIN TRANSACTION\n"
 		tx = @_begin()
-		tx.____start = new Date()
+		tx.____start = Date.now()
 		tx.__query = tx.query
 		tx.query = (q, data, cb) ->
 			logged = q
@@ -47,15 +47,15 @@ if process.env.SQLPROF is 'true'
 				index++
 				while logged.indexOf("$#{index}") isnt -1
 					logged = logged.replace "$#{index}", "<#{value}>"
-			Date start = new Date()
+			start = Date.now()
 			@__query q, data, (error, result) ->
-				time = new Date() - start
+				time = Date.now() - start
 				console.log "\n#{time} ms: t: #{logged}\n"
 				cb(error, result)
 		# doesn't work
 		#tx.__commit = tx.commit
 		#tx.commit = (a) ->
-			#console.log "\nCOMMIT, the whole thing took #{new Date() - tx.____start} ms\n"
+			#console.log "\nCOMMIT, the whole thing took #{Date.now() - tx.____start} ms\n"
 			#tx.__commit a
 		return tx
 
