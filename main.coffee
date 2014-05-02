@@ -88,6 +88,12 @@ mustBeAuthed = (request, response, next) ->
 	else
 		response.redirect '/login/'
 
+mustNotBeAuthed = (request, response, next) ->
+	if request.uonline.basicOpts.loggedIn is true
+		response.redirect config.defaultInstanceForUsers
+	else
+		next()
+
 
 app.use ((request, response) ->
 	# Read basic stuff
@@ -150,11 +156,11 @@ app.get '/about/', (request, response) ->
 	quickRender request, response, 'about'
 
 
-app.get '/register/', (request, response) ->
+app.get '/register/', mustNotBeAuthed, (request, response) ->
 	quickRender request, response, 'register'
 
 
-app.post '/register/', (request, response) ->
+app.post '/register/', mustNotBeAuthed, (request, response) ->
 	options = request.uonline.basicOpts
 	options.instance = 'register'
 	usernameIsValid = lib.validation.usernameIsValid(request.body.user)
@@ -180,11 +186,11 @@ app.post '/register/', (request, response) ->
 		response.render 'register', options
 
 
-app.get '/login/', (request, response) ->
+app.get '/login/', mustNotBeAuthed, (request, response) ->
 	quickRender request, response, 'login'
 
 
-app.post '/login/', (request, response) ->
+app.post '/login/', mustNotBeAuthed, (request, response) ->
 	if lib.user.accessGranted.sync null, dbConnection, request.body.user, request.body.pass
 		sessid = lib.user.createSession.sync null, dbConnection, request.body.user
 		response.cookie 'sessid', sessid
@@ -223,7 +229,7 @@ app.get '/profile/:username/', (request, response) ->
 	response.render 'profile', options
 
 
-app.get '/action/logout', (request, response) ->
+app.get '/action/logout', mustBeAuthed, (request, response) ->
 	# TODO: move sessid to uonline{}
 	lib.user.closeSession dbConnection, request.cookies.sessid, (error, result) ->
 		if error?
