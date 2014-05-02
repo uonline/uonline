@@ -117,7 +117,7 @@ exports.changeCol = (test) ->
 				"WHERE table_name = 'test_table'", [], callback
 	], (error, result) ->
 		test.ifError error
-		test.strictEqual result[2].rows[0].data_type, "integer", "column type should have changed"
+		test.strictEqual result[2].rows[0].data_type, "integer", "should change type of column"
 		test.done()
 
 
@@ -134,8 +134,8 @@ exports.dropCol = (test) ->
 				"WHERE table_name = 'test_table'", [], callback
 	], (error, result) ->
 		test.ifError error
-		test.strictEqual result[3].rows.length, 1, "column shold have been removed"
-		test.strictEqual result[3].rows[0].column_name, "id", "correct column shold have been removed"
+		test.strictEqual result[3].rows.length, 1, "should remove column"
+		test.strictEqual result[3].rows[0].column_name, "id", "should remove specified column and not another"
 		test.done()
 
 
@@ -149,6 +149,6 @@ exports.createIndex = (test) ->
 			conn.query "SELECT * FROM pg_indexes WHERE tablename='test_table' AND indexname='test_table_id'", callback
 	], (error, result) ->
 		test.ifError error
-		test.strictEqual result[2].rows.length, 1, 'index should have been created'
+		test.strictEqual result[2].rows.length, 1, 'should create index'
 		test.done()
 

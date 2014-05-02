@@ -53,8 +53,8 @@ exports.userExists = function (test) {
 		],
 		function(error, result){
 			test.ifError(error);
-			test.strictEqual(result[2], true, 'user should exist after inserted');
-			test.strictEqual(result[4], false, 'user should not exist after deleted');
+			test.strictEqual(result[2], true, 'should return true if user exists');
+			test.strictEqual(result[4], false, 'should return false if user does not exist');
 			test.done();
 		}
 	);
@@ -148,8 +148,8 @@ exports.sessionInfoRefreshing = {
 						username: 'user1',
 						admin: false,
 						userid: 99
-					}, 'if user is NOT admin, he is NOT admin');
-				test.ok(timeBefore < timeAfter, "session timestamp should have been updated");
+					}, 'should return admin: false if user is not admin');
+				test.ok(timeBefore < timeAfter, 'should update session timestamp');
 				test.done();
 			}
 		);
@@ -240,7 +240,7 @@ exports.closeSession = {
 			function(error, result) {
 				test.ifError(error);
 				test.strictEqual(result[3].sessionIsActive, false, 'session should have expired');
-				test.strictEqual(result[4], 'Not closing: empty sessid', 'false sessid should have been detected');
+				test.strictEqual(result[4], 'Not closing: empty sessid', 'should not fail with empty sessid');
 				test.done();
 			}
 		);
@@ -258,11 +258,11 @@ exports.createSalt = function (test) {
 
 	result = users.createSalt(50);
 	test.strictEqual(result.length, 50, 'should keep specified length');
-	test.ok(( /^[a-zA-Z0-9]+$/ ).test(result), 'should contain printable characters');
+	test.ok(( /^[a-zA-Z0-9]+$/ ).test(result), 'should use printable characters');
 
 	result = users.createSalt(10);
 	test.strictEqual(result.length, 10, 'should keep specified length');
-	test.ok(( /^[a-zA-Z0-9]+$/ ).test(result), 'should contain printable characters');
+	test.ok(( /^[a-zA-Z0-9]+$/ ).test(result), 'should use printable characters');
 
 	test.done();
 };
@@ -277,15 +277,15 @@ exports.registerUser = function (test) {
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[4].rows.length, 1, 'one registration - one user');
+			test.strictEqual(result[4].rows.length, 1, 'should create exactly one user');
 			var user = result[4].rows[0];
-			test.ok(user.salt.length > 0, 'salt should be set');
-			test.ok(user.hash.length > 0, 'hash should be set');
-			test.ok(user.sessid.length > 0, 'sessid should be set');
-			test.ok(user.reg_time <= new Date(), 'should not put registration time in future');
-			test.ok(user.sess_time <= new Date(), 'session timestamp should not point to future');
-			test.strictEqual(user.location, 2, 'user should have been spawned on default location');
-			test.strictEqual(user.permissions, 1, 'user should have specified permissions');
+			test.ok(user.salt.length > 0, 'should generate salt');
+			test.ok(user.hash.length > 0, 'should generate hash');
+			test.ok(user.sessid.length > 0, 'should generate sessid');
+			test.ok(user.reg_time <= new Date(), 'should not put registration time into future');
+			test.ok(user.sess_time <= new Date(), 'should not put session timestamp into future');
+			test.strictEqual(user.location, 2, 'should set location to default one');
+			test.strictEqual(user.permissions, 1, 'should set specified permissions');
 			test.done();
 		}
 	);
@@ -304,9 +304,9 @@ exports.accessGranted = {
 			],
 			function(error, result) {
 				test.ifError(error);
-				test.strictEqual(result[4], true, "access should be granted for valid data");
-				test.strictEqual(result[5], false, "access should NOT be granted if user does not exists");
-				test.strictEqual(result[6], false, "access should NOT be granted if password is wrong");
+				test.strictEqual(result[4], true, "should return true for valid data");
+				test.strictEqual(result[5], false, "should return false if user does not exist");
+				test.strictEqual(result[6], false, "should return false if password is wrong");
 				test.done();
 			}
 		);
@@ -332,9 +332,9 @@ exports.createSession = {
 			],
 			function(error, result) {
 				test.ifError(error);
-				test.ok(result[4].rows[0].sessid !== result[6].rows[0].sessid, "Sessid should have changed");
+				test.ok(result[4].rows[0].sessid !== result[6].rows[0].sessid, "should change sessid");
 				test.ok(result[6].rows[0].sess_time.getTime() > new Date().getTime() - 60000,
-					'session timestamp should have been updated');
+					'should update session timestamp');
 				test.done();
 			}
 		);

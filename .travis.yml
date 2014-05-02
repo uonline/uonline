@@ -8,7 +8,7 @@ env:
 before_script:
   - # test scripts
   - ./init.coffee --info || true
-  - ./init.coffee --create-database both --migrate-tables --unify-export --test-monsters --optimize-tables
+  - ./init.coffee --create-database both --migrate-tables --unify-export --monsters --optimize-tables
   - ./init.coffee --info
   - ./add-admin.coffee admin password
   - ./init.coffee --drop-database both

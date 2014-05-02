@@ -99,11 +99,11 @@ options = [
 	help: 'Parse and save locations to DB.'
 ,
 	names: [
-		'test-monsters'
-		't'
+		'monsters'
+		'M'
 	]
 	type: 'bool'
-	help: 'Insert test monsters.'
+	help: 'Insert monsters.'
 ]
 
 
@@ -222,19 +222,28 @@ unifyExport = ->
 	result.save(dbConnection)
 
 
-insertTestMonsters = ->
+insertMonsters = ->
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 
 	console.log('Inserting test prototypes...')
 
 	prototypes = [
-		[1, 'Гигантская улитка', 1, 1, 1, 1, 1, 1, 1, 1, 3]
-		[2, 'Червь-хищник', 2, 1, 2, 2, 1, 1, 2, 1, 1]
-		[3, 'Ядовитая многоножка', 1, 1, 2, 1, 1, 1, 1, 1, 1]
-		[4, 'Скорпион', 1, 2, 1, 1, 1, 1, 1, 1, 1]
-		[5, 'Кобра', 2, 1, 3, 1, 3, 2, 1, 2, 1]
-		[6, 'Дикий кабан', 1, 2, 1, 2, 1, 1, 1, 2, 1]
-		[7, 'Тарантул', 3, 1, 4, 2, 1, 2, 4, 1, 1]
+		[0,"Могильный жук",1,12,6,0,0,0,5,250,0]
+		[1,"Молодой паук",2,16,30,0,0,0,10,290,0]
+		[2,"Маленький скорпион",3,20,30,0,0,0,25,100,0]
+		[3,"Паук",3,20,24,0,0,0,15,400,0]
+		[4,"Хряк",5,28,16,0,0,0,9,540,0]
+		[5,"Скелет",4,32,34,0,0,0,45,600,0]
+		[6,"Молодой лесной волк",5,40,34,0,0,0,35,700,0]
+		[7,"Малый медведь",6,56,34,0,0,0,24,800,0]
+		[8,"Зомби",6,40,54,0,0,0,45,700,0]
+		[9,"Броненосец",7,46,10,0,0,0,15,2500,0]
+		[10,"Вепрь",8,80,30,0,0,0,25,1500,0]
+		[11,"Лесной волк",9,68,54,0,0,0,55,1600,0]
+		[12,"Медведь",10,160,22,0,0,0,25,2000,0]
+		[13,"Гоблин",11,40,64,0,0,0,25,1100,0]
+		[14,"Огр",14,180,30,0,0,0,15,1800,0]
+		[15,"Грязевой голем",21,300,20,0,0,0,5,2500,0]
 	]
 
 	dbConnection.query.sync(dbConnection, "TRUNCATE monster_prototypes", [])
@@ -251,73 +260,19 @@ insertTestMonsters = ->
 
 	console.log('Inserting monsters...')
 
-	monsters = [
-		[1, 6, 774449300, 1, 1, null, 16]
-		[2, 5, 648737395, 1, 1, null, 5]
-		[3, 6, 580475724, 1, 1, null, 25]
-		[4, 3, 571597042, 1, 1, null, 22]
-		[5, 4, 845588419, 1, 1, null, 11]
-		[6, 3, 446105458, 1, 1, null, 19]
-		[7, 1, 4642136, 1, 1, null, 10]
-		[8, 5, 29958182, 1, 1, null, 9]
-		[9, 7, 904434466, 1, 1, null, 13]
-		[10, 7, 288482442, 1, 1, null, 25]
-		[11, 1, 77716864, 1, 1, null, 6]
-		[12, 2, 701741103, 1, 1, null, 17]
-		[13, 5, 744906885, 1, 1, null, 22]
-		[14, 4, 744906885, 1, 1, null, 6]
-		[15, 7, 4642136, 1, 1, null, 8]
-		[16, 2, 1054697917, 1, 1, null, 7]
-		[17, 6, 833637588, 1, 1, null, 10]
-		[18, 6, 29958182, 1, 1, null, 25]
-		[19, 6, 774449300, 1, 1, null, 12]
-		[20, 4, 744906885, 1, 1, null, 8]
-		[21, 5, 446105458, 1, 1, null, 22]
-		[22, 5, 288482442, 1, 1, null, 17]
-		[23, 1, 4642136, 1, 1, null, 8]
-		[24, 7, 29958182, 1, 1, null, 16]
-		[25, 5, 774449300, 1, 1, null, 15]
-		[26, 7, 1054697917, 1, 1, null, 20]
-		[27, 5, 723001325, 1, 1, null, 16]
-		[28, 4, 571597042, 1, 1, null, 23]
-		[29, 3, 845588419, 1, 1, null, 14]
-		[30, 5, 288482442, 1, 1, null, 25]
-		[31, 4, 701741103, 1, 1, null, 6]
-		[32, 2, 77716864, 1, 1, null, 15]
-		[33, 7, 701741103, 1, 1, null, 17]
-		[34, 7, 701741103, 1, 1, null, 22]
-		[35, 5, 772635195, 1, 1, null, 7]
-		[36, 6, 29958182, 1, 1, null, 21]
-		[37, 4, 29958182, 1, 1, null, 18]
-		[38, 1, 578736465, 1, 1, null, 25]
-		[39, 4, 172926385, 1, 1, null, 25]
-		[40, 2, 744906885, 1, 1, null, 21]
-		[41, 5, 29958182, 1, 1, null, 21]
-		[42, 4, 723001325, 1, 1, null, 9]
-		[43, 1, 451777421, 1, 1, null, 8]
-		[44, 4, 29958182, 1, 1, null, 5]
-		[45, 4, 648737395, 1, 1, null, 24]
-		[46, 2, 723001325, 1, 1, null, 21]
-		[47, 2, 571597042, 1, 1, null, 24]
-		[48, 2, 288482442, 1, 1, null, 13]
-		[49, 2, 774449300, 1, 1, null, 8]
-		[50, 6, 446105458, 1, 1, null, 19]
-	]
-
 	locs = dbConnection.query.sync(dbConnection, "SELECT id FROM locations").rows
 	if (locs.length == 0)
 		throw new Error("No locations found. Forgot unify data?")
 
 	dbConnection.query.sync(dbConnection, "TRUNCATE monsters", [])
-	for i in monsters
-		i[2] = locs.pickRandom().id
+	for i in [0...50]
 		dbConnection.query.sync(
 			dbConnection
 			"INSERT INTO monsters "+
 				"(id, prototype, location, health, mana, effects, attack_chance) "+
 				"VALUES "+
 				"($1, $2, $3, $4, $5, $6, $7)"
-			i
+			[i, prototypes.pickRandom()[0], locs.pickRandom().id, 1, 1, null, Math.random()*25|0]
 		)
 
 	console.log('Done.')
@@ -338,7 +293,7 @@ sync(
 		migrateTables() if opts.migrate_tables
 		unifyValidate() if opts.unify_validate
 		unifyExport() if opts.unify_export
-		insertTestMonsters() if opts.test_monsters
+		insertMonsters() if opts.monsters
 		optimize() if opts.optimize_tables
 		process.exit 0
 	(ex) ->

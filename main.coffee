@@ -82,6 +82,13 @@ app.locals.pretty = true
 app.set 'views', __dirname + '/views'
 
 
+mustBeAuthed = (request, response, next) ->
+	if request.uonline.basicOpts.loggedIn is true
+		next()
+	else
+		response.redirect '/login/'
+
+
 app.use ((request, response) ->
 	# Read basic stuff
 	request.uonline = {}
@@ -190,19 +197,16 @@ app.post '/login/', (request, response) ->
 		response.render 'login', options
 
 
-app.get '/profile/', (request, response) -> sync ->
-	if request.uonline.basicOpts.loggedIn is true
-		options = request.uonline.basicOpts
-		options.instance = 'profile'
-		options.username = request.uonline.basicOpts.login
-		options.profileIsMine = true
-		options.id = request.uonline.basicOpts.userid
-		chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
-		for i of chars
-			options[i] = chars[i]
-		response.render 'profile', options
-	else
-		response.redirect '/login/'
+app.get '/profile/', mustBeAuthed, (request, response) -> sync ->
+	options = request.uonline.basicOpts
+	options.instance = 'profile'
+	options.username = request.uonline.basicOpts.login
+	options.profileIsMine = true
+	options.id = request.uonline.basicOpts.userid
+	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
+	for i of chars
+		options[i] = chars[i]
+	response.render 'profile', options
 
 
 app.get '/profile/:username/', (request, response) ->
@@ -228,81 +232,66 @@ app.get '/action/logout', (request, response) ->
 			response.redirect '/'
 
 
-app.get '/game/', (request, response) -> sync ->
-	if request.uonline.basicOpts.loggedIn is true
-		userid = request.uonline.basicOpts.userid
-		options = request.uonline.basicOpts
-		options.instance = 'game'
+app.get '/game/', mustBeAuthed, (request, response) -> sync ->
+	userid = request.uonline.basicOpts.userid
+	options = request.uonline.basicOpts
+	options.instance = 'game'
 
-		try
-			location = lib.game.getUserLocation.sync null, dbConnection, userid
-		catch e
-			console.log e.stack
-			location = lib.game.getDefaultLocation.sync null, dbConnection
-			lib.game.changeLocation.sync null, dbConnection, userid, location.id, true
+	try
+		location = lib.game.getUserLocation.sync null, dbConnection, userid
+	catch e
+		console.log e.stack
+		location = lib.game.getDefaultLocation.sync null, dbConnection
+		lib.game.changeLocation.sync null, dbConnection, userid, location.id, true
 
-		area = lib.game.getUserArea.sync null, dbConnection, userid
-		options.location_name = location.title
-		options.area_name = area.title
-		options.pic = options.picture  if options.picture?
-		options.description = location.description
-		options.ways = location.goto
-		options.ways.forEach (i) -> # Facepalm. #273
-			i.name = i.text
-			i.to = i.id
-		tmpUsers = lib.game.getNearbyUsers.sync null,
-			dbConnection, userid, location.id
-		tmpUsers.forEach (i) -> # Facepalm. Refs #273 too.
-			i.name = i.user
-		options.players_list = tmpUsers
-		tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, location.id
-		options.monsters_list = tmpMonsters
-		options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
-		options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
+	area = lib.game.getUserArea.sync null, dbConnection, userid
+	options.location_name = location.title
+	options.area_name = area.title
+	options.pic = options.picture  if options.picture?
+	options.description = location.description
+	options.ways = location.goto
+	options.ways.forEach (i) -> # Facepalm. #273
+		i.name = i.text
+		i.to = i.id
+	tmpUsers = lib.game.getNearbyUsers.sync null,
+		dbConnection, userid, location.id
+	tmpUsers.forEach (i) -> # Facepalm. Refs #273 too.
+		i.name = i.user
+	options.players_list = tmpUsers
+	tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, location.id
+	options.monsters_list = tmpMonsters
+	options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
+	options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
 
-		chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
-		for i of chars
-			options[i] = chars[i]
+	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
+	for i of chars
+		options[i] = chars[i]
 
-		response.header 'X-PJAX-URL', '/game/'
-		response.render 'game', options
-	else
-		response.redirect '/login/'
+	response.header 'X-PJAX-URL', '/game/'
+	response.render 'game', options
 
 
-app.get '/inventory/', (request, response) ->
-	if request.uonline.basicOpts.loggedIn is true
-		userid = request.uonline.basicOpts.userid
-		options = request.uonline.basicOpts
-		options.instance = 'inventory'
-		options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
-		response.render 'inventory', options
-	else
-		response.redirect '/login/'
+app.get '/inventory/', mustBeAuthed, (request, response) ->
+	userid = request.uonline.basicOpts.userid
+	options = request.uonline.basicOpts
+	options.instance = 'inventory'
+	options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
+	response.render 'inventory', options
 
 
-app.get '/action/go/:to', (request, response) ->
-	unless request.uonline.basicOpts.loggedIn
-		response.redirect '/login/'
-	else
-		lib.game.changeLocation.sync null, dbConnection, request.uonline.basicOpts.userid, request.param('to')
-		response.redirect '/game/'
+app.get '/action/go/:to', mustBeAuthed, (request, response) ->
+	lib.game.changeLocation.sync null, dbConnection, request.uonline.basicOpts.userid, request.param('to')
+	response.redirect '/game/'
 
 
-app.get '/action/attack', (request, response) ->
-	unless request.uonline.basicOpts.loggedIn
-		response.redirect '/login/'
-	else
-		lib.game.goAttack.sync null, dbConnection, request.uonline.basicOpts.userid
-		response.redirect '/game/'
+app.get '/action/attack', mustBeAuthed, (request, response) ->
+	lib.game.goAttack.sync null, dbConnection, request.uonline.basicOpts.userid
+	response.redirect '/game/'
 
 
-app.get '/action/escape', (request, response) ->
-	unless request.uonline.basicOpts.loggedIn
-		response.redirect '/login/'
-	else
-		lib.game.goEscape.sync null, dbConnection, request.uonline.basicOpts.userid
-		response.redirect '/game/'
+app.get '/action/escape', mustBeAuthed, (request, response) ->
+	lib.game.goEscape.sync null, dbConnection, request.uonline.basicOpts.userid
+	response.redirect '/game/'
 
 
 app.get '/ajax/isNickBusy/:nick', (request, response) ->
