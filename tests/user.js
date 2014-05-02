@@ -304,7 +304,7 @@ exports.accessGranted = {
 			],
 			function(error, result) {
 				test.ifError(error);
-				test.strictEqual(result[4], true, "should return true valid data");
+				test.strictEqual(result[4], true, "should return true for valid data");
 				test.strictEqual(result[5], false, "should return false if user does not exist");
 				test.strictEqual(result[6], false, "should return false if password is wrong");
 				test.done();
