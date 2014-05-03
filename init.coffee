@@ -266,13 +266,14 @@ insertMonsters = ->
 
 	dbConnection.query.sync(dbConnection, "TRUNCATE monsters", [])
 	for i in [0...50]
+		soul = prototypes.pickRandom()
 		dbConnection.query.sync(
 			dbConnection
 			"INSERT INTO monsters "+
 				"(id, prototype, location, health, mana, effects, attack_chance) "+
 				"VALUES "+
 				"($1, $2, $3, $4, $5, $6, $7)"
-			[i, prototypes.pickRandom()[0], locs.pickRandom().id, 1, 1, null, Math.random()*25|0]
+			[i, soul[0], locs.pickRandom().id, soul[8], soul[9], null, Math.random()*25|0]
 		)
 
 	console.log('Done.')
