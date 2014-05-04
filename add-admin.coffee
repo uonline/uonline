@@ -16,33 +16,36 @@
 
 'use strict'
 
-
 lib = require './lib.coffee'
-
-if process.argv.length != 4
-	console.log 'Usage: <username> <password>'
-	process.exit 2
-
-u = process.argv[2]
-p = process.argv[3]
-
-if !lib.validation.usernameIsValid(u)
-	console.log 'Incorrect username.'
-	console.log 'Must be: 2-32 symbols, [a-zA-Z0-9а-яА-ЯёЁйЙру _-].'
-	process.exit 1
-
-if !lib.validation.passwordIsValid(p)
-	console.log 'Incorrect password.'
-	console.log 'Must be: 4-32 symbols, [!@#$%^&*()_+A-Za-z0-9].'
-	process.exit 1
-
-config = require './config.js'
 sync = require 'sync'
-anyDB = require 'any-db'
-conn = anyDB.createConnection config.DATABASE_URL
 
+readline = require 'readline'
+rl = readline.createInterface
+	input: process.stdin
+	output: process.stdout
+
+u = null
+p = null
+
+ask = (what, checker, rules, callback) ->
+	rl.question "#{what} (#{rules}): ", (answer) ->
+		if checker(answer) is true
+			callback null, answer
+		else
+			ask(what, checker, rules, callback)
 
 sync ->
+	if process.argv.length is 4
+		u = process.argv[2]
+		p = process.argv[3]
+	else
+		u = ask.sync null, 'Username', lib.validation.usernameIsValid, '2-32 symbols, [a-zA-Z0-9а-яА-ЯёЁйЙру _-]'
+		p = ask.sync null, 'Password', lib.validation.passwordIsValid, '4-32 symbols, [!@#$%^&*()_+A-Za-z0-9]'
+
+	config = require './config.js'
+	anyDB = require 'any-db'
+	conn = anyDB.createConnection config.DATABASE_URL
+
 	try
 		exists = lib.user.userExists.sync null, conn, u
 		if exists is true
