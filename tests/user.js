@@ -30,7 +30,7 @@ var conn = null;
 
 exports.setUp = function (done) {
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST);
-	conn.query('DROP TABLE IF EXISTS revisions, uniusers, locations', [], done);
+	conn.query('DROP TABLE IF EXISTS revision, uniusers, locations', [], done);
 };
 
 exports.tearDown = function (done) {

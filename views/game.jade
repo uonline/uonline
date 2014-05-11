@@ -17,7 +17,7 @@ block content
 			p(style="line-height: 2.5em;")
 				each i in ways
 					//- TODO: typography
-					a.pjax.btn(href="/action/go/"+i.to) #{i.name}
+					a.pjax.btn(href="/action/go/"+i.target) #{i.text}
 					| #{'\n'}
 	else
 		h4 Здоровье
@@ -39,7 +39,7 @@ block content
 					| Рядом с вами стоят#{' '}
 			each i,index in players_list
 				| #{' '}
-				a.pjax(href="/profile/"+i.name+"/") #{i.name}
+				a.pjax(href="/profile/"+i.username+"/") #{i.username}
 				if index == players_list.length-2
 					| #{' '}и
 				if index < players_list.length-2

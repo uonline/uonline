@@ -104,7 +104,7 @@ app.use ((request, response) ->
 	sessionData = lib.user.sessionInfoRefreshing.sync(null,
 		dbConnection, request.cookies.sessid, config.sessionExpireTime)
 	request.uonline.basicOpts.loggedIn = sessionData.sessionIsActive
-	request.uonline.basicOpts.login = sessionData.username
+	request.uonline.basicOpts.username = sessionData.username
 	request.uonline.basicOpts.admin = sessionData.admin
 	request.uonline.basicOpts.userid = sessionData.userid
 	# CSP
@@ -206,7 +206,7 @@ app.post '/login/', mustNotBeAuthed, (request, response) ->
 app.get '/profile/', mustBeAuthed, (request, response) -> sync ->
 	options = request.uonline.basicOpts
 	options.instance = 'profile'
-	options.username = request.uonline.basicOpts.login
+	options.username = request.uonline.basicOpts.username
 	options.profileIsMine = true
 	options.id = request.uonline.basicOpts.userid
 	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
@@ -255,14 +255,9 @@ app.get '/game/', mustBeAuthed, (request, response) -> sync ->
 	options.area_name = area.title
 	options.pic = options.picture  if options.picture?
 	options.description = location.description
-	options.ways = location.goto
-	options.ways.forEach (i) -> # Facepalm. #273
-		i.name = i.text
-		i.to = i.id
+	options.ways = location.ways
 	tmpUsers = lib.game.getNearbyUsers.sync null,
 		dbConnection, userid, location.id
-	tmpUsers.forEach (i) -> # Facepalm. Refs #273 too.
-		i.name = i.user
 	options.players_list = tmpUsers
 	tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, location.id
 	options.monsters_list = tmpMonsters
