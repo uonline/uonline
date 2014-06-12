@@ -6,7 +6,7 @@ uonline
 [![Dependency Status](https://david-dm.org/uonline/uonline.svg)](https://david-dm.org/uonline/uonline)
 [![devDependency Status](https://david-dm.org/uonline/uonline/dev-status.svg)](https://david-dm.org/uonline/uonline#info=devDependencies)
 [![Code Climate](https://codeclimate.com/github/uonline/uonline.png)](https://codeclimate.com/github/uonline/uonline)
-[![Tasks for this week](https://badge.waffle.io/uonline/uonline.png?label=this%20week&title=Tasks)](http://waffle.io/uonline/uonline)
+[![Tasks for this week](https://badge.waffle.io/uonline/uonline.svg?label=this%20week&title=Tasks)](http://waffle.io/uonline/uonline)
 
 A browser-based MMORPG game in a fantasy world.
 
@@ -28,8 +28,8 @@ How to set up
 * Clone the repo.
 * Install packages: `npm install`
 * Fetch submodules: `git submodule init`, `git submodule update`
-* Initialize database: `./init.coffee --migrate-tables --unify-export --test-monsters --optimize-tables`
-* If you need to add an admin: `./add-admin.coffee username password`
+* Initialize database: `./init.coffee --migrate-tables --unify-export --monsters --optimize-tables`
+* If you need to add an admin: `./add-admin.coffee`
 
 
 How to run

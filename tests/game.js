@@ -80,7 +80,7 @@ exports.getDefaultLocation = {
 			function(error, result) {
 				test.ifError(error);
 				test.strictEqual(result[4].id, 2, 'should return id of default location');
-				test.ok(result[4].goto instanceof Array, 'should return parsed ways from location');
+				test.ok(result[4].ways instanceof Array, 'should return parsed ways from location');
 				test.done();
 			}
 		);
@@ -157,16 +157,16 @@ exports.getUserLocation = {
 	"testValidData": function(test) {
 		async.series([
 				insertCallback('locations', {
-					"id":3, "area":5, "title":"The Location", "goto":"Left=7|Forward=8|Right=9"}),
+					"id":3, "area":5, "title":"The Location", "ways":"Left=7|Forward=8|Right=9"}),
 				function(callback){ game.getUserLocation(conn, 1, callback); },
 			],
 			function(error, result) {
 				test.ifError(error);
 				test.strictEqual(result[1].id, 3, "should return user's location id");
-				test.deepEqual(result[1].goto, [
-					{id:7, text:'Left'},
-					{id:8, text:'Forward'},
-					{id:9, text:'Right'}], 'should return ways from location');
+				test.deepEqual(result[1].ways, [
+					{target:7, text:'Left'},
+					{target:8, text:'Forward'},
+					{target:9, text:'Right'}], 'should return ways from location');
 				test.done();
 			}
 		);
@@ -202,7 +202,7 @@ exports.getUserArea = {
 	'usual test': function(test) {
 		async.series([
 				insertCallback('locations', {
-					"id":3, "area":5, "title":"The Location", "goto":"Left=7|Forward=8|Right=9"}),
+					"id":3, "area":5, "title":"The Location", "ways":"Left=7|Forward=8|Right=9"}),
 				insertCallback('areas', {
 					"id":5, "title":"London"}),
 				function(callback){ game.getUserArea(conn, 1, callback); },
@@ -230,8 +230,8 @@ exports.changeLocation = {
 				function(callback){ mg.migrate(conn, {table: 'locations'}, callback); },
 				function(callback){ mg.migrate(conn, {table: 'monsters'}, callback); },
 				insertCallback('uniusers', {"id":1, "location":1}),
-				insertCallback('locations', {"id":1, "goto":"Left=2"}),
-				insertCallback('locations', {"id":2, "goto":"Right=3"}),
+				insertCallback('locations', {"id":1, "ways":"Left=2"}),
+				insertCallback('locations', {"id":2, "ways":"Right=3"}),
 				insertCallback('locations', {"id":3})
 			], callback);
 	},
