@@ -35,7 +35,7 @@ How to set up
 How to run
 ----------
 
-If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`. If you need to restart server after every change in code - `make monitor`.
+If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`. If you need to restart server after every change in code — `make monitor`.
 
 
 Programmers' guidelines
@@ -85,7 +85,7 @@ exports.closeSession = function(dbConnection, sess, callback) {
 };
 ```
 
-* Use trailing commas. Place them even after last element - it allows you to swap lines easily.
+* Use trailing commas. Place them even after last element — it allows you to swap lines easily.
 
 ```js
 var numbers = [
