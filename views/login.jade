@@ -1,23 +1,24 @@
-extends old-layout
+extends layout
 block title
 	| Вход
 block content
 	div.page-header
 		h1 Вход
+
 	if error === true
-		div.alert.alert-error
-			a.close(href='#', data-dismiss='alert') &times;
-			b Ошибка!
-			| #{' '}Не удалось войти, используя введённые данные.
-	form.form-horizontal(method='post', action='/login/')
-		div.control-group
-			label.control-label(for='user') Логин
-			div.controls
-				input#user(type='text', maxlength='32', name='user', value=user, required, autofocus)
-		div.control-group
-			label.control-label(for='pass') Пароль
-			div.controls
-				input#pass(type='password', maxlength='32', name='pass', required)
-		div.control-group
-			div.controls
-				button.btn(type='submit') Войти
+		div.alert.alert-danger
+			button.close(type="button", data-dismiss="alert", aria-hidden="true") &times;
+			b Неверный логин или пароль.
+			| #{' '}Проверьте&nbsp;&mdash; может, вы опечатались.
+
+	form(role='form', method='post', action='/login/')
+		div.row
+			div.col-lg-3.col-md-4.col-sm-6
+				.form-group
+					label(for='username') Логин
+					input#username.form-control(type='text', maxlength='32', name='user', value=user, required, autofocus)
+				.form-group
+					label(for='password') Пароль
+					input#password.form-control(type='password', maxlength='32', name='pass', required)
+				.form-group
+					button.btn.btn-default(type='submit') Войти

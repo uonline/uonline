@@ -1,11 +1,11 @@
-extends old-layout
+extends layout
 block title
 	| Инвентарь
 block content
 	div.page-header
 		h1 Инвентарь
 	if fight_mode == true
-		a.pjax.btn(href='/game/')
+		a.pjax.btn.btn-default(href='/game/')
 			i.icon.icon-chevron-left
 			| #{' '}Вернуться в бой
 		hr

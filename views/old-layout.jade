@@ -26,6 +26,7 @@ if !pjax
 			script(src='/static/bootstrap/js/bootstrap.min.js')
 			script(src='/static/bower_components/jquery-pjax/jquery.pjax.js')
 			:coffee
+				###
 				$(document).ready ->
 					# Start up pjax
 					$(document).pjax('a.pjax', '#content', timeout: 2000)
@@ -38,6 +39,7 @@ if !pjax
 					$('.instance-link').click ->
 						$('.instance-link').removeClass 'active'
 						$(this).addClass 'active'
+				###
 		body
 			div.navbar.navbar-fixed-top
 				div.navbar-inner

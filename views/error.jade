@@ -1,4 +1,4 @@
-extends old-layout
+extends layout
 block title
 	//- Этому кейсу по идее надо быть где-то выше, потому что description
 	//- используется и в следующем блоке. Но Jade не разрешает.
@@ -28,4 +28,4 @@ block content
 	if text != null
 		p #{text}
 	p
-		a.btn(href='/') Перейти на главную
+		a.btn.btn-default(href='/') Перейти на главную

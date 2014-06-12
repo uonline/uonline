@@ -5,32 +5,31 @@ mixin tr_td_ch(name, value)
 			//- | #{' '}
 			//- a.btn.btn-mini(href='javascript://') &plus;
 
-extends old-layout
+extends layout
 block title
 	| Профиль игрока #{username}
 block content
 	.page-header
 		h1 #{username}&nbsp;&nbsp;
 			small орк #{level}-го уровня
-			| #{' '}
-			if profileIsMine
-				span.label Это вы
+				if profileIsMine
+					| #{' '}(это&nbsp;вы)
 	.row
-		.span5
-			h3 Здоровье
+		.col-sm-5
+			h4 Здоровье
 			.progress
-				.bar.bar-success(style='width: '+health_percent+'%;')
-			| #{ health }/#{ health_max }
-			h3 Мана
+				.progress-bar.progress-bar-success(style='width: '+health_percent+'%;', role="progressbar", aria-valuenow=health_percent, aria-valuemin="0", aria-valuemax="100")
+					| #{ health }/#{ health_max }
+			h4 Мана
 			.progress
-				.bar(style='width: '+mana_percent+'%;')
-			| #{ mana }/#{ mana_max }
-			h3 Опыт
-			.progress.bar-warning
-				.bar(style='width: '+exp_percent+'%;')
-			| #{ exp }/#{ exp_max }
-		.span1
-		.span6
+				.progress-bar(style='width: '+mana_percent+'%;', role="progressbar", aria-valuenow=mana_percent, aria-valuemin="0", aria-valuemax="100")
+					| #{ mana }/#{ mana_max }
+			h4 Опыт
+			.progress
+				.progress-bar.progress-bar-warning(style='width: '+exp_percent+'%;', role="progressbar", aria-valuenow=exp_percent, aria-valuemin="0", aria-valuemax="100")
+					| #{ exp }/#{ exp_max }
+		.col-sm-1
+		.col-sm-6
 			h3 Характеристики
 			table.table.table-striped.table-hover
 				+tr_td_ch('Энергия', energy)
