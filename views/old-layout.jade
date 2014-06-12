@@ -50,7 +50,7 @@ if !pjax
 								li
 									a(href='/profile/')
 										i(class=(admin?'icon-certificate':'icon-user'))
-										| #{' '}#{login}
+										| #{' '}#{username}
 								+instanceLink('profile', '/profile/', 'Профиль', null, !profileIsMine)
 								+instanceLink('game', '/game/', 'Игра')
 								li
