@@ -35,12 +35,24 @@ ask = (what, checker, rules, callback) ->
 			ask(what, checker, rules, callback)
 
 sync ->
+	if process.argv[2] is '-h' or process.argv[2] is '--help'
+		console.log 'Usage: no params, or <username>, or <username> <password>'
+		console.log 'You will be prompted to enter missing params from tty.'
+		process.exit 2
+
 	if process.argv.length is 4
 		u = process.argv[2]
 		p = process.argv[3]
-	else
+	else if process.argv.length is 3
+		u = process.argv[2]
+		p = ask.sync null, 'Password', lib.validation.passwordIsValid, '4-32 symbols, [!@#$%^&*()_+A-Za-z0-9]'
+	else if process.argv.length is 2
 		u = ask.sync null, 'Username', lib.validation.usernameIsValid, '2-32 symbols, [a-zA-Z0-9а-яА-ЯёЁйЙру _-]'
 		p = ask.sync null, 'Password', lib.validation.passwordIsValid, '4-32 symbols, [!@#$%^&*()_+A-Za-z0-9]'
+	else
+		console.log 'Usage: no params, or <username>, or <username> <password>'
+		console.log 'You will be prompted to enter missing params from tty.'
+		process.exit 2
 
 	config = require './config.js'
 	anyDB = require 'any-db'
