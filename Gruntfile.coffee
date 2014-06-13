@@ -127,8 +127,11 @@ module.exports = (grunt) ->
 
 		jscoverage:
 			all:
-				src: 'lib/'
+				expand: true
+				cwd: 'lib/'
+				src: ['*.js']
 				dest: 'lib-cov/'
+				ext: '.js'
 			options:
 				exclude: /^.*[.]coffee$/
 
