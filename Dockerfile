@@ -8,7 +8,7 @@ WORKDIR /uonline
 # Add node & coffee
 RUN pacman -Sy
 RUN pacman -S --noconfirm nodejs
-RUN npm install -g coffee-script
+RUN npm install -g coffee-script grunt-cli
 
 # What to run
 CMD ["./main.coffee"]
