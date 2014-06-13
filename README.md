@@ -17,6 +17,7 @@ Requirements
 * Node.js 0.10 with npm;
 * CoffeeScript;
 * Grunt (you may use local one, but why?);
+* Bower;
 * PostgreSQL 9.1 or higher;
 * DB user `anonymous` with password `nopassword`;
 * Two databases: `uonline` and `uonline_test`.
@@ -26,7 +27,7 @@ How to set up
 -------------
 
 * Clone the repo.
-* Install packages: `npm install`
+* Install packages: `npm install`, `bower install`
 * Fetch submodules: `git submodule init`, `git submodule update`
 * Initialize database: `./init.coffee --migrate-tables --unify-export --monsters --optimize-tables`
 * If you need to add an admin: `./add-admin.coffee`
