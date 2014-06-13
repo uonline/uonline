@@ -16,10 +16,16 @@
 
 'use strict'
 
-config = require './config.js'
+config = require "#{__dirname}/config.js"
 
 anyDB = require 'any-db'
+
 dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
+dbConnection.query 'SELECT version()', [], (error, result) ->
+	if error?
+		console.log "Problem with database: #{error.stack}"
+	else
+		console.log "Database: #{result.rows[0].version}"
 
 # Attach profiler?
 if process.env.SQLPROF is 'true'
@@ -59,7 +65,7 @@ if process.env.SQLPROF is 'true'
 			#tx.__commit a
 		return tx
 
-lib = require './lib.coffee'
+lib = require "#{__dirname}/lib.coffee"
 async = require 'async'
 express = require 'express'
 sync = require 'sync'
