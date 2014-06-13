@@ -121,6 +121,11 @@ app.use ((request, response) ->
 	# PJAX
 	if request.header('X-PJAX')?
 		request.uonline.basicOpts.pjax = true
+	# Try to guess layout version
+	if /[/](register|game)/.test(request.path)
+		response.header 'X-PJAX-Version', 'second'
+	else
+		response.header 'X-PJAX-Version', 'third'
 	return
 ).asyncMiddleware()
 

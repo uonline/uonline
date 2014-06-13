@@ -14,6 +14,7 @@ if !pjax
 	html
 		head
 			meta(charset='utf-8')
+			meta(http-equiv='x-pjax-version', content='third')
 			meta(http-equiv="X-UA-Compatible", content="IE=edge")
 			meta(name='viewport', content='width=device-width, initial-scale=1.0')
 			title
@@ -31,7 +32,6 @@ if !pjax
 			script(src='/static/bower_components/bootstrap/dist/js/bootstrap.min.js')
 			script(src='/static/bower_components/jquery-pjax/jquery.pjax.js')
 			:coffee
-				###
 				$(document).ready ->
 					# Start up pjax
 					$(document).pjax('a.pjax', '#content', timeout: 2000)
@@ -44,12 +44,11 @@ if !pjax
 					$('.instance-link').click ->
 						$('.instance-link').removeClass 'active'
 						$(this).addClass 'active'
-				###
 		body
 			div.navbar.navbar-default.navbar-static-top(role='navigation')
 				div.container
 					div.navbar-header
-						button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+						button.navbar-toggle(type='button',data-toggle='collapse',data-target='.navbar-collapse')
 							span.sr-only Toggle navigation
 							span.icon-bar
 							span.icon-bar
