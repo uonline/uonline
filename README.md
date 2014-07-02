@@ -51,7 +51,7 @@ Programmers' guidelines
 * Sync is better than async. Async is better than callbacks.
 * Write tests for everything.
 * Write good assert comments: they should answer the question "What do this function should do?".
-* Keep things outside of main thread. Use asynchronous API.
+* Keep things outside of main thread: use asynchronous API. And remember: `fs.readFile.sync()` is way better than `fs.readFileSync()`.
 
 
 ### CoffeeScript-specific
