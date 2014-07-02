@@ -367,6 +367,6 @@ exports.createSession =
 			test.done()
 
 	testErrors: (test) ->
-		users.createSession conn, 1, (error, result) ->
-			test.ok error, 'should not crash if error has occured'
+		users.createSession conn, 10101, (error, result) ->
+			test.ok error, 'should crash on wrong sessid'
 			test.done()
