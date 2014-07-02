@@ -32,27 +32,33 @@ exports.tearDown = (done) ->
 
 
 exports.userExists = (test) ->
-	users.userExists conn, 'm1kc', (error, result) ->
+	users.userExists conn, 'Sauron', (error, result) ->
 		test.ok !!error, 'should fail on nonexistent table'
 
 	async.series [
 		(callback) ->
-			mg.migrate conn, { table: "uniusers" }, callback
+			mg.migrate conn, { table: 'uniusers' }, callback
 		(callback) ->
-			conn.query 'INSERT INTO uniusers (username) VALUES ( $1 )', ['m1kc'], callback
+			conn.query 'INSERT INTO uniusers (username) VALUES ( $1 )', ['Sauron'], callback
 		(callback) ->
-			users.userExists conn, 'm1kc', callback
+			users.userExists conn, 'Sauron', callback
+		(callback) ->
+			users.userExists conn, 'SAURON', callback
+		(callback) ->
+			users.userExists conn, 'sauron', callback
 		(callback) ->
 			conn.query 'TRUNCATE uniusers', [], callback
 		(callback) ->
-			users.userExists conn, 'm1kc', callback
+			users.userExists conn, 'Sauron', callback
 		(callback) ->
 			conn.query 'DROP TABLE uniusers', [], callback
 	],
 	(error, result) ->
 		test.ifError error
 		test.strictEqual result[2], true, 'should return true if user exists'
-		test.strictEqual result[4], false, 'should return false if user does not exist'
+		test.strictEqual result[3], true, 'should ignore capitalization'
+		test.strictEqual result[4], true, 'should ignore capitalization'
+		test.strictEqual result[6], false, 'should return false if user does not exist'
 		test.done()
 
 
@@ -293,7 +299,9 @@ exports.registerUser = (test) ->
 		test.ok user.sess_time <= new Date(), 'should not put session timestamp into future'
 		test.strictEqual user.location, 2, 'should set location to default one'
 		test.strictEqual user.permissions, 1, 'should set specified permissions'
-		test.done()
+		users.registerUser conn, 'TheUser', 'password', 1, (error, result) ->
+			test.ok(!!error, 'should fail if user exists')
+			test.done()
 
 
 exports.accessGranted =
@@ -313,11 +321,17 @@ exports.accessGranted =
 				users.accessGranted conn, 'WrongUser', 'password', callback
 			(callback) ->
 				users.accessGranted conn, 'TheUser', 'wrongpass', callback
+			(callback) ->
+				users.accessGranted conn, 'THEUSER', 'password', callback
+			(callback) ->
+				users.accessGranted conn, 'theuser', 'password', callback
 		], (error, result) ->
 			test.ifError error
 			test.strictEqual result[4], true, 'should return true for valid data'
 			test.strictEqual result[5], false, 'should return false if user does not exist'
 			test.strictEqual result[6], false, 'should return false if password is wrong'
+			test.strictEqual result[7], true, 'should ignore capitalization'
+			test.strictEqual result[8], true, 'should ignore capitalization'
 			test.done()
 
 	testErrors: (test) ->
@@ -336,11 +350,11 @@ exports.createSession =
 			(callback) ->
 				conn.query 'INSERT INTO locations (id, "default") VALUES (2, 1)', callback
 			(callback) ->
-				users.registerUser conn, 'TheUser', 'password', 1, callback
+				users.registerUser conn, 'Мохнатый Ангел', 'password', 1, callback
 			(callback) ->
 				conn.query 'SELECT sessid FROM uniusers', [], callback
 			(callback) -> #5
-				users.createSession conn, 'TheUser', callback
+				users.createSession conn, 'МОХНАТЫЙ ангел', callback
 			(callback) ->
 				conn.query 'SELECT sessid, sess_time FROM uniusers', [], callback
 		],
