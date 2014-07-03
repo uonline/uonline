@@ -6,7 +6,7 @@ uonline
 [![Dependency Status](https://david-dm.org/uonline/uonline.svg)](https://david-dm.org/uonline/uonline)
 [![devDependency Status](https://david-dm.org/uonline/uonline/dev-status.svg)](https://david-dm.org/uonline/uonline#info=devDependencies)
 [![Code Climate](http://img.shields.io/codeclimate/github/uonline/uonline.svg)](https://codeclimate.com/github/uonline/uonline)
-[![Tasks for this week](https://badge.waffle.io/uonline/uonline.svg?label=this%20week&title=Tasks)](http://waffle.io/uonline/uonline)
+[![Planned tasks](https://badge.waffle.io/uonline/uonline.svg?label=sweetest%20july&title=Tasks)](http://waffle.io/uonline/uonline)
 
 A browser-based MMORPG game in a fantasy world.
 
@@ -39,10 +39,26 @@ How to run
 If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`. If you need to restart server after every change in code — `make monitor`.
 
 
+Grunt hints
+-----------
+
+Run `grunt` to check and test your code. It will lint your code, run tests, show coverage stats, generate docs and so on. Please run it before every commit.
+
+Useful subtasks:
+
+* `grunt test` — run unittests only;
+* `grunt docs` — rebuild docs;
+* `grunt build` — rebuild static files.
+
+Useful options:
+
+* `grunt test --single health-check.coffee` — run only one testsuite;
+* `grunt test --speedup=test` — skip loading some modules;
+* `grunt --stack` — show stack trace on error.
+
+
 Programmers' guidelines
 -----------------------
-
-**Hint:** Run `grunt` to check and test your code. Run something like `grunt test --single health-check.coffee` to run a single testsuite.
 
 * Use tabs, not spaces. Don't mix them and don't use smarttabs.
 * Prefer single quotes. Use double quotes when you need to escape `'` itself.
