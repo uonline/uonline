@@ -73,7 +73,7 @@ exports.getDefaultLocation = {
 		async.series([
 				function(callback){ mg.migrate(conn, {table: 'locations'}, callback); },
 				insertCallback('locations', {"id":1}),
-				insertCallback('locations', {"id":2, '"default"':1}),
+				insertCallback('locations', {"id":2, 'initial':1}),
 				insertCallback('locations', {"id":3}),
 				function(callback){ game.getDefaultLocation(conn, callback); },
 			],
@@ -103,8 +103,8 @@ exports.getDefaultLocation = {
 		async.series([
 				function(callback){ mg.migrate(conn, {table: 'locations'}, callback); },
 				insertCallback('locations', {"id":1}),
-				insertCallback('locations', {"id":2, '"default"':1}),
-				insertCallback('locations', {"id":3, '"default"':1}),
+				insertCallback('locations', {"id":2, 'initial':1}),
+				insertCallback('locations', {"id":3, 'initial':1}),
 				insertCallback('locations', {"id":4}),
 				function(callback){ game.getDefaultLocation(conn, callback); },
 			],

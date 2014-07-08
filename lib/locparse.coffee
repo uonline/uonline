@@ -210,7 +210,7 @@ class Result
 			ways = ("#{v}=#{locByLabel[k].id}" for k,v of loc.actions)
 			dbConnection.query.sync(
 				dbConnection
-				'INSERT INTO locations (id, title, description, area, "default", ways, picture) VALUES($1,$2,$3,$4,$5,$6,$7)'
+				'INSERT INTO locations (id, title, description, area, initial, ways, picture) VALUES($1,$2,$3,$4,$5,$6,$7)'
 				[loc.id, loc.name, loc.description, loc.area.id, (if loc is @defaultLocation then 1 else 0),
 					ways.join('|'), loc.picture]
 			)

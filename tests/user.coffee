@@ -282,7 +282,7 @@ exports.registerUser = (test) ->
 		(callback) ->
 			mg.migrate conn, { table: 'locations' }, callback
 		(callback) ->
-			conn.query 'INSERT INTO locations (id, "default") VALUES (2, 1)', [], callback
+			conn.query 'INSERT INTO locations (id, initial) VALUES (2, 1)', [], callback
 		(callback) ->
 			users.registerUser conn, 'TheUser', 'password', 1, callback
 		(callback) ->
@@ -312,7 +312,7 @@ exports.accessGranted =
 			(callback) ->
 				mg.migrate conn, { table: 'locations' }, callback
 			(callback) ->
-				conn.query 'INSERT INTO locations (id, "default") VALUES (2, 1)', callback
+				conn.query 'INSERT INTO locations (id, initial) VALUES (2, 1)', callback
 			(callback) ->
 				users.registerUser conn, 'TheUser', 'password', 1, callback
 			(callback) ->
@@ -348,7 +348,7 @@ exports.createSession =
 			(callback) ->
 				mg.migrate conn, { table: "locations" }, callback
 			(callback) ->
-				conn.query 'INSERT INTO locations (id, "default") VALUES (2, 1)', callback
+				conn.query 'INSERT INTO locations (id, initial) VALUES (2, 1)', callback
 			(callback) ->
 				users.registerUser conn, 'Мохнатый Ангел', 'password', 1, callback
 			(callback) ->
