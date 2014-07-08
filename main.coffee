@@ -257,7 +257,7 @@ app.get '/game/', mustBeAuthed, (request, response) -> sync ->
 	try
 		location = lib.game.getUserLocation.sync null, dbConnection, userid
 	catch e
-		console.log e.stack
+		console.error e.stack
 		location = lib.game.getDefaultLocation.sync null, dbConnection
 		lib.game.changeLocation.sync null, dbConnection, userid, location.id
 
@@ -295,8 +295,9 @@ app.get '/action/go/:to', mustBeAuthed, (request, response) ->
 	userid = request.uonline.basicOpts.userid
 	to = request.param('to')
 	
-	if lib.game.canChangeLocation.sync null, dbConnection, userid, to
-		lib.game.changeLocation.sync null, dbConnection, userid, to
+	unless lib.game.isInFight.sync null, dbConnection, userid
+		if lib.game.canChangeLocation.sync null, dbConnection, userid, to
+			lib.game.changeLocation.sync null, dbConnection, userid, to
 	
 	response.redirect '/game/'
 
