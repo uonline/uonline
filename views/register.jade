@@ -23,7 +23,7 @@ block content
 		#password-control-group.control-group(class=(invalidPass?'error':''))
 			label.control-label(for='pass') Пароль
 			.controls
-				input#pass(type='password', name='pass', maxlength='32', required)
+				input#pass(type='password', name='pass', maxlength='32', value=pass, required)
 				span.help-inline
 					a#revealpass.btn.btn-small(title='Показать пароль')
 						i.icon-eye-open
