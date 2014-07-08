@@ -223,6 +223,27 @@ exports.getUserArea = {
 	},
 };
 
+exports.canChangeLocation = function(test) {
+	async.series([
+			function(callback){ mg.migrate(conn, {table: 'uniusers'}, callback); },
+			function(callback){ mg.migrate(conn, {table: 'locations'}, callback); },
+			function(callback){ mg.migrate(conn, {table: 'monsters'}, callback); },
+			insertCallback('uniusers', {"id":1, "location":1}),
+			insertCallback('locations', {"id":1, "ways":"Left=2"}),
+			insertCallback('locations', {"id":2}),
+			function(callback){ game.canChangeLocation(conn, 1, 2, callback); },
+			function(callback){ game.changeLocation(conn, 1, 2, callback); },
+			function(callback){ game.canChangeLocation(conn, 1, 1, callback); }
+		],
+		function(error, result) {
+			test.ifError(error);
+			test.strictEqual(result[6], true, "should return true if path exists");
+			test.strictEqual(result[8], false, "should return false if path doesn't exist");
+			test.done();
+		}
+	);
+};
+
 exports.changeLocation = {
 	"setUp": function(callback) {
 		async.series([
@@ -252,16 +273,6 @@ exports.changeLocation = {
 				test.strictEqual(result[4].rows[0].fight_mode, 0, 'user should not be attacked');
 				test.strictEqual(result[6], 3, 'user shold have moved to new location');
 				test.strictEqual(result[7].rows[0].fight_mode, 1, 'user should be attacked');
-				test.done();
-			}
-		);
-	},
-	"testWrongLocid": function(test) {
-		async.series([
-				function(callback){ game.changeLocation(conn, 1, 3, callback); },
-			],
-			function(error, result) {
-				test.ok(error, 'should fail if no way from current location to destination');
 				test.done();
 			}
 		);

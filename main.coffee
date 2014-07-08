@@ -259,7 +259,7 @@ app.get '/game/', mustBeAuthed, (request, response) -> sync ->
 	catch e
 		console.log e.stack
 		location = lib.game.getDefaultLocation.sync null, dbConnection
-		lib.game.changeLocation.sync null, dbConnection, userid, location.id, true
+		lib.game.changeLocation.sync null, dbConnection, userid, location.id
 
 	area = lib.game.getUserArea.sync null, dbConnection, userid
 	options.location_name = location.title
@@ -292,7 +292,12 @@ app.get '/inventory/', mustBeAuthed, (request, response) ->
 
 
 app.get '/action/go/:to', mustBeAuthed, (request, response) ->
-	lib.game.changeLocation.sync null, dbConnection, request.uonline.basicOpts.userid, request.param('to')
+	userid = request.uonline.basicOpts.userid
+	to = request.param('to')
+	
+	if lib.game.canChangeLocation.sync null, dbConnection, userid, to
+		lib.game.changeLocation.sync null, dbConnection, userid, to
+	
 	response.redirect '/game/'
 
 
