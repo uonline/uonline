@@ -25,10 +25,15 @@ var mg = require('../lib/migration');
 
 var async = require('async');
 
+var sync = require('sync');
+
 var anyDB = require('any-db');
 var conn = null;
 
-var usedTables = ['revision', 'locations', 'uniusers', 'areas', 'monsters', 'monster_prototypes'].join(', ');
+
+var usedTables = [
+	'revision', 'locations', 'uniusers', 'areas', 'monsters', 'monster_prototypes',
+	'battles', 'battle_participants'].join(', ');
 
 exports.setUp = function (done) {
 	async.series([
@@ -67,6 +72,33 @@ function insertCallback(dbName, fields) { //НЕ для использовани
 		});
 	};
 }
+
+
+function query(str, values)
+{
+	return conn.query.sync(conn, str, values).rows;
+}
+
+function queryOne(str, values)
+{
+	var rows = query(str, values);
+	if (rows.length !== 1)
+	{
+		throw new Error("In query:\n"+query+"\nExpected one row, but got "+rows.length);
+	}
+	return rows[0];
+}
+
+function migrateTable(table)
+{
+	return mg.migrate.sync(mg, conn, {table: table});
+}
+
+function insert(dbName, fields)
+{
+	insertCallback(dbName, fields).sync();
+}
+
 
 exports.getDefaultLocation = {
 	'good test': function (test) {
@@ -228,6 +260,7 @@ exports.canChangeLocation = function(test) {
 			function(callback){ mg.migrate(conn, {table: 'uniusers'}, callback); },
 			function(callback){ mg.migrate(conn, {table: 'locations'}, callback); },
 			function(callback){ mg.migrate(conn, {table: 'monsters'}, callback); },
+			function(callback){ mg.migrate(conn, {table: 'battle_participants'}, callback); },
 			insertCallback('uniusers', {"id":1, "location":1}),
 			insertCallback('locations', {"id":1, "ways":"Left=2"}),
 			insertCallback('locations', {"id":2}),
@@ -237,8 +270,8 @@ exports.canChangeLocation = function(test) {
 		],
 		function(error, result) {
 			test.ifError(error);
-			test.strictEqual(result[6], true, "should return true if path exists");
-			test.strictEqual(result[8], false, "should return false if path doesn't exist");
+			test.strictEqual(result[7], true, "should return true if path exists");
+			test.strictEqual(result[9], false, "should return false if path doesn't exist");
 			test.done();
 		}
 	);
@@ -246,37 +279,58 @@ exports.canChangeLocation = function(test) {
 
 exports.changeLocation = {
 	"setUp": function(callback) {
-		async.series([
-				function(callback){ mg.migrate(conn, {table: 'uniusers'}, callback); },
-				function(callback){ mg.migrate(conn, {table: 'locations'}, callback); },
-				function(callback){ mg.migrate(conn, {table: 'monsters'}, callback); },
-				insertCallback('uniusers', {"id":1, "location":1}),
-				insertCallback('locations', {"id":1, "ways":"Left=2"}),
-				insertCallback('locations', {"id":2, "ways":"Right=3"}),
-				insertCallback('locations', {"id":3})
-			], callback);
+		'uniusers locations monsters battles battle_participants'.split(' ').forEach(migrateTable);
+		insert('uniusers', {"id":1, "location":1, "initiative":50});
+		insert('locations', {"id":1, "ways":"Left=2"});
+		insert('locations', {"id":2});
+	}.async(),
+	"with peaceful monster": function(test) {
+		insert('monsters', {"id":1, "location":2, "attack_chance":-1});
+		game.changeLocation.sync(null, conn, 1, 2);
+		
+		var locid = game.getUserLocationId.sync(null, conn, 1);
+		test.strictEqual(locid, 2, 'user shold have moved to new location');
+		
+		var fm = queryOne('SELECT fight_mode FROM uniusers WHERE id=1').fight_mode;
+		test.strictEqual(fm, 0, 'user should not be attacked');
+		
+		test.done();
+	}, //.async(),
+	"with angry monster": function(test) {
+		insert('monsters', {id:1, location:2, attack_chance:100, initiative:100});
+		insert('monsters', {id:2, location:2, attack_chance:-1, initiative:5});
+		game.changeLocation.sync(null, conn, 1, 2);
+		
+		var locid = game.getUserLocationId.sync(null, conn, 1);
+		test.strictEqual(locid, 2, 'user shold have moved to new location');
+		
+		var fm = queryOne('SELECT fight_mode FROM uniusers WHERE id=1').fight_mode;
+		test.strictEqual(fm, 1, 'user should be attacked');
+		
+		var battles = query('SELECT * FROM battles');
+		test.strictEqual(battles.length, 1, 'one battle should appear');
+		
+		var participants = query('SELECT * FROM battle_participants ORDER BY index');
+		test.deepEqual(
+			participants,
+			[
+				{battle:1, id:1, kind:'monster', index:0},
+				{battle:1, id:1, kind:'user',    index:1},
+				{battle:1, id:2, kind:'monster', index:2},
+			], 'they should have been envolved in right order');
+		
+		test.done();
 	},
-	"testValidData": function(test) {
-		async.series([
-				insertCallback('monsters', {"id":1, "location":2, "attack_chance":-1}),
-				insertCallback('monsters', {"id":2, "location":3, "attack_chance":100}),
-				function(callback){ game.changeLocation(conn, 1, 2, callback); },
-				function(callback){ game.getUserLocationId(conn, 1, callback); },
-				function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE id=1', callback); },
-				function(callback){ game.changeLocation(conn, 1, 3, callback); },
-				function(callback){ game.getUserLocationId(conn, 1, callback); },
-				function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE id=1', callback); }
-			],
-			function(error, result) {
-				test.ifError(error);
-				test.strictEqual(result[3], 2, 'user shold have moved to new location');
-				test.strictEqual(result[4].rows[0].fight_mode, 0, 'user should not be attacked');
-				test.strictEqual(result[6], 3, 'user shold have moved to new location');
-				test.strictEqual(result[7].rows[0].fight_mode, 1, 'user should be attacked');
-				test.done();
-			}
-		);
-	}
+	"with busy monster": function(test) {
+		insert('monsters', {id:1, location:2, attack_chance:100, initiative:100});
+		insert('battle_participants', {id:1, kind:'monster'});
+		game.changeLocation.sync(null, conn, 1, 2);
+		
+		var fm = queryOne('SELECT fight_mode FROM uniusers WHERE id=1').fight_mode;
+		test.strictEqual(fm, 0, 'user should not be attacked');
+		
+		test.done();
+	},
 };
 
 exports.goAttack = function(test) {
