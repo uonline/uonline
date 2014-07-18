@@ -298,7 +298,8 @@ exports.changeLocation = {
 	}, //.async(),
 	"with angry monster": function(test) {
 		insert('monsters', {id:1, location:2, attack_chance:100, initiative:100});
-		insert('monsters', {id:2, location:2, attack_chance:-1, initiative:5});
+		insert('monsters', {id:2, location:2, attack_chance:100, initiative:5});
+		insert('monsters', {id:3, location:2, attack_chance:-1, initiative:10});
 		game.changeLocation.sync(null, conn, 1, 2);
 		
 		var locid = game.getUserLocationId.sync(null, conn, 1);
@@ -310,7 +311,7 @@ exports.changeLocation = {
 		var battles = query('SELECT * FROM battles');
 		test.strictEqual(battles.length, 1, 'one battle should appear');
 		
-		var participants = query('SELECT * FROM battle_participants ORDER BY index');
+		var participants = query('SELECT battle, id, kind, index FROM battle_participants ORDER BY index');
 		test.deepEqual(
 			participants,
 			[
@@ -318,6 +319,11 @@ exports.changeLocation = {
 				{battle:1, id:1, kind:'user',    index:1},
 				{battle:1, id:2, kind:'monster', index:2},
 			], 'they should have been envolved in right order');
+		
+		var userSide = queryOne("SELECT side FROM battle_participants WHERE kind='user' AND id=1").side;
+		query("SELECT side FROM battle_participants WHERE kind='monster'").forEach(function(m) {
+			test.ok(userSide != m.side, 'user and monsters should be on different sides');
+		});
 		
 		test.done();
 	},
