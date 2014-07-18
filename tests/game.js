@@ -389,6 +389,40 @@ exports.goEscape = {
 	},
 };
 
+exports.getBattleParticipants = {
+	'setUp': function() {
+		migrateTables('uniusers', 'monsters', 'monster_prototypes', 'battle_participants');
+		insert('uniusers', {id:1, username:'SomeUser'});
+		insert('monster_prototypes', {id:2, name:'SomeMonster'});
+		insert('monsters', {id:4, prototype:2});
+		insert('monsters', {id:5, prototype:2});
+		insert('battle_participants', {battle:3, id:1, kind:'user',    side:1, index:1});
+		insert('battle_participants', {battle:3, id:4, kind:'monster', side:0, index:0});
+		insert('battle_participants', {battle:3, id:5, kind:'monster', side:0, index:2});
+	}.async(),
+	'test': function(test) {
+		var participants = game.getBattleParticipants.sync(null, conn, 1);
+		
+		test.deepEqual(participants, [
+			{id:4, kind:'monster', name:'SomeMonster', side:0, index:0},
+			{id:1, kind:'user',    name:'SomeUser',    side:1, index:1},
+			{id:5, kind:'monster', name:'SomeMonster', side:0, index:2},
+		], 'should return participants with names');
+		
+		test.done();
+	},
+	'wrong kind': function(test) {
+		insert('battle_participants', {battle:3, id:5, kind:'wrong', side:0, index:2});
+		try
+		{
+			game.getBattleParticipants.sync(null, conn, 1);
+			test.ok(false, 'should return error');
+		}
+		catch(e) {}
+		test.done();
+	}
+};
+
 exports.getNearbyUsers = {
 	"setUp": function(callback) {
 		var d = new Date();

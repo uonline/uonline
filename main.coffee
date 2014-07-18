@@ -274,6 +274,10 @@ app.get '/game/', mustBeAuthed, (request, response) -> sync ->
 	options.monsters_list = tmpMonsters
 	options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
 	options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
+	
+	if options.fight_mode
+		options.participants = lib.game.getBattleParticipants.sync null, dbConnection, userid
+		options.our_side = options.participants.find((p) -> p.kind=='user' && p.id==userid).side
 
 	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
 	for i of chars
