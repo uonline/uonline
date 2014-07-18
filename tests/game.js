@@ -89,9 +89,12 @@ function queryOne(str, values)
 	return rows[0];
 }
 
-function migrateTable(table)
+function migrateTables()
 {
-	return mg.migrate.sync(mg, conn, {table: table});
+	for (var i=0; i<arguments.length; i++)
+	{
+		mg.migrate.sync(mg, conn, {table: arguments[i]});
+	}
 }
 
 function insert(dbName, fields)
@@ -278,8 +281,8 @@ exports.canChangeLocation = function(test) {
 };
 
 exports.changeLocation = {
-	"setUp": function(callback) {
-		'uniusers locations monsters battles battle_participants'.split(' ').forEach(migrateTable);
+	"setUp": function() {
+		migrateTables('uniusers', 'locations', 'monsters', 'battles', 'battle_participants');
 		insert('uniusers', {"id":1, "location":1, "initiative":50});
 		insert('locations', {"id":1, "ways":"Left=2"});
 		insert('locations', {"id":2});
@@ -339,36 +342,51 @@ exports.changeLocation = {
 	},
 };
 
-exports.goAttack = function(test) {
-	async.series([
-			function(callback){ mg.migrate(conn, {table: 'uniusers'}, callback); },
-			insertCallback('uniusers', {"id":1, "fight_mode":0}),
-			function(callback){ game.goAttack(conn, 1, callback); },
-			function(callback){ conn.query('SELECT fight_mode FROM uniusers WHERE id=1', callback); },
-		],
-		function(error, result) {
-			test.ifError(error);
-			test.strictEqual(result[3].rows[0].fight_mode, 1, 'user should be attacking');
-			test.done();
-		}
-	);
+exports.goAttack = {
+	'setUp': function() {
+		migrateTables('uniusers', 'monsters', 'battles', 'battle_participants');
+		insert('uniusers', {id:1, location:1, initiative:10, fight_mode:0});
+	}.async(),
+	'usual test': function(test) {
+		insert('monsters', {id:1, location:1, initiative:20});
+		game.goAttack.sync(null, conn, 1);
+		var fm = queryOne('SELECT fight_mode FROM uniusers WHERE id=1').fight_mode;
+		test.strictEqual(fm, 1, 'user should be attacking');
+		test.done();
+	},
+	'on empty location': function(test) {
+		game.goAttack.sync(null, conn, 1);
+		var fm = queryOne('SELECT fight_mode FROM uniusers WHERE id=1').fight_mode;
+		test.strictEqual(fm, 0, 'user should not be fighting');
+		test.strictEqual(query('SELECT id FROM battles').length, 0, 'should be no battles');
+		test.strictEqual(query('SELECT id FROM battle_participants').length, 0, 'should be no participants');
+		test.done();
+	},
 };
 
-exports.goEscape = function(test) {
-	async.series([
-			function(callback){ mg.migrate(conn, {table: 'uniusers'}, callback); },
-			insertCallback('uniusers', {"id":1, "fight_mode":1, "autoinvolved_fm":1}),
-			function(callback){ game.goEscape(conn, 1, callback); },
-			function(callback){ conn.query(
-				'SELECT fight_mode, autoinvolved_fm FROM uniusers WHERE id=1', callback); },
-		],
-		function(error, result) {
-			test.ifError(error);
-			test.strictEqual(result[3].rows[0].fight_mode, 0, 'user should not be attacking');
-			test.strictEqual(result[3].rows[0].autoinvolved_fm, 0, 'user should not be autoinvolved');
-			test.done();
-		}
-	);
+exports.goEscape = {
+	'setUp': function() {
+		migrateTables('uniusers', 'battles', 'battle_participants');
+		insert('uniusers', {id:1, fight_mode:1, autoinvolved_fm:1});
+		insert('battles', {id:3, is_over:0});
+		insert('battle_participants', {battle:3, id:1, kind:'user'});
+		insert('battle_participants', {battle:3, id:1, kind:'monster'});
+	}.async(),
+	'test': function(test) {
+		game.goEscape.sync(null, conn, 1);
+		
+		var user = queryOne('SELECT fight_mode, autoinvolved_fm FROM uniusers WHERE id=1');
+		test.strictEqual(user.fight_mode, 0, 'user should not be attacking');
+		test.strictEqual(user.autoinvolved_fm, 0, 'user should not be autoinvolved');
+		
+		var battle = queryOne('SELECT * FROM battles');
+		test.strictEqual(battle.is_over, 1, 'battle should be over');
+		
+		var participants = query('SELECT id FROM battle_participants');
+		test.strictEqual(participants.length, 0, 'all participants should have been removed');
+		
+		test.done();
+	},
 };
 
 exports.getNearbyUsers = {
