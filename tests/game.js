@@ -68,18 +68,18 @@ function insertCallback(dbName, fields) { //НЕ для использовани
 	};
 }
 
-exports.getDefaultLocation = {
+exports.getInitialLocation = {
 	'good test': function (test) {
 		async.series([
 				function(callback){ mg.migrate(conn, {table: 'locations'}, callback); },
 				insertCallback('locations', {"id":1}),
 				insertCallback('locations', {"id":2, 'initial':1}),
 				insertCallback('locations', {"id":3}),
-				function(callback){ game.getDefaultLocation(conn, callback); },
+				function(callback){ game.getInitialLocation(conn, callback); },
 			],
 			function(error, result) {
 				test.ifError(error);
-				test.strictEqual(result[4].id, 2, 'should return id of default location');
+				test.strictEqual(result[4].id, 2, 'should return id of initial location');
 				test.ok(result[4].ways instanceof Array, 'should return parsed ways from location');
 				test.done();
 			}
@@ -91,10 +91,10 @@ exports.getDefaultLocation = {
 				insertCallback('locations', { "id": 1 } ),
 				insertCallback('locations', { "id": 2 } ),
 				insertCallback('locations', { "id": 3 } ),
-				function(callback){ game.getDefaultLocation(conn, callback); },
+				function(callback){ game.getInitialLocation(conn, callback); },
 			],
 			function(error, result) {
-				test.ok(!!error, 'should return error if default location is not defined');
+				test.ok(!!error, 'should return error if initial location is not defined');
 				test.done();
 			}
 		);
@@ -106,10 +106,10 @@ exports.getDefaultLocation = {
 				insertCallback('locations', {"id":2, 'initial':1}),
 				insertCallback('locations', {"id":3, 'initial':1}),
 				insertCallback('locations', {"id":4}),
-				function(callback){ game.getDefaultLocation(conn, callback); },
+				function(callback){ game.getInitialLocation(conn, callback); },
 			],
 			function(error, result) {
-				test.ok(!!error, 'should return error if there is more than one default location');
+				test.ok(!!error, 'should return error if there is more than one initial location');
 				test.done();
 			}
 		);

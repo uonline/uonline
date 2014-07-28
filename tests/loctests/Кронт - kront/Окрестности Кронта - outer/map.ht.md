@@ -10,7 +10,7 @@
 
 * Пойти на Зелёную улицу `greenstreet`
 
-### Зелёная улица `greenstreet` (default)
+### Зелёная улица `greenstreet` (initial)
 
 Здесь посажены деревья.
 

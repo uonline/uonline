@@ -258,7 +258,7 @@ app.get '/game/', mustBeAuthed, (request, response) -> sync ->
 		location = lib.game.getUserLocation.sync null, dbConnection, userid
 	catch e
 		console.error e.stack
-		location = lib.game.getDefaultLocation.sync null, dbConnection
+		location = lib.game.getInitialLocation.sync null, dbConnection
 		lib.game.changeLocation.sync null, dbConnection, userid, location.id
 
 	area = lib.game.getUserArea.sync null, dbConnection, userid

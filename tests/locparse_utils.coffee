@@ -170,7 +170,7 @@ exports.postCheck_test =
 			id: 3
 			label: 'loc3'
 		]
-		log.result.defaultLocation = log.result.areas[0]
+		log.result.initialLocation = log.result.areas[0]
 		parser.postCheck log
 		test.deepEqual log.all(), {}, "should not produce warnings or errors if everything's ok"
 		test.done()
@@ -194,7 +194,7 @@ exports.postCheck_test =
 			id: 1
 			label: 'loc1'
 		]
-		log.result.defaultLocation = null
+		log.result.initialLocation = null
 		parser.postCheck log
 		log.testIfCorrect test, 'errors', [
 				{id: 'E1',  pointer: 'actions'}

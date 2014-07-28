@@ -297,7 +297,7 @@ exports.registerUser = (test) ->
 		test.ok user.sessid.length > 0, 'should generate sessid'
 		test.ok user.reg_time <= new Date(), 'should not put registration time into future'
 		test.ok user.sess_time <= new Date(), 'should not put session timestamp into future'
-		test.strictEqual user.location, 2, 'should set location to default one'
+		test.strictEqual user.location, 2, 'should set location to initial one'
 		test.strictEqual user.permissions, 1, 'should set specified permissions'
 		users.registerUser conn, 'TheUser', 'password', 1, (error, result) ->
 			test.ok(!!error, 'should fail if user exists')
