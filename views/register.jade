@@ -45,6 +45,9 @@ block content
 		# Reveal password
 		revealPasswordButton.click ->
 			passwordField.prop 'type', (if passwordField.prop('type') is 'password' then 'text' else 'password')
+			document.cookie = "pass_field_type=#{passwordField.prop('type')}; expires=#{new Date(Date.now()+30000).toUTCString()}"
+		if matched=document.cookie.match /pass_field_type=([^;]+)/
+			passwordField.prop 'type', matched[1]
 
 		# Validate password
 		passwordField.change ->
