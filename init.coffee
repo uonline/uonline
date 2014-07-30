@@ -20,6 +20,7 @@ config = require './config.js'
 lib = require './lib.coffee'
 sync = require 'sync'
 dashdash = require 'dashdash'
+chalk = require 'chalk'
 
 
 anyDB = null
@@ -193,6 +194,8 @@ migrateTables = ->
 
 
 optimize = ->
+	console.log chalk.magenta 'Optimizing tables...'
+
 	conn = createAnyDBConnection(config.DATABASE_URL)
 	db_name = config.DATABASE_URL.match(/[^\/]+$/)[0]
 
@@ -203,11 +206,12 @@ optimize = ->
 
 	for row in result.rows
 		#lib.prettyprint.action "Optimizing table `#{row.table_name}`"
-		console.log "Optimizing table `#{row.table_name}`..."
+		process.stdout.write " `#{row.table_name}`... "
 		try
 			optRes = conn.query.sync conn, "VACUUM FULL ANALYZE #{row.table_name}"
-			console.log "ok"
+			console.log chalk.green "ok"
 		catch ex
+			console.log chalk.red.bold "fail"
 			console.trace ex
 
 
