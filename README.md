@@ -6,7 +6,7 @@ uonline
 [![Dependency Status](https://david-dm.org/uonline/uonline.svg)](https://david-dm.org/uonline/uonline)
 [![devDependency Status](https://david-dm.org/uonline/uonline/dev-status.svg)](https://david-dm.org/uonline/uonline#info=devDependencies)
 [![Code Climate](http://img.shields.io/codeclimate/github/uonline/uonline.svg)](https://codeclimate.com/github/uonline/uonline)
-[![Planned tasks](https://badge.waffle.io/uonline/uonline.svg?label=sweetest%20july&title=Tasks)](http://waffle.io/uonline/uonline)
+[![Planned tasks](https://badge.waffle.io/uonline/uonline.svg?label=on%20fire&title=Tasks)](http://waffle.io/uonline/uonline)
 
 A browser-based MMORPG game in a fantasy world.
 
