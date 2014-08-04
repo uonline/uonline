@@ -208,7 +208,7 @@ exports.error_E5_test = (test) ->
 exports.error_E6_test = (test) ->
 	testOneError(
 		test, 'E6'
-		"### Зелёная улица `greenstreet` (default)"
+		"### Зелёная улица `greenstreet` (initial)"
 		"### Зелёная улица `greenstreet`"
 		"#{TMP_DIR}/Кронт - kront/Окрестности Кронта - outer/map.ht.md"
 	)
@@ -247,7 +247,7 @@ exports.error_E11_test = (test) ->
 	testOneError(
 		test, 'E11'
 		"### Другая голубая улица `bluestreet`"
-		"### Другая голубая улица `bluestreet` (default)"
+		"### Другая голубая улица `bluestreet` (initial)"
 	)
 
 exports.error_E12_test = (test) ->

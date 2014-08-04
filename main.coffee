@@ -121,11 +121,6 @@ app.use ((request, response) ->
 	# PJAX
 	if request.header('X-PJAX')?
 		request.uonline.basicOpts.pjax = true
-	# Try to guess layout version
-	if /[/](register|game)/.test(request.path)
-		response.header 'X-PJAX-Version', 'second'
-	else
-		response.header 'X-PJAX-Version', 'third'
 	return
 ).asyncMiddleware()
 
@@ -258,7 +253,7 @@ app.get '/game/', mustBeAuthed, (request, response) -> sync ->
 		location = lib.game.getUserLocation.sync null, dbConnection, userid
 	catch e
 		console.error e.stack
-		location = lib.game.getDefaultLocation.sync null, dbConnection
+		location = lib.game.getInitialLocation.sync null, dbConnection
 		lib.game.changeLocation.sync null, dbConnection, userid, location.id
 
 	area = lib.game.getUserArea.sync null, dbConnection, userid
@@ -298,11 +293,11 @@ app.get '/inventory/', mustBeAuthed, (request, response) ->
 app.get '/action/go/:to', mustBeAuthed, (request, response) ->
 	userid = request.uonline.basicOpts.userid
 	to = request.param('to')
-	
+
 	unless lib.game.isInFight.sync null, dbConnection, userid
 		if lib.game.canChangeLocation.sync null, dbConnection, userid, to
 			lib.game.changeLocation.sync null, dbConnection, userid, to
-	
+
 	response.redirect '/game/'
 
 

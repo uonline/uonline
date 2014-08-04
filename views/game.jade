@@ -1,4 +1,4 @@
-extends old-layout
+extends layout
 block title
 	//- TODO: typography
 	| #{location_name}
@@ -8,25 +8,25 @@ block content
 		h1 #{ location_name }#{' '}
 			small #{ area_name }
 	if pic != null
-		img.img-polaroid(src=pic, style="float: right; margin-left: 1em; margin-bottom: 1em;")
+		img.img-thumbnail(src=pic, style="float: right; margin-left: 1em; margin-bottom: 1em;")
 	if fight_mode == false
 		div
 			//- TODO: {{ description | tf | nl2p | nl2br }}
 			p #{ description }
 		div
-			p(style="line-height: 2.5em;")
+			p(style="line-height: 2.8em;")
 				each i in ways
 					//- TODO: typography
-					a.pjax.btn(href="/action/go/"+i.target) #{i.text}
+					a.pjax.btn.btn-default(href="/action/go/"+i.target) #{i.text}
 					| #{'\n'}
 	else
 		h4 Здоровье
 		.progress
-			.bar.bar-success(style='width: '+health_percent+'%;')
+			.progress-bar.progress-bar-success(style='width: '+health_percent+'%;')
 				| #{ health }/#{ health_max }
 		h4 Мана
 		.progress
-			.bar(style='width: '+mana_percent+'%;')
+			.progress-bar(style='width: '+mana_percent+'%;')
 				| #{ mana }/#{ mana_max }
 	div
 		p
@@ -55,7 +55,7 @@ block content
 						div(style="float:left;")
 							| #{i.name}:&nbsp;
 						.progress(style="margin-bottom:5px;")
-							.bar.bar-success(style='width: '+(i.health/i.health_max*100)+'%;')
+							.progress-bar.progress-bar-success(style='width: '+(i.health/i.health_max*100)+'%;')
 								| #{ i.health }/#{ i.health_max }
 				else
 					each i,index in monsters_list
@@ -77,16 +77,16 @@ block content
 		if monsters_list.length > 0
 			p
 				if fight_mode == true
-					a.btn.disabled Атака
+					a.btn.btn-default.disabled Атака
 					| #{' '}
-					a.btn.disabled Защита
+					a.btn.btn-default.disabled Защита
 					| #{' '}
-					a.btn.pjax(href='/inventory/') Инвентарь
+					a.btn.btn-default.pjax(href='/inventory/') Инвентарь
 					| #{' '}
-					a.btn.disabled Магия
+					a.btn.btn-default.disabled Магия
 					| #{' '}
-					a.btn.pjax(href="/action/escape") Сбежать
+					a.btn.btn-default.pjax(href="/action/escape") Сбежать
 				else
-					a.btn.pjax(href="/action/attack") Атаковать
+					a.btn.btn-default.pjax(href="/action/attack") Атаковать
 	//- fit picture
 	div(style="clear: both;")

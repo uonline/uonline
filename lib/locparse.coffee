@@ -94,7 +94,7 @@ postCheck = (log) ->
 	checkPropUniqueness res.areas, 'areas', 'N/a', 'id', log # error N
 	checkPropUniqueness res.locations, 'locations', 'N/a', 'id', log # error N
 	checkPropUniqueness res.locations, 'locations', 'E7', 'label', log # error 7
-	log.error 'locations', 'E6', "default was not found" unless res.defaultLocation? # error 6
+	log.error 'locations', 'E6', "initial was not found" unless res.initialLocation? # error 6
 
 	labels = {}
 	labels[loc.label] = loc for loc in res.locations
@@ -185,7 +185,7 @@ class Result
 	constructor: () ->
 		@areas = []
 		@locations = []
-		@defaultLocation = null
+		@initialLocation = null
 		@errors = []
 		@warnings = []
 		@files = {}
@@ -211,7 +211,7 @@ class Result
 			dbConnection.query.sync(
 				dbConnection
 				'INSERT INTO locations (id, title, description, area, initial, ways, picture) VALUES($1,$2,$3,$4,$5,$6,$7)'
-				[loc.id, loc.name, loc.description, loc.area.id, (if loc is @defaultLocation then 1 else 0),
+				[loc.id, loc.name, loc.description, loc.area.id, (if loc is @initialLocation then 1 else 0),
 					ways.join('|'), loc.picture]
 			)
 
@@ -265,9 +265,9 @@ processMap = (filename, areaName, areaLabel, log) ->
 
 			location = new Location(name, label, area)
 
-			if prop is '(default)'
-				log.error i, 'E11', "second default location found" if log.result.defaultLocation? # error 11
-				log.result.defaultLocation = location
+			if prop is '(initial)'
+				log.error i, 'E11', "second initial location found" if log.result.initialLocation? # error 11
+				log.result.initialLocation = location
 			else if prop isnt ''
 				log.warn i, 'W10', "text after location label will be ignored (#{prop})" # warn 10
 

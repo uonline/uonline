@@ -14,7 +14,6 @@ if !pjax
 	html
 		head
 			meta(charset='utf-8')
-			meta(http-equiv='x-pjax-version', content='third')
 			meta(http-equiv="X-UA-Compatible", content="IE=edge")
 			meta(name='viewport', content='width=device-width, initial-scale=1.0')
 			title
@@ -88,27 +87,6 @@ if !pjax
 							else
 								+instanceLink('login', '/login/', 'Вход', 'glyphicon-chevron-right')
 								+instanceLink('register', '/register/', 'Регистрация')
-
-			//div.navbar.navbar-fixed-top
-				div.navbar-inner
-					div.container
-						a.brand(href='/') uonline
-						ul.nav
-							+instanceLink('about','/about/','Об игре')
-						ul.nav.pull-right
-							if loggedIn === true
-								li
-									a(href='/profile/')
-										i(class=(admin?'icon-certificate':'icon-user'))
-										| #{' '}#{login}
-								+instanceLink('profile', '/profile/', 'Профиль', null, !profileIsMine)
-								+instanceLink('game', '/game/', 'Игра')
-								li
-									a(href='/action/logout') Выйти
-							else
-								+instanceLink('login', '/login/', 'Вход', 'icon-chevron-right')
-								+instanceLink('register', '/register/', 'Регистрация')
-
 			div.container
 				div.row
 					div.col-md-12#content
