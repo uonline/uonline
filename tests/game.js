@@ -36,25 +36,15 @@ var usedTables = [
 	'battles', 'battle_participants'].join(', ');
 
 exports.setUp = function (done) {
-	async.series([
-		function(callback) {
-			conn = anyDB.createConnection(config.DATABASE_URL_TEST);
-			conn.query("DROP TABLE IF EXISTS "+usedTables, callback);
-		},
-	], done);
-};
+	conn = anyDB.createConnection(config.DATABASE_URL_TEST);
+	conn.constructor.prototype.sq = function(){ this.query.sync(this, arguments[0], arguments[1]) };
+	conn.sq("DROP TABLE IF EXISTS "+usedTables);
+}.async();
 
 exports.tearDown = function (done) {
-	async.series([
-		function(callback) {
-			conn.query("DROP TABLE IF EXISTS "+usedTables, callback);
-		},
-		function(callback) {
-			conn.end();
-			callback();
-		}
-	], done);
-};
+	conn.sq("DROP TABLE IF EXISTS "+usedTables);
+	conn.end();
+}.async();
 
 
 function insertCallback(dbName, fields) { //НЕ для использования снаружи тестов
@@ -103,123 +93,97 @@ function insert(dbName, fields)
 
 exports.getInitialLocation = {
 	'good test': function (test) {
-		async.series([
-				function(callback){ mg.migrate(conn, {table: 'locations'}, callback); },
-				insertCallback('locations', {"id":1}),
-				insertCallback('locations', {"id":2, 'initial':1}),
-				insertCallback('locations', {"id":3}),
-				function(callback){ game.getInitialLocation(conn, callback); },
-			],
-			function(error, result) {
-				test.ifError(error);
-				test.strictEqual(result[4].id, 2, 'should return id of initial location');
-				test.ok(result[4].ways instanceof Array, 'should return parsed ways from location');
-				test.done();
-			}
-		);
+		migrateTables('locations');
+		insert('locations', {"id":1});
+		insert('locations', {"id":2, 'initial':1});
+		insert('locations', {"id":3});
+		var loc = game.getInitialLocation.sync(null, conn);
+		
+		test.strictEqual(loc.id, 2, 'should return id of initial location');
+		test.ok(loc.ways instanceof Array, 'should return parsed ways from location');
+		test.done();
 	},
 	'bad test': function (test) {
-		async.series([
-				function(callback){ mg.migrate(conn, {table: 'locations'}, callback); },
-				insertCallback('locations', { "id": 1 } ),
-				insertCallback('locations', { "id": 2 } ),
-				insertCallback('locations', { "id": 3 } ),
-				function(callback){ game.getInitialLocation(conn, callback); },
-			],
-			function(error, result) {
-				test.ok(!!error, 'should return error if initial location is not defined');
-				test.done();
-			}
+		migrateTables('locations');
+		insert('locations', { "id": 1 } );
+		insert('locations', { "id": 2 } );
+		insert('locations', { "id": 3 } );
+		test.throws(
+			function(){ game.getInitialLocation.sync(null, conn); },
+			Error,
+			'should return error if initial location is not defined'
 		);
+		test.done();
 	},
 	'ambiguous test': function (test) {
-		async.series([
-				function(callback){ mg.migrate(conn, {table: 'locations'}, callback); },
-				insertCallback('locations', {"id":1}),
-				insertCallback('locations', {"id":2, 'initial':1}),
-				insertCallback('locations', {"id":3, 'initial':1}),
-				insertCallback('locations', {"id":4}),
-				function(callback){ game.getInitialLocation(conn, callback); },
-			],
-			function(error, result) {
-				test.ok(!!error, 'should return error if there is more than one initial location');
-				test.done();
-			}
+		migrateTables('locations');
+		insert('locations', {"id":1});
+		insert('locations', {"id":2, 'initial':1});
+		insert('locations', {"id":3, 'initial':1});
+		insert('locations', {"id":4});
+		test.throws(
+			function(){ game.getInitialLocation.sync(null, conn) },
+			Error,
+			'should return error if there is more than one initial location'
 		);
+		test.done();
 	},
 };
 
 exports.getUserLocationId = {
 	"testValidData": function(test) {
-		async.series([
-				function(callback){ mg.migrate(conn, {table: 'uniusers'}, callback); },
-				insertCallback('uniusers', {"id":1, '"location"':3}),
-				insertCallback('uniusers', {"id":2, '"location"':1}),
-				function(callback){ game.getUserLocationId(conn, 1, callback); },
-				function(callback){ game.getUserLocationId(conn, 2, callback); },
-			],
-			function(error, result) {
-				test.ifError(error);
-				test.strictEqual(result[3], 3, "should return user's location id");
-				test.strictEqual(result[4], 1, "should return user's location id");
-				test.done();
-			}
-		);
+		migrateTables('uniusers');
+		insert('uniusers', {"id":1, '"location"':3});
+		insert('uniusers', {"id":2, '"location"':1});
+		var id1 = game.getUserLocationId.sync(null, conn, 1);
+		var id2 = game.getUserLocationId.sync(null, conn, 2);
+		test.strictEqual(id1, 3, "should return user's location id");
+		test.strictEqual(id2, 1, "should return user's location id");
+		test.done();
 	},
 	"testWrongSessid": function(test) {
-		async.series([
-				function(callback){ mg.migrate(conn, {table: 'uniusers'}, callback); },
-				function(callback) {game.getUserLocationId(conn, -1, callback);},
-			],
-			function(error, result) {
-				test.ok(error, 'should fail on wrong sessid');
-				test.done();
-			}
+		migrateTables('uniusers');
+		test.throws(
+			function(){ game.getUserLocationId.sync(null, conn, -1) },
+			Error,
+			'should fail on wrong sessid'
 		);
+		test.done();
 	}
 };
 
 exports.getUserLocation = {
-	"setUp": function(callback) {
-		async.series([
-				function(callback){ mg.migrate(conn, {table: 'uniusers'}, callback); },
-				function(callback){ mg.migrate(conn, {table: 'locations'}, callback); },
-				insertCallback('uniusers', {"id":1, "location":3, "sessid":"someid"})
-			], callback);
-	},
+	"setUp": function() {
+		migrateTables('uniusers', 'locations');
+		insert('uniusers', {"id":1, "location":3, "sessid":"someid"});
+	}.async(),
 	"testValidData": function(test) {
-		async.series([
-				insertCallback('locations', {
-					"id":3, "area":5, "title":"The Location", "ways":"Left=7|Forward=8|Right=9"}),
-				function(callback){ game.getUserLocation(conn, 1, callback); },
-			],
-			function(error, result) {
-				test.ifError(error);
-				test.strictEqual(result[1].id, 3, "should return user's location id");
-				test.deepEqual(result[1].ways, [
-					{target:7, text:'Left'},
-					{target:8, text:'Forward'},
-					{target:9, text:'Right'}], 'should return ways from location');
-				test.done();
-			}
-		);
+		insert('locations', {"id":3, "area":5, "title":"The Location", "ways":"Left=7|Forward=8|Right=9"});
+		var loc = game.getUserLocation.sync(null, conn, 1);
+		
+		test.strictEqual(loc.id, 3, "should return user's location id");
+		test.deepEqual(loc.ways, [
+			{target:7, text:'Left'},
+			{target:8, text:'Forward'},
+			{target:9, text:'Right'}], 'should return ways from location');
+		test.done();
 	},
 	"testWrongSessid": function(test) {
-		game.getUserLocation(conn, -1, function(error, result) {
-			test.ok(error, 'should fail on wrong id');
-			test.done();
-		});
+		test.throws(
+			function(){ game.getUserLocation.sync(null, conn, -1) },
+			Error,
+			'should fail on wrong id'
+		);
+		test.done();
 	},
 	"testWrongLocid": function(test) {
-		async.series([
-				insertCallback('locations', {"id":1, "area":5}),
-				function(callback){ game.getUserLocation(conn, 1, callback); },
-			],
-			function(error, result) {
-				test.ok(error, 'should fail if user.location is wrong');
-				test.done();
-			}
+		insert('locations', {"id":1, "area":5});
+		test.throws(
+			function(){ game.getUserLocation.sync(null, conn, 1) },
+			Error,
+			'should fail if user.location is wrong'
 		);
+		test.done();
 	}
 };
 
