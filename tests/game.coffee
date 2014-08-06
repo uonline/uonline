@@ -26,11 +26,8 @@ queryOne = (str, values) ->
 
 
 migrateTables = ->
-	i = 0
-	while i < arguments.length
-		mg.migrate.sync mg, conn,
-			table: arguments[i]
-		i++
+	args = (i for i in arguments)
+	mg.migrate.sync mg, conn, tables: args
 
 insert = (dbName, fields) ->
 	params = []
@@ -38,7 +35,7 @@ insert = (dbName, fields) ->
 	for i of fields
 		params.push i
 		values.push (if typeof fields[i] is 'string' then "'#{fields[i]}'" else fields[i])
-	conn.sq "INSERT INTO #{dbName} (#{params.join(', ')}) VALUES (#{values.join(', ')})"
+	query "INSERT INTO #{dbName} (#{params.join(', ')}) VALUES (#{values.join(', ')})"
 
 
 config = require '../config.js'
@@ -63,12 +60,11 @@ usedTables = [
 
 exports.setUp = (->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-	conn.constructor::sq = -> @query.sync this, arguments[0], arguments[1]
-	conn.sq 'DROP TABLE IF EXISTS ' + usedTables
+	query 'DROP TABLE IF EXISTS ' + usedTables
 ).async() # the entrance to the Fieber land
 
 exports.tearDown = (->
-	conn.sq 'DROP TABLE IF EXISTS ' + usedTables
+	query 'DROP TABLE IF EXISTS ' + usedTables
 	conn.end()
 ).async()
 
@@ -137,7 +133,7 @@ exports.getUserLocationId =
 
 
 exports.getUserLocation =
-	setUp: (done)->
+	setUp: (done) ->
 		migrateTables 'uniusers', 'locations'
 		insert 'uniusers', id: 1, location: 3, sessid: 'someid'
 		done()
@@ -318,7 +314,7 @@ exports.goEscape =
 
 
 exports.getBattleParticipants =
-	setUp: (done)->
+	setUp: (done) ->
 		migrateTables 'uniusers', 'monsters', 'monster_prototypes', 'battle_participants'
 		insert 'uniusers', id: 1, username: 'SomeUser'
 		insert 'monster_prototypes', id: 2, name: 'SomeMonster'
@@ -493,7 +489,7 @@ exports.getUserCharacters =
 #	for attr of obj
 #		if attr is 'setUp' or attr is 'tearDown'
 #			continue
-#		
+#
 #		if obj[attr] instanceof Function
 #			obj[attr] = ((origTestFunc, t) -> (test) ->
 #					console.log(t)

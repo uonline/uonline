@@ -290,17 +290,3 @@ exports.migrate =
 		
 		test.ok log_times>0, 'should say something'
 		test.done()
-
-fixTest = (obj) ->
-	for attr of obj
-		if attr is 'setUp' or attr is 'tearDown'
-			continue
-		
-		if obj[attr] instanceof Function
-			obj[attr] = ((origTestFunc, t) -> (test) ->
-					console.log(t)
-					origTestFunc(test)
-				)(obj[attr], attr)
-		else
-			fixTest(obj[attr])
-fixTest exports
