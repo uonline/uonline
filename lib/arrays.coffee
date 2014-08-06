@@ -20,7 +20,7 @@ Array::pickRandom = ->
 	return null if this.length == 0
 	return this[Math.random()*this.length|0]
 
-# Returns first mathing element
+# Returns first matching element
 # TODO: tests or #394
 Array::find = (func) ->
 	for val in this
