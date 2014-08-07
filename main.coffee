@@ -17,8 +17,15 @@
 'use strict'
 
 config = require "#{__dirname}/config.js"
+lib = require "#{__dirname}/lib.coffee"
 
+chalk = require 'chalk'
 anyDB = require 'any-db'
+transaction = require 'any-db-transaction'
+async = require 'async'
+express = require 'express'
+sync = require 'sync'
+
 
 dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
 dbConnection.query 'SELECT version()', [], (error, result) ->
@@ -35,40 +42,17 @@ if process.env.SQLPROF is 'true'
 		for value, index in data
 			index++
 			while logged.indexOf("$#{index}") isnt -1
-				logged = logged.replace "$#{index}", "<#{value}>"
+				logged = logged.replace "$#{index}", chalk.blue(JSON.stringify(value))
 		start = Date.now()
 		@_query q, data, (error, result) ->
 			time = Date.now() - start
-			console.log "\n#{time} ms: #{logged}\n"
+			time = switch
+				when time < 10 then chalk.green("#{time} ms")
+				when time < 20 then chalk.yellow("#{time} ms")
+				else chalk.red("#{time} ms")
+			console.log "\n#{time}: #{logged}\n"
+			# console.log "\n#{time}: t: #{logged}\n"
 			cb(error, result)
-	dbConnection._begin = dbConnection.begin
-	dbConnection.begin = ->
-		console.log "\nBEGIN TRANSACTION\n"
-		tx = @_begin()
-		tx.____start = Date.now()
-		tx.__query = tx.query
-		tx.query = (q, data, cb) ->
-			logged = q
-			for value, index in data
-				index++
-				while logged.indexOf("$#{index}") isnt -1
-					logged = logged.replace "$#{index}", "<#{value}>"
-			start = Date.now()
-			@__query q, data, (error, result) ->
-				time = Date.now() - start
-				console.log "\n#{time} ms: t: #{logged}\n"
-				cb(error, result)
-		# doesn't work
-		#tx.__commit = tx.commit
-		#tx.commit = (a) ->
-			#console.log "\nCOMMIT, the whole thing took #{Date.now() - tx.____start} ms\n"
-			#tx.__commit a
-		return tx
-
-lib = require "#{__dirname}/lib.coffee"
-async = require 'async'
-express = require 'express'
-sync = require 'sync'
 
 app = express()
 app.enable 'trust proxy'
@@ -269,7 +253,7 @@ app.get '/game/', mustBeAuthed, (request, response) -> sync ->
 	options.monsters_list = tmpMonsters
 	options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
 	options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
-	
+
 	if options.fight_mode
 		options.participants = lib.game.getBattleParticipants.sync null, dbConnection, userid
 		options.our_side = options.participants.find((p) -> p.kind=='user' && p.id==userid).side
