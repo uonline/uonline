@@ -21,12 +21,10 @@ module.exports = (grunt) ->
 	# Project configuration.
 	grunt.initConfig
 		nodeunit:
-			js: [
+			all: [
 				'tests/health-check.js'
-				'tests/*.js'
-			]
-			coffee: [
 				'tests/health-check.coffee'
+				'tests/*.js'
 				'tests/*.coffee'
 			]
 
@@ -132,8 +130,6 @@ module.exports = (grunt) ->
 				src: ['*.js']
 				dest: 'lib-cov/'
 				ext: '.js'
-			options:
-				exclude: /^.*[.]coffee$/
 
 		clean:
 			lib_cov: 'lib-cov/'
@@ -151,6 +147,10 @@ module.exports = (grunt) ->
 				src: 'report.lcov'
 			options:
 				force: false
+
+		jscoverage_report:
+			options:
+				showOnly: /^lib[/]/
 
 
 	# These plugins provide necessary tasks.
@@ -179,7 +179,7 @@ module.exports = (grunt) ->
 		grunt.config.set 'nodeunit.one', [ 'tests/'+grunt.option('single') ]
 		testTask.push 'nodeunit:one'
 	else
-		testTask = testTask.concat ['nodeunit:js', 'nodeunit:coffee']  # order is important
+		testTask.push 'nodeunit:all'
 	testTask.push 'jscoverage_report'
 	grunt.registerTask 'test', testTask
 
