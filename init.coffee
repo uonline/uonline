@@ -143,9 +143,18 @@ info = ->
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 	current = lib.migration.getCurrentRevision.sync(null, dbConnection)
 	newest = lib.migration.getNewestRevision()
-	status = if current < newest then 'needs update' else 'up to date'
-	console.log "init.js with #{newest + 1} revisions on board."
-	console.log "Current revision is #{current} (#{status})."
+
+	status = 'up to date'
+	color = chalk.green
+	if current < newest
+		status = 'needs update'
+		color = chalk.red
+	if current > newest
+		status = "oh fuck, how it's possible?"
+		color = chalk.red
+
+	console.log "This is the uonline init script."
+	console.log "Latest revision is #{chalk.magenta(newest)}, current is #{color(current)} (#{color(status)})."
 
 
 createDatabase = (arg) ->

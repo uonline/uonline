@@ -14,13 +14,14 @@ block content
 				b Ой! Во введённых данных что-то не так.
 				| #{' '}Исправьте ошибки и попробуйте ещё раз.
 	form.form-horizontal(method='post', action='/register/')
-		#user-form-group.form-group(class=((invalidLogin || loginIsBusy)?'has-error':''))
+		#user-form-group.form-group.has-feedback(class=((invalidLogin || loginIsBusy)?'has-error':''))
 			label.col-sm-2.control-label(for='user') Логин
 			.col-sm-3
 				input.form-control#user(type='text', name='user', maxlength='32', value=user, required, autofocus)
+				span#username-feedback.glyphicon.glyphicon-ok.form-control-feedback(style='display: none')
 			span.col-sm-7.help-block
 				small От 2 до 32 символов, [a-zA-Z0-9а-яА-Я_- ].
-		#password-form-group.form-group(class=(invalidPass?'has-error':''))
+		#password-form-group.form-group.has-feedback(class=(invalidPass?'has-error':''))
 			label.col-sm-2.control-label(for='pass') Пароль
 			.col-sm-3
 				.input-group
@@ -38,9 +39,31 @@ block content
 		# Common variables
 		usernameField = $('input[name=user]')
 		usernameFormGroup = $('#user-form-group')
+		usernameFeedback = $('#username-feedback')
 		passwordField = $('input[name=pass]')
 		passwordFormGroup = $('#password-form-group')
 		revealPasswordButton = $('#revealpass')
+
+		usernameStatus = (state, hint) ->
+			usernameFormGroup.removeClass 'has-error has-success'
+			usernameFeedback.removeClass 'glyphicon-ok glyphicon-remove glyphicon-refresh'
+			usernameFeedback.hide()
+			# state
+			if state is 'checking'
+				usernameFeedback.addClass 'glyphicon-refresh'
+				usernameFeedback.show()
+			if state is 'ok'
+				usernameFeedback.addClass 'glyphicon-ok'
+				usernameFeedback.show()
+				usernameFormGroup.addClass 'has-success'
+			if state is 'error'
+				usernameFeedback.addClass 'glyphicon-remove'
+				usernameFeedback.show()
+				usernameFormGroup.addClass 'has-error'
+			# hint
+			if not hint? then hint = ''
+			usernameFeedback.attr('title', hint)
+
 
 		# Reveal password
 		revealPasswordButton.click ->
@@ -56,10 +79,15 @@ block content
 
 		# Validate username
 		usernameField.change ->
-			usernameFormGroup.removeClass 'has-error'
 			if validation.usernameIsValid(usernameField.val())
+				usernameStatus 'checking', 'Проверяем, свободен ли логин'
 				$.getJSON "/ajax/isNickBusy/#{encodeURIComponent(usernameField.val())}", (data) ->
-					if data.isNickBusy and data.nick == usernameField.val()
-						usernameFormGroup.addClass 'has-error'
+					if data.nick != usernameField.val()
+						usernameStatus 'empty'
+						return
+					if data.isNickBusy
+						usernameStatus 'error', 'Такой логин уже занят'
+					else
+						usernameStatus 'ok', 'Логин свободен'
 			else
-				usernameFormGroup.addClass 'has-error'
+				usernameStatus 'error', 'Логин неправильный'

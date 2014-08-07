@@ -310,7 +310,7 @@ processMap = (filename, areaName, areaLabel, log) ->
 
 		else
 			curObj = location || area
-			curObj.description += '\n' if blankLines >= 1 and curObj.description isnt ''
+			curObj.description += Array(blankLines+2).join("\n") if curObj.description isnt ''
 			curObj.description += line
 
 		blankLines = 0

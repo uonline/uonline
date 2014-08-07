@@ -28,7 +28,7 @@ krontShouldBeLike =
 	id: 0
 	name: 'Кронт'
 	label: 'kront'
-	description: 'Большой и ленивый город.\nЗдесь убивают слоников и разыгрывают туристов.'
+	description: 'Большой и ленивый город.\n\nЗдесь убивают слоников\nи разыгрывают туристов.'
 	locations: [
 		id: 0
 		area: null
@@ -61,7 +61,7 @@ outerShouldBeLike =
 		name: 'Зелёная улица'
 		label: 'kront-outer/greenstreet'
 		picture: 'животноводство.png'
-		description: 'Здесь посажены деревья.\nИ грибы.\nИ животноводство.'
+		description: 'Здесь посажены деревья.\n\nИ грибы.\n\nИ животноводство.'
 		actions:
 			'kront/bluestreet': 'Пойти на Голубую улицу'
 			'kront-outer/bluestreet': 'Пойти на другую Голубую улицу'
