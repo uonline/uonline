@@ -117,13 +117,13 @@ exports.coverage = ->
 	for i of _$jscoverage
 		file = i
 		tmp = _$jscoverage[i]
-		continue  if typeof tmp is "function" or tmp.length is `undefined`
+		continue  if typeof tmp is "function" or tmp.length is undefined
 		total = touched = 0
 		n = 0
 		len = tmp.length
 
 		while n < len
-			if tmp[n] isnt `undefined`
+			if tmp[n] isnt undefined
 				total++
 				touched++  if tmp[n] > 0
 			n++
@@ -142,7 +142,7 @@ exports.coverageDetail = ->
 	for i of _$jscoverage
 		file = i
 		tmp = _$jscoverage[i]
-		continue  if typeof tmp is "function" or tmp.length is `undefined`
+		continue  if typeof tmp is "function" or tmp.length is undefined
 		source = tmp.source
 		allcovered = true
 		console.log "[UNCOVERED CODE]", file
