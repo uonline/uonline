@@ -27,7 +27,7 @@ block content
 				.input-group
 					input.form-control#pass(type='password', name='pass', maxlength='32', value=pass, required)
 					a#revealpass.btn.btn-default.input-group-addon(title='Показать пароль')
-						i.glyphicon.glyphicon-eye-open
+						i.glyphicon.glyphicon-eye-close
 			span.col-sm-7.help-block
 				small #{' '}От 4 до 32 символов, [a-zA-Z0-9!@#$%^&amp;*()_+]
 		.form-group
@@ -43,7 +43,8 @@ block content
 		usernameFeedback = $('#username-feedback')
 		passwordField = $('input[name=pass]')
 		passwordFormGroup = $('#password-form-group')
-		revealPasswordButton = $('#revealpass')
+		passwordRevealButton = $('#revealpass')
+		passwordRevealIcon = $('#revealpass i')
 
 		usernameStatus = (state, hint) ->
 			usernameFormGroup.removeClass 'has-error has-success'
@@ -67,9 +68,10 @@ block content
 
 
 		# Reveal password
-		revealPasswordButton.click ->
+		passwordRevealButton.click ->
 			passwordField.prop 'type', (if passwordField.prop('type') is 'password' then 'text' else 'password')
-			revealPasswordButton.toggleClass 'active'
+			passwordRevealButton.toggleClass 'active'
+			passwordRevealIcon.toggleClass 'glyphicon-eye-close glyphicon-eye-open'
 
 		# Validate password
 		passwordField.change ->
