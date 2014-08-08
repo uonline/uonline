@@ -25,8 +25,9 @@ exports.usernameIsValid = (test) ->
 	test.strictEqual validation.usernameIsValid('b'), false, 'not too short'
 	test.strictEqual validation.usernameIsValid('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'), false, 'not too long'
 	test.strictEqual validation.usernameIsValid('DROP TABLE `users`;'), false, 'no odd characters'
-	test.strictEqual validation.usernameIsValid(undefined), false, 'missing name can\'t be valid'
-	test.strictEqual validation.usernameIsValid(null), false, 'missing name can\'t be valid'
+	test.strictEqual validation.usernameIsValid(undefined), false, "missing name can't be valid"
+	test.strictEqual validation.usernameIsValid(null), false, "missing name can't be valid"
+	test.strictEqual validation.usernameIsValid('you_shall_not_pass'), false, 'should not pass underscores'
 	test.done()
 
 
