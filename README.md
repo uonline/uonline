@@ -18,9 +18,13 @@ Requirements
 * CoffeeScript;
 * Grunt (you may use local one, but why?);
 * Bower;
-* PostgreSQL 9.1 or higher;
+* PostgreSQL 9.1 or higher.
+
+uonline expects environment variables `DATABASE_URL` and `DATABASE_URL_TEST` to be set. If they are not, it will use following default credentials. You'll probably find it convinient to make the dev environment match them.
+
+* Hostname `localhost`;
 * DB user `anonymous` with password `nopassword`;
-* Two databases: `uonline` and `uonline_test`.
+* Databases: `uonline` and `uonline_test`.
 
 
 How to set up
