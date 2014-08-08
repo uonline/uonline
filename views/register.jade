@@ -11,7 +11,7 @@ block content
 				b Извините! Это имя уже занято.
 				| #{' '}Придумайте какое-нибудь другое.
 			else
-				b Ой! Во введённых данных что-то не так.
+				b Ой! Вы что-то не так ввели.
 				| #{' '}Исправьте ошибки и попробуйте ещё раз.
 	form.form-horizontal(method='post', action='/register/')
 		#user-form-group.form-group.has-feedback(class=((invalidLogin || loginIsBusy)?'has-error':''))
@@ -34,8 +34,10 @@ block content
 			.col-sm-2
 			.col-sm-3
 				button.btn.btn-default(type='submit') Зарегистрироваться
-	script(src='/static/browserified/validation.min.js')
+	script(src='/static/browserified/bundle.min.js')
 	:coffee
+		# Reqs
+		validation = require './lib/validation.js'
 		# Common variables
 		usernameField = $('input[name=user]')
 		usernameFormGroup = $('#user-form-group')
@@ -74,7 +76,9 @@ block content
 		passwordField.change ->
 			if validation.passwordIsValid(passwordField.val())
 				passwordFormGroup.removeClass 'has-error'
+				passwordFormGroup.addClass 'has-success'
 			else
+				passwordFormGroup.removeClass 'has-success'
 				passwordFormGroup.addClass 'has-error'
 
 		# Validate username
