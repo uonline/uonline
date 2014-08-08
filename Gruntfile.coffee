@@ -51,15 +51,15 @@ module.exports = (grunt) ->
 
 		browserify:
 			all:
-				src: './lib/validation.js'
-				dest: './browserified/validation.js'
-				options:
-					standalone: 'validation'
+				src: []
+				dest: './browserified/bundle.js'
+			options:
+				require: ['./lib/validation.js']
 
 		uglify:
 			all:
-				src: './browserified/validation.js'
-				dest: './browserified/validation.min.js'
+				src: './browserified/bundle.js'
+				dest: './browserified/bundle.min.js'
 
 		mustcontain:
 			license:

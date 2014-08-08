@@ -11,7 +11,7 @@ block content
 				b Извините! Это имя уже занято.
 				| #{' '}Придумайте какое-нибудь другое.
 			else
-				b Ой! Во введённых данных что-то не так.
+				b Ой! Вы что-то не так ввели.
 				| #{' '}Исправьте ошибки и попробуйте ещё раз.
 	form.form-horizontal(method='post', action='/register/')
 		#user-form-group.form-group.has-feedback(class=((invalidLogin || loginIsBusy)?'has-error':''))
@@ -20,29 +20,31 @@ block content
 				input.form-control#user(type='text', name='user', maxlength='32', value=user, required, autofocus)
 				span#username-feedback.glyphicon.glyphicon-ok.form-control-feedback(style='display: none')
 			span.col-sm-7.help-block
-				small От 2 до 32 символов, [a-zA-Z0-9а-яА-Я_- ].
+				small От 2 до 32 символов, [a-zA-Z0-9а-яА-Я -].
 		#password-form-group.form-group.has-feedback(class=(invalidPass?'has-error':''))
 			label.col-sm-2.control-label(for='pass') Пароль
 			.col-sm-3
 				.input-group
 					input.form-control#pass(type='password', name='pass', maxlength='32', value=pass, required)
 					a#revealpass.btn.btn-default.input-group-addon(title='Показать пароль')
-						i.glyphicon.glyphicon-eye-open
+						i.glyphicon.glyphicon-eye-close
 			span.col-sm-7.help-block
 				small #{' '}От 4 до 32 символов, [a-zA-Z0-9!@#$%^&amp;*()_+]
 		.form-group
 			.col-sm-2
 			.col-sm-3
 				button.btn.btn-default(type='submit') Зарегистрироваться
-	script(src='/static/browserified/validation.min.js')
 	:coffee
+		# Reqs
+		validation = require './lib/validation.js'
 		# Common variables
 		usernameField = $('input[name=user]')
 		usernameFormGroup = $('#user-form-group')
 		usernameFeedback = $('#username-feedback')
 		passwordField = $('input[name=pass]')
 		passwordFormGroup = $('#password-form-group')
-		revealPasswordButton = $('#revealpass')
+		passwordRevealButton = $('#revealpass')
+		passwordRevealIcon = $('#revealpass i')
 
 		usernameStatus = (state, hint) ->
 			usernameFormGroup.removeClass 'has-error has-success'
@@ -66,15 +68,18 @@ block content
 
 
 		# Reveal password
-		revealPasswordButton.click ->
+		passwordRevealButton.click ->
 			passwordField.prop 'type', (if passwordField.prop('type') is 'password' then 'text' else 'password')
-			revealPasswordButton.toggleClass 'active'
+			passwordRevealButton.toggleClass 'active'
+			passwordRevealIcon.toggleClass 'glyphicon-eye-close glyphicon-eye-open'
 
 		# Validate password
 		passwordField.change ->
 			if validation.passwordIsValid(passwordField.val())
 				passwordFormGroup.removeClass 'has-error'
+				passwordFormGroup.addClass 'has-success'
 			else
+				passwordFormGroup.removeClass 'has-success'
 				passwordFormGroup.addClass 'has-error'
 
 		# Validate username
