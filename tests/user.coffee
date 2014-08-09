@@ -119,26 +119,42 @@ exports.sessionInfoRefreshing =
 					"VALUES (8, 'user0', $1, 'expiredid', NOW() - INTERVAL '3600 SECOND' )",
 					[config.PERMISSIONS_ADMIN], callback
 			(callback) ->
-				users.sessionInfoRefreshing conn, 'someid', 7200, callback
+				users.sessionInfoRefreshing conn, 'someid', 7200, false, callback
 			(callback) ->
-				users.sessionInfoRefreshing conn, 'someid', 7200, callback
+				users.sessionInfoRefreshing conn, 'someid', 7200, false, callback
 			(callback) ->
 				conn.query "UPDATE uniusers SET sessid = 'someid'", [], callback
 			(callback) -> #5
 				conn.query 'SELECT sess_time FROM uniusers', [], callback
 			(callback) ->
-				users.sessionInfoRefreshing conn, 'someid', 7200, callback
+				users.sessionInfoRefreshing conn, 'someid', 7200, false, callback
 			(callback) ->
 				conn.query 'SELECT sess_time FROM uniusers', [], callback
 			(callback) ->
-				users.sessionInfoRefreshing conn, undefined, 7200, callback
+				users.sessionInfoRefreshing conn, undefined, 7200, false, callback
 			(callback) ->
 				conn.query "INSERT INTO uniusers " +
 					"(id, username, permissions, sessid, sess_time) " +
 					"VALUES (99, 'user1', $1, 'otherid', NOW() + INTERVAL '3600 SECOND' )",
 					[config.PERMISSIONS_USER], callback
 			(callback) -> #10
-				users.sessionInfoRefreshing conn, 'otherid', 7200, callback
+				users.sessionInfoRefreshing conn, 'otherid', 7200, false, callback
+			(callback) -> #11
+				conn.query "INSERT INTO uniusers " +
+					"(id, username, permissions, sessid, sess_time) " +
+					"VALUES (112, '112', $1, '123456', NOW() - INTERVAL '3600 SECOND' )",
+					[config.PERMISSIONS_ADMIN], callback
+			(callback) -> #12
+				conn.query 'SELECT sess_time FROM uniusers WHERE id = 112', [], callback
+			(callback) -> #13
+				users.sessionInfoRefreshing conn, '123456', 7200, true, callback
+			(callback) -> #14
+				process.nextTick ->
+					process.nextTick ->
+						process.nextTick ->
+							process.nextTick ->
+								process.nextTick ->
+									conn.query 'SELECT sess_time FROM uniusers WHERE id = 112', [], callback
 			(callback) ->
 				conn.query 'DROP TABLE uniusers', [], callback
 		],
@@ -164,6 +180,9 @@ exports.sessionInfoRefreshing =
 				userid: 99
 			}, 'should return admin: false if user is not admin'
 			test.ok timeBefore < timeAfter, 'should update session timestamp'
+			timeBefore = new Date(result[12].rows[0].sess_time)
+			timeAfter = new Date(result[14].rows[0].sess_time)
+			test.ok timeBefore < timeAfter, 'should update session timestamp with asyncUpdate'
 			test.done()
 
 	testErrors: (test) ->

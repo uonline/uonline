@@ -52,7 +52,7 @@ if process.env.SQLPROF is 'true'
 				else chalk.red("#{time} ms")
 			console.log "\n#{time}: #{logged}\n"
 			# console.log "\n#{time}: t: #{logged}\n"
-			cb(error, result)
+			if cb? then cb(error, result)
 
 app = express()
 app.enable 'trust proxy'
@@ -92,7 +92,7 @@ app.use ((request, response) ->
 	request.uonline.basicOpts.now = new Date()
 	request.uonline.basicOpts.pjax = false
 	sessionData = lib.user.sessionInfoRefreshing.sync(null,
-		dbConnection, request.cookies.sessid, config.sessionExpireTime)
+		dbConnection, request.cookies.sessid, config.sessionExpireTime, true)
 	request.uonline.basicOpts.loggedIn = sessionData.sessionIsActive
 	request.uonline.basicOpts.username = sessionData.username
 	request.uonline.basicOpts.admin = sessionData.admin
