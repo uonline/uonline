@@ -54,14 +54,15 @@ migrationData = [
 ]
 
 
-exports.setUp = (->
+exports.setUp = (done) -> sync ->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
 	query 'DROP TABLE IF EXISTS test_table, other_table, revision'
 	mg.setMigrationsData migrationData
-).async()
+	done()
 
 
-exports.tearDown = (done) ->
+exports.tearDown = (done) -> sync ->
+	query 'DROP TABLE IF EXISTS test_table, other_table, revision'
 	conn.end()
 	done()
 
@@ -199,7 +200,7 @@ exports.migrateOne =
 exports.migrate =
 	'usual': (test) ->
 		mg.migrate.sync null, conn, {dest_revision: 1}
-		
+
 		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		orows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
@@ -215,13 +216,13 @@ exports.migrate =
 			orows[0].column_name is 'id' and
 			orows[0].data_type is 'integer',
 			'should correctly perform part of migrations'
-		
+
 		revision = mg.getCurrentRevision.sync null, conn
 		test.strictEqual revision, 1, 'should set correct revision'
-		
-		
+
+
 		mg.migrate.sync null, conn
-		
+
 		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		orows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
@@ -241,52 +242,52 @@ exports.migrate =
 			orows[0].data_type is 'lseg' and
 			orows[1].data_type is 'integer',
 			'should correctly perform all remaining migrations'
-		
+
 		revision = mg.getCurrentRevision.sync null, conn
 		test.strictEqual revision, 3, 'should set correct revision'
 		test.done()
-	
+
 	'for one table': (test) ->
 		rev0 = mg.getCurrentRevision.sync null, conn
 		mg.migrate.sync null, conn, {dest_revision: 0, table: 'test_table'}
 		rev1 = mg.getCurrentRevision.sync null, conn
 		test.strictEqual rev0, rev1, 'should not change version for one table'
-		
+
 		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		exists = tables.tableExists.sync null, conn, 'other_table'
-		
+
 		test.ok rows.length is 1 and
 			rows[0].column_name is 'id',
 			'should correctly perform migration for specified table'
 		test.ok not exists, 'migration for other tables should not have been performed'
 		test.done()
-	
+
 	'for multiple tables': (test) ->
 		rev0 = mg.getCurrentRevision.sync null, conn
 		mg.migrate.sync null, conn, {dest_revision: 0, tables: ['no_such_table', 'test_table', 'other_table']}
 		rev1 = mg.getCurrentRevision.sync null, conn
 		test.strictEqual rev0, rev1, 'should not change version'
-		
+
 		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		test.ok rows.length is 1 and
 			rows[0].column_name is 'id',
 			'should correctly perform migration for specified tables'
-		
+
 		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		test.ok rows.length is 1 and
 			rows[0].column_name is 'id',
 			'should correctly perform migration for specified tables'
 		test.done()
-	
+
 	'verbose': (test) ->
 		log = console.log
 		log_times = 0
 		console.log = (smth) -> log_times++
 		mg.migrate.sync null, conn, {verbose: true}
 		console.log = log
-		
+
 		test.ok log_times>0, 'should say something'
 		test.done()
