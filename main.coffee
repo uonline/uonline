@@ -27,6 +27,11 @@ express = require 'express'
 sync = require 'sync'
 
 
+if process.env.NODE_ENV is 'production'
+	console.log 'Loading New Relic...'
+	require 'newrelic'
+	console.log 'Loaded New Relic.'
+
 dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
 dbConnection.query 'SELECT version()', [], (error, result) ->
 	if error?
