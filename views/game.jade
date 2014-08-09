@@ -14,7 +14,7 @@ block content
 			//- TODO: {{ description | tf | nl2p | nl2br }}
 			p #{ description }
 		div
-			p(style="line-height: 2.8em;")
+			p.button-row
 				each i in ways
 					//- TODO: typography
 					a.pjax.btn.btn-default(href="/action/go/"+i.target) #{i.text}
@@ -70,7 +70,7 @@ block content
 				if autoinvolved_fm == true
 					b Вас атаковали!
 		if monsters_list.length > 0
-			p
+			p.button-row
 				if fight_mode == true
 					a.btn.btn-default.disabled Атака
 					| #{' '}
