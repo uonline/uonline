@@ -62,7 +62,6 @@ app.use express.json()
 app.use express.urlencoded()
 app.use express.compress()
 
-app.use '/static/bootstrap', express.static(__dirname + '/bootstrap')
 #app.use '/img', express.static(__dirname + '/img')
 app.use '/static/browserified', express.static(__dirname + '/browserified')
 app.use '/static/bower_components', express.static(__dirname + '/bower_components')
@@ -87,16 +86,16 @@ mustNotBeAuthed = (request, response, next) ->
 
 app.use ((request, response) ->
 	# Read basic stuff
-	request.uonline = {}
-	request.uonline.basicOpts = {}
-	request.uonline.basicOpts.now = new Date()
-	request.uonline.basicOpts.pjax = false
 	sessionData = lib.user.sessionInfoRefreshing.sync(null,
 		dbConnection, request.cookies.sessid, config.sessionExpireTime, true)
-	request.uonline.basicOpts.loggedIn = sessionData.sessionIsActive
-	request.uonline.basicOpts.username = sessionData.username
-	request.uonline.basicOpts.admin = sessionData.admin
-	request.uonline.basicOpts.userid = sessionData.userid
+	request.uonline =
+		basicOpts:
+			now: new Date()
+			pjax: false
+			loggedIn: sessionData.sessionIsActive
+			username: sessionData.username
+			admin: sessionData.admin
+			userid: sessionData.userid
 	# CSP
 	response.header 'Content-Security-Policy-Report-Only',
 		"default-src 'self'; script-src 'self' http://code.jquery.com"
