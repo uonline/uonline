@@ -29,7 +29,7 @@ sync = require 'sync'
 
 if process.env.NODE_ENV is 'production'
 	console.log 'Loading New Relic...'
-	require 'newrelic'
+	newrelic = require 'newrelic'
 	console.log 'Loaded New Relic.'
 
 dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
