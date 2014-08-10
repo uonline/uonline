@@ -16,6 +16,11 @@
 
 'use strict'
 
+if process.env.NODE_ENV is 'production'
+	console.log 'Loading New Relic...'
+	newrelic = require 'newrelic'
+	console.log 'Loaded New Relic.'
+
 config = require "#{__dirname}/config.js"
 lib = require "#{__dirname}/lib.coffee"
 
@@ -26,11 +31,6 @@ async = require 'async'
 express = require 'express'
 sync = require 'sync'
 
-
-if process.env.NODE_ENV is 'production'
-	console.log 'Loading New Relic...'
-	require 'newrelic'
-	console.log 'Loaded New Relic.'
 
 dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
 dbConnection.query 'SELECT version()', [], (error, result) ->
@@ -73,6 +73,7 @@ app.use '/static/bower_components', express.static(__dirname + '/bower_component
 
 app.set 'view engine', 'jade'
 app.locals.pretty = true
+if newrelic? then app.locals.newrelic = newrelic
 app.set 'views', __dirname + '/views'
 
 

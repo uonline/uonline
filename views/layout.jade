@@ -13,14 +13,21 @@ if !pjax
 	doctype html
 	html
 		head
+			//- metadata
 			meta(charset='utf-8')
 			meta(http-equiv="X-UA-Compatible", content="IE=edge")
 			meta(name='viewport', content='width=device-width, initial-scale=1.0')
+			//- New Relic analytics
+			!= (!!newrelic) ? newrelic.getBrowserTimingHeader() : ''
+			//- and here we go
 			title
 				block title
 			//- Bootstrap
 			link(href='/static/bower_components/bootstrap/dist/css/bootstrap.min.css', rel='stylesheet')
 			link(href='/static/bower_components/bootstrap/dist/css/bootstrap-theme.min.css', rel='stylesheet')
+			:stylus
+				.button-row
+					line-height: 2.8em
 			//- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries
 			//- WARNING: Respond.js doesn't work if you view the page via file://
 			// if lt IE 9
@@ -45,9 +52,6 @@ if !pjax
 					$('.instance-link').click ->
 						$('.instance-link').removeClass 'active'
 						$(this).addClass 'active'
-			:stylus
-				.button-row
-					line-height: 2.8em
 		body
 			div.navbar.navbar-default.navbar-static-top(role='navigation')
 				div.container
