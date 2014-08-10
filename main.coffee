@@ -16,6 +16,11 @@
 
 'use strict'
 
+if process.env.NODE_ENV is 'production'
+	console.log 'Loading New Relic...'
+	newrelic = require 'newrelic'
+	console.log 'Loaded New Relic.'
+
 config = require "#{__dirname}/config.js"
 lib = require "#{__dirname}/lib.coffee"
 
@@ -26,11 +31,6 @@ async = require 'async'
 express = require 'express'
 sync = require 'sync'
 
-
-if process.env.NODE_ENV is 'production'
-	console.log 'Loading New Relic...'
-	newrelic = require 'newrelic'
-	console.log 'Loaded New Relic.'
 
 dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
 dbConnection.query 'SELECT version()', [], (error, result) ->
