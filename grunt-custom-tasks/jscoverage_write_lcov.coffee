@@ -14,32 +14,15 @@
 
 'use strict'
 
-require '../lib/strings'
-
-
-reportFile = (filename, data, log) ->
-	log "SF:#{filename}"
-	data.source.forEach (line, num) ->
-		# increase the line number, as JS arrays are zero-based
-		num++
-		if data[num] isnt undefined
-			log "DA:#{num},#{data[num]}"
-	log 'end_of_record'
-
-
 module.exports = (grunt) ->
 	# Please see the Grunt documentation for more information regarding task
 	# creation: http://gruntjs.com/creating-tasks
 	grunt.registerTask 'jscoverage_write_lcov', 'Write jscoverage report in lcov format to file.', ->
-		cov = (global or window)._$jscoverage or {}
-		output = ''
-		log = (x) ->
-			output = "#{output}#{x}\n"
-		Object.keys(cov).forEach (filename) ->
-			data = cov[filename]
-			reportFile(filename, data, log)
+		jsc = require 'jscoverage'
+		lcov = jsc.getLCOV()
 		try
-			require('fs').writeFileSync('./report.lcov', output)
+			require('fs').writeFileSync('./report.lcov', lcov)
 			grunt.log.ok 'report.lcov'
 		catch error
 			grunt.fail.warn(error)
+

@@ -28,6 +28,7 @@
     "header-stack": ">= 0.0.2",
     "jade": "~0.35.0",
     "load-grunt-tasks": "^0.6.0",
+    "newrelic": "^1.9.2",
     "stream-stack": ">= 1.1.1",
     "stylus": "^0.47.3",
     "sync": "~0.2.2"

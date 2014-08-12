@@ -16,6 +16,11 @@
 
 'use strict'
 
+if process.env.NODE_ENV is 'production'
+	console.log 'Loading New Relic...'
+	newrelic = require 'newrelic'
+	console.log 'Loaded New Relic.'
+
 config = require "#{__dirname}/config.js"
 lib = require "#{__dirname}/lib.coffee"
 
@@ -62,13 +67,13 @@ app.use express.json()
 app.use express.urlencoded()
 app.use express.compress()
 
-app.use '/static/bootstrap', express.static(__dirname + '/bootstrap')
 #app.use '/img', express.static(__dirname + '/img')
 app.use '/static/browserified', express.static(__dirname + '/browserified')
 app.use '/static/bower_components', express.static(__dirname + '/bower_components')
 
 app.set 'view engine', 'jade'
 app.locals.pretty = true
+if newrelic? then app.locals.newrelic = newrelic
 app.set 'views', __dirname + '/views'
 
 
@@ -87,16 +92,16 @@ mustNotBeAuthed = (request, response, next) ->
 
 app.use ((request, response) ->
 	# Read basic stuff
-	request.uonline = {}
-	request.uonline.basicOpts = {}
-	request.uonline.basicOpts.now = new Date()
-	request.uonline.basicOpts.pjax = false
 	sessionData = lib.user.sessionInfoRefreshing.sync(null,
 		dbConnection, request.cookies.sessid, config.sessionExpireTime, true)
-	request.uonline.basicOpts.loggedIn = sessionData.sessionIsActive
-	request.uonline.basicOpts.username = sessionData.username
-	request.uonline.basicOpts.admin = sessionData.admin
-	request.uonline.basicOpts.userid = sessionData.userid
+	request.uonline =
+		basicOpts:
+			now: new Date()
+			pjax: false
+			loggedIn: sessionData.sessionIsActive
+			username: sessionData.username
+			admin: sessionData.admin
+			userid: sessionData.userid
 	# CSP
 	response.header 'Content-Security-Policy-Report-Only',
 		"default-src 'self'; script-src 'self' http://code.jquery.com"
