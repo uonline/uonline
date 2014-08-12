@@ -41,6 +41,7 @@ insert = (dbName, fields) ->
 config = require '../config.js'
 game = require '../lib/game'
 mg = require '../lib/migration'
+tables = require '../lib/tables'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
@@ -58,13 +59,17 @@ usedTables = [
 	'battle_participants'
 ].join(', ')
 
+cleanup = ->
+	query 'DROP TABLE IF EXISTS ' + usedTables
+	query 'DROP TYPE IF EXISTS creature_kind'
+
 exports.setUp = (->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-	query 'DROP TABLE IF EXISTS ' + usedTables
+	cleanup()
 ).async() # the entrance to the Fieber land
 
 exports.tearDown = (->
-	query 'DROP TABLE IF EXISTS ' + usedTables
+	cleanup()
 	conn.end()
 ).async()
 
@@ -194,7 +199,7 @@ exports.getUserArea =
 
 
 exports.canChangeLocation = (test) ->
-	migrateTables 'uniusers', 'locations', 'monsters', 'battle_participants'
+	migrateTables 'uniusers', 'locations', 'monsters', 'creature_kind', 'battle_participants'
 	insert 'uniusers', id: 1, location: 1
 	insert 'locations', id: 1, ways: 'Left=2'
 	insert 'locations', id: 2
@@ -210,7 +215,7 @@ exports.canChangeLocation = (test) ->
 
 exports.changeLocation =
 	setUp: (done) ->
-		migrateTables 'uniusers', 'locations', 'monsters', 'battles', 'battle_participants'
+		migrateTables 'uniusers', 'locations', 'monsters', 'battles', 'creature_kind', 'battle_participants'
 		insert 'uniusers', id: 1, location: 1, initiative: 50
 		insert 'locations', id: 1, ways: 'Left=2'
 		insert 'locations', id: 2
@@ -266,7 +271,7 @@ exports.changeLocation =
 
 exports.goAttack =
 	setUp: (done) ->
-		migrateTables 'uniusers', 'monsters', 'battles', 'battle_participants'
+		migrateTables 'uniusers', 'monsters', 'battles', 'creature_kind', 'battle_participants'
 		insert 'uniusers', id: 1, location: 1, initiative: 10, fight_mode: 0
 		done()
 	
@@ -291,7 +296,7 @@ exports.goAttack =
 
 exports.goEscape =
 	setUp: (done) ->
-		migrateTables 'uniusers', 'battles', 'battle_participants'
+		migrateTables 'uniusers', 'battles', 'creature_kind', 'creature_kind', 'battle_participants'
 		insert 'uniusers', id: 1, fight_mode: 1, autoinvolved_fm: 1
 		insert 'battles', id: 3, is_over: 0
 		insert 'battle_participants', battle: 3, id: 1, kind: 'user'
@@ -315,7 +320,7 @@ exports.goEscape =
 
 exports.getBattleParticipants =
 	setUp: (done) ->
-		migrateTables 'uniusers', 'monsters', 'monster_prototypes', 'battle_participants'
+		migrateTables 'uniusers', 'monsters', 'monster_prototypes', 'creature_kind', 'battle_participants'
 		insert 'uniusers', id: 1, username: 'SomeUser'
 		insert 'monster_prototypes', id: 2, name: 'SomeMonster'
 		insert 'monsters', id: 4, prototype: 2
@@ -335,7 +340,8 @@ exports.getBattleParticipants =
 		test.done()
 	
 	'wrong kind': (test) ->
-		insert 'battle_participants', battle: 3, id: 5, kind: 'wrong', side: 0, index: 2
+		query "ALTER TYPE creature_kind ADD VALUE 'very new kind' AFTER 'monster'"
+		insert 'battle_participants', battle: 3, id: 5, kind: 'very new kind', side: 0, index: 2
 		
 		test.throws(
 			-> game.getBattleParticipants.sync null, conn, 1
@@ -485,16 +491,16 @@ exports.getUserCharacters =
 		test.done()
 
 
-#fixTest = (obj) ->
-#	for attr of obj
-#		if attr is 'setUp' or attr is 'tearDown'
-#			continue
-#
-#		if obj[attr] instanceof Function
-#			obj[attr] = ((origTestFunc, t) -> (test) ->
-#					console.log(t)
-#					origTestFunc(test)
-#				)(obj[attr], attr)
-#		else
-#			fixTest(obj[attr])
-#fixTest exports
+fixTest = (obj) ->
+	for attr of obj
+		if attr is 'setUp' or attr is 'tearDown'
+			continue
+
+		if obj[attr] instanceof Function
+			obj[attr] = ((origTestFunc, t) -> (test) ->
+					console.log(t)
+					origTestFunc(test)
+				)(obj[attr], attr)
+		else
+			fixTest(obj[attr])
+fixTest exports
