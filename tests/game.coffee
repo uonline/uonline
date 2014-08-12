@@ -41,7 +41,6 @@ insert = (dbName, fields) ->
 config = require '../config.js'
 game = require '../lib/game'
 mg = require '../lib/migration'
-tables = require '../lib/tables'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
@@ -491,16 +490,16 @@ exports.getUserCharacters =
 		test.done()
 
 
-fixTest = (obj) ->
-	for attr of obj
-		if attr is 'setUp' or attr is 'tearDown'
-			continue
-
-		if obj[attr] instanceof Function
-			obj[attr] = ((origTestFunc, t) -> (test) ->
-					console.log(t)
-					origTestFunc(test)
-				)(obj[attr], attr)
-		else
-			fixTest(obj[attr])
-fixTest exports
+#fixTest = (obj) ->
+#	for attr of obj
+#		if attr is 'setUp' or attr is 'tearDown'
+#			continue
+#
+#		if obj[attr] instanceof Function
+#			obj[attr] = ((origTestFunc, t) -> (test) ->
+#					console.log(t)
+#					origTestFunc(test)
+#				)(obj[attr], attr)
+#		else
+#			fixTest(obj[attr])
+#fixTest exports
