@@ -56,11 +56,16 @@ usedTables = [
 	'monster_prototypes'
 	'battles'
 	'battle_participants'
-].join(', ')
+]
+
+usedCustomTypes = [
+	'creature_kind'
+	'permission_kind'
+]
 
 cleanup = ->
-	query 'DROP TABLE IF EXISTS ' + usedTables
-	query 'DROP TYPE IF EXISTS creature_kind'
+	query 'DROP TABLE IF EXISTS ' + usedTables.join(', ')
+	query 'DROP TYPE IF EXISTS ' + usedCustomTypes.join(', ')
 
 exports.setUp = (->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
@@ -115,7 +120,7 @@ exports.getInitialLocation =
 
 exports.getUserLocationId =
 	testValidData: (test) ->
-		migrateTables 'uniusers'
+		migrateTables 'permission_kind', 'uniusers'
 		insert 'uniusers', id: 1, 'location': 3
 
 		insert 'uniusers', id: 2, 'location': 1
@@ -127,7 +132,7 @@ exports.getUserLocationId =
 		test.done()
 
 	testWrongSessid: (test) ->
-		migrateTables 'uniusers'
+		migrateTables 'permission_kind', 'uniusers'
 		test.throws(
 			-> game.getUserLocationId.sync(null, conn, -1)
 			Error
@@ -138,7 +143,7 @@ exports.getUserLocationId =
 
 exports.getUserLocation =
 	setUp: (done) ->
-		migrateTables 'uniusers', 'locations'
+		migrateTables 'permission_kind', 'uniusers', 'locations'
 		insert 'uniusers', id: 1, location: 3, sessid: 'someid'
 		done()
 	
@@ -175,7 +180,7 @@ exports.getUserLocation =
 
 exports.getUserArea =
 	setUp: (done) ->
-		migrateTables 'uniusers', 'locations', 'areas'
+		migrateTables 'permission_kind', 'uniusers', 'locations', 'areas'
 		insert 'uniusers', id: 1, location: 3, sessid: 'someid'
 		done()
 	
@@ -198,7 +203,7 @@ exports.getUserArea =
 
 
 exports.canChangeLocation = (test) ->
-	migrateTables 'uniusers', 'locations', 'monsters', 'creature_kind', 'battle_participants'
+	migrateTables 'permission_kind', 'uniusers', 'locations', 'monsters', 'creature_kind', 'battle_participants'
 	insert 'uniusers', id: 1, location: 1
 	insert 'locations', id: 1, ways: 'Left=2'
 	insert 'locations', id: 2
@@ -214,7 +219,9 @@ exports.canChangeLocation = (test) ->
 
 exports.changeLocation =
 	setUp: (done) ->
-		migrateTables 'uniusers', 'locations', 'monsters', 'battles', 'creature_kind', 'battle_participants'
+		migrateTables 'permission_kind', 'uniusers',
+			'locations', 'monsters', 'battles',
+			'creature_kind', 'battle_participants'
 		insert 'uniusers', id: 1, location: 1, initiative: 50
 		insert 'locations', id: 1, ways: 'Left=2'
 		insert 'locations', id: 2
@@ -271,7 +278,7 @@ exports.changeLocation =
 
 exports.goAttack =
 	setUp: (done) ->
-		migrateTables 'uniusers', 'monsters', 'battles', 'creature_kind', 'battle_participants'
+		migrateTables 'permission_kind', 'uniusers', 'monsters', 'battles', 'creature_kind', 'battle_participants'
 		insert 'uniusers', id: 1, location: 1, initiative: 10, fight_mode: 0
 		done()
 	
@@ -300,7 +307,7 @@ exports.goAttack =
 
 exports.goEscape =
 	setUp: (done) ->
-		migrateTables 'uniusers', 'battles', 'creature_kind', 'battle_participants'
+		migrateTables 'permission_kind', 'uniusers', 'battles', 'creature_kind', 'battle_participants'
 		insert 'uniusers', id: 1, fight_mode: 1, autoinvolved_fm: 1
 		insert 'battles', id: 3, is_over: 0
 		insert 'battle_participants', battle: 3, id: 1, kind: 'user'
@@ -324,7 +331,9 @@ exports.goEscape =
 
 exports.getBattleParticipants =
 	setUp: (done) ->
-		migrateTables 'uniusers', 'monsters', 'monster_prototypes', 'creature_kind', 'battle_participants'
+		migrateTables 'permission_kind', 'uniusers',
+			'monsters', 'monster_prototypes',
+			'creature_kind', 'battle_participants'
 		insert 'uniusers', id: 1, username: 'SomeUser'
 		insert 'monster_prototypes', id: 2, name: 'SomeMonster'
 		insert 'monsters', id: 4, prototype: 2
@@ -359,7 +368,7 @@ exports.getNearbyUsers =
 	setUp: (done) ->
 		d = new Date()
 		now = (d.getFullYear() + 1) + '-' + (d.getMonth() + 1) + '-' + d.getDate()
-		migrateTables 'uniusers', 'locations'
+		migrateTables 'permission_kind', 'uniusers', 'locations'
 		insert 'uniusers', id: 1, username: 'someuser',  location: 1, sess_time: now
 		insert 'uniusers', id: 2, username: 'otheruser', location: 1, sess_time: now
 		insert 'uniusers', id: 3, username: 'thirduser', location: 1, sess_time: now
@@ -381,7 +390,7 @@ exports.getNearbyUsers =
 
 
 exports.getNearbyMonsters = (test) ->
-	migrateTables 'uniusers', 'monster_prototypes', 'monsters'
+	migrateTables 'permission_kind', 'uniusers', 'monster_prototypes', 'monsters'
 	insert 'uniusers', id: 1, location: 1
 	insert 'uniusers', id: 2, location: 2
 	insert 'monster_prototypes', id: 1, name: 'The Creature of Unimaginable Horror'
@@ -397,7 +406,7 @@ exports.getNearbyMonsters = (test) ->
 
 
 exports.isInFight = (test) ->
-	migrateTables 'uniusers'
+	migrateTables 'permission_kind', 'uniusers'
 	insert 'uniusers', id: 2, fight_mode: 0
 	insert 'uniusers', id: 4, fight_mode: 1
 	
@@ -410,7 +419,7 @@ exports.isInFight = (test) ->
 
 
 exports.isAutoinvolved = (test) ->
-	migrateTables 'uniusers'
+	migrateTables 'permission_kind', 'uniusers'
 	insert 'uniusers', id: 2, fight_mode: 1, autoinvolved_fm: 0
 	insert 'uniusers', id: 4, fight_mode: 1, autoinvolved_fm: 1
 	
@@ -422,7 +431,7 @@ exports.isAutoinvolved = (test) ->
 	test.done()
 
 exports.uninvolve = (test) ->
-	migrateTables 'uniusers'
+	migrateTables 'permission_kind', 'uniusers'
 	insert 'uniusers', id: 1, fight_mode: 1, autoinvolved_fm: 1
 	game.uninvolve.sync null, conn, 1
 	
@@ -434,7 +443,7 @@ exports.uninvolve = (test) ->
 
 exports.getUserCharacters =
 	testNoErrors: (test) ->
-		migrateTables 'uniusers'
+		migrateTables 'permission_kind', 'uniusers'
 		insert 'uniusers',
 			id: 1
 			username: 'someuser'
