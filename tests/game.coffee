@@ -250,8 +250,9 @@ exports.changeLocation =
 		test.deepEqual participants, [
 			{ battle: 1, id: 1, kind: 'monster', index: 0 }
 			{ battle: 1, id: 1, kind: 'user',    index: 1 }
-			{ battle: 1, id: 2, kind: 'monster', index: 2 }
-		], 'they should have been envolved in right order'
+			{ battle: 1, id: 3, kind: 'monster', index: 2 }
+			{ battle: 1, id: 2, kind: 'monster', index: 3 }
+		], 'they all should have been envolved in right order'
 		
 		userSide = queryOne("SELECT side FROM battle_participants WHERE kind='user' AND id=1").side
 		query("SELECT side FROM battle_participants WHERE kind='monster'").forEach (m) ->
@@ -276,7 +277,11 @@ exports.goAttack =
 	
 	'usual test': (test) ->
 		insert 'monsters', id: 1, location: 1, initiative: 20
+		insert 'monsters', id: 2, location: 1, initiative: 30
 		game.goAttack.sync null, conn, 1
+		
+		envolvedMonstersCount = +queryOne("SELECT count(*) FROM battle_participants WHERE kind='monster'").count
+		test.strictEqual envolvedMonstersCount, 2, 'all monsters should have been envolved'
 		
 		fm = queryOne('SELECT fight_mode FROM uniusers WHERE id=1').fight_mode
 		test.strictEqual fm, 1, 'user should be attacking'
@@ -295,7 +300,7 @@ exports.goAttack =
 
 exports.goEscape =
 	setUp: (done) ->
-		migrateTables 'uniusers', 'battles', 'creature_kind', 'creature_kind', 'battle_participants'
+		migrateTables 'uniusers', 'battles', 'creature_kind', 'battle_participants'
 		insert 'uniusers', id: 1, fight_mode: 1, autoinvolved_fm: 1
 		insert 'battles', id: 3, is_over: 0
 		insert 'battle_participants', battle: 3, id: 1, kind: 'user'
