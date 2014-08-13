@@ -318,7 +318,7 @@ app.use (error, request, response, next) ->
 
 # main
 
-DEFAULT_PORT = 5000
+DEFAULT_PORT = config.defaultPort
 port = process.env.PORT or process.env.OPENSHIFT_NODEJS_PORT or DEFAULT_PORT
 ip = process.env.OPENSHIFT_NODEJS_IP or undefined
 console.log "Starting up on port #{port}, and IP is #{ip}"

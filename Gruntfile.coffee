@@ -27,6 +27,10 @@ module.exports = (grunt) ->
 				'tests/*.js'
 				'tests/*.coffee'
 			]
+			http: [
+				'tests-http/*.js'
+				'tests-http/*.coffee'
+			]
 
 		jshint:
 			all:
@@ -180,6 +184,7 @@ module.exports = (grunt) ->
 		testTask.push 'nodeunit:one'
 	else
 		testTask.push 'nodeunit:all'
+		testTask.push 'nodeunit:http'
 	testTask.push 'jscoverage_report'
 	grunt.registerTask 'test', testTask
 
