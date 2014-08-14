@@ -234,8 +234,8 @@ exports.changeLocation =
 		locid = game.getUserLocationId.sync(null, conn, 1)
 		test.strictEqual locid, 2, 'user shold have moved to new location'
 		
-		fm = queryOne('SELECT fight_mode FROM uniusers WHERE id=1').fight_mode
-		test.strictEqual fm, 0, 'user should not be attacked'
+		fm = game.isInFight.sync(null, conn, 1)
+		test.strictEqual fm, false, 'user should not be attacked'
 		test.done()
 	
 	'with angry monster': (test) ->
@@ -247,8 +247,8 @@ exports.changeLocation =
 		locid = game.getUserLocationId.sync(null, conn, 1)
 		test.strictEqual locid, 2, 'user shold have moved to new location'
 		
-		fm = queryOne('SELECT fight_mode FROM uniusers WHERE id=1').fight_mode
-		test.strictEqual fm, 1, 'user should be attacked'
+		fm = game.isInFight.sync(null, conn, 1)
+		test.strictEqual fm, true, 'user should be attacked'
 		
 		battles = query('SELECT * FROM battles')
 		test.strictEqual battles.length, 1, 'one battle should appear'
@@ -271,15 +271,15 @@ exports.changeLocation =
 		insert 'battle_participants', id: 1, kind: 'monster'
 		game.changeLocation.sync null, conn, 1, 2
 		
-		fm = queryOne('SELECT fight_mode FROM uniusers WHERE id=1').fight_mode
-		test.strictEqual fm, 0, 'user should not be attacked'
+		fm = game.isInFight.sync(null, conn, 1)
+		test.strictEqual fm, false, 'user should not be attacked'
 		test.done()
 
 
 exports.goAttack =
 	setUp: (done) ->
 		migrateTables 'permission_kind', 'uniusers', 'monsters', 'battles', 'creature_kind', 'battle_participants'
-		insert 'uniusers', id: 1, location: 1, initiative: 10, fight_mode: 0
+		insert 'uniusers', id: 1, location: 1, initiative: 10
 		done()
 	
 	'usual test': (test) ->
@@ -290,15 +290,15 @@ exports.goAttack =
 		envolvedMonstersCount = +queryOne("SELECT count(*) FROM battle_participants WHERE kind='monster'").count
 		test.strictEqual envolvedMonstersCount, 2, 'all monsters should have been envolved'
 		
-		fm = queryOne('SELECT fight_mode FROM uniusers WHERE id=1').fight_mode
-		test.strictEqual fm, 1, 'user should be attacking'
+		fm = game.isInFight.sync(null, conn, 1)
+		test.strictEqual fm, true, 'user should be attacking'
 		test.done()
 	
 	'on empty location': (test) ->
 		game.goAttack.sync null, conn, 1
 		
-		fm = queryOne('SELECT fight_mode FROM uniusers WHERE id=1').fight_mode
-		test.strictEqual fm, 0, 'user should not be fighting'
+		fm = game.isInFight.sync(null, conn, 1)
+		test.strictEqual fm, false, 'user should not be fighting'
 		
 		test.strictEqual query('SELECT id FROM battles').length, 0, 'should be no battles'
 		test.strictEqual query('SELECT id FROM battle_participants').length, 0, 'should be no participants'
@@ -308,7 +308,7 @@ exports.goAttack =
 exports.goEscape =
 	setUp: (done) ->
 		migrateTables 'permission_kind', 'uniusers', 'battles', 'creature_kind', 'battle_participants'
-		insert 'uniusers', id: 1, fight_mode: 1, autoinvolved_fm: 1
+		insert 'uniusers', id: 1, autoinvolved_fm: 1
 		insert 'battles', id: 3
 		insert 'battle_participants', battle: 3, id: 1, kind: 'user'
 		insert 'battle_participants', battle: 3, id: 1, kind: 'monster'
@@ -317,9 +317,11 @@ exports.goEscape =
 	test: (test) ->
 		game.goEscape.sync null, conn, 1
 		
-		user = queryOne('SELECT fight_mode, autoinvolved_fm FROM uniusers WHERE id=1')
-		test.strictEqual user.fight_mode, 0, 'user should not be attacking'
-		test.strictEqual user.autoinvolved_fm, 0, 'user should not be autoinvolved'
+		fm = game.isInFight.sync(null, conn, 1)
+		test.strictEqual fm, false, 'user should not be attacking'
+		
+		autoinvolved = queryOne('SELECT autoinvolved_fm FROM uniusers WHERE id=1').autoinvolved_fm
+		test.strictEqual autoinvolved, 0, 'user should not be autoinvolved'
 		
 		battles = query('SELECT * FROM battles')
 		test.strictEqual battles.length, 0, 'battle should be over and destroyed'
@@ -406,9 +408,10 @@ exports.getNearbyMonsters = (test) ->
 
 
 exports.isInFight = (test) ->
-	migrateTables 'permission_kind', 'uniusers'
-	insert 'uniusers', id: 2, fight_mode: 0
-	insert 'uniusers', id: 4, fight_mode: 1
+	migrateTables 'permission_kind', 'uniusers', 'creature_kind', 'battle_participants'
+	insert 'uniusers', id: 2
+	insert 'uniusers', id: 4
+	insert 'battle_participants', kind: 'user', id: 4
 	
 	isIn = game.isInFight.sync null, conn, 2
 	test.strictEqual isIn, false, 'should return false if user is not in fight mode'
@@ -420,8 +423,8 @@ exports.isInFight = (test) ->
 
 exports.isAutoinvolved = (test) ->
 	migrateTables 'permission_kind', 'uniusers'
-	insert 'uniusers', id: 2, fight_mode: 1, autoinvolved_fm: 0
-	insert 'uniusers', id: 4, fight_mode: 1, autoinvolved_fm: 1
+	insert 'uniusers', id: 2, autoinvolved_fm: 0
+	insert 'uniusers', id: 4, autoinvolved_fm: 1
 	
 	autoinv = game.isAutoinvolved.sync null, conn, 2
 	test.strictEqual autoinv, false, 'should return false if user was not attacked'
@@ -431,13 +434,16 @@ exports.isAutoinvolved = (test) ->
 	test.done()
 
 exports.uninvolve = (test) ->
-	migrateTables 'permission_kind', 'uniusers'
-	insert 'uniusers', id: 1, fight_mode: 1, autoinvolved_fm: 1
+	migrateTables 'permission_kind', 'uniusers', 'creature_kind', 'battle_participants'
+	insert 'uniusers', id: 1, autoinvolved_fm: 1
+	insert 'battle_participants', kind: 'user', id: 1
 	game.uninvolve.sync null, conn, 1
 	
-	user = queryOne 'SELECT fight_mode, autoinvolved_fm FROM uniusers WHERE id=1'
-	test.strictEqual user.fight_mode, 1, 'should not disable fight mode'
-	test.strictEqual user.autoinvolved_fm, 0, 'user should not be autoinvolved'
+	isInFight = game.isInFight.sync null, conn, 1
+	test.strictEqual isInFight, true, 'should not disable fight mode'
+	
+	autoinvolved = queryOne('SELECT autoinvolved_fm FROM uniusers WHERE id=1').autoinvolved_fm
+	test.strictEqual autoinvolved, 0, 'user should not be autoinvolved'
 	test.done()
 
 
@@ -447,7 +453,6 @@ exports.getUserCharacters =
 		insert 'uniusers',
 			id: 1
 			username: 'someuser'
-			fight_mode: 1
 			autoinvolved_fm: 1
 			health: 100
 			health_max: 200
