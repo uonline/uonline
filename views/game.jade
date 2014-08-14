@@ -12,7 +12,14 @@ block content
 	if fight_mode == false
 		div
 			//- TODO: {{ description | tf | nl2p | nl2br }}
-			p #{ description }
+			//- p #{ description }
+			each i in description.split('\n\n')
+				if i.substring(0,5)=='*****'
+					//- каменты имени Андрея
+					//
+						p= i
+				else
+					p= i
 		div
 			p.button-row
 				each i in ways
