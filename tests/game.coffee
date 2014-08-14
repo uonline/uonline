@@ -44,6 +44,7 @@ mg = require '../lib/migration'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
+transaction = require 'any-db-transaction'
 conn = null
 
 
@@ -217,6 +218,38 @@ exports.canChangeLocation = (test) ->
 	test.done()
 
 
+exports.createBattleBetween = (test) ->
+	migrateTables 'battles', 'creature_kind', 'battle_participants'
+	
+	tx = transaction conn
+	locid = 123
+	
+	game.createBattleBetween.sync null, tx, locid, [
+			{id: 1, kind: 'user', initiative:  5}
+			{id: 2, kind: 'user', initiative: 15}
+			{id: 1, kind: 'monster', initiative: 30}
+		], [
+			{id: 2, kind: 'monster', initiative: 20}
+			{id: 3, kind: 'monster', initiative: 10}
+		]
+	
+	battle = queryOne 'SELECT id, location, turn_number FROM battles'
+	test.strictEqual battle.location, locid, 'should create battle on specified location'
+	test.strictEqual battle.turn_number, 0, 'should create battle that is on first turn'
+	
+	participants = query 'SELECT id, kind, index, side FROM battle_participants WHERE battle = $1', [battle.id]
+	test.deepEqual participants, [
+		{id: 1, kind: 'monster', index: 0, side: 0}
+		{id: 2, kind: 'monster', index: 1, side: 1}
+		{id: 2, kind: 'user',    index: 2, side: 0}
+		{id: 3, kind: 'monster', index: 3, side: 1}
+		{id: 1, kind: 'user',    index: 4, side: 0}
+	], 'should involve all users and monsters of both sides in correct order'
+	
+	tx.commit.sync tx
+	test.done()
+
+
 exports.changeLocation =
 	setUp: (done) ->
 		migrateTables 'permission_kind', 'uniusers',
@@ -228,38 +261,30 @@ exports.changeLocation =
 		done()
 	
 	'with peaceful monster': (test) ->
-		insert 'monsters', id: 1, location: 2, attack_chance: -1
+		insert 'monsters', id: 1, location: 2, attack_chance: 0
 		game.changeLocation.sync null, conn, 1, 2
 		
 		locid = game.getUserLocationId.sync(null, conn, 1)
-		test.strictEqual locid, 2, 'user shold have moved to new location'
+		test.strictEqual locid, 2, 'user should have moved to new location'
 		
 		fm = game.isInFight.sync(null, conn, 1)
-		test.strictEqual fm, false, 'user should not be attacked'
+		test.strictEqual fm, false, 'user should not be attacked if monster attack_chance is 0%'
 		test.done()
 	
 	'with angry monster': (test) ->
 		insert 'monsters', id: 1, location: 2, attack_chance: 100, initiative: 100
 		insert 'monsters', id: 2, location: 2, attack_chance: 100, initiative: 5
-		insert 'monsters', id: 3, location: 2, attack_chance: -1, initiative: 10
+		insert 'monsters', id: 3, location: 2, attack_chance: 0, initiative: 10
 		game.changeLocation.sync null, conn, 1, 2
 		
 		locid = game.getUserLocationId.sync(null, conn, 1)
-		test.strictEqual locid, 2, 'user shold have moved to new location'
+		test.strictEqual locid, 2, 'user should have moved to new location'
 		
 		fm = game.isInFight.sync(null, conn, 1)
-		test.strictEqual fm, true, 'user should be attacked'
+		test.strictEqual fm, true, "user should be attacked if at least one monster's attack chance is 100%"
 		
-		battles = query('SELECT * FROM battles')
-		test.strictEqual battles.length, 1, 'one battle should appear'
-		
-		participants = query('SELECT battle, id, kind, index FROM battle_participants ORDER BY index')
-		test.deepEqual participants, [
-			{ battle: 1, id: 1, kind: 'monster', index: 0 }
-			{ battle: 1, id: 1, kind: 'user',    index: 1 }
-			{ battle: 1, id: 3, kind: 'monster', index: 2 }
-			{ battle: 1, id: 2, kind: 'monster', index: 3 }
-		], 'they all should have been envolved in right order'
+		participantsCount = +queryOne('SELECT count(*) FROM battle_participants').count
+		test.strictEqual participantsCount, 4, 'all monsters should have been involved'
 		
 		userSide = queryOne("SELECT side FROM battle_participants WHERE kind='user' AND id=1").side
 		query("SELECT side FROM battle_participants WHERE kind='monster'").forEach (m) ->
@@ -272,7 +297,7 @@ exports.changeLocation =
 		game.changeLocation.sync null, conn, 1, 2
 		
 		fm = game.isInFight.sync(null, conn, 1)
-		test.strictEqual fm, false, 'user should not be attacked'
+		test.strictEqual fm, false, 'user should not be attacked if monster is in another battle'
 		test.done()
 
 
