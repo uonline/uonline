@@ -102,8 +102,7 @@ exports.sessionInfoRefreshing =
 		migrateTables 'permission_kind', 'uniusers'
 		query "INSERT INTO uniusers " +
 			"(id, username, permissions, sessid, sess_time) " +
-			"VALUES (8, 'user0', $1, 'expiredid', NOW() - INTERVAL '3600 SECOND' )",
-			[config.PERMISSIONS_ADMIN]
+			"VALUES (8, 'user0', 'admin', 'expiredid', NOW() - INTERVAL '3600 SECOND' )"
 		
 		res = users.sessionInfoRefreshing.sync null, conn, 'someid', 7200, false
 		test.deepEqual res, { sessionIsActive: false },
@@ -135,8 +134,7 @@ exports.sessionInfoRefreshing =
 		
 		query "INSERT INTO uniusers " +
 			"(id, username, permissions, sessid, sess_time) " +
-			"VALUES (99, 'user1', $1, 'otherid', NOW() + INTERVAL '3600 SECOND' )",
-			[config.PERMISSIONS_USER]
+			"VALUES (99, 'user1', 'user', 'otherid', NOW() + INTERVAL '3600 SECOND' )"
 		
 		res = users.sessionInfoRefreshing.sync null, conn, 'otherid', 7200, false
 		test.deepEqual res, {
@@ -149,8 +147,7 @@ exports.sessionInfoRefreshing =
 		
 		query "INSERT INTO uniusers " +
 			"(id, username, permissions, sessid, sess_time) " +
-			"VALUES (112, '112', $1, '123456', NOW() - INTERVAL '3600 SECOND' )",
-			[config.PERMISSIONS_ADMIN]
+			"VALUES (112, '112', 'admin', '123456', NOW() - INTERVAL '3600 SECOND' )"
 		
 		timeBefore = new Date(queryOne('SELECT sess_time FROM uniusers WHERE id = 112').sess_time)
 		users.sessionInfoRefreshing.sync null, conn, '123456', 7200, true

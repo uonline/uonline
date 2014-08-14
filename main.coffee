@@ -167,7 +167,7 @@ app.post '/register/', mustNotBeAuthed, (request, response) ->
 			dbConnection
 			request.body.user
 			request.body.pass
-			config.PERMISSIONS_USER
+			'user'
 		)
 		response.cookie 'sessid', result.sessid
 		response.redirect '/'
