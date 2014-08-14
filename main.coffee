@@ -110,7 +110,6 @@ app.use ((request, response) ->
 	# PJAX
 	if request.header('X-PJAX')?
 		request.uonline.basicOpts.pjax = true
-	return
 ).asyncMiddleware()
 
 
