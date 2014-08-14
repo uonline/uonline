@@ -73,8 +73,10 @@ app.use '/static/bower_components', express.static(__dirname + '/bower_component
 
 app.set 'view engine', 'jade'
 app.locals.pretty = true
-if newrelic? then app.locals.newrelic = newrelic
 app.set 'views', __dirname + '/views'
+
+if newrelic?
+	app.locals.newrelic = newrelic
 
 
 mustBeAuthed = (request, response, next) ->

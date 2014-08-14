@@ -121,7 +121,6 @@ exports.coverage = ->
 		total = touched = 0
 		n = 0
 		len = tmp.length
-
 		while n < len
 			if tmp[n] isnt undefined
 				total++
@@ -145,11 +144,9 @@ exports.coverageDetail = ->
 		continue  if typeof tmp is "function" or tmp.length is undefined
 		source = tmp.source
 		allcovered = true
-		console.log "[UNCOVERED CODE]", file
 		lines = []
 		n = 0
 		len = source.length
-
 		while n < len
 			if tmp[n] is 0
 				lines[n] = 1
@@ -158,7 +155,8 @@ exports.coverageDetail = ->
 				lines[n] = 0
 			n++
 		if allcovered
-			console.log colorful("\t100% covered", "GREEN")
+			console.log colorful("[ 100% COVERED ]", "GREEN"), file
 		else
+			console.log colorful("[UNCOVERED CODE]", "RED"), file
 			printCoverageDetail lines, source
 	return
