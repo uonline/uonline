@@ -309,7 +309,7 @@ exports.goEscape =
 	setUp: (done) ->
 		migrateTables 'permission_kind', 'uniusers', 'battles', 'creature_kind', 'battle_participants'
 		insert 'uniusers', id: 1, fight_mode: 1, autoinvolved_fm: 1
-		insert 'battles', id: 3, is_over: 0
+		insert 'battles', id: 3
 		insert 'battle_participants', battle: 3, id: 1, kind: 'user'
 		insert 'battle_participants', battle: 3, id: 1, kind: 'monster'
 		done()
@@ -321,8 +321,8 @@ exports.goEscape =
 		test.strictEqual user.fight_mode, 0, 'user should not be attacking'
 		test.strictEqual user.autoinvolved_fm, 0, 'user should not be autoinvolved'
 		
-		battle = queryOne('SELECT * FROM battles')
-		test.strictEqual battle.is_over, 1, 'battle should be over'
+		battles = query('SELECT * FROM battles')
+		test.strictEqual battles.length, 0, 'battle should be over and destroyed'
 		
 		participants = query('SELECT id FROM battle_participants')
 		test.strictEqual participants.length, 0, 'all participants should have been removed'
