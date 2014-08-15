@@ -8,7 +8,7 @@ uonline
 [![Code Climate](http://img.shields.io/codeclimate/github/uonline/uonline.svg)](https://codeclimate.com/github/uonline/uonline)
 [![Planned tasks](https://badge.waffle.io/uonline/uonline.svg?label=on%20fire&title=Tasks)](http://waffle.io/uonline/uonline)
 
-A browser-based MMORPG game in a fantasy world.
+A browser-based MMORPG in a fantasy world.
 
 
 Requirements
