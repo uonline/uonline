@@ -15,22 +15,6 @@
 'use strict'
 
 
-migrateTables = ->
-	args = (i for i in arguments)
-	mg.migrate.sync mg, conn, tables: args
-
-clearTables = ->
-	query 'TRUNCATE ' + [].join.call(arguments, ', ')
-
-insert = (dbName, fields) ->
-	params = []
-	values = []
-	for i of fields
-		params.push i
-		values.push (if typeof fields[i] is 'string' then "'#{fields[i]}'" else fields[i])
-	query "INSERT INTO #{dbName} (#{params.join(', ')}) VALUES (#{values.join(', ')})"
-
-
 config = require '../config.js'
 game = require '../lib-cov/game'
 mg = require '../lib/migration'
@@ -41,6 +25,17 @@ transaction = require 'any-db-transaction'
 queryUtils = require '../lib/query_utils'
 conn = null
 query = null
+
+
+migrateTables = ->
+	mg.migrate.sync mg, conn, tables: (i for i in arguments)
+
+clearTables = ->
+	query 'TRUNCATE ' + [].join.call(arguments, ', ')
+
+insert = (dbName, fields) ->
+	values = (v for _,v of fields)
+	query "INSERT INTO #{dbName} (#{k for k of fields}) VALUES (#{values.map (_,i) -> '$'+(i+1)})", values
 
 
 usedTables = [
