@@ -72,6 +72,11 @@ block content
 					| #{'.'}
 			else
 				| На этой локации нет монстров.
+		if fight_mode == true
+			ol
+				each p, index in participants
+					li
+						| #{p.name} (#{p.kind}), #{p.side==our_side ? (userid==p.id ? 'я' : 'союзник') : 'противник'}
 		p
 			small
 				if autoinvolved_fm == true

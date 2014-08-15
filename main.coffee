@@ -112,6 +112,7 @@ app.use ((request, response) ->
 	# PJAX
 	if request.header('X-PJAX')?
 		request.uonline.basicOpts.pjax = true
+	# Necessary, or it will pass shit to callback
 	return
 ).asyncMiddleware()
 
@@ -169,7 +170,7 @@ app.post '/register/', mustNotBeAuthed, (request, response) ->
 			dbConnection
 			request.body.user
 			request.body.pass
-			config.PERMISSIONS_USER
+			'user'
 		)
 		response.cookie 'sessid', result.sessid
 		response.redirect '/'
@@ -260,6 +261,10 @@ app.get '/game/', mustBeAuthed, (request, response) -> sync ->
 	options.monsters_list = tmpMonsters
 	options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
 	options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
+
+	if options.fight_mode
+		options.participants = lib.game.getBattleParticipants.sync null, dbConnection, userid
+		options.our_side = options.participants.find((p) -> p.kind=='user' && p.id==userid).side
 
 	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
 	for i of chars
