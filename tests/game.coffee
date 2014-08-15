@@ -32,7 +32,7 @@ insert = (dbName, fields) ->
 
 
 config = require '../config.js'
-game = require '../lib/game'
+game = require '../lib-cov/game'
 mg = require '../lib/migration'
 async = require 'async'
 sync = require 'sync'
@@ -140,11 +140,11 @@ exports.getUserLocation =
 		clearTables 'uniusers', 'locations'
 		insert 'uniusers', id: 1, location: 3, sessid: 'someid'
 		done()
-	
+
 	testValidData: (test) ->
 		insert 'locations', id: 3, area: 5, title: 'The Location', ways: 'Left=7|Forward=8|Right=9'
 		loc = game.getUserLocation.sync(null, conn, 1)
-		
+
 		test.strictEqual loc.id, 3, "should return user's location id"
 		test.deepEqual loc.ways, [
 				{ target: 7, text: 'Left' }
@@ -152,7 +152,7 @@ exports.getUserLocation =
 				{ target: 9, text: 'Right' }
 			], 'should return ways from location'
 		test.done()
-	
+
 	testWrongSessid: (test) ->
 		test.throws(
 			-> game.getUserLocation.sync null, conn, -1
@@ -160,10 +160,10 @@ exports.getUserLocation =
 			'should fail on wrong id'
 		)
 		test.done()
-	
+
 	testWrongLocid: (test) ->
 		insert 'locations', id: 1, area: 5
-		
+
 		test.throws(
 			-> game.getUserLocation.sync null, conn, 1
 			Error
@@ -177,16 +177,16 @@ exports.getUserArea =
 		clearTables 'uniusers', 'locations', 'areas'
 		insert 'uniusers', id: 1, location: 3, sessid: 'someid'
 		done()
-	
+
 	'usual test': (test) ->
 		insert 'locations', id: 3, area: 5, title: 'The Location', ways: 'Left=7|Forward=8|Right=9'
 		insert 'areas', id: 5, title: 'London'
 		area = game.getUserArea.sync null, conn, 1
-		
+
 		test.strictEqual area.id, 5, "should return user's area id"
 		test.strictEqual area.title, 'London', "should return user's area name"
 		test.done()
-	
+
 	'wrong user id': (test) ->
 		test.throws(
 			-> game.getUserArea.sync null, conn, -1
@@ -201,10 +201,10 @@ exports.canChangeLocation = (test) ->
 	insert 'uniusers', id: 1, location: 1
 	insert 'locations', id: 1, ways: 'Left=2'
 	insert 'locations', id: 2
-	
+
 	can = game.canChangeLocation.sync null, conn, 1, 2
 	test.strictEqual can, true, "should return true if path exists"
-	
+
 	game.changeLocation.sync null, conn, 1, 2
 	can = game.canChangeLocation.sync null, conn, 1, 1
 	test.strictEqual can, false, "should return false if path doesn't exist"
@@ -213,10 +213,10 @@ exports.canChangeLocation = (test) ->
 
 exports.createBattleBetween = (test) ->
 	clearTables 'battles', 'battle_participants'
-	
+
 	tx = transaction conn
 	locid = 123
-	
+
 	game.createBattleBetween.sync null, tx, locid, [
 			{id: 1, kind: 'user', initiative:  5}
 			{id: 2, kind: 'user', initiative: 15}
@@ -225,11 +225,11 @@ exports.createBattleBetween = (test) ->
 			{id: 2, kind: 'monster', initiative: 20}
 			{id: 3, kind: 'monster', initiative: 10}
 		]
-	
+
 	battle = query.row 'SELECT id, location, turn_number FROM battles'
 	test.strictEqual battle.location, locid, 'should create battle on specified location'
 	test.strictEqual battle.turn_number, 0, 'should create battle that is on first turn'
-	
+
 	participants = query.all 'SELECT id, kind, index, side FROM battle_participants WHERE battle = $1', [battle.id]
 	test.deepEqual participants, [
 		{id: 1, kind: 'monster', index: 0, side: 0}
@@ -238,7 +238,7 @@ exports.createBattleBetween = (test) ->
 		{id: 3, kind: 'monster', index: 3, side: 1}
 		{id: 1, kind: 'user',    index: 4, side: 0}
 	], 'should involve all users and monsters of both sides in correct order'
-	
+
 	tx.commit.sync tx
 	test.done()
 
@@ -250,43 +250,43 @@ exports.changeLocation =
 		insert 'locations', id: 1, ways: 'Left=2'
 		insert 'locations', id: 2
 		done()
-	
+
 	'with peaceful monster': (test) ->
 		insert 'monsters', id: 1, location: 2, attack_chance: 0
 		game.changeLocation.sync null, conn, 1, 2
-		
+
 		locid = game.getUserLocationId.sync(null, conn, 1)
 		test.strictEqual locid, 2, 'user should have moved to new location'
-		
+
 		fm = game.isInFight.sync(null, conn, 1)
 		test.strictEqual fm, false, 'user should not be attacked if monster attack_chance is 0%'
 		test.done()
-	
+
 	'with angry monster': (test) ->
 		insert 'monsters', id: 1, location: 2, attack_chance: 100, initiative: 100
 		insert 'monsters', id: 2, location: 2, attack_chance: 100, initiative: 5
 		insert 'monsters', id: 3, location: 2, attack_chance: 0, initiative: 10
 		game.changeLocation.sync null, conn, 1, 2
-		
+
 		locid = game.getUserLocationId.sync(null, conn, 1)
 		test.strictEqual locid, 2, 'user should have moved to new location'
-		
+
 		fm = game.isInFight.sync(null, conn, 1)
 		test.strictEqual fm, true, "user should be attacked if at least one monster's attack chance is 100%"
-		
+
 		participantsCount = +query.val 'SELECT count(*) FROM battle_participants'
 		test.strictEqual participantsCount, 4, 'all monsters should have been involved'
-		
+
 		userSide = query.val "SELECT side FROM battle_participants WHERE kind='user' AND id=1"
 		query.all("SELECT side FROM battle_participants WHERE kind='monster'").forEach (m) ->
 			test.ok userSide isnt m.side, 'user and monsters should be on different sides'
 		test.done()
-	
+
 	'with busy monster': (test) ->
 		insert 'monsters', id: 1, location: 2, attack_chance: 100, initiative: 100
 		insert 'battle_participants', id: 1, kind: 'monster'
 		game.changeLocation.sync null, conn, 1, 2
-		
+
 		fm = game.isInFight.sync(null, conn, 1)
 		test.strictEqual fm, false, 'user should not be attacked if monster is in another battle'
 		test.done()
@@ -297,25 +297,25 @@ exports.goAttack =
 		clearTables 'uniusers', 'monsters', 'battles', 'battle_participants'
 		insert 'uniusers', id: 1, location: 1, initiative: 10
 		done()
-	
+
 	'usual test': (test) ->
 		insert 'monsters', id: 1, location: 1, initiative: 20
 		insert 'monsters', id: 2, location: 1, initiative: 30
 		game.goAttack.sync null, conn, 1
-		
+
 		envolvedMonstersCount = +query.val "SELECT count(*) FROM battle_participants WHERE kind='monster'"
 		test.strictEqual envolvedMonstersCount, 2, 'all monsters should have been envolved'
-		
+
 		fm = game.isInFight.sync(null, conn, 1)
 		test.strictEqual fm, true, 'user should be attacking'
 		test.done()
-	
+
 	'on empty location': (test) ->
 		game.goAttack.sync null, conn, 1
-		
+
 		fm = game.isInFight.sync(null, conn, 1)
 		test.strictEqual fm, false, 'user should not be fighting'
-		
+
 		test.strictEqual +query.val('SELECT count(*) FROM battles'), 0, 'should be no battles'
 		test.strictEqual +query.val('SELECT count(*) FROM battle_participants'), 0, 'should be no participants'
 		test.done()
@@ -329,19 +329,19 @@ exports.goEscape =
 		insert 'battle_participants', battle: 3, id: 1, kind: 'user'
 		insert 'battle_participants', battle: 3, id: 1, kind: 'monster'
 		done()
-	
+
 	test: (test) ->
 		game.goEscape.sync null, conn, 1
-		
+
 		fm = game.isInFight.sync(null, conn, 1)
 		test.strictEqual fm, false, 'user should not be attacking'
-		
+
 		autoinvolved = query.val 'SELECT autoinvolved_fm FROM uniusers WHERE id=1'
 		test.strictEqual autoinvolved, 0, 'user should not be autoinvolved'
-		
+
 		battles = query.all 'SELECT * FROM battles'
 		test.strictEqual battles.length, 0, 'battle should be over and destroyed'
-		
+
 		participants = query.all 'SELECT id FROM battle_participants'
 		test.strictEqual participants.length, 0, 'all participants should have been removed'
 		test.done()
@@ -358,7 +358,7 @@ exports.getBattleParticipants =
 		insert 'battle_participants', battle: 3, id: 4, kind: 'monster', side: 0, index: 0
 		insert 'battle_participants', battle: 3, id: 5, kind: 'monster', side: 0, index: 2
 		done()
-	
+
 	test: (test) ->
 		participants = game.getBattleParticipants.sync(null, conn, 1)
 		test.deepEqual participants, [
@@ -367,17 +367,17 @@ exports.getBattleParticipants =
 			{ id: 5, kind: 'monster', name: 'SomeMonster', side: 0, index: 2 }
 		], 'should return participants with names'
 		test.done()
-	
+
 	'wrong kind': (test) ->
 		query "ALTER TYPE creature_kind ADD VALUE 'very new kind' AFTER 'monster'"
 		insert 'battle_participants', battle: 3, id: 5, kind: 'very new kind', side: 0, index: 2
-		
+
 		test.throws(
 			-> game.getBattleParticipants.sync null, conn, 1
 			Error
 			'should throw error'
 		)
-		
+
 		# restoring original creature_kind
 		query 'DROP TABLE battle_participants'
 		query 'DROP TYPE creature_kind'
@@ -397,14 +397,14 @@ exports.getNearbyUsers =
 		insert 'uniusers', id: 5, username: 'aloneuser', location: 2, sess_time: now
 		insert 'locations', id: 1
 		done()
-	
+
 	testValidData: (test) ->
 		users = game.getNearbyUsers.sync null, conn, 1, 1
 		test.deepEqual users, [
 			{ id: 2, username: 'otheruser' }
 			{ id: 3, username: 'thirduser' }
 		], 'should return all online users on this location'
-		
+
 		users = game.getNearbyUsers.sync null, conn, 5, 2
 		test.deepEqual users, [], 'alone user should be alone. for now'
 		test.done()
@@ -419,7 +419,7 @@ exports.getNearbyMonsters = (test) ->
 	insert 'monsters', id: 2, prototype: 1, location: 2
 	insert 'monsters', id: 3, prototype: 1, location: 2
 	monsters = game.getNearbyMonsters.sync null, conn, 1
-	
+
 	test.strictEqual monsters.length, 1, 'should not return excess monsters'
 	test.strictEqual monsters[0].attack_chance, 42, "should return monster's info"
 	test.strictEqual monsters[0].name, 'The Creature of Unimaginable Horror', 'should return prototype info too'
@@ -431,10 +431,10 @@ exports.isInFight = (test) ->
 	insert 'uniusers', id: 2
 	insert 'uniusers', id: 4
 	insert 'battle_participants', kind: 'user', id: 4
-	
+
 	isIn = game.isInFight.sync null, conn, 2
 	test.strictEqual isIn, false, 'should return false if user is not in fight mode'
-	
+
 	isIn = game.isInFight.sync null, conn, 4
 	test.strictEqual isIn, true, 'should return true if user is in fight mode'
 	test.done()
@@ -444,10 +444,10 @@ exports.isAutoinvolved = (test) ->
 	clearTables 'uniusers'
 	insert 'uniusers', id: 2, autoinvolved_fm: 0
 	insert 'uniusers', id: 4, autoinvolved_fm: 1
-	
+
 	autoinv = game.isAutoinvolved.sync null, conn, 2
 	test.strictEqual autoinv, false, 'should return false if user was not attacked'
-	
+
 	autoinv = game.isAutoinvolved.sync null, conn, 4
 	test.strictEqual autoinv, true, 'should return true if user was attacked'
 	test.done()
@@ -457,10 +457,10 @@ exports.uninvolve = (test) ->
 	insert 'uniusers', id: 1, autoinvolved_fm: 1
 	insert 'battle_participants', kind: 'user', id: 1
 	game.uninvolve.sync null, conn, 1
-	
+
 	isInFight = game.isInFight.sync null, conn, 1
 	test.strictEqual isInFight, true, 'should not disable fight mode'
-	
+
 	autoinvolved = query.val 'SELECT autoinvolved_fm FROM uniusers WHERE id=1'
 	test.strictEqual autoinvolved, 0, 'user should not be autoinvolved'
 	test.done()
@@ -486,7 +486,7 @@ exports.getUserCharacters =
 			accuracy: 4
 			intelligence: 5
 			initiative: 6
-		
+
 		expectedData =
 			id: 1
 			username: 'someuser'
@@ -507,18 +507,18 @@ exports.getUserCharacters =
 			accuracy: 4
 			intelligence: 5
 			initiative: 6
-		
+
 		user = game.getUserCharacters.sync null, conn, 1
 		test.deepEqual user, expectedData, 'should return specific fields by id'
 		user = game.getUserCharacters.sync null, conn, 'someuser'
 		test.deepEqual user, expectedData, 'should return specific fields by nickname'
-		
+
 		user = game.getUserCharacters.sync null, conn, 2
 		test.strictEqual user, null, 'should return null if no such user exists'
 		user = game.getUserCharacters.sync null, conn, 'anotheruser'
 		test.strictEqual user, null, 'should return null if no such user exists'
 		test.done()
-	
+
 	testErrors: (test) ->
 		test.throws(
 			-> game.getUserCharacters.sync conn, 1

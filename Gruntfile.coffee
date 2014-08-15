@@ -27,6 +27,8 @@ module.exports = (grunt) ->
 				'tests/*.js'
 				'tests/*.coffee'
 			]
+			options:
+				reporter: 'grunt'
 
 		jshint:
 			all:
