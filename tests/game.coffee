@@ -15,16 +15,6 @@
 'use strict'
 
 
-query = (str, values) ->
-	conn.query.sync(conn, str, values).rows
-
-
-queryOne = (str, values) ->
-	rows = query(str, values)
-	throw new Error('In query:\n' + query + '\nExpected one row, but got ' + rows.length) if rows.length isnt 1
-	rows[0]
-
-
 migrateTables = ->
 	args = (i for i in arguments)
 	mg.migrate.sync mg, conn, tables: args
@@ -48,7 +38,9 @@ async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
+queryUtils = require '../lib/query_utils'
 conn = null
+query = null
 
 
 usedTables = [
@@ -67,23 +59,17 @@ usedCustomTypes = [
 	'permission_kind'
 ]
 
-#cleanup = ->
-#	query 'DROP TABLE IF EXISTS ' + usedTables.join(', ')
-#	query 'DROP TYPE IF EXISTS ' + usedCustomTypes.join(', ')
 
 exports.setUp = (->
 	unless conn?
 		conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+		query = queryUtils.getFor conn
 		query 'DROP TABLE IF EXISTS ' + usedTables.join(', ')
 		query 'DROP TYPE IF EXISTS ' + usedCustomTypes.join(', ')
 		migrateTables.apply null, usedCustomTypes.concat(usedTables)
-	#cleanup()
 ).async() # the entrance to the Fieber land
 
-exports.tearDown = (->
-	#cleanup()
-	#conn.end()
-).async()
+#exports.tearDown = (->).async()
 
 
 exports.getInitialLocation =
@@ -240,11 +226,11 @@ exports.createBattleBetween = (test) ->
 			{id: 3, kind: 'monster', initiative: 10}
 		]
 	
-	battle = queryOne 'SELECT id, location, turn_number FROM battles'
+	battle = query.row 'SELECT id, location, turn_number FROM battles'
 	test.strictEqual battle.location, locid, 'should create battle on specified location'
 	test.strictEqual battle.turn_number, 0, 'should create battle that is on first turn'
 	
-	participants = query 'SELECT id, kind, index, side FROM battle_participants WHERE battle = $1', [battle.id]
+	participants = query.all 'SELECT id, kind, index, side FROM battle_participants WHERE battle = $1', [battle.id]
 	test.deepEqual participants, [
 		{id: 1, kind: 'monster', index: 0, side: 0}
 		{id: 2, kind: 'monster', index: 1, side: 1}
@@ -288,11 +274,11 @@ exports.changeLocation =
 		fm = game.isInFight.sync(null, conn, 1)
 		test.strictEqual fm, true, "user should be attacked if at least one monster's attack chance is 100%"
 		
-		participantsCount = +queryOne('SELECT count(*) FROM battle_participants').count
+		participantsCount = +query.val 'SELECT count(*) FROM battle_participants'
 		test.strictEqual participantsCount, 4, 'all monsters should have been involved'
 		
-		userSide = queryOne("SELECT side FROM battle_participants WHERE kind='user' AND id=1").side
-		query("SELECT side FROM battle_participants WHERE kind='monster'").forEach (m) ->
+		userSide = query.val "SELECT side FROM battle_participants WHERE kind='user' AND id=1"
+		query.all("SELECT side FROM battle_participants WHERE kind='monster'").forEach (m) ->
 			test.ok userSide isnt m.side, 'user and monsters should be on different sides'
 		test.done()
 	
@@ -317,7 +303,7 @@ exports.goAttack =
 		insert 'monsters', id: 2, location: 1, initiative: 30
 		game.goAttack.sync null, conn, 1
 		
-		envolvedMonstersCount = +queryOne("SELECT count(*) FROM battle_participants WHERE kind='monster'").count
+		envolvedMonstersCount = +query.val "SELECT count(*) FROM battle_participants WHERE kind='monster'"
 		test.strictEqual envolvedMonstersCount, 2, 'all monsters should have been envolved'
 		
 		fm = game.isInFight.sync(null, conn, 1)
@@ -330,8 +316,8 @@ exports.goAttack =
 		fm = game.isInFight.sync(null, conn, 1)
 		test.strictEqual fm, false, 'user should not be fighting'
 		
-		test.strictEqual query('SELECT id FROM battles').length, 0, 'should be no battles'
-		test.strictEqual query('SELECT id FROM battle_participants').length, 0, 'should be no participants'
+		test.strictEqual +query.val('SELECT count(*) FROM battles'), 0, 'should be no battles'
+		test.strictEqual +query.val('SELECT count(*) FROM battle_participants'), 0, 'should be no participants'
 		test.done()
 
 
@@ -350,13 +336,13 @@ exports.goEscape =
 		fm = game.isInFight.sync(null, conn, 1)
 		test.strictEqual fm, false, 'user should not be attacking'
 		
-		autoinvolved = queryOne('SELECT autoinvolved_fm FROM uniusers WHERE id=1').autoinvolved_fm
+		autoinvolved = query.val 'SELECT autoinvolved_fm FROM uniusers WHERE id=1'
 		test.strictEqual autoinvolved, 0, 'user should not be autoinvolved'
 		
-		battles = query('SELECT * FROM battles')
+		battles = query.all 'SELECT * FROM battles'
 		test.strictEqual battles.length, 0, 'battle should be over and destroyed'
 		
-		participants = query('SELECT id FROM battle_participants')
+		participants = query.all 'SELECT id FROM battle_participants'
 		test.strictEqual participants.length, 0, 'all participants should have been removed'
 		test.done()
 
@@ -475,7 +461,7 @@ exports.uninvolve = (test) ->
 	isInFight = game.isInFight.sync null, conn, 1
 	test.strictEqual isInFight, true, 'should not disable fight mode'
 	
-	autoinvolved = queryOne('SELECT autoinvolved_fm FROM uniusers WHERE id=1').autoinvolved_fm
+	autoinvolved = query.val 'SELECT autoinvolved_fm FROM uniusers WHERE id=1'
 	test.strictEqual autoinvolved, 0, 'user should not be autoinvolved'
 	test.done()
 
