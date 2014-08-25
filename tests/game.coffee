@@ -303,6 +303,16 @@ exports.goAttack =
 
 		fm = game.isInFight.sync(null, conn, 1)
 		test.strictEqual fm, true, 'user should be attacking'
+
+		envolvedCountBefore = +query.val "SELECT count(*) FROM battle_participants"
+		game.goAttack.sync null, conn, 1
+
+		battlesCount = +query.val "SELECT count(*) FROM battles"
+		test.strictEqual battlesCount, 1, 'second battle should not be created if user already in battle'
+
+		envolvedCountAfter = +query.val "SELECT count(*) FROM battle_participants"
+		test.strictEqual envolvedCountBefore, envolvedCountAfter,
+			'no more participants should appear if user already in battle'
 		test.done()
 
 	'on empty location': (test) ->
