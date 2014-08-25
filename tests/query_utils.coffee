@@ -17,11 +17,11 @@ exports.setUp = (->
 
 
 exports.itself = (test) ->
-	res = query "INSERT INTO test_table (id, data) VALUES (3, 'third')"
-	count = +conn.query.sync(conn, "SELECT count(*) FROM test_table").rows[0].count
+	sql = "INSERT INTO test_table (id, data) VALUES (3, 'third')"
+	result = query sql
+	expected = conn.query.sync conn, sql
 	
-	test.strictEqual count, 3, 'should perform query'
-	test.strictEqual res, undefined, 'should not return anything'
+	test.deepEqual result, expected, 'should reutn dbConnection.query result'
 	
 	query "DELETE FROM test_table WHERE id = 3"
 	test.done()
@@ -64,4 +64,13 @@ exports.val = (test) ->
 	test.throws (->
 		query.val 'SELECT * FROM test_table WHERE id = 3'
 	), Error, 'should throw error if no rows returned'
+	test.done()
+
+exports.ins = (test) ->
+	query.ins 'test_table', id: 3, data: 'third'
+	count = +query.val 'SELECT count(*) FROM test_table'
+	data = query.val 'SELECT data FROM test_table WHERE id = 3'
+	
+	test.strictEqual count, 3, 'should insert one row'
+	test.strictEqual data, 'third', 'should add strings correctly'
 	test.done()
