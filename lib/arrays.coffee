@@ -21,7 +21,7 @@ Array::pickRandom = ->
 	return this[Math.random()*this.length|0]
 
 # Returns first matching element
-# TODO: tests or #394
+# TODO: #394 ?
 Array::find = (func) ->
 	for val in this
 		return val if func(val)

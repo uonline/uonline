@@ -290,7 +290,7 @@ insertMonsters = ->
 				"($1, $2, $3, $4, $5, $6, $7, $8)"
 			[
 				i, soul.id, locs.pickRandom().id, soul.health_max, soul.mana_max, null,
-				Math.random()*25|0, soul.initiative_min + Math.random()*(soul.initiative_max-soul.initiative_min)|0
+				Number.irandom(25), Number.irandom(soul.initiative_min, soul.initiative_max)
 			]
 		)
 

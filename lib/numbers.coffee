@@ -15,22 +15,13 @@
 'use strict'
 
 
-require '../lib-cov/arrays'
+# Returns random number between a and b
+# or a and 0 if b is undefined
+# TODO: #394 ?
+Number.random = (a, b) ->
+	b = 0 unless b?
+	a + Math.random() * (b - a)
 
-
-exports.pickRandom = (test) ->
-	arr = [1..5]
-	set = {}
-	set[arr.pickRandom()] = 1 for [1..100]
-	
-	test.ok(x of set, 'each random element should be from array') for x in arr
-	test.strictEqual arr.length, Object.keys(set).length, 'all array elements should have chance to be picked'
-	
-	test.strictEqual null, [].pickRandom()
-	test.done()
-
-
-exports.find = (test) ->
-	test.strictEqual([1,2,3,4].find((x) -> x>2), 3, "should return first matching element")
-	test.strictEqual([1,2,3,4].find((x) -> x>4), undefined, "should return null if unable to find anyting")
-	test.done()
+# As Number::random but with only ints
+Number.irandom = (a, b) ->
+	Math.floor(Number.random(a, b))
