@@ -42,10 +42,10 @@ exports.tearDown = (->
 
 
 exports.tableExists = (test) ->
-	conn.query.sync conn, 'CREATE TABLE IF NOT EXISTS test_table (id INT NOT NULL)', []
+	query 'CREATE TABLE IF NOT EXISTS test_table (id INT NOT NULL)'
 	test.strictEqual tables.tableExists.sync(null, conn, 'test_table'), true,
 		'should return true if table exists'
-	conn.query.sync conn, 'DROP TABLE test_table', []
+	query 'DROP TABLE test_table'
 	test.strictEqual tables.tableExists.sync(null, conn, 'test_table'), false,
 		'should return false if table does not exist'
 	test.done()
@@ -54,66 +54,57 @@ exports.tableExists = (test) ->
 exports.create = (test) ->
 	tables.create.sync null, conn, 'akira', 'id INT'
 	test.strictEqual tables.tableExists.sync(null, conn, 'akira'), true, 'should create table'
-	dsc = conn.query.sync conn,
-		"SELECT column_name AS result FROM information_schema.columns WHERE table_name = 'akira'", []
-	test.strictEqual dsc.rows[0].result, 'id', 'and its columns'
+	
+	col_name = query.val "SELECT column_name AS result FROM information_schema.columns WHERE table_name = 'akira'"
+	test.strictEqual col_name, 'id', 'and its columns'
 	test.done()
 
 
 exports.addCol = (test) ->
 	tables.create.sync null, conn, 'test_table', 'id INT'
 	tables.addCol.sync null, conn, 'test_table', 'zoich INT'
-	dsc = conn.query.sync conn,
-		"SELECT column_name AS result FROM information_schema.columns WHERE table_name = 'test_table'", []
-	test.strictEqual dsc.rows.length, 2, 'should create a new column'
+	
+	rows = query.all "SELECT column_name AS result FROM information_schema.columns WHERE table_name = 'test_table'"
+	test.strictEqual rows.length, 2, 'should create a new column'
 	test.done()
 
 
 exports.renameCol =
 	testNoErrors: (test) ->
-		async.series [
-			(callback) ->
-				tables.create conn, "test_table", "id INTEGER", callback
-			(callback) ->
-				tables.renameCol conn, "test_table", "id", "col", callback
-			(callback) ->
-				conn.query "SELECT column_name, data_type FROM information_schema.columns " +
-					"WHERE table_name = 'test_table'", [], callback
-		], (error, result) ->
-			test.ifError error
-			test.strictEqual result[2].rows[0].column_name, "col", "should rename column"
-			test.strictEqual result[2].rows[0].data_type, "integer", "should not alter its type"
-			test.done()
+		tables.create.sync null, conn, "test_table", "id INTEGER"
+		tables.renameCol.sync null, conn, "test_table", "id", "col"
+		
+		col = query.row "SELECT column_name, data_type FROM information_schema.columns "+
+			"WHERE table_name = 'test_table'"
+		test.strictEqual col.column_name, "col", "should rename column"
+		test.strictEqual col.data_type, "integer", "should not alter its type"
+		test.done()
 
 	testNoTable: (test) ->
-		tables.renameCol conn, "test_table", "id", "col", (error, result) ->
-			test.ok error, "No table - no renaming"
-			test.done()
+		test.throws(
+			-> tables.renameCol.sync null, conn, "test_table", "id", "col"
+			Error
+			'should return error if tried to rename column from nonexistent table'
+		)
+		test.done()
 
 	testNoColumn: (test) ->
-		async.series [
-			(callback) ->
-				tables.create conn, "test_table", "id INT(9)", callback
-			(callback) ->
-				tables.renameCol conn, "test_table", "noSuchCol", "col", callback
-		], (error, result) ->
-			test.ok error, "No column - no renaming"
-			test.done()
+		tables.create.sync null, conn, "test_table", "id INT"
+		test.throws(
+			-> tables.renameCol.sync null, conn, "test_table", "noSuchCol", "col"
+			Error
+			'should return error if tried to rename nonexistent column'
+		)
+		test.done()
 
 
 exports.changeCol = (test) ->
-	async.series [
-		(callback) ->
-			tables.create conn, "test_table", "id SMALLINT", callback
-		(callback) ->
-			tables.changeCol conn, "test_table", "id", "INTEGER", callback
-		(callback) ->
-			conn.query "SELECT column_name, data_type FROM information_schema.columns "+
-				"WHERE table_name = 'test_table'", [], callback
-	], (error, result) ->
-		test.ifError error
-		test.strictEqual result[2].rows[0].data_type, "integer", "should change type of column"
-		test.done()
+	tables.create.sync null, conn, "test_table", "id SMALLINT"
+	tables.changeCol.sync null, conn, "test_table", "id", "INTEGER"
+	
+	data_type = query.val "SELECT data_type FROM information_schema.columns WHERE table_name = 'test_table'"
+	test.strictEqual data_type, "integer", "should change type of column"
+	test.done()
 
 
 exports.changeDefault = (test) ->
@@ -126,35 +117,23 @@ exports.changeDefault = (test) ->
 
 
 exports.dropCol = (test) ->
-	async.series [
-		(callback) ->
-			tables.create conn, "test_table", "id INTEGER", callback
-		(callback) ->
-			tables.addCol conn, "test_table", "col INTEGER", callback
-		(callback) ->
-			tables.dropCol conn, "test_table", "col", callback
-		(callback) ->
-			conn.query "SELECT column_name, data_type FROM information_schema.columns "+
-				"WHERE table_name = 'test_table'", [], callback
-	], (error, result) ->
-		test.ifError error
-		test.strictEqual result[3].rows.length, 1, "should remove column"
-		test.strictEqual result[3].rows[0].column_name, "id", "should remove specified column and not another"
-		test.done()
+	tables.create.sync null, conn, "test_table", "id INTEGER"
+	tables.addCol.sync null, conn, "test_table", "col INTEGER"
+	tables.dropCol.sync null, conn, "test_table", "col"
+	
+	rows = query.all "SELECT column_name, data_type FROM information_schema.columns WHERE table_name='test_table'"
+	test.strictEqual rows.length, 1, "should remove column"
+	test.strictEqual rows[0].column_name, "id", "should remove specified column and not another"
+	test.done()
 
 
 exports.createIndex = (test) ->
-	async.series [
-		(callback) ->
-			tables.create conn, 'test_table', 'id INTEGER', callback
-		(callback) ->
-			tables.createIndex conn, 'test_table', 'id', callback
-		(callback) ->
-			conn.query "SELECT * FROM pg_indexes WHERE tablename='test_table' AND indexname='test_table_id'", callback
-	], (error, result) ->
-		test.ifError error
-		test.strictEqual result[2].rows.length, 1, 'should create index'
-		test.done()
+	tables.create.sync null, conn, 'test_table', 'id INTEGER'
+	tables.createIndex.sync null, conn, 'test_table', 'id'
+	
+	rows = query.all "SELECT * FROM pg_indexes WHERE tablename='test_table' AND indexname='test_table_id'"
+	test.strictEqual rows.length, 1, 'should create index'
+	test.done()
 
 
 exports.createEnum = (test) -> sync ->
