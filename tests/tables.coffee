@@ -19,17 +19,9 @@ tables = require '../lib-cov/tables'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
+queryUtils = require '../lib/query_utils'
 conn = null
-
-
-query = (str, values) ->
-	conn.query.sync(conn, str, values).rows
-
-
-queryOne = (str, values) ->
-	rows = query(str, values)
-	throw new Error('In query:\n' + query + '\nExpected one row, but got ' + rows.length) if rows.length isnt 1
-	rows[0]
+query = null
 
 
 cleanup = ->
@@ -38,6 +30,7 @@ cleanup = ->
 
 exports.setUp = (->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+	query = queryUtils.getFor conn
 	cleanup()
 ).async()
 
@@ -123,6 +116,15 @@ exports.changeCol = (test) ->
 		test.done()
 
 
+exports.changeDefault = (test) ->
+	tables.create.sync null, conn, "test_table", "id SMALLINT DEFAULT 1"
+	tables.changeDefault.sync null, conn, "test_table", "id", 2
+	
+	defaultValue = +query.val "SELECT column_default FROM information_schema.columns WHERE table_name = 'test_table'"
+	test.strictEqual defaultValue, 2, "should change default value"
+	test.done()
+
+
 exports.dropCol = (test) ->
 	async.series [
 		(callback) ->
@@ -158,10 +160,10 @@ exports.createIndex = (test) ->
 exports.createEnum = (test) -> sync ->
 	tables.createEnum.sync null, conn, 'test_enum', "'bla', 'blabla', 'for the blah!'"
 
-	enums = query "SELECT * FROM pg_type WHERE typname='test_enum'"
+	enums = query.all "SELECT * FROM pg_type WHERE typname='test_enum'"
 	test.strictEqual enums.length, 1, 'should create enum'
 
-	values = queryOne('SELECT enum_range(NULL::test_enum)').enum_range
+	values = query.val('SELECT enum_range(NULL::test_enum)')
 	# other way: SELECT unnest(enum_range(NULL::mood))
 	test.strictEqual values, '{bla,blabla,"for the blah!"}', 'should create correct enum'
 	test.done()
