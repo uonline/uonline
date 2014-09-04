@@ -10,7 +10,7 @@ block content
 	if pic != null
 		img.img-thumbnail(src=pic, style="float: right; margin-left: 1em; margin-bottom: 1em;")
 	if fight_mode == false
-		div
+		div(style='max-width: 50em')
 			//- TODO: {{ description | tf | nl2p | nl2br }}
 			//- p #{ description }
 			each i in description.split('\n\n')
@@ -19,6 +19,9 @@ block content
 					//
 						p= i
 				else
+					//- примитивная типографика
+					- i = i.replace(/ - /g, ' — ')
+					//- render
 					p= i
 		div
 			p.button-row
