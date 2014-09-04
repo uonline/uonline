@@ -34,11 +34,7 @@ if !pjax
 				script(src='https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js')
 				script(src='https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js')
 			//- TODO: maybe move scripts to bottom
-			script(src='/static/bower_components/jquery/dist/jquery.min.js')
-			script(src='/static/bower_components/bootstrap/dist/js/bootstrap.min.js')
-			script(src='/static/bower_components/jquery-pjax/jquery.pjax.js')
-			//- custom
-			script(src='/static/browserified/bundle.min.js')
+			!= cachify_js('/assets/scripts.js')
 			:coffee
 				$(document).ready ->
 					# Start up pjax

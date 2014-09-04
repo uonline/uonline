@@ -63,6 +63,16 @@ module.exports = (grunt) ->
 				src: './browserified/bundle.js'
 				dest: './browserified/bundle.min.js'
 
+		concat:
+			scripts:
+				src: [
+					'./bower_components/jquery/dist/jquery.min.js'
+					'./bower_components/bootstrap/dist/js/bootstrap.min.js'
+					'./bower_components/jquery-pjax/jquery.pjax.js'
+					'./browserified/bundle.min.js'
+				]
+				dest: './assets/scripts.js'
+
 		mustcontain:
 			license:
 				src: [
@@ -173,7 +183,7 @@ module.exports = (grunt) ->
 
 	# Custom tasks.
 	grunt.registerTask 'check', ['mustcontain', 'coffeelint', 'jshint:all']
-	grunt.registerTask 'build', ['browserify', 'uglify']
+	grunt.registerTask 'build', ['browserify', 'uglify', 'concat']
 	grunt.registerTask 'docs', ['codo']
 
 	testTask = ['clean:lib_cov', 'jscoverage', 'coffeeCoverage']

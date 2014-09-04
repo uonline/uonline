@@ -29,6 +29,7 @@ anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
 async = require 'async'
 express = require 'express'
+cachify = require 'connect-cachify'
 sync = require 'sync'
 
 
@@ -59,6 +60,7 @@ if process.env.SQLPROF is 'true'
 			# console.log "\n#{time}: t: #{logged}\n"
 			if cb? then cb(error, result)
 
+# Set up Express
 app = express()
 app.enable 'trust proxy'
 app.use express.logger()
@@ -67,7 +69,21 @@ app.use express.json()
 app.use express.urlencoded()
 app.use express.compress()
 
-#app.use '/img', express.static(__dirname + '/img')
+assets =
+	'/assets/scripts.js': [
+		'/static/bower_components/jquery/dist/jquery.min.js'
+		'/static/bower_components/bootstrap/dist/js/bootstrap.min.js'
+		'/static/bower_components/jquery-pjax/jquery.pjax.js'
+		'/static/browserified/bundle.min.js'
+	]
+
+app.use(cachify.setup(assets,
+	root: __dirname
+	url_to_paths: {}
+	production: process.env.NODE_ENV is 'production'
+))
+
+app.use '/assets', express.static(__dirname + '/assets')
 app.use '/static/browserified', express.static(__dirname + '/browserified')
 app.use '/static/bower_components', express.static(__dirname + '/bower_components')
 
