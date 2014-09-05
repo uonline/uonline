@@ -33,21 +33,6 @@ if !pjax
 			// if lt IE 9
 				script(src='https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js')
 				script(src='https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js')
-			//- TODO: maybe move scripts to bottom
-			!= cachify_js('/assets/scripts.js')
-			:coffee
-				$(document).ready ->
-					# Start up pjax
-					$(document).pjax('a.pjax', '#content', timeout: 2000)
-					$(document).on 'pjax:send', ->
-						$('#content').animate opacity: 0.3, 'fast'
-					$(document).on 'pjax:complete', ->
-						$('#content').stop().css opacity: 1
-
-					# Push buttons
-					$('.instance-link').click ->
-						$('.instance-link').removeClass 'active'
-						$(this).addClass 'active'
 		body
 			div.navbar.navbar-default.navbar-static-top(role='navigation')
 				div.container
@@ -101,6 +86,21 @@ if !pjax
 						hr
 						footer
 							p.text-muted &copy; m1kc и К<sup>о</sup>, 2012&ndash;#{ now.getFullYear() }
+
+			!= cachify_js('/assets/scripts.js')
+			:coffee
+				$(document).ready ->
+					# Start up pjax
+					$(document).pjax('a.pjax', '#content', timeout: 2000)
+					$(document).on 'pjax:send', ->
+						$('#content').animate opacity: 0.3, 'fast'
+					$(document).on 'pjax:complete', ->
+						$('#content').stop().css opacity: 1
+
+					# Push buttons
+					$('.instance-link').click ->
+						$('.instance-link').removeClass 'active'
+						$(this).addClass 'active'
 else
 	title
 		block title
