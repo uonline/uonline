@@ -22,9 +22,7 @@ if !pjax
 			//- and here we go
 			title
 				block title
-			//- Bootstrap
-			link(href='/static/bower_components/bootstrap/dist/css/bootstrap.min.css', rel='stylesheet')
-			link(href='/static/bower_components/bootstrap/dist/css/bootstrap-theme.min.css', rel='stylesheet')
+			//- easier to inline than mess with it
 			:stylus
 				.button-row
 					line-height: 2.8em
@@ -87,7 +85,12 @@ if !pjax
 						footer
 							p.text-muted &copy; m1kc и К<sup>о</sup>, 2012&ndash;#{ now.getFullYear() }
 
+			//- Styles
+			link(href='/static/bower_components/bootstrap/dist/css/bootstrap.min.css', rel='stylesheet')
+			link(href='/static/bower_components/bootstrap/dist/css/bootstrap-theme.min.css', rel='stylesheet')
+			//- Scripts
 			!= cachify_js('/assets/scripts.js')
+			//- TODO: meld into ^
 			:coffee
 				$(document).ready ->
 					# Start up pjax
