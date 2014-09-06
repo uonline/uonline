@@ -10,9 +10,19 @@ block content
 	if pic != null
 		img.img-thumbnail(src=pic, style="float: right; margin-left: 1em; margin-bottom: 1em;")
 	if fight_mode == false
-		div
+		div(style='max-width: 50em')
 			//- TODO: {{ description | tf | nl2p | nl2br }}
-			p #{ description }
+			//- p #{ description }
+			each i in description.split('\n\n')
+				if i.substring(0,5)=='*****'
+					//- каменты имени Андрея
+					//
+						p= i
+				else
+					//- примитивная типографика
+					- i = i.replace(/ - /g, ' — ')
+					//- render
+					p= i
 		div
 			p.button-row
 				each i in ways
@@ -65,6 +75,11 @@ block content
 					| #{'.'}
 			else
 				| На этой локации нет монстров.
+		if fight_mode == true
+			ol
+				each p, index in participants
+					li
+						| #{p.name} (#{p.kind}), #{p.side==our_side ? (userid==p.id ? 'я' : 'союзник') : 'противник'}
 		p
 			small
 				if autoinvolved_fm == true

@@ -13,6 +13,9 @@ bower_components/
 # Browserified Node modules
 browserified/
 
+# And other stuff
+assets/
+
 ## Tool-specific
 
 # NetBeans

@@ -27,10 +27,14 @@ module.exports = (grunt) ->
 				'tests/*.js'
 				'tests/*.coffee'
 			]
+
 			http: [
 				'tests-http/*.js'
 				'tests-http/*.coffee'
 			]
+
+			options:
+				reporter: 'grunt'
 
 		jshint:
 			all:
@@ -60,10 +64,20 @@ module.exports = (grunt) ->
 			options:
 				require: ['./lib/validation.js']
 
+		concat:
+			scripts:
+				src: [
+					'./bower_components/jquery/dist/jquery.min.js'
+					'./bower_components/bootstrap/dist/js/bootstrap.min.js'
+					'./bower_components/jquery-pjax/jquery.pjax.js'
+					'./browserified/bundle.js'
+				]
+				dest: './assets/scripts.big.js'
+
 		uglify:
 			all:
-				src: './browserified/bundle.js'
-				dest: './browserified/bundle.min.js'
+				src: './assets/scripts.big.js'
+				dest: './assets/scripts.js'
 
 		mustcontain:
 			license:
@@ -175,7 +189,7 @@ module.exports = (grunt) ->
 
 	# Custom tasks.
 	grunt.registerTask 'check', ['mustcontain', 'coffeelint', 'jshint:all']
-	grunt.registerTask 'build', ['browserify', 'uglify']
+	grunt.registerTask 'build', ['browserify', 'concat', 'uglify']
 	grunt.registerTask 'docs', ['codo']
 
 	testTask = ['clean:lib_cov', 'jscoverage', 'coffeeCoverage']

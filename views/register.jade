@@ -34,9 +34,10 @@ block content
 			.col-sm-2
 			.col-sm-3
 				button.btn.btn-default(type='submit') Зарегистрироваться
+block bottom
 	:coffee
 		# Reqs
-		validation = require './lib/validation.js'
+		validation = require './lib/validation.js'  # virtual name
 		# Common variables
 		usernameField = $('input[name=user]')
 		usernameFormGroup = $('#user-form-group')

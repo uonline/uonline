@@ -278,15 +278,20 @@ insertMonsters = ->
 		throw new Error("No locations found. Forgot unify data?")
 
 	dbConnection.query.sync(dbConnection, "TRUNCATE monsters", [])
+	prototypesFromDB = dbConnection.query.sync(dbConnection, "SELECT * FROM monster_prototypes").rows
 	for i in [0...50]
-		soul = prototypes.pickRandom()
+		soul = prototypesFromDB.pickRandom()
 		dbConnection.query.sync(
 			dbConnection
 			"INSERT INTO monsters "+
-				"(id, prototype, location, health, mana, effects, attack_chance) "+
+				"(id, prototype, location, health, mana, effects,"+
+				" attack_chance, initiative) "+
 				"VALUES "+
-				"($1, $2, $3, $4, $5, $6, $7)"
-			[i, soul[0], locs.pickRandom().id, soul[8], soul[9], null, Math.random()*25|0]
+				"($1, $2, $3, $4, $5, $6, $7, $8)"
+			[
+				i, soul.id, locs.pickRandom().id, soul.health_max, soul.mana_max, null,
+				Number.irandom(25), Number.irandom(soul.initiative_min, soul.initiative_max)
+			]
 		)
 
 	console.log('Done.')

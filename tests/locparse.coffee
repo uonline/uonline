@@ -143,23 +143,23 @@ exports.warnings_test =
 			], "#{TMP_DIR}/Кронт - kront/map.ht.md"
 		)
 		result = parser.processDir "#{TMP_DIR}/Кронт - kront" #'unify/Кронт - kront'
-		
+
 		test.strictEqual result.warnings[0].id, 'W10', 'should get warn 10'
 		test.strictEqual result.warnings[1].id, 'W10', 'should get another warn 10'
 		test.strictEqual result.warnings.length, 2, 'should generate warnings for both cases'
 		test.deepEqual result.errors, [], 'should receive no errors'
-		
+
 		test.done()
 
 
 testOneError = (test, errId, sedWhat, sedByWhat, sedWhere="#{TMP_DIR}/Кронт - kront/map.ht.md") ->
 	sed [[sedWhat, sedByWhat]], sedWhere
 	result = parser.processDir "#{TMP_DIR}/Кронт - kront"
-	
+
 	test.ok result.errors.some((e) -> e.id == errId), 'should return specific error'
 	#test.strictEqual result.errors.length, 1, 'should not generate extra errors'
 	test.deepEqual result.warnings, [], 'should receive no warnings'
-	
+
 	test.done()
 
 
@@ -190,10 +190,10 @@ exports.error_E3_test = (test) ->
 exports.error_E4_test = (test) ->
 	fs.renameSync "#{TMP_DIR}/Кронт - kront", "#{TMP_DIR}/Кронт"
 	result = parser.processDir "#{TMP_DIR}/Кронт"
-	
+
 	test.ok result.errors.some((e) -> e.id == 'E4'), 'should return specific error'
 	test.deepEqual result.warnings, [], 'should receive no warnings'
-	
+
 	test.done()
 
 
@@ -277,7 +277,7 @@ exports.error_E15_test = (test) ->
 		"#{TMP_DIR}/Кронт - kront/Окрестности Кронта2 - outer"
 		(error) ->
 			throw error if error
-			
+
 			testOneError(
 				test, 'E15'
 				"# Окрестности Кронта"
@@ -295,11 +295,13 @@ exports.save = ((test) ->
 		mg.migrate.sync null, conn, {table: 'areas'}
 		mg.migrate.sync null, conn, {table: 'locations'}
 		parseResult.save(conn)
-		
+
 		result = conn.query.sync conn, 'SELECT count(*) AS cnt FROM areas'
 		test.equal result.rows[0].cnt, parseResult.areas.length, 'should save all areas'
 		result = conn.query.sync conn, 'SELECT count(*) AS cnt FROM locations'
 		test.equal result.rows[0].cnt, parseResult.locations.length, 'should save all locations'
+
+		conn.query.sync conn, "DROP TABLE IF EXISTS revision, areas, locations"
 	catch e
 		test.ifError e
 	test.done()

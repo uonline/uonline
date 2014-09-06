@@ -64,7 +64,7 @@ sync ->
 			console.log "User `#{u}` already exists."
 			process.exit 1
 
-		lib.user.registerUser.sync null, conn, u, p, config.PERMISSIONS_ADMIN
+		lib.user.registerUser.sync null, conn, u, p, 'admin'
 		console.log "New admin `#{u}` registered successfully."
 		process.exit 0
 	catch ex

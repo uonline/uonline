@@ -22,9 +22,7 @@ if !pjax
 			//- and here we go
 			title
 				block title
-			//- Bootstrap
-			link(href='/static/bower_components/bootstrap/dist/css/bootstrap.min.css', rel='stylesheet')
-			link(href='/static/bower_components/bootstrap/dist/css/bootstrap-theme.min.css', rel='stylesheet')
+			//- easier to inline than mess with it
 			:stylus
 				.button-row
 					line-height: 2.8em
@@ -33,25 +31,6 @@ if !pjax
 			// if lt IE 9
 				script(src='https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js')
 				script(src='https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js')
-			//- TODO: maybe move scripts to bottom
-			script(src='/static/bower_components/jquery/dist/jquery.min.js')
-			script(src='/static/bower_components/bootstrap/dist/js/bootstrap.min.js')
-			script(src='/static/bower_components/jquery-pjax/jquery.pjax.js')
-			//- custom
-			script(src='/static/browserified/bundle.min.js')
-			:coffee
-				$(document).ready ->
-					# Start up pjax
-					$(document).pjax('a.pjax', '#content', timeout: 2000)
-					$(document).on 'pjax:send', ->
-						$('#content').animate opacity: 0.3, 'fast'
-					$(document).on 'pjax:complete', ->
-						$('#content').stop().css opacity: 1
-
-					# Push buttons
-					$('.instance-link').click ->
-						$('.instance-link').removeClass 'active'
-						$(this).addClass 'active'
 		body
 			div.navbar.navbar-default.navbar-static-top(role='navigation')
 				div.container
@@ -105,7 +84,30 @@ if !pjax
 						hr
 						footer
 							p.text-muted &copy; m1kc и К<sup>о</sup>, 2012&ndash;#{ now.getFullYear() }
+
+			//- Styles
+			link(href='/static/bower_components/bootstrap/dist/css/bootstrap.min.css', rel='stylesheet')
+			link(href='/static/bower_components/bootstrap/dist/css/bootstrap-theme.min.css', rel='stylesheet')
+			//- Scripts
+			!= cachify_js('/assets/scripts.js')
+			//- TODO: meld into ^
+			:coffee
+				$(document).ready ->
+					# Start up pjax
+					$(document).pjax('a.pjax', '#content', timeout: 2000)
+					$(document).on 'pjax:send', ->
+						$('#content').animate opacity: 0.3, 'fast'
+					$(document).on 'pjax:complete', ->
+						$('#content').stop().css opacity: 1
+
+					# Push buttons
+					$('.instance-link').click ->
+						$('.instance-link').removeClass 'active'
+						$(this).addClass 'active'
+			//- custom stuff, if any
+			block bottom
 else
 	title
 		block title
 	block content
+	block bottom
