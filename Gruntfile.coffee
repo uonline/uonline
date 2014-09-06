@@ -21,20 +21,23 @@ module.exports = (grunt) ->
 	# Project configuration.
 	grunt.initConfig
 		nodeunit:
-			all: [
-				'tests/health-check.js'
-				'tests/health-check.coffee'
-				'tests/*.js'
-				'tests/*.coffee'
-			]
+			all:
+				src: [
+					'tests/health-check.js'
+					'tests/health-check.coffee'
+					'tests/*.js'
+					'tests/*.coffee'
+				]
+				options:
+					reporter: 'grunt'
 
-			http: [
-				'tests-http/*.js'
-				'tests-http/*.coffee'
-			]
-
-			options:
-				reporter: 'grunt'
+			http:
+				src: [
+					'tests-http/*.js'
+					'tests-http/*.coffee'
+				]
+				options:
+					reporter: 'default'
 
 		jshint:
 			all:
@@ -198,8 +201,8 @@ module.exports = (grunt) ->
 		testTask.push 'nodeunit:one'
 	else
 		testTask.push 'nodeunit:all'
-		testTask.push 'nodeunit:http'
 	testTask.push 'jscoverage_report'
+	testTask.push 'nodeunit:http'
 	grunt.registerTask 'test', testTask
 
 	# Default task.

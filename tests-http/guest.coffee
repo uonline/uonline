@@ -30,16 +30,16 @@ finish = (test) ->
 		test.done()
 
 
-exports.about = (test) ->
+exports['/'] = (test) ->
 	site
-		.get '/about/'
-		.expect 200
-		.expect /[&]copy[;] m1kc и К[<]sup[>]о[<][/]sup[>]/  # custom template rendered
-		.expect /Первая в мире текстовая браузерная MMORPG/  # page rendered
+		.get '/'
+		.expect 302  # redirect
+		.expect (response) ->
+			test.strictEqual response.header.location, '/about/', 'should redirect to /about/'
 		.end(finish(test))
 
 
-exports.notfound = (test) ->
+exports['/404/'] = (test) ->
 	site
 		.get '/404/'
 		.expect 404
@@ -49,7 +49,7 @@ exports.notfound = (test) ->
 		.end(finish(test))
 
 
-exports.explode = (test) ->
+exports['/explode/'] = (test) ->
 	site
 		.get '/explode/'
 		.expect 500
@@ -59,7 +59,24 @@ exports.explode = (test) ->
 		.end(finish(test))
 
 
-exports.login = (test) ->
+exports['/node/'] = (test) ->
+	site
+		.get '/node/'
+		.expect 200
+		.expect /Node.js is up and running/  # page rendered
+		.end(finish(test))
+
+
+exports['/about/'] = (test) ->
+	site
+		.get '/about/'
+		.expect 200
+		.expect /[&]copy[;] m1kc и К[<]sup[>]о[<][/]sup[>]/  # custom template rendered
+		.expect /Первая в мире текстовая браузерная MMORPG/  # page rendered
+		.end(finish(test))
+
+
+exports['/login/'] = (test) ->
 	site
 		.get '/login/'
 		.expect 200
@@ -71,7 +88,7 @@ exports.login = (test) ->
 		.end(finish(test))
 
 
-exports.register = (test) ->
+exports['/register/'] = (test) ->
 	site
 		.get '/register/'
 		.expect 200
