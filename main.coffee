@@ -83,13 +83,13 @@ app.use(cachify.setup(assets,
 	production: process.env.NODE_ENV is 'production'
 ))
 
-app.use '/assets', express.static(__dirname + '/assets')
-app.use '/static/browserified', express.static(__dirname + '/browserified')
-app.use '/static/bower_components', express.static(__dirname + '/bower_components')
+app.use '/assets', express.static "#{__dirname}/assets"
+app.use '/static/browserified', express.static "#{__dirname}/browserified"
+app.use '/static/bower_components', express.static "#{__dirname}/bower_components"
 
 app.set 'view engine', 'jade'
 app.locals.pretty = true
-app.set 'views', __dirname + '/views'
+app.set 'views', "#{__dirname}/views"
 
 if newrelic?
 	app.locals.newrelic = newrelic
