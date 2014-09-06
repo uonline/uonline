@@ -104,7 +104,10 @@ if !pjax
 					$('.instance-link').click ->
 						$('.instance-link').removeClass 'active'
 						$(this).addClass 'active'
+			//- custom stuff, if any
+			block bottom
 else
 	title
 		block title
 	block content
+	block bottom
