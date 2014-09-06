@@ -39,6 +39,15 @@ module.exports = (grunt) ->
 				options:
 					reporter: 'default'
 
+		express:
+			server:
+				options:
+					opts: ['./node_modules/coffee-script/bin/coffee']
+					script: './main.coffee'
+					port: 9623
+					output: "Listening on port 9623"
+					background: true
+
 		jshint:
 			all:
 				options:
@@ -202,6 +211,7 @@ module.exports = (grunt) ->
 	else
 		testTask.push 'nodeunit:all'
 	testTask.push 'jscoverage_report'
+	testTask.push 'express'
 	testTask.push 'nodeunit:http'
 	grunt.registerTask 'test', testTask
 

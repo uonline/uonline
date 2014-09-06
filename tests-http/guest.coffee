@@ -18,7 +18,7 @@
 
 unit = require 'unit.js'
 config = require "#{__dirname}/../config.js"
-site = unit.httpAgent "http://localhost:#{config.defaultPort}"
+site = unit.httpAgent "http://localhost:9623"
 
 
 finish = (test) ->
