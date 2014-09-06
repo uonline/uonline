@@ -7,11 +7,13 @@ block content
 		p Первая в мире текстовая браузерная MMORPG. Альфа-версия.
 		if loggedIn === true
 			p
-				a.pjax.btn.btn-default.btn-lg(href='/game/', role='button')
+				a.pjax.instance-switcher.btn.btn-default.btn-lg(href='/game/', role='button', data-instance='game')
 					i.glyphicon.glyphicon-send
 					| #{' '}Начать играть
 		else
 			p
-				a.pjax.btn.btn-primary.btn-lg(href='/register/', role='button') Регистрация
+				a.pjax.instance-switcher.btn.btn-primary.btn-lg(href='/register/',role='button',data-instance='register')
+					| Регистрация
 				| #{' '}
-				a.pjax.btn.btn-default.btn-lg(href='/login/', role='button') Вход
+				a.pjax.instance-switcher.btn.btn-default.btn-lg(href='/login/', role='button', data-instance='login')
+					| Вход
