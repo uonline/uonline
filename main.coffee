@@ -33,6 +33,7 @@ cachify = require 'connect-cachify'
 sync = require 'sync'
 
 
+# Connect to database
 dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
 dbConnection.query 'SELECT version()', [], (error, result) ->
 	if error?
@@ -60,7 +61,9 @@ if process.env.SQLPROF is 'true'
 			# console.log "\n#{time}: t: #{logged}\n"
 			if cb? then cb(error, result)
 
+
 # Set up Express
+
 app = express()
 app.enable 'trust proxy'
 app.use express.logger()
@@ -94,6 +97,8 @@ app.set 'views', "#{__dirname}/views"
 if newrelic?
 	app.locals.newrelic = newrelic
 
+
+# Middlewares
 
 mustBeAuthed = (request, response, next) ->
 	if request.uonline.basicOpts.loggedIn is true
@@ -133,7 +138,14 @@ app.use ((request, response) ->
 ).asyncMiddleware()
 
 
-# routing routines
+# Trivial pages
+
+quickRender = (template) ->
+	(request, response) ->
+		options = request.uonline.basicOpts
+		options.instance = template
+		response.render template, options
+
 
 app.get '/node/', (request, response) ->
 	response.send 'Node.js is up and running.'
@@ -143,22 +155,6 @@ app.get '/explode/', (request, response) ->
 	throw new Error 'Emulated error.'
 
 
-# real ones
-
-quickRender = (request, response, template) ->
-	options = request.uonline.basicOpts
-	options.instance = template
-	response.render template, options
-
-
-quickRenderError = (request, response, code) ->
-	options = request.uonline.basicOpts
-	options.code = code
-	options.instance = 'error'
-	response.status code
-	response.render 'error', options
-
-
 app.get '/', (request, response) ->
 	if request.uonline.basicOpts.loggedIn is true
 		response.redirect config.defaultInstanceForUsers
@@ -166,13 +162,12 @@ app.get '/', (request, response) ->
 		response.redirect config.defaultInstanceForGuests
 
 
-app.get '/about/', (request, response) ->
-	quickRender request, response, 'about'
+app.get '/about/', quickRender 'about'
+app.get '/register/', mustNotBeAuthed, quickRender 'register'
+app.get '/login/', mustNotBeAuthed, quickRender 'login'
 
 
-app.get '/register/', mustNotBeAuthed, (request, response) ->
-	quickRender request, response, 'register'
-
+# And the rest
 
 app.post '/register/', mustNotBeAuthed, (request, response) ->
 	options = request.uonline.basicOpts
@@ -198,10 +193,6 @@ app.post '/register/', mustNotBeAuthed, (request, response) ->
 		options.user = request.body.user
 		options.pass = request.body.pass
 		response.render 'register', options
-
-
-app.get '/login/', mustNotBeAuthed, (request, response) ->
-	quickRender request, response, 'login'
 
 
 app.post '/login/', mustNotBeAuthed, (request, response) ->
@@ -332,20 +323,22 @@ app.get '*', (request, response) ->
 
 # Exception handling
 app.use (error, request, response, next) ->
-	if error.message is '404'
-		quickRenderError request, response, 404
-	else
-		console.error error.stack
-		quickRenderError request, response, 500
+	code = if error.message is '404' then 404 else 500
+	options = request.uonline.basicOpts
+	options.code = code
+	options.instance = 'error'
+	response.status code
+	response.render 'error', options
 
 
 # main
 
 DEFAULT_PORT = 5000
 port = process.env.PORT or process.env.OPENSHIFT_NODEJS_PORT or DEFAULT_PORT
-ip = process.env.OPENSHIFT_NODEJS_IP or undefined
+ip = process.env.OPENSHIFT_NODEJS_IP or process.env.IP or undefined
 console.log "Starting up on port #{port}, and IP is #{ip}"
-startupFinished = () ->
+
+startupFinished = ->
 	console.log "Listening on port #{port}"
 	if port is DEFAULT_PORT then console.log "Try http://localhost:#{port}/"
 
