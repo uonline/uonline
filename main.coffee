@@ -120,19 +120,15 @@ app.use ((request, response) ->
 	request.uonline =
 		basicOpts:
 			now: new Date()
-			pjax: false
+			pjax: request.header('X-PJAX')?
 			loggedIn: sessionData.sessionIsActive
 			username: sessionData.username
 			admin: sessionData.admin
 			userid: sessionData.userid
 	# CSP
-	response.header 'Content-Security-Policy-Report-Only',
-		"default-src 'self'; script-src 'self' http://code.jquery.com"
+	response.header 'Content-Security-Policy-Report-Only', "default-src 'self'"
 	# Anti-clickjacking
 	response.header 'X-Frame-Options', 'DENY'
-	# PJAX
-	if request.header('X-PJAX')?
-		request.uonline.basicOpts.pjax = true
 	# Necessary, or it will pass shit to callback
 	return
 ).asyncMiddleware()
