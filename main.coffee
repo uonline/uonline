@@ -84,7 +84,6 @@ app.use(cachify.setup(assets,
 ))
 
 app.use '/assets', express.static "#{__dirname}/assets"
-app.use '/static/browserified', express.static "#{__dirname}/browserified"
 app.use '/static/bower_components', express.static "#{__dirname}/bower_components"
 
 app.set 'view engine', 'jade'
