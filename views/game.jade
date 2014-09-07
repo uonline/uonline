@@ -79,7 +79,12 @@ block content
 			ol
 				each p, index in participants
 					li
-						| #{p.name} (#{p.kind}), #{p.side==our_side ? (userid==p.id ? 'я' : 'союзник') : 'противник'}
+						| #{p.name} (#{p.kind}), 
+						if p.side == our_side
+							| #{ userid==p.id ? 'я' : 'союзник' }
+						else
+							| противник 
+							a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.index) Вдарить
 		p
 			small
 				if autoinvolved_fm == true

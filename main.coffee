@@ -306,6 +306,11 @@ app.get '/action/escape', mustBeAuthed, (request, response) ->
 	response.redirect '/game/'
 
 
+app.get '/action/hit/:index', mustBeAuthed, (request, response) ->
+	lib.game.hitOpponent.sync null, dbConnection, request.uonline.basicOpts.userid, request.param('index')
+	response.redirect '/game/'
+
+
 app.get '/ajax/isNickBusy/:nick', (request, response) ->
 	response.json
 		nick: request.param('nick')
