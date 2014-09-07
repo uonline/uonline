@@ -74,16 +74,13 @@ app.use express.compress()
 
 assets =
 	'/assets/scripts.js': [
-		'/static/bower_components/jquery/dist/jquery.min.js'
-		'/static/bower_components/bootstrap/dist/js/bootstrap.min.js'
-		'/static/bower_components/jquery-pjax/jquery.pjax.js'
-		'/static/browserified/bundle.min.js'
+		'/assets/scripts.js'
 	]
 
 app.use(cachify.setup(assets,
 	root: __dirname
 	url_to_paths: {}
-	production: process.env.NODE_ENV is 'production'
+	production: true
 ))
 
 app.use '/assets', express.static "#{__dirname}/assets"

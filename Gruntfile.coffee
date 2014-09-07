@@ -54,7 +54,7 @@ module.exports = (grunt) ->
 		browserify:
 			all:
 				src: []
-				dest: './browserified/bundle.js'
+				dest: './_build/validation.js'
 			options:
 				require: ['./lib/validation.js']
 
@@ -64,13 +64,14 @@ module.exports = (grunt) ->
 					'./bower_components/jquery/dist/jquery.min.js'
 					'./bower_components/bootstrap/dist/js/bootstrap.min.js'
 					'./bower_components/jquery-pjax/jquery.pjax.js'
-					'./browserified/bundle.js'
+					'./_build/validation.js'
+					'./_build/browser.js'
 				]
-				dest: './assets/scripts.big.js'
+				dest: './_build/all.js'
 
 		uglify:
 			all:
-				src: './assets/scripts.big.js'
+				src: './_build/all.js'
 				dest: './assets/scripts.js'
 
 		mustcontain:
@@ -106,15 +107,11 @@ module.exports = (grunt) ->
 				fatal: false
 
 		coffee:
-			all:
-				expand: true
-				src: [
-					'lib/*.coffee'
-				]
-				ext: '.js'
-
+			browser:
+				src: './browser.coffee'
+				dest: './_build/browser.js'
 			options:
-				bare: true
+				bare: false
 
 		coffeelint:
 			all: [
@@ -183,7 +180,7 @@ module.exports = (grunt) ->
 
 	# Custom tasks.
 	grunt.registerTask 'check', ['mustcontain', 'coffeelint', 'jshint:all']
-	grunt.registerTask 'build', ['browserify', 'concat', 'uglify']
+	grunt.registerTask 'build', ['browserify', 'coffee', 'concat', 'uglify']
 	grunt.registerTask 'docs', ['codo']
 
 	testTask = ['clean:lib_cov', 'jscoverage', 'coffeeCoverage']

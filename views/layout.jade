@@ -68,7 +68,7 @@ if !pjax
 										a(href='#') One more separated link
 						ul.nav.navbar-nav.navbar-right
 							if loggedIn === true
-								+instanceLink('profile', '/profile/', username, (admin ? 'glyphicon-certificate' : 'glyphicon-user'), false, true)
+								+instanceLink('profile', '/profile/', username, 'glyphicon-'+(admin?'certificate':'user'), false, true)
 								+instanceLink('profile', '/profile/', 'Профиль', null, !profileIsMine)
 								+instanceLink('game', '/game/', 'Игра')
 								li
@@ -91,25 +91,7 @@ if !pjax
 			link(href='/static/bower_components/bootstrap/dist/css/bootstrap-theme.min.css', rel='stylesheet')
 			//- Scripts
 			!= cachify_js('/assets/scripts.js')
-			//- TODO: meld into ^
-			:coffee
-				# Common stuff
-				$(document).ready ->
-					# Start up pjax
-					$(document).pjax('a.pjax', '#content', timeout: 2000)
-					$(document).on 'pjax:send', ->
-						$('#content').animate opacity: 0.3, 'fast'
-					$(document).on 'pjax:complete', ->
-						$('#content').stop().css opacity: 1
-
-					# Push buttons
-					$('body').on 'click', '.instance-switcher', ->
-						$('.instance-indicator').removeClass 'active'
-						$(".instance-indicator[data-instance='#{this.dataset.instance}']").addClass 'active'
-			//- custom stuff, if any
-			block bottom
 else
 	title
 		block title
 	block content
-	block bottom
