@@ -399,10 +399,10 @@ exports.hitOpponent =
 		insert 'monsters', id: 4, prototype: 2, health: 1000
 		insert 'monsters', id: 5, prototype: 2, health: 5
 		insert 'battles', id: 3
-		insert 'battle_participants', battle: 3, id: 1, kind: 'user', side: 0, index: 0
-		insert 'battle_participants', battle: 3, id: 2, kind: 'user', side: 0, index: 3
 		insert 'battle_participants', battle: 3, id: 4, kind: 'monster', side: 1, index: 1
 		insert 'battle_participants', battle: 3, id: 5, kind: 'monster', side: 1, index: 2
+		insert 'battle_participants', battle: 3, id: 1, kind: 'user', side: 0, index: 0
+		insert 'battle_participants', battle: 3, id: 2, kind: 'user', side: 0, index: 3
 		done()
 
 	'fighting with monster': (test) ->
@@ -480,6 +480,14 @@ exports.hitOpponent =
 		test.deepEqual user, {location: initialId, health: 10},
 			'should respawn user on initial location with full health'
 		
+		test.done()
+
+	'wrong index': (test) ->
+		test.doesNotThrow(
+			-> game.hitOpponent.sync null, conn, 1, 123
+			Error
+			'should just return if opponent index is wrong'
+		)
 		test.done()
 
 	'wrong kind': (test) ->
