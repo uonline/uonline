@@ -191,17 +191,17 @@ exports.getUserArea =
 		test.done()
 
 
-exports.canChangeLocation = (test) ->
+exports.isTherePathForUserToLocation = (test) ->
 	clearTables 'uniusers', 'locations', 'monsters', 'battle_participants'
 	insert 'uniusers', id: 1, location: 1
 	insert 'locations', id: 1, ways: 'Left=2'
 	insert 'locations', id: 2
 
-	can = game.canChangeLocation.sync null, conn, 1, 2
+	can = game.isTherePathForUserToLocation.sync null, conn, 1, 2
 	test.strictEqual can, true, "should return true if path exists"
 
 	game.changeLocation.sync null, conn, 1, 2
-	can = game.canChangeLocation.sync null, conn, 1, 1
+	can = game.isTherePathForUserToLocation.sync null, conn, 1, 1
 	test.strictEqual can, false, "should return false if path doesn't exist"
 	test.done()
 
@@ -212,7 +212,7 @@ exports.createBattleBetween = (test) ->
 	tx = transaction conn
 	locid = 123
 
-	game.createBattleBetween.sync null, tx, locid, [
+	game._createBattleBetween tx, locid, [
 			{id: 1, kind: 'user', initiative:  5}
 			{id: 2, kind: 'user', initiative: 15}
 			{id: 1, kind: 'monster', initiative: 30}
@@ -234,6 +234,62 @@ exports.createBattleBetween = (test) ->
 		{id: 1, kind: 'user',    index: 4, side: 0}
 	], 'should involve all users and monsters of both sides in correct order'
 
+	tx.commit.sync tx
+	test.done()
+
+
+exports._stopBattle = (test) ->
+	clearTables 'uniusers', 'battles', 'battle_participants'
+	insert 'uniusers', id: 1, autoinvolved_fm: 1
+	insert 'battles', id: 1
+	insert 'battle_participants', battle: 1, id: 1, kind: 'user'
+	insert 'battle_participants', battle: 1, id: 1, kind: 'monster'
+	
+	tx = transaction conn
+	game._stopBattle(tx, 1)
+	tx.commit.sync tx
+	
+	test.strictEqual +query.val("SELECT count(*) FROM battles"), 0, 'should remove battle'
+	test.strictEqual +query.val("SELECT count(*) FROM battle_participants"), 0, 'should remove participants'
+	test.strictEqual +query.val("SELECT autoinvolved_fm FROM uniusers"), 0, 'should uninvolve user'
+	test.done()
+
+
+exports._leaveBattle = (test) ->
+	clearTables 'uniusers', 'battles', 'battle_participants'
+	insert 'uniusers', id: 1, autoinvolved_fm: 1
+	insert 'uniusers', id: 2, autoinvolved_fm: 1
+	insert 'battles', id: 1
+	insert 'battle_participants', battle: 1, id: 1, kind: 'user',    side: 0
+	insert 'battle_participants', battle: 1, id: 2, kind: 'user',    side: 0
+	insert 'battle_participants', battle: 1, id: 1, kind: 'monster', side: 1
+	insert 'battle_participants', battle: 1, id: 2, kind: 'monster', side: 1
+	
+	tx = transaction conn
+	
+	game._leaveBattle(tx, 1, 1, 'user')
+	participant = query.row "SELECT id FROM battle_participants WHERE kind='user'"
+	test.strictEqual +query.val("SELECT autoinvolved_fm FROM uniusers WHERE id=1"), 0, 'should uninvolve user'
+	test.strictEqual participant.id, 2, 'should remove correct participant'
+	
+	game._leaveBattle(tx, 1, 2, 'monster')
+	participant = query.row "SELECT id FROM battle_participants WHERE kind='monster'"
+	test.strictEqual participant.id, 1, 'should remove correct participant'
+	
+	game._leaveBattle(tx, 1, 2, 'user')
+	test.strictEqual +query.val("SELECT autoinvolved_fm FROM uniusers WHERE id=2"), 0, 'should uninvolve user'
+	
+	test.strictEqual +query.val("SELECT count(*) FROM battles"), 0,
+		'should remove battle if one side become empty'
+	test.strictEqual +query.val("SELECT count(*) FROM battle_participants"), 0,
+		'should remove participants if one side become empty'
+	
+	test.throws(
+		-> game._leaveBattle(tx, 1, 123, 'user')
+		Error
+		'should throw error if unable to find anyone to leave'
+	)
+	
 	tx.commit.sync tx
 	test.done()
 
@@ -284,6 +340,31 @@ exports.changeLocation =
 
 		fm = game.isInFight.sync(null, conn, 1)
 		test.strictEqual fm, false, 'user should not be attacked if monster is in another battle'
+		test.done()
+
+	'in fight already': (test) ->
+		insert 'battle_participants', id: 1, kind: 'user'
+		
+		game.changeLocation.sync null, conn, 1, 2
+		locid = game.getUserLocationId.sync null, conn, 1
+		test.strictEqual locid, 1, 'should not change location if user is in fight'
+		
+		game.changeLocation.sync null, conn, 1, 2, true
+		locid = game.getUserLocationId.sync null, conn, 1
+		test.strictEqual game.isInFight.sync(null, conn, 1), false, 'should remove user from fight...'
+		test.strictEqual locid, 2, '...and change location if force flag is set'
+		test.done()
+
+	'no way to location': (test) ->
+		insert 'locations', id: 3
+		
+		game.changeLocation.sync null, conn, 1, 3
+		locid = game.getUserLocationId.sync null, conn, 1
+		test.strictEqual locid, 1, 'should not change location if there is no such way'
+		
+		game.changeLocation.sync null, conn, 1, 3, true
+		locid = game.getUserLocationId.sync null, conn, 1
+		test.strictEqual locid, 3, 'should change location despite all roads if force flag is set'
 		test.done()
 
 
@@ -343,12 +424,6 @@ exports.goEscape =
 
 		autoinvolved = query.val 'SELECT autoinvolved_fm FROM uniusers WHERE id=1'
 		test.strictEqual autoinvolved, 0, 'user should not be autoinvolved'
-
-		battles = query.all 'SELECT * FROM battles'
-		test.strictEqual battles.length, 0, 'battle should be over and destroyed'
-
-		participants = query.all 'SELECT id FROM battle_participants'
-		test.strictEqual participants.length, 0, 'all participants should have been removed'
 		test.done()
 
 
@@ -488,22 +563,6 @@ exports.hitOpponent =
 			Error
 			'should just return if opponent index is wrong'
 		)
-		test.done()
-
-	'wrong kind': (test) ->
-		query "ALTER TYPE creature_kind ADD VALUE 'very new kind' AFTER 'monster'"
-		insert 'battle_participants', battle: 3, id: 5, kind: 'very new kind', side: 1, index: 4
-
-		test.throws(
-			-> game.hitOpponent.sync null, conn, 1, 4
-			Error
-			'should throw error if participant kind is wrong'
-		)
-
-		# restoring original creature_kind
-		query 'DROP TABLE battle_participants'
-		query 'DROP TYPE creature_kind'
-		migrateTables 'creature_kind', 'battle_participants'
 		test.done()
 
 

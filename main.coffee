@@ -289,9 +289,7 @@ app.get '/action/go/:to', mustBeAuthed, (request, response) ->
 	userid = request.uonline.basicOpts.userid
 	to = request.param('to')
 
-	unless lib.game.isInFight.sync null, dbConnection, userid
-		if lib.game.canChangeLocation.sync null, dbConnection, userid, to
-			lib.game.changeLocation.sync null, dbConnection, userid, to
+	lib.game.changeLocation.sync null, dbConnection, userid, to
 
 	response.redirect '/game/'
 
