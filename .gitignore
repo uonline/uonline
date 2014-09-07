@@ -10,10 +10,8 @@ report.lcov
 node_modules/
 bower_components/
 
-# Browserified Node modules
-browserified/
-
-# And other stuff
+# Browser assets
+_build/
 assets/
 
 ## Tool-specific
