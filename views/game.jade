@@ -84,7 +84,7 @@ block content
 							| #{ userid==p.id ? 'я' : 'союзник' }
 						else
 							| противник 
-							a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.index) Вдарить
+							a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.kind+"/"+p.id) Вдарить
 		p
 			small
 				if autoinvolved_fm == true

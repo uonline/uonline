@@ -481,7 +481,7 @@ exports.hitOpponent =
 		done()
 
 	'fighting with monster': (test) ->
-		game.hitOpponent.sync null, conn, 1, 1
+		game.hitOpponent.sync null, conn, 1, 4, 'monster'
 		hp = query.val 'SELECT health FROM monsters WHERE id = 4'
 		test.strictEqual hp, 1000, 'should not chanhe health if defense is greater than damage'
 		query 'UPDATE monster_prototypes SET defense = 0'
@@ -490,7 +490,7 @@ exports.hitOpponent =
 		damages = {}
 		prevHP = 1000
 		for i in [0..30]
-			game.hitOpponent.sync null, conn, 1, 1
+			game.hitOpponent.sync null, conn, 1, 4, 'monster'
 			
 			dmg = prevHP - query.val('SELECT health FROM monsters WHERE id = 4')
 			test.ok 8 <= dmg <= 12, 'dealed damage should be in fixed range'
@@ -501,13 +501,13 @@ exports.hitOpponent =
 		test.ok Object.keys(damages).length > 1, 'should deal different amounts of damage'
 		
 		
-		game.hitOpponent.sync null, conn, 1, 3
+		game.hitOpponent.sync null, conn, 1, 2, 'user'
 		hp = query.val "SELECT health FROM uniusers WHERE id = 2"
 		test.strictEqual hp, 1000, "should not hit teammate"
 		
 		
 		query 'UPDATE monsters SET health = 5 WHERE id = 4'
-		game.hitOpponent.sync null, conn, 1, 1
+		game.hitOpponent.sync null, conn, 1, 4, 'monster'
 		
 		rows = query.all 'SELECT id FROM monsters WHERE id = 4'
 		test.strictEqual rows.length, 0, 'monster should have gone if it had too little hp before attack'
@@ -523,7 +523,7 @@ exports.hitOpponent =
 			], "should update indexes if participant has gone"
 		
 		
-		game.hitOpponent.sync null, conn, 1, 1
+		game.hitOpponent.sync null, conn, 1, 5, 'monster'
 		battles = query.all 'SELECT id FROM battles'
 		test.strictEqual battles.length, 0, 'should stop battle if last enemy was defeated'
 		
@@ -539,13 +539,13 @@ exports.hitOpponent =
 		insert 'locations', id: 1, initial: 1
 		
 		
-		game.hitOpponent.sync null, conn, 1, 4
+		game.hitOpponent.sync null, conn, 1, 3, 'user'
 		hp = query.val 'SELECT health FROM uniusers WHERE id = 3'
 		test.strictEqual hp, 5, 'should not chanhe health if defense is greater than damage'
 		query 'UPDATE uniusers SET defense = 0 WHERE id = 3'
 		
 		
-		game.hitOpponent.sync null, conn, 1, 4
+		game.hitOpponent.sync null, conn, 1, 3, 'user'
 		
 		rows = query.all "SELECT id FROM battle_participants WHERE id = 3 AND kind='user'"
 		test.strictEqual rows.length, 0, 'should remove battle participant if user was defeated'
@@ -559,9 +559,9 @@ exports.hitOpponent =
 
 	'wrong index': (test) ->
 		test.doesNotThrow(
-			-> game.hitOpponent.sync null, conn, 1, 123
+			-> game.hitOpponent.sync null, conn, 1, 123, 'user'
 			Error
-			'should just return if opponent index is wrong'
+			'should just return if opponent does not exist'
 		)
 		test.done()
 
