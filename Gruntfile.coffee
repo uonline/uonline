@@ -155,7 +155,7 @@ module.exports = (grunt) ->
 			all:
 				src: 'report.lcov'
 			options:
-				force: false
+				force: true
 
 		jscoverage_report:
 			options:
