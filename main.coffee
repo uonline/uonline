@@ -125,6 +125,8 @@ app.use ((request, response) ->
 	response.header 'Content-Security-Policy-Report-Only', "default-src 'self'"
 	# Anti-clickjacking
 	response.header 'X-Frame-Options', 'DENY'
+	# PJAX
+	response.header 'X-PJAX-URL', request.url
 	# Necessary, or it will pass shit to callback
 	return
 ).asyncMiddleware()
@@ -269,7 +271,6 @@ app.get '/game/', mustBeAuthed, (request, response) -> sync ->
 	for i of chars
 		options[i] = chars[i]
 
-	response.header 'X-PJAX-URL', '/game/'
 	response.render 'game', options
 
 
