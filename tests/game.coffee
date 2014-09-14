@@ -425,6 +425,16 @@ exports.goAttack =
 		test.strictEqual envolvedCountBefore, envolvedCountAfter,
 			'no more participants should appear if user already in battle'
 		test.done()
+	
+	'when one monster is busy': (test) ->
+		insert 'monsters', id: 1, location: 1, initiative: 20
+		insert 'monsters', id: 2, location: 1, initiative: 30
+		insert 'battle_participants', id: 2, kind: 'monster'
+		game.goAttack.sync null, conn, 1
+		
+		count = +query.val "SELECT count(*) FROM battle_participants WHERE id=2 AND kind='monster'"
+		test.strictEqual count, 1, 'should not envolve monster in second battle'
+		test.done()
 
 	'on empty location': (test) ->
 		game.goAttack.sync null, conn, 1
@@ -665,22 +675,50 @@ exports._hit = (test) ->
 	test.done()
 
 
-exports.hitOpponent = (test) ->
-	clearTables 'uniusers', 'monsters', 'monster_prototypes', 'battles', 'battle_participants'
-	insert 'uniusers', id: 1, username: 'SomeUser', power: 20
-	insert 'monster_prototypes', id: 2, name: 'SomeMonster', defense: 5
-	insert 'monsters', id: 4, prototype: 2, health: 1000
-	insert 'monsters', id: 5, prototype: 2, health: 5
-	insert 'battles', id: 3
-	insert 'battle_participants', battle: 3, id: 4, kind: 'monster', side: 1, index: 1
-	insert 'battle_participants', battle: 3, id: 5, kind: 'monster', side: 1, index: 2
-	insert 'battle_participants', battle: 3, id: 1, kind: 'user', side: 0, index: 0
+exports.hitOpponent =
+	setUp: (done) ->
+		clearTables 'uniusers', 'monsters', 'monster_prototypes', 'battles', 'battle_participants'
+		insert 'uniusers', id: 1, username: 'SomeUser', power: 20, defense: 10, health: 1000
+		insert 'monster_prototypes', id: 2, name: 'SomeMonster', power: 20, defense: 10
+		insert 'monsters', id: 4, prototype: 2, health: 1000
+		insert 'monsters', id: 5, prototype: 2, health: 1000
+		insert 'battles', id: 3
+		insert 'battle_participants', battle: 3, id: 4, kind: 'monster', side: 1, index: 1
+		insert 'battle_participants', battle: 3, id: 5, kind: 'monster', side: 1, index: 2
+		insert 'battle_participants', battle: 3, id: 1, kind: 'user', side: 0, index: 0
+		done()
 	
-	game.hitOpponent conn, 1, 4, 'monster'
-	hp = query.val 'SELECT health FROM monsters WHERE id = 4'
-	test.ok hp < 1000, 'should hit'
+	'normal attack': (test) ->
+		minDmg = (20-10)/2 * 0.8
+		
+		game.hitOpponent conn, 1, 4, 'monster'
+		hp = query.val 'SELECT health FROM monsters WHERE id = 4'
+		test.ok hp <= 1000-minDmg, 'should hit'
+		hp = query.val 'SELECT health FROM uniusers WHERE id = 1'
+		test.ok hp <= 1000-minDmg*2, 'victims should hit back'
+		
+		query 'UPDATE monsters SET health=1 WHERE id=4'
+		query 'UPDATE uniusers SET health=1000 WHERE id=1'
+		game.hitOpponent conn, 1, 4, 'monster'
+		hp = query.val 'SELECT health FROM uniusers WHERE id = 1'
+		test.ok hp <= 1000-minDmg, 'only alive opponents should hit back'
+		test.done()
 	
-	test.done()
+	'defeating target': (test) ->
+		query "DELETE FROM battle_participants WHERE id=5 AND kind='monster'"
+		query 'UPDATE monsters SET health=1 WHERE id=4'
+		
+		game.hitOpponent conn, 1, 4, 'monster'
+		count = +query.val 'SELECT count(*) FROM battles'
+		test.strictEqual count, 0, 'should correctly handle defeating last opponent'
+		test.done()
+	
+	'defeated by target': (test) ->
+		query 'UPDATE uniusers SET health = 1'
+		game.hitOpponent conn, 1, 4, 'monster'
+		count = +query.val 'SELECT count(*) FROM battles'
+		test.strictEqual count, 0, 'should correctly handle when defeated by opponent'
+		test.done()
 
 
 exports.getNearbyUsers =
