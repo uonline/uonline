@@ -301,8 +301,12 @@ app.get '/action/escape', mustBeAuthed, (request, response) ->
 	response.redirect '/game/'
 
 
-app.get '/action/hit/:index', mustBeAuthed, (request, response) ->
-	lib.game.hitOpponent.sync null, dbConnection, request.uonline.basicOpts.userid, request.param('index')
+app.get '/action/hit/:kind/:id', mustBeAuthed, (request, response) ->
+	lib.game.hitOpponent.sync(
+		null, dbConnection,
+		request.uonline.basicOpts.userid,
+		request.param('id'), request.param('kind')
+	)
 	response.redirect '/game/'
 
 
