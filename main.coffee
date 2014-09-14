@@ -159,25 +159,38 @@ app.get '/', (request, response) ->
 app.get '/about/', quickRender 'about'
 app.get '/register/', mustNotBeAuthed, quickRender 'register'
 app.get '/login/', mustNotBeAuthed, quickRender 'login'
+
 # experimental
-app.get '/dicks/', (request, response) ->
+app.get '/monster/:id/', (request, response) ->
 	options = request.uonline.basicOpts
 	options.instance = 'monster'
-	#...
-	options.name = 'Молодой лесной волк'
-	options.level = 5
-	options.power = 40
-	options.agility = 34
-	options.defense = 38
-	options.intelligence = 0
-	options.accuracy = 34
-	options.initiative_min = 35
-	options.health_max = 700
-	options.mana_max = 0
-	options.energy = 0
-	options.initiative_max = 65
-	#...
-	response.render 'monster', options
+	list = [
+		'name'
+		'level'
+		'power'
+		'agility'
+		'defense'
+		'intelligence'
+		'accuracy'
+		'initiative_min'
+		'health_max'
+		'mana_max'
+		'energy'
+		'initiative_max'
+	]
+
+	result = dbConnection.query.sync(
+		dbConnection
+		"SELECT #{list.join(', ')} FROM monster_prototypes WHERE id = $1"
+		[ request.param('id') ]
+	).rows
+
+	if result.length isnt 1
+		throw new Error '404'
+	else
+		for i in list
+			options[i] = result[0][i]
+		response.render 'monster', options
 
 
 # And the rest
@@ -342,7 +355,11 @@ app.get '*', (request, response) ->
 
 # Exception handling
 app.use (error, request, response, next) ->
-	code = if error.message is '404' then 404 else 500
+	code = 500
+	if error.message is '404'
+		code = 404
+	else
+		console.error error.stack
 	options = request.uonline.basicOpts
 	options.code = code
 	options.instance = 'error'
