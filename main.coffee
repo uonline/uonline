@@ -159,6 +159,8 @@ app.get '/', (request, response) ->
 app.get '/about/', quickRender 'about'
 app.get '/register/', mustNotBeAuthed, quickRender 'register'
 app.get '/login/', mustNotBeAuthed, quickRender 'login'
+# experimental
+app.get '/dicks/', mustNotBeAuthed, quickRender 'monster'
 
 
 # And the rest
