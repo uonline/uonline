@@ -231,33 +231,12 @@ app.get '/profile/:username/', (request, response) ->
 app.get '/monster/:id/', (request, response) ->
 	options = request.uonline.basicOpts
 	options.instance = 'monster'
-	list = [
-		'name'
-		'level'
-		'power'
-		'agility'
-		'defense'
-		'intelligence'
-		'accuracy'
-		'initiative_min'
-		'health_max'
-		'mana_max'
-		'energy'
-		'initiative_max'
-	]
-
-	result = dbConnection.query.sync(
-		dbConnection
-		"SELECT #{list.join(', ')} FROM monster_prototypes WHERE id = $1"
-		[ request.param('id') ]
-	).rows
-
-	if result.length isnt 1
-		throw new Error '404'
-	else
-		for i in list
-			options[i] = result[0][i]
-		response.render 'monster', options
+	chars = lib.game.getMonsterPrototypeCharacters.sync null, dbConnection, request.param('id')
+	
+	for i of chars
+		options[i] = chars[i]
+	
+	response.render 'monster', options
 
 
 app.get '/action/logout', mustBeAuthed, (request, response) ->
