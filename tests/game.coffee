@@ -268,9 +268,12 @@ exports._leaveBattle = (test) ->
 	insert 'battle_participants', battle: 2, id: 20, kind: 'monster', side: 0
 	insert 'battle_participants', battle: 2, id: 21, kind: 'user',    side: 1
 	
+	
 	tx = transaction conn
 	
-	game._leaveBattle(tx, 1, 1, 'user')
+	battleEnded = game._leaveBattle(tx, 1, 1, 'user')
+	test.strictEqual battleEnded, false, "should return false if wasn't ended"
+	
 	participant = query.row "SELECT id FROM battle_participants WHERE battle = 1 AND kind='user'"
 	test.strictEqual +query.val("SELECT autoinvolved_fm FROM uniusers WHERE id=1"), 0, 'should uninvolve user'
 	test.strictEqual participant.id, 2, 'should remove correct participant'
@@ -282,7 +285,10 @@ exports._leaveBattle = (test) ->
 			{id:9, index:1}
 		], "should update indexes if participant has gone"
 	
-	game._leaveBattle(tx, 1, 9, 'monster')
+	
+	battleEnded = game._leaveBattle(tx, 1, 9, 'monster')
+	test.strictEqual battleEnded, false, "should return false if wasn't ended"
+	
 	participant = query.row "SELECT id FROM battle_participants WHERE battle = 1 AND kind='monster'"
 	test.strictEqual participant.id, 8, 'should remove correct participant'
 	
@@ -292,7 +298,10 @@ exports._leaveBattle = (test) ->
 			{id:8, index:1}
 		], "should update indexes if participant has gone"
 	
-	game._leaveBattle(tx, 1, 2, 'user')
+	
+	battleEnded = game._leaveBattle(tx, 1, 2, 'user')
+	test.strictEqual battleEnded, true, 'should return true if battle was ended'
+	
 	test.strictEqual +query.val("SELECT autoinvolved_fm FROM uniusers WHERE id=2"), 0, 'should uninvolve user'
 	
 	test.strictEqual +query.val("SELECT count(*) FROM battles WHERE id = 1"), 0,
@@ -592,33 +601,66 @@ exports._hit = (test) ->
 	insert 'battle_participants', battle: 8, id: 3, kind: 'user',    side: 0, index: 0
 	
 	
-	game._hit conn, 1, 'user', 4, 'monster'
+	result = game._hit conn, 1, 'user', 4, 'monster'
 	hp = query.val 'SELECT health FROM monsters WHERE id = 4'
 	test.strictEqual hp, 500, 'should not do anything if victim is in another battle'
+	test.deepEqual result,
+			state: 'canceled'
+			reason: 'different battles'
+		'should describe premature termination reason'
 	
-	game._hit conn, 1, 'user', 2, 'user'
+	result = game._hit conn, 1, 'user', 2, 'user'
 	hp = query.val 'SELECT health FROM uniusers WHERE id = 2'
 	test.strictEqual hp, 1000, 'should not hit teammate'
+	test.deepEqual result,
+			state: 'canceled'
+			reason: "can't hit teammate"
+		'should describe premature termination reason'
 	
-	game._hit conn, 15, 'monster', 2, 'user'
+	result = game._hit conn, 15, 'monster', 2, 'user'
 	hp = query.val 'SELECT health FROM uniusers WHERE id = 2'
 	test.strictEqual hp, 1000, 'should not do anything if hunter does not exist'
+	test.deepEqual result,
+			state: 'canceled'
+			reason: 'hunter not found'
+		'should describe premature termination reason'
+	
+	result = game._hit conn, 5, 'monster', 12, 'user'
+	test.deepEqual result,
+			state: 'canceled'
+			reason: 'victim not found'
+		'should describe premature termination reason'
 	
 	
-	game._hit conn, 1, 'user', 5, 'monster'
+	result = game._hit conn, 1, 'user', 5, 'monster'
 	hp = query.val 'SELECT health FROM monsters WHERE id = 5'
 	test.ok hp < 500, 'should deal damage to victim'
+	test.deepEqual result,
+			state: 'ok'
+			victimKilled: false
+			battleEnded: false
+		'should describe what had happened'
 	
-	game._hit conn, 5, 'monster', 1, 'user'
+	result = game._hit conn, 5, 'monster', 1, 'user'
 	rows = query.all "SELECT id FROM battle_participants WHERE id = 1 AND kind = 'user'"
 	test.strictEqual rows.length, 0, 'should remove participant if one was killed'
+	test.deepEqual result,
+			state: 'ok'
+			victimKilled: true
+			battleEnded: false
+		'should describe what had happened'
 	
 	query 'UPDATE monsters SET health = 5 WHERE id = 5'
-	game._hit conn, 2, 'user', 5, 'monster'
+	result = game._hit conn, 2, 'user', 5, 'monster'
 	battles = query.all 'SELECT id FROM battles WHERE id = 3'
 	participants = query.all 'SELECT id FROM battle_participants WHERE battle = 3'
 	test.strictEqual battles.length, 0, 'should stop battle if one side won'
 	test.strictEqual participants.length, 0, 'should also remove battle participants'
+	test.deepEqual result,
+			state: 'ok'
+			victimKilled: true
+			battleEnded: true
+		'should describe what had happened'
 	
 	test.done()
 
