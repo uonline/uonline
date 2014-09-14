@@ -160,7 +160,24 @@ app.get '/about/', quickRender 'about'
 app.get '/register/', mustNotBeAuthed, quickRender 'register'
 app.get '/login/', mustNotBeAuthed, quickRender 'login'
 # experimental
-app.get '/dicks/', mustNotBeAuthed, quickRender 'monster'
+app.get '/dicks/', (request, response) ->
+	options = request.uonline.basicOpts
+	options.instance = 'monster'
+	#...
+	options.name = 'Молодой лесной волк'
+	options.level = 5
+	options.power = 40
+	options.agility = 34
+	options.defense = 38
+	options.intelligence = 0
+	options.accuracy = 34
+	options.initiative_min = 35
+	options.health_max = 700
+	options.mana_max = 0
+	options.energy = 0
+	options.initiative_max = 65
+	#...
+	response.render 'monster', options
 
 
 # And the rest

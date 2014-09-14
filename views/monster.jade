@@ -1,41 +1,46 @@
 mixin tr_td_ch(name, value)
 	tr
 		td= name
-		td= value
+		if value==0
+			td.text-muted= value
+		else
+			td= value
 
 
 extends layout
 block title
-	| Инвентарь
+	| #{name}
 block content
 	div.page-header
-		h1 Молодой лесной волк&nbsp;&nbsp;
-			small монстр 80-го уровня
+		h1 #{name}&nbsp;&nbsp;
+			small монстр #{level}-го уровня
 	.row
 		.col-sm-12
-			p Это молодой лесной волк. Он ебёт молодых женщин.
+			//- p Это молодой лесной волк. Он ебёт молодых женщин.
+			//- p= description
+			p Этот монстр ужасен и крайне опасен.
 	.row
 		.col-sm-6
 			h3 Характеристики
 			table.table.table-striped.table-hover
-				+tr_td_ch('Здоровье', 250)
-				+tr_td_ch('Мана', 110)
-				+tr_td_ch('Энергия', 11)
-				+tr_td_ch('Сила', 11)
-				+tr_td_ch('Защита', 11)
-				+tr_td_ch('Ловкость', 33)
-				+tr_td_ch('Точность', 11)
-				+tr_td_ch('Интеллект', 22)
-				+tr_td_ch('Инициатива', '11...14')
+				+tr_td_ch('Здоровье', health_max)
+				+tr_td_ch('Мана', mana_max)
+				+tr_td_ch('Энергия', energy)
+				+tr_td_ch('Сила', power)
+				+tr_td_ch('Защита', defense)
+				+tr_td_ch('Ловкость', agility)
+				+tr_td_ch('Точность', accuracy)
+				+tr_td_ch('Интеллект', intelligence)
+				+tr_td_ch('Инициатива', initiative_min+'...'+initiative_max)
 		.col-sm-6
 			h3 Характеристики
 			table.table.table-striped.table-hover
-				+tr_td_ch('Здоровье', 250)
-				+tr_td_ch('Мана', 110)
-				+tr_td_ch('Энергия', 11)
-				+tr_td_ch('Сила', 11)
-				+tr_td_ch('Защита', 11)
-				+tr_td_ch('Ловкость', 33)
-				+tr_td_ch('Точность', 11)
-				+tr_td_ch('Интеллект', 22)
-				+tr_td_ch('Инициатива', '11–14')
+				+tr_td_ch('Здоровье', health_max)
+				+tr_td_ch('Мана', mana_max)
+				+tr_td_ch('Энергия', energy)
+				+tr_td_ch('Сила', power)
+				+tr_td_ch('Защита', defense)
+				+tr_td_ch('Ловкость', agility)
+				+tr_td_ch('Точность', accuracy)
+				+tr_td_ch('Интеллект', intelligence)
+				+tr_td_ch('Инициатива', initiative_min+'–'+initiative_max)
