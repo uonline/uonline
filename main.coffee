@@ -160,38 +160,6 @@ app.get '/about/', quickRender 'about'
 app.get '/register/', mustNotBeAuthed, quickRender 'register'
 app.get '/login/', mustNotBeAuthed, quickRender 'login'
 
-# experimental
-app.get '/monster/:id/', (request, response) ->
-	options = request.uonline.basicOpts
-	options.instance = 'monster'
-	list = [
-		'name'
-		'level'
-		'power'
-		'agility'
-		'defense'
-		'intelligence'
-		'accuracy'
-		'initiative_min'
-		'health_max'
-		'mana_max'
-		'energy'
-		'initiative_max'
-	]
-
-	result = dbConnection.query.sync(
-		dbConnection
-		"SELECT #{list.join(', ')} FROM monster_prototypes WHERE id = $1"
-		[ request.param('id') ]
-	).rows
-
-	if result.length isnt 1
-		throw new Error '404'
-	else
-		for i in list
-			options[i] = result[0][i]
-		response.render 'monster', options
-
 
 # And the rest
 
@@ -258,6 +226,38 @@ app.get '/profile/:username/', (request, response) ->
 		options[i] = chars[i]
 	options.username = username
 	response.render 'profile', options
+
+
+app.get '/monster/:id/', (request, response) ->
+	options = request.uonline.basicOpts
+	options.instance = 'monster'
+	list = [
+		'name'
+		'level'
+		'power'
+		'agility'
+		'defense'
+		'intelligence'
+		'accuracy'
+		'initiative_min'
+		'health_max'
+		'mana_max'
+		'energy'
+		'initiative_max'
+	]
+
+	result = dbConnection.query.sync(
+		dbConnection
+		"SELECT #{list.join(', ')} FROM monster_prototypes WHERE id = $1"
+		[ request.param('id') ]
+	).rows
+
+	if result.length isnt 1
+		throw new Error '404'
+	else
+		for i in list
+			options[i] = result[0][i]
+		response.render 'monster', options
 
 
 app.get '/action/logout', mustBeAuthed, (request, response) ->
