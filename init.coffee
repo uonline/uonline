@@ -105,6 +105,12 @@ options = [
 	]
 	type: 'bool'
 	help: 'Insert monsters.'
+,
+	names: [
+		'fix-attributes'
+	]
+	type: 'bool'
+	help: 'Set predefined attributes for all players.'
 ]
 
 
@@ -297,6 +303,39 @@ insertMonsters = ->
 	console.log('Done.')
 
 
+fixAttrs = ->
+	# ['uniusers', 'changeDefault', 'health',       1000],
+	# ['uniusers', 'changeDefault', 'health_max',   1000],
+	# ['uniusers', 'changeDefault', 'mana',         500],
+	# ['uniusers', 'changeDefault', 'mana_max',     500],
+	# ['uniusers', 'changeDefault', 'energy',       100],
+	# ['uniusers', 'changeDefault', 'power',        50],
+	# ['uniusers', 'changeDefault', 'defense',      50],
+	# ['uniusers', 'changeDefault', 'agility',      50],
+	# ['uniusers', 'changeDefault', 'accuracy',     50],
+	# ['uniusers', 'changeDefault', 'intelligence', 50],
+	# ['uniusers', 'changeDefault', 'initiative',   50],
+	process.stdout.write chalk.magenta 'Setting predefined attributes... '
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+	dbConnection.query.sync(
+		dbConnection
+		'UPDATE uniusers SET '+
+			'health = 1000, '+
+			'health_max = 1000, '+
+			'mana = 500, '+
+			'mana_max = 500, '+
+			'energy = 100, '+
+			'power = 50, '+
+			'defense = 50, '+
+			'agility = 50, '+
+			'accuracy = 50, '+
+			'intelligence = 50, '+
+			'initiative = 50'
+	)
+	console.log chalk.green 'ok'
+
+
+
 sync(
 	->
 		if opts.help
@@ -314,6 +353,7 @@ sync(
 		unifyExport() if opts.unify_export
 		insertMonsters() if opts.monsters
 		optimize() if opts.optimize_tables
+		fixAttrs() if opts.fix_attributes
 		process.exit 0
 	(ex) ->
 		if ex? then throw ex
