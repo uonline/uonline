@@ -28,6 +28,14 @@ $(document).ready ->
 		$('.instance-indicator').removeClass 'active'
 		$(".instance-indicator[data-instance='#{this.dataset.instance}']").addClass 'active'
 
+	# Help on profile page
+	$('.profile-help').hide()
+	$(document).on 'pjax:complete', ->
+		$('.profile-help').hide()
+	$('body').on 'click', '.profile-help-switcher', ->
+		$('.profile-help-switcher').toggleClass 'active'
+		$('.profile-help').toggle()
+
 	# Registration page stuff
 
 	# Selectors

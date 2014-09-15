@@ -1,13 +1,18 @@
 mixin personalSign()
-	i.text-muted.glyphicon.glyphicon-leaf(title='Это личный параметр, его нельзя увеличить вещами')
+	i.text-muted.glyphicon.glyphicon-leaf(title='Это личный параметр, его нельзя увеличить вещами.')
 
-mixin tr_td_ch(name, value, isPersonal)
+//-mixin tr_td_ch(name, value, desc, perLevel, perSP, isPersonal)
+mixin tr_td_ch(name, value, desc, isPersonal)
 	tr
-		if isPersonal === true
-			td #{name}#{' '}
-				+personalSign()
-		else
-			td= name
+		td
+			div #{name}
+				if isPersonal === true
+					| #{' '}
+					+personalSign()
+			div.profile-help.text-muted
+				small= desc
+			//-div.text-muted
+				small +#{perLevel} за уровень, +#{perSP} за очко навыка.
 		td= value
 			//- | #{' '}
 			//- a.btn.btn-mini(href='javascript://') &plus;
@@ -41,11 +46,13 @@ block content
 		.col-sm-1
 		.col-sm-6
 			h3 Характеристики
+				button.profile-help-switcher.btn.btn-default.btn-sm
+					i.glyphicon.glyphicon-question-sign
 			table.table.table-striped.table-hover
-				+tr_td_ch('Энергия', energy)
-				+tr_td_ch('Сила', power)
-				+tr_td_ch('Защита', defense)
-				+tr_td_ch('Ловкость', agility)
-				+tr_td_ch('Точность', accuracy)
-				+tr_td_ch('Интеллект', intelligence, true)
-				+tr_td_ch('Инициатива', initiative)
+				+tr_td_ch('Энергия', energy, 'Чем выше, тем большее расстояние может пройти персонаж, не уставая.')
+				+tr_td_ch('Сила', power, 'Влияет на силу удара.')
+				+tr_td_ch('Защита', defense, 'Влияет на поглощаемый урон.')
+				+tr_td_ch('Ловкость', agility, 'Влияет на количество ударов за ход и шанс уворота.')
+				+tr_td_ch('Точность', accuracy, 'Влияет на шанс нанести точный удар вне зависимости от шанса уворота противника.')
+				+tr_td_ch('Интеллект', intelligence, 'Влияет на скорость регенерации маны.', true)
+				+tr_td_ch('Инициатива', initiative, 'Влияет на очерёдность ходов в бою.')
