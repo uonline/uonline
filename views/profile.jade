@@ -29,6 +29,9 @@ block title
 	| Профиль игрока #{username}
 block content
 	.page-header
+		button.pull-right.profile-help-switcher.btn.btn-default
+			i.glyphicon.glyphicon-question-sign
+			| #{' '}Что означают все эти цифры?
 		h1 #{username}&nbsp;&nbsp;
 			small орк #{level}-го уровня
 				if profileIsMine
@@ -56,8 +59,6 @@ block content
 		.col-sm-1
 		.col-sm-6
 			h3 Характеристики
-				button.profile-help-switcher.btn.btn-default.btn-sm
-					i.glyphicon.glyphicon-question-sign
 			table.table.table-striped.table-hover
 				+tr_td_ch('Сила', power, 'Даёт от 0,8 до 1,2 урона за удар.', 5, 3)
 				+tr_td_ch('Защита', defense, 'Поглощает 1 единицу урона за удар.', 5, 3)
