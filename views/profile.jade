@@ -1,9 +1,17 @@
-mixin tr_td_ch(name, value)
+mixin personalSign()
+	i.text-muted.glyphicon.glyphicon-leaf(title='Это личный параметр, его нельзя увеличить вещами')
+
+mixin tr_td_ch(name, value, isPersonal)
 	tr
-		td= name
+		if isPersonal === true
+			td #{name}#{' '}
+				+personalSign()
+		else
+			td= name
 		td= value
 			//- | #{' '}
 			//- a.btn.btn-mini(href='javascript://') &plus;
+
 
 extends layout
 block title
@@ -16,11 +24,13 @@ block content
 					| #{' '}(это&nbsp;вы)
 	.row
 		.col-sm-5
-			h4 Здоровье
+			h4 Здоровье#{' '}
+				+personalSign()
 			.progress
 				.progress-bar.progress-bar-success(style='width: '+health_percent+'%;', role="progressbar", aria-valuenow=health_percent, aria-valuemin="0", aria-valuemax="100")
 					| #{ health }/#{ health_max }
-			h4 Мана
+			h4 Мана#{' '}
+				+personalSign()
 			.progress
 				.progress-bar(style='width: '+mana_percent+'%;', role="progressbar", aria-valuenow=mana_percent, aria-valuemin="0", aria-valuemax="100")
 					| #{ mana }/#{ mana_max }
@@ -37,5 +47,5 @@ block content
 				+tr_td_ch('Защита', defense)
 				+tr_td_ch('Ловкость', agility)
 				+tr_td_ch('Точность', accuracy)
-				+tr_td_ch('Интеллект', intelligence)
+				+tr_td_ch('Интеллект', intelligence, true)
 				+tr_td_ch('Инициатива', initiative)
