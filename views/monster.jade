@@ -1,0 +1,33 @@
+mixin tr_td_ch(name, value)
+	tr
+		td= name
+		if value==0
+			td.text-muted= value
+		else
+			td= value
+
+
+extends layout
+block title
+	| #{name}
+block content
+	div.page-header
+		h1 #{name}&nbsp;&nbsp;
+			small монстр #{level}-го уровня
+	.row
+		.col-sm-12
+			//- p= description
+			p Этот монстр ужасен и крайне опасен.
+	.row
+		.col-sm-6
+			h3 Характеристики
+			table.table.table-striped.table-hover
+				+tr_td_ch('Здоровье', health_max)
+				+tr_td_ch('Мана', mana_max)
+				+tr_td_ch('Энергия', energy)
+				+tr_td_ch('Сила', power)
+				+tr_td_ch('Защита', defense)
+				+tr_td_ch('Ловкость', agility)
+				+tr_td_ch('Точность', accuracy)
+				+tr_td_ch('Интеллект', intelligence)
+				+tr_td_ch('Инициатива', initiative_min+'...'+initiative_max)

@@ -864,6 +864,35 @@ exports.getUserCharacters =
 		test.done()
 
 
+exports.getMonsterPrototypeCharacters = (test) ->
+	data =
+		name: 'The Monster'
+		level: 5
+		power: 12
+		agility: 4
+		defense: 3
+		intelligence: 8
+		accuracy: 15
+		initiative_min: 5
+		health_max: 1000
+		mana_max: 500
+		energy: 200
+		initiative_max: 15
+	
+	clearTables 'monster_prototypes'
+	insert 'monster_prototypes', data
+	query 'UPDATE monster_prototypes SET id = 1'
+	
+	res = game.getMonsterPrototypeCharacters.sync null, conn, 1
+	test.deepEqual res, data, 'should return nesessary characters'
+	
+	test.throws(
+		-> game.getMonsterPrototypeCharacters.sync null, conn, 123
+		Error
+		'should throw if monster not found'
+	)
+	test.done()
+
 #fixTest = (obj) ->
 #	for attr of obj
 #		if attr is 'setUp' or attr is 'tearDown'

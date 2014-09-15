@@ -228,6 +228,17 @@ app.get '/profile/:username/', (request, response) ->
 	response.render 'profile', options
 
 
+app.get '/monster/:id/', (request, response) ->
+	options = request.uonline.basicOpts
+	options.instance = 'monster'
+	chars = lib.game.getMonsterPrototypeCharacters.sync null, dbConnection, request.param('id')
+	
+	for i of chars
+		options[i] = chars[i]
+	
+	response.render 'monster', options
+
+
 app.get '/action/logout', mustBeAuthed, (request, response) ->
 	# TODO: move sessid to uonline{}
 	lib.user.closeSession dbConnection, request.cookies.sessid, (error, result) ->
@@ -323,7 +334,11 @@ app.get '*', (request, response) ->
 
 # Exception handling
 app.use (error, request, response, next) ->
-	code = if error.message is '404' then 404 else 500
+	code = 500
+	if error.message is '404'
+		code = 404
+	else
+		console.error error.stack
 	options = request.uonline.basicOpts
 	options.code = code
 	options.instance = 'error'

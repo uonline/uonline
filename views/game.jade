@@ -69,7 +69,8 @@ block content
 								| #{ i.health }/#{ i.health_max }
 				else
 					each i,index in monsters_list
-						| #{' '}#{i.name}
+						| #{' '}
+						a.pjax(href = '/monster/'+i.prototype+'/')= i.name
 						if index < monsters_list.length-1
 							| ,
 					| #{'.'}
@@ -79,11 +80,11 @@ block content
 			ol
 				each p, index in participants
 					li
-						| #{p.name} (#{p.kind}), 
+						| #{p.name} (#{p.kind}),
 						if p.side == our_side
 							| #{ userid==p.id ? 'я' : 'союзник' }
 						else
-							| противник 
+							| противник
 							a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.kind+"/"+p.id) Вдарить
 		p
 			small
