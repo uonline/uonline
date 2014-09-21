@@ -28,6 +28,9 @@ createAnyDBConnection = (url) ->
 	anyDB = require 'any-db' unless anyDB?
 	anyDB.createConnection(url)
 
+createQueryUtils = (url) ->
+	lib.query_utils.getFor createAnyDBConnection url
+
 
 checkError = (error, dontExit) ->
 	if error?
@@ -105,6 +108,20 @@ options = [
 	]
 	type: 'bool'
 	help: 'Insert monsters.'
+,
+	names: [
+		'armor'
+		'A'
+	]
+	type: 'bool'
+	help: 'Insert armor (or update if already inserted).'
+,
+	names: [
+		'give-armor'
+		'a'
+	]
+	type: 'integer'
+	help: 'Give some armor to user.'
 ,
 	names: [
 		'fix-attributes'
@@ -303,6 +320,53 @@ insertMonsters = ->
 	console.log('Done.')
 
 
+insertArmor = ->
+	query = createQueryUtils(config.DATABASE_URL)
+	
+	prototypes = [
+		[1 , 'кожаный нагрудник',  'breastplate',   100, 12]
+		[2 , 'кожаные поножи',     'greave',        100, 20]
+		[3 , 'кожаные сапоги',     'shoe',          100, 8]
+		[4 , 'кожаные наплечники', 'pauldron',      100, 6]
+		[5 , 'кожаные наручи',     'vambrace',      100, 6]
+		[6 , 'кожаный шлем',       'helmet',        100, 8]
+	]
+	
+	console.log('Inserting armor prototypes...')
+	
+	for proto in prototypes
+		rows = query.all(
+			'UPDATE armor_prototypes '+
+			'SET name=$2, type=$3, strength_max=$4, coverage=$5 '+
+			'WHERE id=$1 RETURNING id', proto)
+		if rows.length is 0
+			query(
+				'INSERT INTO armor_prototypes (id, name, type, strength_max, coverage) '+
+				'VALUES ($1, $2, $3, $4, $5)', proto)
+	
+	console.log('Done.')
+
+
+giveArmor = (userid) ->
+	query = createQueryUtils(config.DATABASE_URL)
+	armorToGive = [1,2,3,4,5,6]
+	
+	actualCount = +query.val "SELECT count(*) FROM armor_prototypes WHERE id IN (#{armorToGive.join()})"
+	if actualCount != armorToGive.length
+		console.log("Didn't find all nesessary armor prototypes. Forgot to insert armor?")
+		return
+	
+	user = query.row 'SELECT username FROM uniusers WHERE id = $1', [userid]
+	
+	console.log("Giving some armor to <#{user.username}>")
+	
+	for id in armorToGive
+		strength = query.val 'SELECT strength_max FROM armor_prototypes WHERE id = $1', [id]
+		query 'INSERT INTO armor (prototype, owner, strength) VALUES ($1, $2, $3)', [id, userid, strength]
+	
+	console.log('Done.')
+
+
 fixAttrs = ->
 	# ['uniusers', 'changeDefault', 'health',       1000],
 	# ['uniusers', 'changeDefault', 'health_max',   1000],
@@ -354,6 +418,8 @@ sync(
 		insertMonsters() if opts.monsters
 		optimize() if opts.optimize_tables
 		fixAttrs() if opts.fix_attributes
+		insertArmor() if opts.armor
+		giveArmor(opts.give_armor) if opts.give_armor
 		process.exit 0
 	(ex) ->
 		if ex? then throw ex

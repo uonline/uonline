@@ -601,7 +601,7 @@ exports._hitAndGetHealth =
 		
 		
 		insert 'armor_prototypes', id:1, name: 'breastplate', coverage:25
-		insert 'armor_prototypes', id:2, name: 'breastplate', coverage:25
+		insert 'armor_prototypes', id:2, name: 'greave', coverage:25
 		insert 'armor', prototype:1, owner:1, strength:10000
 		insert 'armor', prototype:2, owner:1, strength:10000
 		
