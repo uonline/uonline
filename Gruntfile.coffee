@@ -144,12 +144,14 @@ module.exports = (grunt) ->
 			lib_cov: 'lib-cov/'
 
 		codo:
+			all:
+				src: './lib/'
+				dest: './docs/'
 			options:
+				name: 'uonline'
 				title: 'uonline documentation'
-				output: 'docs'
-				inputs: [
-					'lib'
-				]
+				undocumented: yes
+				stats: no
 
 		coveralls:
 			all:
