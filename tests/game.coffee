@@ -47,6 +47,8 @@ usedTables = [
 	'monster_prototypes'
 	'battles'
 	'battle_participants'
+	'armor'
+	'armor_prototypes'
 ]
 
 usedCustomTypes = [
@@ -528,49 +530,102 @@ exports._lockAndGetStatsForBattle = (test) ->
 	test.done()
 
 
-exports._hitAndGetHealth = (test) ->
-	clearTables 'uniusers', 'monsters', 'monster_prototypes'
-	insert 'uniusers', id: 1, health: 1000, defense: 50
-	insert 'monster_prototypes', id: 2, defense: 50
-	insert 'monsters', id: 2, prototype: 2, health: 1000
+exports._hitAndGetHealth =
+	setUp: (done) ->
+		clearTables 'uniusers', 'monsters', 'monster_prototypes', 'armor', 'armor_prototypes'
+		insert 'uniusers', id: 1, health: 1000, defense: 50
+		insert 'monster_prototypes', id: 2, defense: 50
+		insert 'monsters', id: 2, prototype: 2, health: 1000
+		done()
 	
-	power = 70
-	minDmg = (power - 50) / 2 * 0.8
-	maxDmg = (power - 50) / 2 * 1.2
-	
-	tx = transaction(conn)
-	
-	[
-		{id:1, kind:'user',    table: 'uniusers', defenseTable: 'uniusers'}
-		{id:2, kind:'monster', table: 'monsters', defenseTable: 'monster_prototypes'}
-	].forEach (victim) ->
-		damages = {}
-		prevHP = 1000
+	simple: (test) ->
+		power = 70
+		minDmg = (power - 50) / 2 * 0.8
+		maxDmg = (power - 50) / 2 * 1.2
 		
-		for i in [0..100]
-			hp = game._hitAndGetHealth tx, victim.id, victim.kind, power
-			hpActual = query.val "SELECT health FROM #{victim.table}"
-			test.strictEqual hp, hpActual, "should return current #{victim.kind}'s health"
+		tx = transaction(conn)
+		
+		[
+			{id:1, kind:'user',    table: 'uniusers', defenseTable: 'uniusers'}
+			{id:2, kind:'monster', table: 'monsters', defenseTable: 'monster_prototypes'}
+		].forEach (victim) ->
+			damages = {}
+			prevHP = 1000
 			
-			dmg = prevHP - hp
-			test.ok minDmg <= dmg <= maxDmg, "dealed to #{victim.kind} damage should be in fixed range"
+			for i in [0..100]
+				hp = game._hitAndGetHealth tx, victim.id, victim.kind, power
+				hpActual = query.val "SELECT health FROM #{victim.table}"
+				test.strictEqual hp, hpActual, "should return current #{victim.kind}'s health"
+				
+				dmg = prevHP - hp
+				test.ok minDmg <= dmg <= maxDmg, "dealed to #{victim.kind} damage should be in fixed range"
+				
+				damages[dmg] = true
+				prevHP = hp
 			
-			damages[dmg] = true
-			prevHP = hp
+			test.ok Object.keys(damages).length > 1, "should deal different amounts of damage to #{victim.kind}"
+			test.ok damages[minDmg], 'should sometimes deal minimal damage'
+			test.ok damages[maxDmg], 'should sometimes deal maximal damage'
+			
+			query "UPDATE #{victim.defenseTable} SET defense = 9001"
+			
+			hpBefore = prevHP #query.val "SELECT health FROM #{victim.kind}s"
+			hpAfter = game._hitAndGetHealth tx, victim.id, victim.kind, power
+			test.strictEqual hpBefore, hpAfter,
+				"should not change #{victim.kind}'s health if defense is greater than damage"
 		
-		test.ok Object.keys(damages).length > 1, "should deal different amounts of damage to #{victim.kind}"
-		test.ok damages[minDmg], 'should sometimes deal minimal damage'
-		test.ok damages[maxDmg], 'should sometimes deal maximal damage'
-		
-		query "UPDATE #{victim.defenseTable} SET defense = 9001"
-		
-		hpBefore = prevHP #query.val "SELECT health FROM #{victim.kind}s"
-		hpAfter = game._hitAndGetHealth tx, victim.id, victim.kind, power
-		test.strictEqual hpBefore, hpAfter,
-			"should not change #{victim.kind}'s health if defense is greater than damage"
+		tx.rollback.sync(tx)
+		test.done()
 	
-	tx.rollback.sync(tx)
-	test.done()
+	'with armor': (test) ->
+		power = 70
+		damages = null
+		
+		userHP = -> query.val 'SELECT health FROM uniusers'
+		totalStringth = -> query.val 'SELECT SUM(strength) FROM armor'
+		
+		performSomeAttacks = ->
+			damages = {}
+			tx = transaction(conn)
+			for i in [0..20]
+				prevHP = userHP()
+				prevSt = totalStringth()
+				
+				hp = game._hitAndGetHealth tx, 1, 'user', power
+				dmg = prevHP - hp
+				damages[dmg] = true
+				
+				if dmg is 0
+					test.ok prevSt > totalStringth(), 'should reduce armor strength if damage was blocked'
+			tx.rollback.sync(tx)
+		
+		
+		insert 'armor_prototypes', id:1, name: 'breastplate', coverage:25
+		insert 'armor_prototypes', id:2, name: 'breastplate', coverage:25
+		insert 'armor', prototype:1, owner:1, strength:10000
+		insert 'armor', prototype:2, owner:1, strength:10000
+		
+		performSomeAttacks()
+		test.ok damages[0], 'armor should block some attacks if coverage > 0'
+		test.ok Object.keys(damages).length > 1, 'armor should not block all attacks if total coverage < 100'
+		
+		
+		query 'UPDATE armor_prototypes SET coverage = 75 WHERE id = 2'
+		performSomeAttacks()
+		test.deepEqual damages, {'0': true}, 'armor should block all if total coverage is 100'
+		
+		
+		query 'UPDATE armor_prototypes SET coverage = 0'
+		performSomeAttacks()
+		test.ok 0 not in damages, 'armor should not block anyting if total coverage is 0'
+		
+		
+		query 'UPDATE armor_prototypes SET coverage = 50'
+		query 'UPDATE armor SET strength = 0'
+		performSomeAttacks()
+		test.ok 0 not in damages, 'armor should not block anyting if it is broken'
+		
+		test.done()
 
 
 exports._handleDeathInBattle = (test) ->
@@ -593,7 +648,9 @@ exports._handleDeathInBattle = (test) ->
 
 
 exports._hit = (test) ->
-	clearTables 'uniusers', 'monsters', 'monster_prototypes', 'battles', 'battle_participants'
+	clearTables 'uniusers', 'monsters', 'monster_prototypes',
+		'battles', 'battle_participants',
+		'armor', 'armor_prototypes'
 	
 	insert 'uniusers', id: 1, username: 'SomeUser',    defense: 1, power: 40, health: 5
 	insert 'uniusers', id: 2, username: 'AnotherUser', defense: 1, power: 50, health: 1000
@@ -677,7 +734,9 @@ exports._hit = (test) ->
 
 exports.hitOpponent =
 	setUp: (done) ->
-		clearTables 'uniusers', 'monsters', 'monster_prototypes', 'battles', 'battle_participants'
+		clearTables 'uniusers', 'monsters', 'monster_prototypes',
+			'battles', 'battle_participants',
+			'armor', 'armor_prototypes'
 		insert 'uniusers', id: 1, username: 'SomeUser', power: 20, defense: 10, health: 1000
 		insert 'monster_prototypes', id: 2, name: 'SomeMonster', power: 20, defense: 10
 		insert 'monsters', id: 4, prototype: 2, health: 1000
