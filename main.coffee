@@ -277,6 +277,7 @@ app.get '/game/', mustBeAuthed, (request, response) -> sync ->
 	if options.fight_mode
 		options.participants = lib.game.getBattleParticipants.sync null, dbConnection, userid
 		options.our_side = options.participants.find((p) -> p.kind=='user' && p.id==userid).side
+		options.armor = lib.game.getUserArmor.sync null, dbConnection, userid
 
 	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
 	for i of chars

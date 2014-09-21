@@ -38,6 +38,19 @@ block content
 		.progress
 			.progress-bar(style='width: '+mana_percent+'%;')
 				| #{ mana }/#{ mana_max }
+		h4 Броня
+		table.table.table-striped.table-hover
+			tr
+				td Название
+				td Тип
+				td Прочность
+				td Покрытие тела
+			each item in armor
+				tr
+					td #{ item.name }
+					td #{ item.type }
+					td #{ item.strength }/#{ item.strength_max }
+					td #{ item.coverage }%
 	div
 		p
 			case players_list.length

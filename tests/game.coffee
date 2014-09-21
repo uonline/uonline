@@ -923,6 +923,22 @@ exports.getUserCharacters =
 		test.done()
 
 
+exports.getUserArmor = (test) ->
+	clearTables 'armor', 'armor_prototypes'
+	insert 'armor_prototypes', id:1, name:'Magic helmet', type:'helmet', coverage:50, strength_max:120
+	insert 'armor_prototypes', id:2, name:'Speed greaves', type:'greave', coverage:25, strength_max:110
+	insert 'armor', id:1, prototype:1, owner:1, strength:100
+	insert 'armor', id:2, prototype:2, owner:1, strength:100
+	insert 'armor', id:3, prototype:1, owner:2, strength:110
+	
+	armor = game.getUserArmor conn, 1
+	test.deepEqual armor, [
+			{name: 'Magic helmet',  type:'helmet', coverage:50, strength:100, strength_max:120}
+			{name: 'Speed greaves', type:'greave', coverage:25, strength:100, strength_max:110}
+		] , "should return nesessary characteristics of user's armor"
+	test.done()
+
+
 exports.getMonsterPrototypeCharacters = (test) ->
 	data =
 		name: 'The Monster'
