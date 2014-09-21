@@ -324,12 +324,12 @@ insertArmor = ->
 	query = createQueryUtils(config.DATABASE_URL)
 	
 	prototypes = [
-		[1 , 'кожаный нагрудник',  'breastplate',   100, 12]
-		[2 , 'кожаные поножи',     'greave',        100, 20]
-		[3 , 'кожаные сапоги',     'shoe',          100, 8]
-		[4 , 'кожаные наплечники', 'pauldron',      100, 6]
-		[5 , 'кожаные наручи',     'vambrace',      100, 6]
-		[6 , 'кожаный шлем',       'helmet',        100, 8]
+		[1 , 'кожаный нагрудник',  'breastplate',   40, 12]
+		[2 , 'кожаные поножи',     'greave',        35, 20]
+		[3 , 'кожаные сапоги',     'shoe',          20, 8]
+		[4 , 'кожаные наплечники', 'pauldron',      20, 6]
+		[5 , 'кожаные наручи',     'vambrace',      30, 6]
+		[6 , 'кожаный шлем',       'helmet',        30, 8]
 	]
 	
 	console.log('Inserting armor prototypes...')

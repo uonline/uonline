@@ -39,18 +39,22 @@ block content
 			.progress-bar(style='width: '+mana_percent+'%;')
 				| #{ mana }/#{ mana_max }
 		h4 Броня
-		table.table.table-striped.table-hover
-			tr
-				td Название
-				td Тип
-				td Прочность
-				td Покрытие тела
-			each item in armor
+		if armor.length == 0
+			p Нету
+			br
+		else
+			table.table.table-striped.table-hover
 				tr
-					td #{ item.name }
-					td #{ item.type }
-					td #{ item.strength }/#{ item.strength_max }
-					td #{ item.coverage }%
+					td Название
+					td Тип
+					td Прочность
+					td Покрытие тела
+				each item in armor
+					tr
+						td #{ item.name }
+						td #{ item.type }
+						td #{ item.strength }/#{ item.strength_max }
+						td #{ item.coverage }%
 	div
 		p
 			case players_list.length
