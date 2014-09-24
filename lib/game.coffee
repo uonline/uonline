@@ -46,17 +46,16 @@ transaction = require 'any-db-transaction'
 #   to
 # [{target:1, text:"Left"}, {target:2, text:"Middle"}, {target:42, text:"Right"}]
 parseLocationWays = (str) ->
-	if str is null
-		return []
+	return [] if str is null
+	
 	ways = str.split '|'
-	i = 0
-	while i < ways.length
+	for i in [0...ways.length]
 		s = ways[i].split '='
 		ways[i] = {
 			target: parseInt(s[1], 10)
 			text: s[0]
 		}
-		i++
+	
 	return ways
 
 
@@ -125,8 +124,10 @@ exports.getUserArea = ((dbConnection, userid) ->
 # Returns wheter user can go to specified location.
 exports.isTherePathForUserToLocation = ((dbConnection, userid, locid) ->
 	result = exports.getUserLocation.sync(null, dbConnection, userid)
+	
 	if result.id is locid
 		return false  # already here
+	
 	for i in result.ways
 		if i.target is locid
 			return true
@@ -182,7 +183,7 @@ exports._leaveBattle = (tx, battleId, leaverId, leaverKind) ->
 		[ leaverId, leaverKind ]
 	).rows[0]
 
-	if not leaver?
+	unless leaver?
 		throw new Error "Can't find participant id=#{leaverId}, kind='#{leaverKind}' in battle ##{battleId}"
 
 	# shifting other participant's indexes
@@ -289,17 +290,15 @@ exports.goAttack = ((dbConnection, userid) ->
 	if monsters.length is 0
 		tx.rollback.sync tx
 		return
-	i = 0
 
-	while i < monsters.length
-		monsters[i].kind = "monster"
-		i++
+	for monster in monsters
+		monster.kind = "monster"
+
 	user = tx.query.sync(tx, "SELECT initiative, location FROM uniusers WHERE id = $1", [userid]).rows[0]
 	user.id = userid
 	user.kind = "user"
 	exports._createBattleBetween tx, user.location, monsters, [user]
 	tx.commit.sync tx
-	return
 ).async()
 
 
@@ -333,10 +332,8 @@ exports.getBattleParticipants = ((dbConnection, userid) ->
 			"ORDER BY index",
 		[userid]
 	).rows
-	i = 0
 
-	while i < participants.length
-		p = participants[i]
+	for p in participants
 		switch p.kind
 			when "user"
 				p.name = dbConnection.query.sync(dbConnection,
@@ -351,7 +348,6 @@ exports.getBattleParticipants = ((dbConnection, userid) ->
 				).rows[0].name
 			else
 				throw new Error "Wrong participant kind: #{p.kind}"
-		i++
 	participants
 ).async()
 
@@ -396,12 +392,10 @@ exports._hitAndGetHealth = (tx, victimId, victimKind, hunterPower) ->
 			).rows
 		when 'monster'
 			armor = []
+
 	armor_item = null
 	percent = 100
-	i = 0
-
-	while i < armor.length
-		item = armor[i]
+	for item in armor
 		if Math.random() * percent <= item.coverage
 			delta = Math.min(hunterPower, item.strength)
 			tx.query.sync tx, 'UPDATE armor SET strength = $1 WHERE id = $2', [
@@ -411,7 +405,7 @@ exports._hitAndGetHealth = (tx, victimId, victimKind, hunterPower) ->
 			hunterPower -= delta
 			break
 		percent -= item.coverage
-		i++
+
 	switch victimKind
 		when "user"
 			tx.query.sync(tx,
@@ -449,32 +443,37 @@ exports._handleDeathInBattle = (tx, id, kind) ->
 
 exports._hit = (dbConnection, hunterId, hunterKind, victimId, victimKind) ->
 	tx = transaction(dbConnection)
+	
 	hunter = exports._lockAndGetStatsForBattle(tx, hunterId, hunterKind)
-	if not hunter?
+	unless hunter?
 		tx.rollback.sync(tx)
 		return {
 			state: "canceled"
 			reason: "hunter not found"
 		}
+	
 	victim = exports._lockAndGetStatsForBattle(tx, victimId, victimKind)
-	if not victim?
+	unless victim?
 		tx.rollback.sync(tx)
 		return {
 			state: "canceled"
 			reason: "victim not found"
 		}
+	
 	if victim.battle != hunter.battle
 		tx.rollback.sync(tx)
 		return {
 			state: "canceled"
 			reason: "different battles"
 		}
+	
 	if victim.side is hunter.side
 		tx.rollback.sync(tx)
 		return {
 			state: "canceled"
 			reason: "can't hit teammate"
 		}
+	
 	health = exports._hitAndGetHealth(tx, victimId, victimKind, hunter.power)
 	victimKilled = (health <= 0)
 	battleEnded = false
@@ -482,6 +481,7 @@ exports._hit = (dbConnection, hunterId, hunterKind, victimId, victimKind) ->
 		battleEnded = exports._leaveBattle(tx, hunter.battle, victimId, victimKind)
 		exports._handleDeathInBattle tx, victimId, victimKind
 	tx.commit.sync(tx)
+	
 	return {
 		state: "ok"
 		victimKilled: victimKilled
@@ -493,7 +493,8 @@ exports._hit = (dbConnection, hunterId, hunterKind, victimId, victimKind) ->
 # Opponent is determined by his 'id' and 'kind' among all participants of user's battle.
 exports.hitOpponent = ((dbConnection, userid, participantId, participantKind) ->
 	result = exports._hit(dbConnection, userid, "user", participantId, participantKind)
-	return	if result.state isnt "ok" or result.battleEnded
+	return if result.state isnt "ok" or result.battleEnded
+	
 	opponents = dbConnection.query.sync(dbConnection,
 		"SELECT opponents.id, opponents.kind "+
 			"FROM battle_participants AS opponents, "+
@@ -503,14 +504,10 @@ exports.hitOpponent = ((dbConnection, userid, participantId, participantKind) ->
 			"AND opponents.side != users.side",
 		[userid]
 	).rows
-	i = 0
 
-	while i < opponents.length
-		opponent = opponents[i]
+	for opponent in opponents
 		result = exports._hit(dbConnection, opponent.id, opponent.kind, userid, "user")
-		return	if result.battleEnded
-		i++
-	return
+		return if result.battleEnded
 ).async()
 
 
@@ -528,11 +525,9 @@ exports.getUsersOnLocation = (dbConnection, locid, callback) ->
 # Returns all users on locations except one.
 exports.getNearbyUsers = (dbConnection, userid, locid, callback) ->
 	exports.getUsersOnLocation dbConnection, locid, (error, result) ->
-		if error?
-			callback error, null
-		result = result.filter((i) ->
-			i.id != userid
-		)
+		callback error, null if error?
+		
+		result = result.filter (i) -> i.id != userid
 		callback null, result
 
 
@@ -599,14 +594,14 @@ exports.getUserCharacters = ((dbConnection, userIdOrName) ->
 			" = $1",
 		[userIdOrName]
 	).rows[0]
-	if not user?
-		return null
+	return null unless user?
+	
 	user.health_percent = user.health * 100 / user.health_max
 	user.mana_percent = user.mana * 100 / user.mana_max
 	expPrevMax = math.ap(config.EXP_MAX_START, user.level - 1, config.EXP_STEP)
 	user.exp_max = math.ap(config.EXP_MAX_START, user.level, config.EXP_STEP)
 	user.exp_percent = (user.exp - expPrevMax) * 100 / (user.exp_max - expPrevMax)
-	user
+	return user
 ).async()
 
 
@@ -637,8 +632,8 @@ monsterCharacters = [
 
 exports.getMonsterPrototypeCharacters = ((dbConnection, id) ->
 	result = dbConnection.query.sync(dbConnection,
-		"SELECT #{monsterCharacters.join(", ")} FROM monster_prototypes WHERE id = $1",
+		"SELECT #{monsterCharacters.join(', ')} FROM monster_prototypes WHERE id = $1",
 		[id]
 	).rows
-	return (if result.length is 1 then result[0] else null)
+	return result[0] || null
 ).async()

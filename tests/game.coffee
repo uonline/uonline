@@ -202,6 +202,9 @@ exports.isTherePathForUserToLocation = (test) ->
 	can = game.isTherePathForUserToLocation.sync null, conn, 1, 2
 	test.strictEqual can, true, "should return true if path exists"
 
+	can = game.isTherePathForUserToLocation.sync null, conn, 1, 1
+	test.strictEqual can, false, "should return false if already on this location"
+
 	game.changeLocation.sync null, conn, 1, 2
 	can = game.isTherePathForUserToLocation.sync null, conn, 1, 1
 	test.strictEqual can, false, "should return false if path doesn't exist"
@@ -961,11 +964,8 @@ exports.getMonsterPrototypeCharacters = (test) ->
 	res = game.getMonsterPrototypeCharacters.sync null, conn, 1
 	test.deepEqual res, data, 'should return nesessary characters'
 	
-	test.throws(
-		-> game.getMonsterPrototypeCharacters.sync null, conn, 123
-		Error
-		'should throw if monster not found'
-	)
+	res = game.getMonsterPrototypeCharacters.sync null, conn, 123
+	test.deepEqual res, null, 'should return null if monster not found'
 	test.done()
 
 #fixTest = (obj) ->
