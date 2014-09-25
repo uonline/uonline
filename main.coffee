@@ -232,10 +232,13 @@ app.get '/monster/:id/', (request, response) ->
 	options = request.uonline.basicOpts
 	options.instance = 'monster'
 	chars = lib.game.getMonsterPrototypeCharacters.sync null, dbConnection, request.param('id')
-	
+
+	if not chars?
+		throw new Error '404'
+
 	for i of chars
 		options[i] = chars[i]
-	
+
 	response.render 'monster', options
 
 
