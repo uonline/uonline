@@ -21,6 +21,7 @@ lib = require './lib.coffee'
 sync = require 'sync'
 dashdash = require 'dashdash'
 chalk = require 'chalk'
+sugar = require 'sugar'
 
 
 anyDB = null
@@ -303,7 +304,7 @@ insertMonsters = ->
 	dbConnection.query.sync(dbConnection, "TRUNCATE monsters", [])
 	prototypesFromDB = dbConnection.query.sync(dbConnection, "SELECT * FROM monster_prototypes").rows
 	for i in [0...50]
-		soul = prototypesFromDB.pickRandom()
+		soul = prototypesFromDB.sample()
 		dbConnection.query.sync(
 			dbConnection
 			"INSERT INTO monsters "+
@@ -312,8 +313,8 @@ insertMonsters = ->
 				"VALUES "+
 				"($1, $2, $3, $4, $5, $6, $7, $8)"
 			[
-				i, soul.id, locs.pickRandom().id, soul.health_max, soul.mana_max, null,
-				Number.irandom(25), Number.irandom(soul.initiative_min, soul.initiative_max)
+				i, soul.id, locs.sample().id, soul.health_max, soul.mana_max, null,
+				Number.random(25), Number.random(soul.initiative_min, soul.initiative_max)
 			]
 		)
 
@@ -322,7 +323,7 @@ insertMonsters = ->
 
 insertArmor = ->
 	query = createQueryUtils(config.DATABASE_URL)
-	
+
 	prototypes = [
 		[1 , 'кожаный нагрудник',  'breastplate',   40, 12]
 		[2 , 'кожаные поножи',     'greave',        35, 20]
@@ -331,9 +332,9 @@ insertArmor = ->
 		[5 , 'кожаные наручи',     'vambrace',      30, 6]
 		[6 , 'кожаный шлем',       'helmet',        30, 8]
 	]
-	
+
 	console.log('Inserting armor prototypes...')
-	
+
 	for proto in prototypes
 		rows = query.all(
 			'UPDATE armor_prototypes '+
@@ -343,27 +344,27 @@ insertArmor = ->
 			query(
 				'INSERT INTO armor_prototypes (id, name, type, strength_max, coverage) '+
 				'VALUES ($1, $2, $3, $4, $5)', proto)
-	
+
 	console.log('Done.')
 
 
 giveArmor = (userid) ->
 	query = createQueryUtils(config.DATABASE_URL)
 	armorToGive = [1,2,3,4,5,6]
-	
+
 	actualCount = +query.val "SELECT count(*) FROM armor_prototypes WHERE id IN (#{armorToGive.join()})"
 	if actualCount != armorToGive.length
 		console.log("Didn't find all nesessary armor prototypes. Forgot to insert armor?")
 		return
-	
+
 	user = query.row 'SELECT username FROM uniusers WHERE id = $1', [userid]
-	
+
 	console.log("Giving some armor to <#{user.username}>")
-	
+
 	for id in armorToGive
 		strength = query.val 'SELECT strength_max FROM armor_prototypes WHERE id = $1', [id]
 		query 'INSERT INTO armor (prototype, owner, strength) VALUES ($1, $2, $3)', [id, userid, strength]
-	
+
 	console.log('Done.')
 
 

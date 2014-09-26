@@ -47,7 +47,7 @@ transaction = require 'any-db-transaction'
 # [{target:1, text:"Left"}, {target:2, text:"Middle"}, {target:42, text:"Right"}]
 parseLocationWays = (str) ->
 	return [] if str is null
-	
+
 	ways = str.split '|'
 	for i in [0...ways.length]
 		s = ways[i].split '='
@@ -55,7 +55,7 @@ parseLocationWays = (str) ->
 			target: parseInt(s[1], 10)
 			text: s[0]
 		}
-	
+
 	return ways
 
 
@@ -123,11 +123,12 @@ exports.getUserArea = ((dbConnection, userid) ->
 
 # Returns wheter user can go to specified location.
 exports.isTherePathForUserToLocation = ((dbConnection, userid, locid) ->
+	locid = parseInt(locid, 10)
 	result = exports.getUserLocation.sync(null, dbConnection, userid)
-	
+
 	if result.id is locid
 		return false  # already here
-	
+
 	for i in result.ways
 		if i.target is locid
 			return true
@@ -226,12 +227,23 @@ exports.changeLocation = ((dbConnection, userid, locid, throughSpaceAndTime) ->
 			exports._leaveBattle tx, battle.id, userid, "user"
 		tx.query.sync tx, "UPDATE uniusers SET location = $1 WHERE id = $2", [locid, userid]
 		tx.commit()
-		return
+		return {
+			result: 'ok'
+		}
 
 	canGo = exports.isTherePathForUserToLocation.sync(null, dbConnection, userid, locid)
-	if isInFight or not canGo
+	if isInFight
 		tx.rollback()
-		return
+		return {
+			result: 'fail'
+			reason: "Player ##{userid} is in fight"
+		}
+	if not canGo
+		tx.rollback()
+		return {
+			result: 'fail'
+			reason: "No path to location ##{locid} for user ##{userid}"
+		}
 
 	monsters = tx.query.sync(tx,
 		"SELECT monsters.id, monsters.initiative, monsters.attack_chance "+
@@ -264,6 +276,10 @@ exports.changeLocation = ((dbConnection, userid, locid, throughSpaceAndTime) ->
 		[locid, userid]
 	)
 	tx.commit.sync(tx)
+
+	return {
+		result: 'ok'
+	}
 ).async()
 
 
@@ -443,7 +459,7 @@ exports._handleDeathInBattle = (tx, id, kind) ->
 
 exports._hit = (dbConnection, hunterId, hunterKind, victimId, victimKind) ->
 	tx = transaction(dbConnection)
-	
+
 	hunter = exports._lockAndGetStatsForBattle(tx, hunterId, hunterKind)
 	unless hunter?
 		tx.rollback.sync(tx)
@@ -451,7 +467,7 @@ exports._hit = (dbConnection, hunterId, hunterKind, victimId, victimKind) ->
 			state: "canceled"
 			reason: "hunter not found"
 		}
-	
+
 	victim = exports._lockAndGetStatsForBattle(tx, victimId, victimKind)
 	unless victim?
 		tx.rollback.sync(tx)
@@ -459,21 +475,21 @@ exports._hit = (dbConnection, hunterId, hunterKind, victimId, victimKind) ->
 			state: "canceled"
 			reason: "victim not found"
 		}
-	
+
 	if victim.battle != hunter.battle
 		tx.rollback.sync(tx)
 		return {
 			state: "canceled"
 			reason: "different battles"
 		}
-	
+
 	if victim.side is hunter.side
 		tx.rollback.sync(tx)
 		return {
 			state: "canceled"
 			reason: "can't hit teammate"
 		}
-	
+
 	health = exports._hitAndGetHealth(tx, victimId, victimKind, hunter.power)
 	victimKilled = (health <= 0)
 	battleEnded = false
@@ -481,7 +497,7 @@ exports._hit = (dbConnection, hunterId, hunterKind, victimId, victimKind) ->
 		battleEnded = exports._leaveBattle(tx, hunter.battle, victimId, victimKind)
 		exports._handleDeathInBattle tx, victimId, victimKind
 	tx.commit.sync(tx)
-	
+
 	return {
 		state: "ok"
 		victimKilled: victimKilled
@@ -494,7 +510,7 @@ exports._hit = (dbConnection, hunterId, hunterKind, victimId, victimKind) ->
 exports.hitOpponent = ((dbConnection, userid, participantId, participantKind) ->
 	result = exports._hit(dbConnection, userid, "user", participantId, participantKind)
 	return if result.state isnt "ok" or result.battleEnded
-	
+
 	opponents = dbConnection.query.sync(dbConnection,
 		"SELECT opponents.id, opponents.kind "+
 			"FROM battle_participants AS opponents, "+
@@ -526,7 +542,7 @@ exports.getUsersOnLocation = (dbConnection, locid, callback) ->
 exports.getNearbyUsers = (dbConnection, userid, locid, callback) ->
 	exports.getUsersOnLocation dbConnection, locid, (error, result) ->
 		callback error, null if error?
-		
+
 		result = result.filter (i) -> i.id != userid
 		callback null, result
 
@@ -595,7 +611,7 @@ exports.getUserCharacters = ((dbConnection, userIdOrName) ->
 		[userIdOrName]
 	).rows[0]
 	return null unless user?
-	
+
 	user.health_percent = user.health * 100 / user.health_max
 	user.mana_percent = user.mana * 100 / user.mana_max
 	expPrevMax = math.ap(config.EXP_MAX_START, user.level - 1, config.EXP_STEP)

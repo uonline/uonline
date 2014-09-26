@@ -98,11 +98,13 @@ block content
 				each p, index in participants
 					li
 						| #{p.name} (#{p.kind}),
+						| #{' '}
 						if p.side == our_side
-							| #{ userid==p.id ? 'я' : 'союзник' }
+							| #{ userid==p.id ? 'вы' : 'союзник' }
 						else
 							| противник
-							a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.kind+"/"+p.id) Вдарить
+							| #{' '}
+							a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.kind+"/"+p.id) Ударить
 		p
 			small
 				if autoinvolved_fm == true

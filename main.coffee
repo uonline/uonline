@@ -301,7 +301,9 @@ app.get '/action/go/:to', mustBeAuthed, (request, response) ->
 	userid = request.uonline.basicOpts.userid
 	to = request.param('to')
 
-	lib.game.changeLocation.sync null, dbConnection, userid, to
+	result = lib.game.changeLocation.sync null, dbConnection, userid, to
+	if result.result != 'ok'
+		console.error "Location change failed: #{result.reason}"
 
 	response.redirect '/game/'
 

@@ -34,6 +34,7 @@
     "newrelic": "^1.9.2",
     "stream-stack": ">= 1.1.1",
     "stylus": "^0.47.3",
+    "sugar": "^1.4.1",
     "sync": "~0.2.2"
   },
   "devDependencies": {
