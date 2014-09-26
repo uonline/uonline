@@ -82,7 +82,7 @@ block content
 						div(style="float:left;")
 							| #{i.name}:&nbsp;
 						.progress(style="margin-bottom:5px;")
-							.progress-bar.progress-bar-success(style='width: '+(i.health/i.health_max*100)+'%;')
+							.progress-bar.progress-bar-success(style='width: '+(Math.round(i.health*100/i.health_max))+'%;', role="progressbar", aria-valuenow=(Math.round(i.health*100/i.health_max)), aria-valuemin="0", aria-valuemax="100")
 								| #{ i.health }/#{ i.health_max }
 				else
 					each i,index in monsters_list
