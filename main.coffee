@@ -122,7 +122,7 @@ app.use ((request, response) ->
 			admin: sessionData.admin
 			userid: sessionData.userid
 	# CSP
-	response.header 'Content-Security-Policy-Report-Only', "default-src 'self'"
+	response.header 'Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'"
 	# Anti-clickjacking
 	response.header 'X-Frame-Options', 'DENY'
 	# PJAX
