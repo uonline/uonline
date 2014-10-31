@@ -115,14 +115,7 @@ options = [
 		'A'
 	]
 	type: 'bool'
-	help: 'Insert armor (or update if already inserted).'
-,
-	names: [
-		'give-armor'
-		'a'
-	]
-	type: 'integer'
-	help: 'Give some armor to user.'
+	help: 'Insert test armor.'
 ,
 	names: [
 		'fix-attributes'
@@ -322,50 +315,42 @@ insertMonsters = ->
 
 
 insertArmor = ->
+	console.log chalk.magenta 'Inserting test armor'+'... '
+
 	query = createQueryUtils(config.DATABASE_URL)
 
+	# protos
 	prototypes = [
-		[1 , 'кожаный нагрудник',  'breastplate',   40, 12]
-		[2 , 'кожаные поножи',     'greave',        35, 20]
-		[3 , 'кожаные сапоги',     'shoe',          20, 8]
-		[4 , 'кожаные наплечники', 'pauldron',      20, 6]
-		[5 , 'кожаные наручи',     'vambrace',      30, 6]
-		[6 , 'кожаный шлем',       'helmet',        30, 8]
+		# [1, 'кожаный нагрудник',  'breastplate',   40, 12]
+		# [2, 'кожаные поножи',     'greave',        35, 20]
+		# [3, 'кожаные сапоги',     'shoes',         20,  8]
+		# [4, 'кожаные наплечники', 'pauldron',      20,  6]
+		# [5, 'кожаные наручи',     'vambrace',      30,  6]
+		# [6, 'кожаный шлем',       'helmet',        30,  8]
+		[1, 'Шлем',   'helmet', 300, 6]
+		[2, 'Сапоги', 'shoes',  120, 8]
 	]
 
-	console.log('Inserting armor prototypes...')
+	process.stdout.write '  '+'Cleaning up'+'... '
+	query 'TRUNCATE armor_prototypes', []
+	query 'TRUNCATE armor', []
+	console.log chalk.green 'ok'
 
+	process.stdout.write '  '+'Inserting armor prototypes'+'... '
 	for proto in prototypes
-		rows = query.all(
-			'UPDATE armor_prototypes '+
-			'SET name=$2, type=$3, strength_max=$4, coverage=$5 '+
-			'WHERE id=$1 RETURNING id', proto)
-		if rows.length is 0
-			query(
-				'INSERT INTO armor_prototypes (id, name, type, strength_max, coverage) '+
-				'VALUES ($1, $2, $3, $4, $5)', proto)
+		query(
+			'INSERT INTO armor_prototypes (id, name, type, strength_max, coverage) '+
+			'VALUES ($1, $2, $3, $4, $5)', proto)
+	console.log chalk.green 'ok'
 
-	console.log('Done.')
-
-
-giveArmor = (userid) ->
-	query = createQueryUtils(config.DATABASE_URL)
-	armorToGive = [1,2,3,4,5,6]
-
-	actualCount = +query.val "SELECT count(*) FROM armor_prototypes WHERE id IN (#{armorToGive.join()})"
-	if actualCount != armorToGive.length
-		console.log("Didn't find all nesessary armor prototypes. Forgot to insert armor?")
-		return
-
-	user = query.row 'SELECT username FROM uniusers WHERE id = $1', [userid]
-
-	console.log("Giving some armor to <#{user.username}>")
-
-	for id in armorToGive
-		strength = query.val 'SELECT strength_max FROM armor_prototypes WHERE id = $1', [id]
-		query 'INSERT INTO armor (prototype, owner, strength) VALUES ($1, $2, $3)', [id, userid, strength]
-
-	console.log('Done.')
+	process.stdout.write '  '+'Fetching users'+'... '
+	users = query.all 'SELECT id, username FROM uniusers', []
+	console.log chalk.green "found #{users.length}"
+	for user in users
+		process.stdout.write '  '+"Giving some armor to #{user.username}"+'... '
+		for item in prototypes
+			query 'INSERT INTO armor (prototype, owner, strength) VALUES ($1,$2,$3)', [item[0], user.id, item[3]]
+		console.log chalk.green 'ok'
 
 
 fixAttrs = ->
@@ -380,7 +365,7 @@ fixAttrs = ->
 	# ['uniusers', 'changeDefault', 'accuracy',     50],
 	# ['uniusers', 'changeDefault', 'intelligence', 50],
 	# ['uniusers', 'changeDefault', 'initiative',   50],
-	process.stdout.write chalk.magenta 'Setting predefined attributes... '
+	process.stdout.write chalk.magenta 'Setting predefined attributes'+'... '
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 	dbConnection.query.sync(
 		dbConnection
@@ -417,10 +402,9 @@ sync(
 		unifyValidate() if opts.unify_validate
 		unifyExport() if opts.unify_export
 		insertMonsters() if opts.monsters
-		optimize() if opts.optimize_tables
 		fixAttrs() if opts.fix_attributes
 		insertArmor() if opts.armor
-		giveArmor(opts.give_armor) if opts.give_armor
+		optimize() if opts.optimize_tables # must always be the last
 		process.exit 0
 	(ex) ->
 		if ex? then throw ex
