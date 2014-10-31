@@ -69,8 +69,11 @@ if !pjax
 						ul.nav.navbar-nav.navbar-right
 							if loggedIn === true
 								+instanceLink('profile', '/profile/', username, 'glyphicon-'+(admin?'certificate':'user'), false, true)
-								+instanceLink('profile', '/profile/', 'Профиль', null, !profileIsMine)
+								//- OH BOLDS
 								+instanceLink('game', '/game/', 'Игра')
+								//- ^^^^^^^^
+								+instanceLink('profile', '/profile/', 'Профиль', null, !profileIsMine)
+								+instanceLink('inventory', '/inventory/', 'Инвентарь')
 								li
 									a(href='/action/logout') Выйти
 							else
