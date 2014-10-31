@@ -334,6 +334,17 @@ app.get '/ajax/isNickBusy/:nick', (request, response) ->
 		isNickBusy: lib.user.userExists.sync null, dbConnection, request.param('nick')
 
 
+app.get '/ajax/cheatFixAll', (request, response) ->
+	dbConnection.query.sync dbConnection,
+		'UPDATE armor '+
+			'SET strength = '+
+			'(SELECT strength_max FROM armor_prototypes '+
+			'WHERE armor.prototype = armor_prototypes.id)'+
+			'',
+		[]
+	response.send 'Вроде сработало.'
+
+
 # 404 handling
 app.get '*', (request, response) ->
 	throw new Error '404'
