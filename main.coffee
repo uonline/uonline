@@ -16,7 +16,7 @@
 
 'use strict'
 
-if process.env.NODE_ENV is 'production'
+if process.env.NEW_RELIC_LICENSE_KEY?
 	console.log 'Loading New Relic...'
 	newrelic = require 'newrelic'
 	console.log 'Loaded New Relic.'
