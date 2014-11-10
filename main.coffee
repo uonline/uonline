@@ -67,7 +67,22 @@ if process.env.SQLPROF is 'true'
 
 app = express()
 app.enable 'trust proxy'
-app.use express.logger()
+
+# logger
+morgan = require 'morgan'
+morgan.token 'coloredStatus', (req, res) ->
+	color = (x) -> x
+	status = res.statusCode
+	if status >= 200 and status <= 300 then color = chalk.green
+	if status >= 300 and status <= 400 then color = chalk.blue
+	if status >= 400 and status <= 500 then color = chalk.yellow
+	if status >= 500 and status <= 600 then color = chalk.red
+	return color(status)
+morgan.token 'uu', (req, res) ->
+	name = req.uonline?.username or req.uonline?.basicOpts?.username or '-'
+	return chalk.gray(name)
+app.use morgan ":remote-addr :uu  :coloredStatus :method :url  #{chalk.gray '":user-agent"'}  :response-time ms"
+
 app.use express.cookieParser()
 app.use express.json()
 app.use express.urlencoded()
