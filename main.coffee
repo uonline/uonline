@@ -79,7 +79,7 @@ morgan.token 'coloredStatus', (req, res) ->
 	if status >= 500 and status <= 600 then color = chalk.red
 	return color(status)
 morgan.token 'uu', (req, res) ->
-	name = req.uonline?.username or req.uonline?.legacyOpts?.username or '-'
+	name = req.uonline?.username or '-'
 	return chalk.gray(name)
 app.use morgan ":remote-addr :uu  :coloredStatus :method :url  #{chalk.gray '":user-agent"'}  :response-time ms"
 
@@ -180,12 +180,65 @@ fetchMonsterFromURL = ((request, response) ->
 
 
 fetchFightMode = ((request, response) ->
+	# TODO: merge these two queries
+	# TODO: merge everything from uniusers into one SELECT
 	request.uonline.fight_mode = lib.game.isInFight.sync null, dbConnection, request.uonline.userid
+	request.uonline.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, request.uonline.userid
 ).asyncMiddleware()
 
 
 fetchArmor = ((request, response) ->
 	request.uonline.armor = lib.game.getUserArmor.sync null, dbConnection, request.uonline.userid
+).asyncMiddleware()
+
+
+fetchLocation = ((request, response) ->
+	try
+		location = lib.game.getUserLocation.sync null, dbConnection, request.uonline.userid
+		request.uonline.location_id = location.id
+		request.uonline.location_name = location.title
+		#request.uonline.pic = request.uonline.picture  if request.uonline.picture?  # TODO: LOLWHAT
+		request.uonline.description = location.description
+		request.uonline.ways = location.ways
+	catch e
+		console.error e.stack
+		location = lib.game.getInitialLocation.sync null, dbConnection
+		lib.game.changeLocation.sync null, dbConnection, request.uonline.userid, location.id
+).asyncMiddleware()
+
+
+fetchArea = ((request, response) ->
+	area = lib.game.getUserArea.sync null, dbConnection, request.uonline.userid
+	request.uonline.area_name = area.title
+).asyncMiddleware()
+
+
+fetchUsersNearby = ((request, response) ->
+	tmpUsers = lib.game.getNearbyUsers.sync null,
+		dbConnection, request.uonline.userid, request.uonline.location_id
+	request.uonline.players_list = tmpUsers
+).asyncMiddleware()
+
+
+fetchMonstersNearby = ((request, response) ->
+	tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, request.uonline.location_id
+	request.uonline.monsters_list = tmpMonsters
+).asyncMiddleware()
+
+
+fetchStats = ((request, response) ->
+	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.userid
+	for i of chars
+		request.uonline[i] = chars[i]
+).asyncMiddleware()
+
+
+fetchBattleGroups = ((request, response) ->
+	if request.uonline.fight_mode
+		request.uonline.participants = lib.game.getBattleParticipants.sync null,
+			dbConnection, request.uonline.userid
+		request.uonline.our_side = request.uonline.participants.find(
+			(p) -> p.kind=='user' && p.id==request.uonline.userid).side
 ).asyncMiddleware()
 
 
@@ -310,41 +363,9 @@ app.get '/action/logout',
 
 app.get '/game/',
 	mustBeAuthed,
-	(request, response) -> sync ->
-		userid = request.uonline.legacyOpts.userid
-		options = request.uonline.legacyOpts
-		options.instance = 'game'
-
-		try
-			location = lib.game.getUserLocation.sync null, dbConnection, userid
-		catch e
-			console.error e.stack
-			location = lib.game.getInitialLocation.sync null, dbConnection
-			lib.game.changeLocation.sync null, dbConnection, userid, location.id
-
-		area = lib.game.getUserArea.sync null, dbConnection, userid
-		options.location_name = location.title
-		options.area_name = area.title
-		options.pic = options.picture  if options.picture?
-		options.description = location.description
-		options.ways = location.ways
-		tmpUsers = lib.game.getNearbyUsers.sync null,
-			dbConnection, userid, location.id
-		options.players_list = tmpUsers
-		tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, location.id
-		options.monsters_list = tmpMonsters
-		options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
-		options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
-
-		if options.fight_mode
-			options.participants = lib.game.getBattleParticipants.sync null, dbConnection, userid
-			options.our_side = options.participants.find((p) -> p.kind=='user' && p.id==userid).side
-
-		chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.legacyOpts.userid
-		for i of chars
-			options[i] = chars[i]
-
-		response.render 'game', options
+	fetchLocation, fetchArea, fetchUsersNearby, fetchMonstersNearby,
+	fetchFightMode, fetchStats, fetchBattleGroups,
+	setInstance('game'), render('game')
 
 
 app.get '/inventory/',
