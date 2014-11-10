@@ -68,7 +68,7 @@ if !pjax
 										a(href='#') One more separated link
 						ul.nav.navbar-nav.navbar-right
 							if loggedIn === true
-								+instanceLink('profile', '/profile/', username, 'glyphicon-'+(admin?'certificate':'user'), false, true)
+								+instanceLink('profile', '/profile/', username, 'glyphicon-'+((admin||isAdmin)?'certificate':'user'), false, true)
 								//- OH BOLDS
 								+instanceLink('game', '/game/', 'Игра')
 								//- ^^^^^^^^
