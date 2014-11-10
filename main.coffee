@@ -162,6 +162,7 @@ mustNotBeAuthed = (request, response, next) ->
 setInstance = (x) ->
 	((request, response) ->
 		request.uonline.instance = x
+		return
 	).asyncMiddleware()
 
 
@@ -176,6 +177,7 @@ fetchMonsterFromURL = ((request, response) ->
 		throw new Error '404'
 	for i of chars
 		request.uonline[i] = chars[i]
+	return
 ).asyncMiddleware()
 
 
@@ -184,11 +186,13 @@ fetchFightMode = ((request, response) ->
 	# TODO: merge everything from uniusers into one SELECT
 	request.uonline.fight_mode = lib.game.isInFight.sync null, dbConnection, request.uonline.userid
 	request.uonline.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, request.uonline.userid
+	return
 ).asyncMiddleware()
 
 
 fetchArmor = ((request, response) ->
 	request.uonline.armor = lib.game.getUserArmor.sync null, dbConnection, request.uonline.userid
+	return
 ).asyncMiddleware()
 
 
@@ -204,12 +208,14 @@ fetchLocation = ((request, response) ->
 		console.error e.stack
 		location = lib.game.getInitialLocation.sync null, dbConnection
 		lib.game.changeLocation.sync null, dbConnection, request.uonline.userid, location.id
+	return
 ).asyncMiddleware()
 
 
 fetchArea = ((request, response) ->
 	area = lib.game.getUserArea.sync null, dbConnection, request.uonline.userid
 	request.uonline.area_name = area.title
+	return
 ).asyncMiddleware()
 
 
@@ -217,12 +223,14 @@ fetchUsersNearby = ((request, response) ->
 	tmpUsers = lib.game.getNearbyUsers.sync null,
 		dbConnection, request.uonline.userid, request.uonline.location_id
 	request.uonline.players_list = tmpUsers
+	return
 ).asyncMiddleware()
 
 
 fetchMonstersNearby = ((request, response) ->
 	tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, request.uonline.location_id
 	request.uonline.monsters_list = tmpMonsters
+	return
 ).asyncMiddleware()
 
 
@@ -230,6 +238,7 @@ fetchStats = ((request, response) ->
 	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.userid
 	for i of chars
 		request.uonline[i] = chars[i]
+	return
 ).asyncMiddleware()
 
 
@@ -239,6 +248,7 @@ fetchBattleGroups = ((request, response) ->
 			dbConnection, request.uonline.userid
 		request.uonline.our_side = request.uonline.participants.find(
 			(p) -> p.kind=='user' && p.id==request.uonline.userid).side
+	return
 ).asyncMiddleware()
 
 
