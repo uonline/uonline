@@ -206,76 +206,93 @@ app.get '/', (request, response) ->
 		response.redirect config.defaultInstanceForGuests
 
 
-app.get '/about/', setInstance('about'), render('about')
-app.get '/login/', mustNotBeAuthed, setInstance('login'), render('login')
+app.get '/about/',
+	setInstance('about'), render('about')
 
 
-app.get '/register/', mustNotBeAuthed, setInstance('register'), render('register')
-
-app.post '/register/', mustNotBeAuthed, setInstance('register'), (request, response) ->
-	usernameIsValid = lib.validation.usernameIsValid(request.body.user)
-	passwordIsValid = lib.validation.passwordIsValid(request.body.pass)
-	userExists = lib.user.userExists.sync(null, dbConnection, request.body.user)
-	if (usernameIsValid is true) and (passwordIsValid is true) and (userExists is false)
-		result = lib.user.registerUser.sync(
-			null
-			dbConnection
-			request.body.user
-			request.body.pass
-			'user'
-		)
-		response.cookie 'sessid', result.sessid
-		response.redirect '/'
-	else
-		options = request.uonline
-		options.error = true
-		options.invalidLogin = !usernameIsValid
-		options.invalidPass = !passwordIsValid
-		options.loginIsBusy = userExists
-		options.user = request.body.user
-		options.pass = request.body.pass
-		response.render 'register', options
+app.get '/login/',
+	mustNotBeAuthed,
+	setInstance('login'), render('login')
 
 
-app.post '/login/', mustNotBeAuthed, setInstance('login'), (request, response) ->
-	if lib.user.accessGranted.sync null, dbConnection, request.body.user, request.body.pass
-		sessid = lib.user.createSession.sync null, dbConnection, request.body.user
-		response.cookie 'sessid', sessid
-		response.redirect '/'
-	else
-		options = request.uonline
-		options.error = true
-		options.user = request.body.user
-		response.render 'login', options
+app.post '/login/',
+	mustNotBeAuthed,
+	setInstance('login'),
+	(request, response) ->
+		if lib.user.accessGranted.sync null, dbConnection, request.body.user, request.body.pass
+			sessid = lib.user.createSession.sync null, dbConnection, request.body.user
+			response.cookie 'sessid', sessid
+			response.redirect '/'
+		else
+			options = request.uonline
+			options.error = true
+			options.user = request.body.user
+			response.render 'login', options
 
 
-app.get '/profile/', mustBeAuthed, (request, response) -> sync ->
-	# TODO: myprofile instance
-	options = request.uonline.legacyOpts
-	options.instance = 'profile'
-	options.username = request.uonline.legacyOpts.username
-	options.profileIsMine = true
-	options.id = request.uonline.legacyOpts.userid
-	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.legacyOpts.userid
-	for i of chars
-		options[i] = chars[i]
-	response.render 'profile', options
+app.get '/register/',
+	mustNotBeAuthed,
+	setInstance('register'), render('register')
 
 
-app.get '/profile/:username/', (request, response) ->
-	# TODO: bug #482
-	# Тут можно смеяться, пускать пузыри и ничего не делать.
-	username = request.param('username')
-	chars = lib.game.getUserCharacters.sync null, dbConnection, username
-	if chars is null
-		throw new Error '404'
-	options = request.uonline.legacyOpts
-	options.instance = 'profile'
-	options.profileIsMine = (options.loggedIn is true) and (chars.id == options.userid)
-	for i of chars
-		options[i] = chars[i]
-	options.username = username
-	response.render 'profile', options
+app.post '/register/',
+	mustNotBeAuthed,
+	setInstance('register'),
+	(request, response) ->
+		usernameIsValid = lib.validation.usernameIsValid(request.body.user)
+		passwordIsValid = lib.validation.passwordIsValid(request.body.pass)
+		userExists = lib.user.userExists.sync(null, dbConnection, request.body.user)
+		if (usernameIsValid is true) and (passwordIsValid is true) and (userExists is false)
+			result = lib.user.registerUser.sync(
+				null
+				dbConnection
+				request.body.user
+				request.body.pass
+				'user'
+			)
+			response.cookie 'sessid', result.sessid
+			response.redirect '/'
+		else
+			options = request.uonline
+			options.error = true
+			options.invalidLogin = !usernameIsValid
+			options.invalidPass = !passwordIsValid
+			options.loginIsBusy = userExists
+			options.user = request.body.user
+			options.pass = request.body.pass
+			response.render 'register', options
+
+
+app.get '/profile/',
+	mustBeAuthed,
+	(request, response) -> sync ->
+		# TODO: myprofile instance
+		options = request.uonline.legacyOpts
+		options.instance = 'profile'
+		options.username = request.uonline.legacyOpts.username
+		options.profileIsMine = true
+		options.id = request.uonline.legacyOpts.userid
+		chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.legacyOpts.userid
+		for i of chars
+			options[i] = chars[i]
+		response.render 'profile', options
+
+
+app.get '/profile/:username/',
+	(request, response) ->
+		# TODO: bug #482
+		# Тут можно смеяться, пускать пузыри и ничего не делать.
+		username = request.param('username')
+		chars = lib.game.getUserCharacters.sync null, dbConnection, username
+		if chars is null
+			throw new Error '404'
+		options = request.uonline.legacyOpts
+		options.instance = 'profile'
+		options.profileIsMine = (options.loggedIn is true) and (chars.id == options.userid)
+		for i of chars
+			options[i] = chars[i]
+		options.username = username
+		response.render 'profile', options
 
 
 app.get '/monster/:id/',
@@ -289,41 +306,43 @@ app.get '/action/logout', mustBeAuthed, (request, response) ->
 	response.redirect '/'
 
 
-app.get '/game/', mustBeAuthed, (request, response) -> sync ->
-	userid = request.uonline.legacyOpts.userid
-	options = request.uonline.legacyOpts
-	options.instance = 'game'
+app.get '/game/',
+	mustBeAuthed,
+	(request, response) -> sync ->
+		userid = request.uonline.legacyOpts.userid
+		options = request.uonline.legacyOpts
+		options.instance = 'game'
 
-	try
-		location = lib.game.getUserLocation.sync null, dbConnection, userid
-	catch e
-		console.error e.stack
-		location = lib.game.getInitialLocation.sync null, dbConnection
-		lib.game.changeLocation.sync null, dbConnection, userid, location.id
+		try
+			location = lib.game.getUserLocation.sync null, dbConnection, userid
+		catch e
+			console.error e.stack
+			location = lib.game.getInitialLocation.sync null, dbConnection
+			lib.game.changeLocation.sync null, dbConnection, userid, location.id
 
-	area = lib.game.getUserArea.sync null, dbConnection, userid
-	options.location_name = location.title
-	options.area_name = area.title
-	options.pic = options.picture  if options.picture?
-	options.description = location.description
-	options.ways = location.ways
-	tmpUsers = lib.game.getNearbyUsers.sync null,
-		dbConnection, userid, location.id
-	options.players_list = tmpUsers
-	tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, location.id
-	options.monsters_list = tmpMonsters
-	options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
-	options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
+		area = lib.game.getUserArea.sync null, dbConnection, userid
+		options.location_name = location.title
+		options.area_name = area.title
+		options.pic = options.picture  if options.picture?
+		options.description = location.description
+		options.ways = location.ways
+		tmpUsers = lib.game.getNearbyUsers.sync null,
+			dbConnection, userid, location.id
+		options.players_list = tmpUsers
+		tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, location.id
+		options.monsters_list = tmpMonsters
+		options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
+		options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
 
-	if options.fight_mode
-		options.participants = lib.game.getBattleParticipants.sync null, dbConnection, userid
-		options.our_side = options.participants.find((p) -> p.kind=='user' && p.id==userid).side
+		if options.fight_mode
+			options.participants = lib.game.getBattleParticipants.sync null, dbConnection, userid
+			options.our_side = options.participants.find((p) -> p.kind=='user' && p.id==userid).side
 
-	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.legacyOpts.userid
-	for i of chars
-		options[i] = chars[i]
+		chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.legacyOpts.userid
+		for i of chars
+			options[i] = chars[i]
 
-	response.render 'game', options
+		response.render 'game', options
 
 
 app.get '/inventory/',
@@ -366,21 +385,23 @@ app.get '/action/hit/:kind/:id',
 		response.redirect '/game/'
 
 
-app.get '/ajax/isNickBusy/:nick', (request, response) ->
-	response.json
-		nick: request.param('nick')
-		isNickBusy: lib.user.userExists.sync null, dbConnection, request.param('nick')
+app.get '/ajax/isNickBusy/:nick',
+	(request, response) ->
+		response.json
+			nick: request.param('nick')
+			isNickBusy: lib.user.userExists.sync null, dbConnection, request.param('nick')
 
 
-app.get '/ajax/cheatFixAll', (request, response) ->
-	dbConnection.query.sync dbConnection,
-		'UPDATE armor '+
-			'SET strength = '+
-			'(SELECT strength_max FROM armor_prototypes '+
-			'WHERE armor.prototype = armor_prototypes.id)'+
-			'',
-		[]
-	response.send 'Вроде сработало.'
+app.get '/ajax/cheatFixAll',
+	(request, response) ->
+		dbConnection.query.sync dbConnection,
+			'UPDATE armor '+
+				'SET strength = '+
+				'(SELECT strength_max FROM armor_prototypes '+
+				'WHERE armor.prototype = armor_prototypes.id)'+
+				'',
+			[]
+		response.send 'Вроде сработало.'
 
 
 # 404 handling
