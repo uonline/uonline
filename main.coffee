@@ -300,10 +300,12 @@ app.get '/monster/:id/',
 	setInstance('monster'), render('monster')
 
 
-app.get '/action/logout', mustBeAuthed, (request, response) ->
-	lib.user.closeSession.sync null,
-		dbConnection, request.uonline.sessid
-	response.redirect '/'
+app.get '/action/logout',
+	mustBeAuthed,
+	(request, response) ->
+		lib.user.closeSession.sync null,
+			dbConnection, request.uonline.sessid
+		response.redirect '/'
 
 
 app.get '/game/',
