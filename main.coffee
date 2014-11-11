@@ -328,17 +328,8 @@ app.post '/register/',
 
 app.get '/profile/',
 	mustBeAuthed,
-	(request, response) -> sync ->
-		# TODO: myprofile instance
-		options = request.uonline.legacyOpts
-		options.instance = 'profile'
-		options.username = request.uonline.legacyOpts.username
-		options.profileIsMine = true
-		options.id = request.uonline.legacyOpts.userid
-		chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.legacyOpts.userid
-		for i of chars
-			options[i] = chars[i]
-		response.render 'profile', options
+	fetchStats,
+	setInstance('myprofile'), render('profile')
 
 
 app.get '/profile/:username/',
