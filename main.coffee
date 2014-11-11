@@ -242,6 +242,16 @@ fetchStats = ((request, response) ->
 ).asyncMiddleware()
 
 
+fetchStatsFromURL = ((request, response) ->
+	chars = lib.game.getUserCharacters.sync null, dbConnection, request.param 'username'
+	if not chars?
+		throw new Error '404'
+	for i of chars
+		request.uonline[i] = chars[i]
+	return
+).asyncMiddleware()
+
+
 fetchBattleGroups = ((request, response) ->
 	if request.uonline.fight_mode
 		request.uonline.participants = lib.game.getBattleParticipants.sync null,
@@ -333,20 +343,8 @@ app.get '/profile/',
 
 
 app.get '/profile/:username/',
-	(request, response) ->
-		# TODO: bug #482
-		# Тут можно смеяться, пускать пузыри и ничего не делать.
-		username = request.param('username')
-		chars = lib.game.getUserCharacters.sync null, dbConnection, username
-		if chars is null
-			throw new Error '404'
-		options = request.uonline.legacyOpts
-		options.instance = 'profile'
-		options.profileIsMine = (options.loggedIn is true) and (chars.id == options.userid)
-		for i of chars
-			options[i] = chars[i]
-		options.username = username
-		response.render 'profile', options
+	fetchStatsFromURL,
+	setInstance('profile'), render('profile')
 
 
 app.get '/monster/:id/',
