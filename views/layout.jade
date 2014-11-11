@@ -76,7 +76,7 @@ if !pjax
 										a(href='#') One more separated link
 						ul.nav.navbar-nav.navbar-right
 							if loggedIn === true
-								+instanceLink('myprofile', '/profile/', username, false, 'glyphicon-'+((admin||isAdmin)?'certificate':'user'), false, true)
+								+instanceLink('myprofile', '/profile/', username, false, 'glyphicon-'+(isAdmin?'certificate':'user'), false, true)
 								+instanceLink('game', '/game/', 'Игра', true)
 								+instanceLink('myprofile', '/profile/', 'Профиль')
 								+instanceLink('inventory', '/inventory/', 'Инвентарь')

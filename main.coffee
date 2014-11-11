@@ -124,14 +124,6 @@ app.use ((request, response) ->
 	request.uonline.username = sessionData.username
 	request.uonline.isAdmin = sessionData.admin
 	request.uonline.userid = sessionData.userid
-	# patch for legacy shit
-	request.uonline.legacyOpts =
-		now: request.uonline.now
-		pjax: request.uonline.pjax
-		loggedIn: request.uonline.loggedIn
-		username: request.uonline.username
-		admin: request.uonline.isAdmin
-		userid: request.uonline.userid
 	# CSP
 	response.header 'Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'"
 	# Anti-clickjacking
@@ -146,14 +138,14 @@ app.use ((request, response) ->
 # Middlewares
 
 mustBeAuthed = (request, response, next) ->
-	if request.uonline.legacyOpts.loggedIn is true
+	if request.uonline.loggedIn is true
 		next()
 	else
 		response.redirect '/login/'
 
 
 mustNotBeAuthed = (request, response, next) ->
-	if request.uonline.legacyOpts.loggedIn is true
+	if request.uonline.loggedIn is true
 		response.redirect config.defaultInstanceForUsers
 	else
 		next()
@@ -273,7 +265,7 @@ app.get '/explode/', (request, response) ->
 
 
 app.get '/', (request, response) ->
-	if request.uonline.legacyOpts.loggedIn is true
+	if request.uonline.loggedIn is true
 		response.redirect config.defaultInstanceForUsers
 	else
 		response.redirect config.defaultInstanceForGuests
@@ -385,14 +377,14 @@ app.get '/action/go/:to',
 app.get '/action/attack',
 	mustBeAuthed,
 	(request, response) ->
-		lib.game.goAttack.sync null, dbConnection, request.uonline.legacyOpts.userid
+		lib.game.goAttack.sync null, dbConnection, request.uonline.userid
 		response.redirect '/game/'
 
 
 app.get '/action/escape',
 	mustBeAuthed,
 	(request, response) ->
-		lib.game.goEscape.sync null, dbConnection, request.uonline.legacyOpts.userid
+		lib.game.goEscape.sync null, dbConnection, request.uonline.userid
 		response.redirect '/game/'
 
 
@@ -401,7 +393,7 @@ app.get '/action/hit/:kind/:id',
 	(request, response) ->
 		lib.game.hitOpponent.sync(
 			null, dbConnection,
-			request.uonline.legacyOpts.userid,
+			request.uonline.userid,
 			request.param('id'), request.param('kind')
 		)
 		response.redirect '/game/'
@@ -438,7 +430,7 @@ app.use (error, request, response, next) ->
 		code = 404
 	else
 		console.error error.stack
-	options = request.uonline.legacyOpts
+	options = request.uonline
 	options.code = code
 	options.instance = 'error'
 	response.status code
