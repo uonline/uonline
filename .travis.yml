@@ -17,3 +17,8 @@ before_script:
   - psql -c 'create database uonline_test;' -U postgres
 script:
   - grunt travis
+# New stack
+sudo: false
+cache:
+  directories:
+  - node_modules
