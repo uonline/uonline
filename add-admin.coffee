@@ -16,6 +16,7 @@
 
 'use strict'
 
+
 lib = require './lib.coffee'
 sync = require 'sync'
 
