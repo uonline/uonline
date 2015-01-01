@@ -73,10 +73,10 @@ morgan = require 'morgan'
 morgan.token 'coloredStatus', (req, res) ->
 	color = (x) -> x
 	status = res.statusCode
-	if status >= 200 and status <= 300 then color = chalk.green
-	if status >= 300 and status <= 400 then color = chalk.blue
-	if status >= 400 and status <= 500 then color = chalk.yellow
-	if status >= 500 and status <= 600 then color = chalk.red
+	if status >= 200 and status < 300 then color = chalk.green
+	if status >= 300 and status < 400 then color = chalk.blue
+	if status >= 400 and status < 500 then color = chalk.yellow
+	if status >= 500 and status < 600 then color = chalk.red
 	return color(status)
 morgan.token 'uu', (req, res) ->
 	name = req.uonline?.username or '-'
