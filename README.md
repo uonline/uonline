@@ -1,48 +1,68 @@
 uonline
 =======
 
-[![Build Status](https://travis-ci.org/uonline/uonline.png?branch=master)](https://travis-ci.org/uonline/uonline) [![Coverage Status](https://coveralls.io/repos/uonline/uonline/badge.png?branch=master)](https://coveralls.io/r/uonline/uonline?branch=master) [![Dependency Status](https://david-dm.org/uonline/uonline.png)](https://david-dm.org/uonline/uonline) [![devDependency Status](https://david-dm.org/uonline/uonline/dev-status.png)](https://david-dm.org/uonline/uonline#info=devDependencies)  [![Code Climate](https://codeclimate.com/github/uonline/uonline.png)](https://codeclimate.com/github/uonline/uonline) [![Tasks for this week](https://badge.waffle.io/uonline/uonline.png?label=this%20week&title=Tasks)](http://waffle.io/uonline/uonline)
+[![Build Status](https://img.shields.io/travis/uonline/uonline/master.svg)](https://travis-ci.org/uonline/uonline)
+[![Coverage Status](https://img.shields.io/coveralls/uonline/uonline.svg)](https://coveralls.io/r/uonline/uonline?branch=master)
+[![Dependency Status](https://img.shields.io/david/uonline/uonline.svg)](https://david-dm.org/uonline/uonline)
+[![devDependency Status](https://img.shields.io/david/dev/uonline/uonline.svg)](https://david-dm.org/uonline/uonline#info=devDependencies)
+[![Code Climate](http://img.shields.io/codeclimate/github/uonline/uonline.svg)](https://codeclimate.com/github/uonline/uonline)
+[![Planned tasks](https://badge.waffle.io/uonline/uonline.svg?label=on%20fire&title=Tasks)](http://waffle.io/uonline/uonline)
 
-A browser-based MMORPG game in a fantasy world.
+A browser-based MMORPG in a fantasy world.
 
 
 Requirements
 ------------
 
-### Current
+* Node.js 0.10 with npm;
+* CoffeeScript;
+* Grunt (you may use local one, but why?);
+* Bower;
+* PostgreSQL 9.1 or higher.
 
-* Node.js 0.10 with npm
-* CoffeeScript
-* Grunt
-* MySQL or MariaDB
-* MySQL user `anonymous` with password `nopassword`
-* Two MySQL databases: `uonline` and `uonline_test`
+uonline expects environment variables `DATABASE_URL` and `DATABASE_URL_TEST` to be set. If they are not, it will use following default credentials. You'll probably find it convinient to make the dev environment match them.
 
-### Future
-
-* PostgreSQL
+* Hostname `localhost`;
+* DB user `anonymous` with password `nopassword`;
+* Databases: `uonline` and `uonline_test`.
 
 
 How to set up
 -------------
 
 * Clone the repo.
-* Install packages: `npm install`.
-* Fetch submodules: `git submodule init`, `git submodule update`.
-* Initialize database: `./init.php --database --tables --unify-validate --unify-export --test-monsters --optimize`. Errrm, now you should use init.coffee, but I'm too lazy to fix the command.
-* If you need to add an admin: `./add-admin.coffee username password`.
+* Install packages: `npm install`, `bower install`
+* Fetch submodules: `git submodule init`, `git submodule update`
+* Initialize database: `./init.coffee --migrate-tables --unify-export --monsters --optimize-tables`
+* If you need to add an admin: `./add-admin.coffee`
 
 
 How to run
 ----------
 
-If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`.
+If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`. If you need to restart server after every change in code — `make monitor`.
+
+
+Grunt hints
+-----------
+
+Run `grunt` to check and test your code. It will lint your code, run tests, show coverage stats, generate docs and so on. Please run it before every commit.
+
+Useful subtasks:
+
+* `grunt test` — run unittests only;
+* `grunt docs` — rebuild docs;
+* `grunt build` — rebuild static files.
+
+Useful options:
+
+* `grunt test --single health-check.coffee` — run only one testsuite;
+* `grunt test --speedup=test` — skip loading some modules;
+* `grunt --stack` — show stack trace on error.
 
 
 Programmers' guidelines
 -----------------------
-
-**Hint:** Run `grunt` to check and test your code. Run something like `grunt test --single health-check.coffee` to run a single testsuite.
 
 * Use tabs, not spaces. Don't mix them and don't use smarttabs.
 * Prefer single quotes. Use double quotes when you need to escape `'` itself.
@@ -51,7 +71,7 @@ Programmers' guidelines
 * Sync is better than async. Async is better than callbacks.
 * Write tests for everything.
 * Write good assert comments: they should answer the question "What do this function should do?".
-* Keep things outside of main thread. Use asynchronous API.
+* Keep things outside of main thread: use asynchronous API. And remember: `fs.readFile.sync()` is way better than `fs.readFileSync()`.
 
 
 ### CoffeeScript-specific
@@ -86,7 +106,7 @@ exports.closeSession = function(dbConnection, sess, callback) {
 };
 ```
 
-* Use trailing commas. Place them even after last element - it allows you to swap lines easily.
+* Use trailing commas. Place them even after last element — it allows you to swap lines easily.
 
 ```js
 var numbers = [

@@ -1,3 +1,6 @@
+# Generated docs
+docs/
+
 # Used by tests
 test/
 lib-cov/
@@ -7,8 +10,9 @@ report.lcov
 node_modules/
 bower_components/
 
-# Browserified Node modules
-browserified/
+# Browser assets
+_build/
+assets/
 
 ## Tool-specific
 

@@ -40,7 +40,7 @@ module.exports = (grunt) ->
 			results = results.filter (item) -> item[1] is false
 			if results.length is 0
 				msg = success.replace /\{n\}/g, "#{count}"
-				if count == 1 or (count > 20 and count % 10 == 1)
+				if count == 1 or (count % 10 == 1 and count % 100 != 11)
 					msg = msg.replace /\{s\}/g, ''
 					msg = msg.replace /\{\!s\}/g, 's'
 					msg = msg.replace /\{is\/are\}/g, 'is'

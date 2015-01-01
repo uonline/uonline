@@ -17,15 +17,20 @@
 'use strict'
 
 config = require './config.js'
-lib = require './lib.js'
-async = require 'async'
+lib = require './lib.coffee'
 sync = require 'sync'
 dashdash = require 'dashdash'
+chalk = require 'chalk'
+sugar = require 'sugar'
+
 
 anyDB = null
 createAnyDBConnection = (url) ->
 	anyDB = require 'any-db' unless anyDB?
 	anyDB.createConnection(url)
+
+createQueryUtils = (url) ->
+	lib.query_utils.getFor createAnyDBConnection url
 
 
 checkError = (error, dontExit) ->
@@ -99,11 +104,24 @@ options = [
 	help: 'Parse and save locations to DB.'
 ,
 	names: [
-		'test-monsters'
-		't'
+		'monsters'
+		'M'
 	]
 	type: 'bool'
-	help: 'Insert test monsters.'
+	help: 'Insert monsters.'
+,
+	names: [
+		'armor'
+		'A'
+	]
+	type: 'bool'
+	help: 'Insert test armor.'
+,
+	names: [
+		'fix-attributes'
+	]
+	type: 'bool'
+	help: 'Set predefined attributes for all players.'
 ]
 
 
@@ -139,12 +157,21 @@ help = ->
 
 
 info = ->
-	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
-	current = lib.migration.getCurrentRevision.sync(null, mysqlConnection)
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+	current = lib.migration.getCurrentRevision.sync(null, dbConnection)
 	newest = lib.migration.getNewestRevision()
-	status = if current < newest then 'needs update' else 'up to date'
-	console.log "init.js with #{newest + 1} revisions on board."
-	console.log "Current revision is #{current} (#{status})."
+
+	status = 'up to date'
+	color = chalk.green
+	if current < newest
+		status = 'needs update'
+		color = chalk.red
+	if current > newest
+		status = "oh fuck, how it's possible?"
+		color = chalk.red
+
+	console.log "This is the uonline init script."
+	console.log "Latest revision is #{chalk.magenta(newest)}, current is #{color(current)} (#{color(status)})."
 
 
 createDatabase = (arg) ->
@@ -152,17 +179,19 @@ createDatabase = (arg) ->
 
 	create = (db_url) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
+		db_path += '/postgres'  # PostgreSQL requires database to be specified.
 		conn = createAnyDBConnection(db_path)
 		try
-			conn.query.sync(conn, 'CREATE DATABASE ' + db_name, [])
+			conn.query.sync(conn, "CREATE DATABASE #{db_name}", [])
 			console.log "#{db_name} created."
 		catch error
-			if error.code != 'ER_DB_CREATE_EXISTS'
+			if error.code is 'ER_DB_CREATE_EXISTS' or error.code is '42P04'  # MySQL, PostgreSQL
+				console.log "#{db_name} already exists."
+			else
 				throw error
-			console.log "#{db_name} already exists."
 
-	create config.MYSQL_DATABASE_URL if arg in ['main', 'both']
-	create config.MYSQL_DATABASE_URL_TEST if arg in ['test', 'both']
+	create config.DATABASE_URL if arg in ['main', 'both']
+	create config.DATABASE_URL_TEST if arg in ['test', 'both']
 
 
 dropDatabase = (arg) ->
@@ -170,39 +199,46 @@ dropDatabase = (arg) ->
 
 	drop = (db_url, callback) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
+		db_path += '/postgres'  # PostgreSQL requires database to be specified.
 		conn = createAnyDBConnection(db_path)
 		try
-			conn.query.sync(conn, 'DROP DATABASE ' + db_name, [])
+			conn.query.sync(conn, "DROP DATABASE #{db_name}", [])
 			console.log "#{db_name} dropped."
 		catch error
-			if error.code != 'ER_DB_DROP_EXISTS'
+			if error.code is 'ER_DB_DROP_EXISTS' or error.code is '3D000'  # MySQL, PostgreSQL
+				console.log "#{db_name} does not exist."
+			else
 				throw error
-			console.log "#{db_name} already dropped."
 
-	drop config.MYSQL_DATABASE_URL if arg in ['main', 'both']
-	drop config.MYSQL_DATABASE_URL_TEST if arg in ['test', 'both']
+	drop config.DATABASE_URL if arg in ['main', 'both']
+	drop config.DATABASE_URL_TEST if arg in ['test', 'both']
 
 
 migrateTables = ->
-	mysqlConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
-	lib.migration.migrate.sync null, mysqlConnection
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+	lib.migration.migrate.sync null, dbConnection, {verbose: true}
 
 
 optimize = ->
-	conn = createAnyDBConnection(config.MYSQL_DATABASE_URL)
-	db_name = config.MYSQL_DATABASE_URL.match(/[^\/]+$/)[0]
+	console.log chalk.magenta 'Optimizing tables...'
+
+	conn = createAnyDBConnection(config.DATABASE_URL)
+	db_name = config.DATABASE_URL.match(/[^\/]+$/)[0]
 
 	result = conn.query.sync conn,
-		"SELECT TABLE_NAME "+
-		"FROM information_schema.TABLES "+
-		"WHERE TABLE_SCHEMA='#{db_name}'"
+		"SELECT table_name "+
+		"FROM information_schema.tables "+
+		"WHERE table_schema = 'public'"  # move to subquery, maybe?
 
 	for row in result.rows
-		optRes = conn.query.sync conn, "OPTIMIZE TABLE #{row.TABLE_NAME}"
-		console.log row.TABLE_NAME+":"
-
-		for optRow in optRes.rows
-			console.log "  #{optRow.Op} #{optRow.Msg_type}: #{optRow.Msg_text}"
+		#lib.prettyprint.action "Optimizing table `#{row.table_name}`"
+		process.stdout.write " `#{row.table_name}`... "
+		try
+			optRes = conn.query.sync conn, "VACUUM FULL ANALYZE #{row.table_name}"
+			console.log chalk.green "ok"
+		catch ex
+			console.log chalk.red.bold "fail"
+			console.trace ex
 
 
 unifyValidate = ->
@@ -210,94 +246,144 @@ unifyValidate = ->
 
 
 unifyExport = ->
-	dbConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 	locparse = require './lib/locparse'
 	result = locparse.processDir('./unify/Кронт - kront', true)
 	result.save(dbConnection)
 
 
-insertTestMonsters = ->
-	dbConnection = createAnyDBConnection(config.MYSQL_DATABASE_URL)
+insertMonsters = ->
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+
+	console.log('Inserting test prototypes...')
+
 	prototypes = [
-		[1, 'Гигантская улитка', 1, 1, 1, 1, 1, 1, 1, 1, 3]
-		[2, 'Червь-хищник', 2, 1, 2, 2, 1, 1, 2, 1, 1]
-		[3, 'Ядовитая многоножка', 1, 1, 2, 1, 1, 1, 1, 1, 1]
-		[4, 'Скорпион', 1, 2, 1, 1, 1, 1, 1, 1, 1]
-		[5, 'Кобра', 2, 1, 3, 1, 3, 2, 1, 2, 1]
-		[6, 'Дикий кабан', 1, 2, 1, 2, 1, 1, 1, 2, 1]
-		[7, 'Тарантул', 3, 1, 4, 2, 1, 2, 4, 1, 1]
+		[0,"Могильный жук",1,12,6,22,0,10,250,0,0,5,16]
+		[1,"Молодой паук",2,16,30,20,0,26,290,0,0,10,30]
+		[2,"Маленький скорпион",3,20,30,38,0,44,100,0,0,25,45]
+		[3,"Паук",3,20,24,28,0,24,400,0,0,15,25]
+		[4,"Хряк",5,28,16,30,0,22,540,0,0,9,20]
+		[5,"Скелет",4,32,34,10,0,34,600,0,0,45,55]
+		[6,"Молодой лесной волк",5,40,34,38,0,34,700,0,0,35,65]
+		[7,"Малый медведь",6,56,34,68,0,30,800,0,0,24,44]
+		[8,"Зомби",6,40,54,28,0,64,700,0,0,45,75]
+		[9,"Броненосец",7,46,10,98,0,24,2500,0,0,15,25]
+		[10,"Вепрь",8,80,30,28,0,24,1500,0,0,25,45]
+		[11,"Лесной волк",9,68,54,54,0,44,1600,0,0,55,70]
+		[12,"Медведь",10,160,22,128,0,48,2000,0,0,25,56]
+		[13,"Гоблин",11,40,64,28,0,64,1100,0,0,25,45]
+		[14,"Огр",14,180,30,118,0,44,1800,0,0,15,45]
+		[15,"Грязевой голем",21,300,20,100,0,50,2500,0,0,5,16]
 	]
+
+	dbConnection.query.sync(dbConnection, "TRUNCATE monster_prototypes", [])
 	for i in prototypes
 		dbConnection.query.sync(
 			dbConnection
-			"REPLACE INTO `monster_prototypes` "+
-				"(`id`, `name`, `level`, `power`, `agility`, `endurance`, `intelligence`, "+
-				"`wisdom`, `volition`, `health_max`, `mana_max`) "+
+			"INSERT INTO monster_prototypes "+
+				"(id, name, level, power, agility, defense, intelligence, accuracy, "+
+				"health_max, mana_max, energy, initiative_min, initiative_max) "+
 				"VALUES "+
-				"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+				"($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)"
 			i
 		)
-	monsters = [
-		[1, 6, 774449300, 1, 1, null, 16]
-		[2, 5, 648737395, 1, 1, null, 5]
-		[3, 6, 580475724, 1, 1, null, 25]
-		[4, 3, 571597042, 1, 1, null, 22]
-		[5, 4, 845588419, 1, 1, null, 11]
-		[6, 3, 446105458, 1, 1, null, 19]
-		[7, 1, 4642136, 1, 1, null, 10]
-		[8, 5, 29958182, 1, 1, null, 9]
-		[9, 7, 904434466, 1, 1, null, 13]
-		[10, 7, 288482442, 1, 1, null, 25]
-		[11, 1, 77716864, 1, 1, null, 6]
-		[12, 2, 701741103, 1, 1, null, 17]
-		[13, 5, 744906885, 1, 1, null, 22]
-		[14, 4, 744906885, 1, 1, null, 6]
-		[15, 7, 4642136, 1, 1, null, 8]
-		[16, 2, 1054697917, 1, 1, null, 7]
-		[17, 6, 833637588, 1, 1, null, 10]
-		[18, 6, 29958182, 1, 1, null, 25]
-		[19, 6, 774449300, 1, 1, null, 12]
-		[20, 4, 744906885, 1, 1, null, 8]
-		[21, 5, 446105458, 1, 1, null, 22]
-		[22, 5, 288482442, 1, 1, null, 17]
-		[23, 1, 4642136, 1, 1, null, 8]
-		[24, 7, 29958182, 1, 1, null, 16]
-		[25, 5, 774449300, 1, 1, null, 15]
-		[26, 7, 1054697917, 1, 1, null, 20]
-		[27, 5, 723001325, 1, 1, null, 16]
-		[28, 4, 571597042, 1, 1, null, 23]
-		[29, 3, 845588419, 1, 1, null, 14]
-		[30, 5, 288482442, 1, 1, null, 25]
-		[31, 4, 701741103, 1, 1, null, 6]
-		[32, 2, 77716864, 1, 1, null, 15]
-		[33, 7, 701741103, 1, 1, null, 17]
-		[34, 7, 701741103, 1, 1, null, 22]
-		[35, 5, 772635195, 1, 1, null, 7]
-		[36, 6, 29958182, 1, 1, null, 21]
-		[37, 4, 29958182, 1, 1, null, 18]
-		[38, 1, 578736465, 1, 1, null, 25]
-		[39, 4, 172926385, 1, 1, null, 25]
-		[40, 2, 744906885, 1, 1, null, 21]
-		[41, 5, 29958182, 1, 1, null, 21]
-		[42, 4, 723001325, 1, 1, null, 9]
-		[43, 1, 451777421, 1, 1, null, 8]
-		[44, 4, 29958182, 1, 1, null, 5]
-		[45, 4, 648737395, 1, 1, null, 24]
-		[46, 2, 723001325, 1, 1, null, 21]
-		[47, 2, 571597042, 1, 1, null, 24]
-		[48, 2, 288482442, 1, 1, null, 13]
-		[49, 2, 774449300, 1, 1, null, 8]
-		[50, 6, 446105458, 1, 1, null, 19]
-	]
-	for i in monsters
+
+	console.log('Inserting monsters...')
+
+	locs = dbConnection.query.sync(dbConnection, "SELECT id FROM locations").rows
+	if (locs.length == 0)
+		throw new Error("No locations found. Forgot unify data?")
+
+	dbConnection.query.sync(dbConnection, "TRUNCATE monsters", [])
+	prototypesFromDB = dbConnection.query.sync(dbConnection, "SELECT * FROM monster_prototypes").rows
+	for i in [0...50]
+		soul = prototypesFromDB.sample()
 		dbConnection.query.sync(
 			dbConnection
-			"REPLACE INTO `monsters` "+
-				"(`id`, `prototype`, `location`, `health`, `mana`, `effects`, `attack_chance`) "+
+			"INSERT INTO monsters "+
+				"(id, prototype, location, health, mana, effects,"+
+				" attack_chance, initiative) "+
 				"VALUES "+
-				"(?, ?, ?, ?, ?, ?, ?)"
-			i
+				"($1, $2, $3, $4, $5, $6, $7, $8)"
+			[
+				i, soul.id, locs.sample().id, soul.health_max, soul.mana_max, null,
+				Number.random(25), Number.random(soul.initiative_min, soul.initiative_max)
+			]
 		)
+
+	console.log('Done.')
+
+
+insertArmor = ->
+	console.log chalk.magenta 'Inserting test armor'+'... '
+
+	query = createQueryUtils(config.DATABASE_URL)
+
+	# protos
+	prototypes = [
+		# [1, 'кожаный нагрудник',  'breastplate',   40, 12]
+		# [2, 'кожаные поножи',     'greave',        35, 20]
+		# [3, 'кожаные сапоги',     'shoes',         20,  8]
+		# [4, 'кожаные наплечники', 'pauldron',      20,  6]
+		# [5, 'кожаные наручи',     'vambrace',      30,  6]
+		# [6, 'кожаный шлем',       'helmet',        30,  8]
+		[1, 'Железный шлем',  'helmet', 300, 6]
+		[2, 'Кожаные сапоги', 'shoes',  120, 8]
+	]
+
+	process.stdout.write '  '+'Cleaning up'+'... '
+	query 'TRUNCATE armor_prototypes', []
+	query 'TRUNCATE armor', []
+	console.log chalk.green 'ok'
+
+	process.stdout.write '  '+'Inserting armor prototypes'+'... '
+	for proto in prototypes
+		query(
+			'INSERT INTO armor_prototypes (id, name, type, strength_max, coverage) '+
+			'VALUES ($1, $2, $3, $4, $5)', proto)
+	console.log chalk.green 'ok'
+
+	process.stdout.write '  '+'Fetching users'+'... '
+	users = query.all 'SELECT id, username FROM uniusers', []
+	console.log chalk.green "found #{users.length}"
+	for user in users
+		process.stdout.write '  '+"Giving some armor to #{user.username}"+'... '
+		for item in prototypes
+			query 'INSERT INTO armor (prototype, owner, strength) VALUES ($1,$2,$3)', [item[0], user.id, item[3]]
+		console.log chalk.green 'ok'
+
+
+fixAttrs = ->
+	# ['uniusers', 'changeDefault', 'health',       1000],
+	# ['uniusers', 'changeDefault', 'health_max',   1000],
+	# ['uniusers', 'changeDefault', 'mana',         500],
+	# ['uniusers', 'changeDefault', 'mana_max',     500],
+	# ['uniusers', 'changeDefault', 'energy',       100],
+	# ['uniusers', 'changeDefault', 'power',        50],
+	# ['uniusers', 'changeDefault', 'defense',      50],
+	# ['uniusers', 'changeDefault', 'agility',      50],
+	# ['uniusers', 'changeDefault', 'accuracy',     50],
+	# ['uniusers', 'changeDefault', 'intelligence', 50],
+	# ['uniusers', 'changeDefault', 'initiative',   50],
+	process.stdout.write chalk.magenta 'Setting predefined attributes'+'... '
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+	dbConnection.query.sync(
+		dbConnection
+		'UPDATE uniusers SET '+
+			'health = 1000, '+
+			'health_max = 1000, '+
+			'mana = 500, '+
+			'mana_max = 500, '+
+			'energy = 100, '+
+			'power = 50, '+
+			'defense = 50, '+
+			'agility = 50, '+
+			'accuracy = 50, '+
+			'intelligence = 50, '+
+			'initiative = 50'
+	)
+	console.log chalk.green 'ok'
+
 
 
 sync(
@@ -313,10 +399,12 @@ sync(
 		dropDatabase(opts.drop_database) if opts.drop_database
 		createDatabase(opts.create_database) if opts.create_database
 		migrateTables() if opts.migrate_tables
-		optimize() if opts.optimize_tables
 		unifyValidate() if opts.unify_validate
 		unifyExport() if opts.unify_export
-		insertTestMonsters() if opts.test_monsters
+		insertMonsters() if opts.monsters
+		fixAttrs() if opts.fix_attributes
+		insertArmor() if opts.armor
+		optimize() if opts.optimize_tables # must always be the last
 		process.exit 0
 	(ex) ->
 		if ex? then throw ex

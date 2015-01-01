@@ -21,17 +21,6 @@ exports.DATABASE_URL = process.env.DATABASE_URL ||
 	'postgres://anonymous:nopassword@localhost/uonline';
 exports.DATABASE_URL_TEST = process.env.DATABASE_URL_TEST ||
 	'postgres://anonymous:nopassword@localhost/uonline_test';
-exports.MYSQL_DATABASE_URL = process.env.MYSQL_DATABASE_URL ||
-	'mysql://anonymous:nopassword@localhost/uonline';
-exports.MYSQL_DATABASE_URL_TEST = process.env.MYSQL_DATABASE_URL_TEST ||
-	'mysql://anonymous:nopassword@localhost/uonline_test';
-
-/*
-exports.MYSQL_URL = exports.MYSQL_DATABASE_URL.match(/.+\//)[0];
-exports.MYSQL_DATABASE_NAME = exports.MYSQL_DATABASE_URL.match(/[^\/]+$/)[0];
-exports.MYSQL_URL_TEST = exports.MYSQL_DATABASE_URL_TEST.match(/.+\//)[0];
-exports.MYSQL_DATABASE_NAME_TEST = exports.MYSQL_DATABASE_URL_TEST.match(/[^\/]+$/)[0];
-*/
 
 exports.sessionLength = 64;
 exports.sessionExpireTime = 3600; // seconds
@@ -43,8 +32,8 @@ exports.defaultInstanceForUsers = '/game/';
 exports.expStart = 1000;
 exports.expStep = 1000;
 
-exports.PERMISSIONS_USER = 0;
-exports.PERMISSIONS_ADMIN = 65535;
+exports.PERMISSIONS_USER = 'user';
+exports.PERMISSIONS_ADMIN = 'admin';
 
 exports.EXP_STEP = 1000;
 exports.EXP_MAX_START = 1000;

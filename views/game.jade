@@ -1,0 +1,110 @@
+extends layout
+block title
+	//- TODO: typography
+	| #{location_name}
+block content
+	//- TODO: typography
+	.page-header
+		h1 #{ location_name }#{' '}
+			small #{ area_name }
+	if pic != null
+		img.img-thumbnail(src=pic, style="float: right; margin-left: 1em; margin-bottom: 1em;")
+	if fight_mode == false
+		div(style='max-width: 50em')
+			//- TODO: {{ description | tf | nl2p | nl2br }}
+			//- p #{ description }
+			each i in description.split('\n\n')
+				if i.substring(0,5)=='*****'
+					//- каменты имени Андрея
+					//
+						p= i
+				else
+					//- примитивная типографика
+					- i = i.replace(/ - /g, ' — ')
+					//- render
+					p= i
+		div
+			p.button-row
+				each i in ways
+					//- TODO: typography
+					a.pjax.btn.btn-default(href="/action/go/"+i.target) #{i.text}
+					| #{'\n'}
+	else
+		h4 Здоровье
+		.progress
+			.progress-bar.progress-bar-success(style='width: '+health_percent+'%;')
+				| #{ health }/#{ health_max }
+		h4 Мана
+		.progress
+			.progress-bar(style='width: '+mana_percent+'%;')
+				| #{ mana }/#{ mana_max }
+	div
+		p
+			case players_list.length
+				when 0
+					| На этой локации больше никого нет
+				when 1
+					| Рядом с вами стоит#{' '}
+				default
+					| Рядом с вами стоят#{' '}
+			each i,index in players_list
+				| #{' '}
+				a.pjax(href="/profile/"+i.username+"/") #{i.username}
+				if index == players_list.length-2
+					| #{' '}и
+				if index < players_list.length-2
+					| ,
+			| #{'.'}
+			if players_list.length >= 15
+				| #{' '}И откуда здесь столько народа?
+		p
+			if monsters_list.length > 0
+				| Монстры:
+				if fight_mode == true
+					each i,index in monsters_list
+						div(style="float:left;")
+							| #{i.name}:&nbsp;
+						.progress(style="margin-bottom:5px;")
+							.progress-bar.progress-bar-success(style='width: '+(Math.round(i.health*100/i.health_max))+'%;', role="progressbar", aria-valuenow=(Math.round(i.health*100/i.health_max)), aria-valuemin="0", aria-valuemax="100")
+								| #{ i.health }/#{ i.health_max }
+				else
+					each i,index in monsters_list
+						| #{' '}
+						a.pjax(href = '/monster/'+i.prototype+'/')= i.name
+						if index < monsters_list.length-1
+							| ,
+					| #{'.'}
+			else
+				| На этой локации нет монстров.
+		if fight_mode == true
+			ol
+				each p, index in participants
+					li
+						| #{p.name} (#{p.kind}),
+						| #{' '}
+						if p.side == our_side
+							| #{ userid==p.id ? 'вы' : 'союзник' }
+						else
+							| противник
+							| #{' '}
+							a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.kind+"/"+p.id) Ударить
+		p
+			small
+				if autoinvolved_fm == true
+					b Вас атаковали!
+		if monsters_list.length > 0
+			p.button-row
+				if fight_mode == true
+					a.btn.btn-default.disabled Атака
+					| #{' '}
+					a.btn.btn-default.disabled Защита
+					| #{' '}
+					a.btn.btn-default.pjax(href='/inventory/') Инвентарь
+					| #{' '}
+					a.btn.btn-default.disabled Магия
+					| #{' '}
+					a.btn.btn-default.pjax(href="/action/escape") Сбежать
+				else
+					a.btn.btn-default.pjax(href="/action/attack") Атаковать
+	//- fit picture
+	div(style="clear: both;")

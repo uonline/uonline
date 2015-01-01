@@ -17,14 +17,28 @@
 
 "use strict";
 
-exports.usernameIsValid = function(nick) {
-	return (!!nick) && ( /^[a-zA-Z0-9а-яА-ЯёЁ][a-zA-Z0-9а-яА-ЯёЁ -]{0,30}[a-zA-Z0-9а-яА-ЯёЁ]$/ ).test(nick);
-};
 
-exports.emailIsValid = function(email) {
-	return (!!email) && ( /^([a-z0-9_\.\-]{1,20})@([a-z0-9\.\-]{1,20})\.([a-z]{2,4})$/i ).test(email);
-};
-
-exports.passwordIsValid = function(pass) {
-	return (!!pass) && ( /^[-!@#$%^&*()_+A-Za-z0-9 ]{4,32}$/ ).test(pass);
+/**
+ * New Relic agent configuration.
+ *
+ * See lib/config.defaults.js in the agent distribution for a more complete
+ * description of configuration variables and their potential values.
+ */
+exports.config = {
+  /**
+   * Array of application names.
+   */
+  app_name : ['m1kc-uonline'],
+  /**
+   * Your New Relic license key.
+   */
+  license_key : 'what is love?',
+  logging : {
+    /**
+     * Level at which to log. 'trace' is most useful to New Relic when diagnosing
+     * issues with the agent, 'info' and higher will impose the least overhead on
+     * production applications.
+     */
+    level : 'info'
+  }
 };

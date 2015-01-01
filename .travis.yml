@@ -2,21 +2,23 @@ language: node_js
 node_js:
   - "0.10"
 services:
-  - mysql
   - postgresql
 env:
-  - DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test" MYSQL_DATABASE_URL="mysql://travis:@localhost/uonline" MYSQL_DATABASE_URL_TEST="mysql://travis:@localhost/uonline_test"
+  - DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test"
 before_script:
-  - # init.coffee test
+  - # test scripts
   - ./init.coffee --info || true
-  - ./init.coffee --create-database both --migrate-tables --optimize-tables --test-monsters
+  - ./init.coffee --create-database both --migrate-tables --unify-export --monsters --optimize-tables
   - ./init.coffee --info
   - ./add-admin.coffee admin password
   - ./init.coffee --drop-database both
   - ./init.coffee --info || true
   - # Create test database
-  - mysql -e 'create database uonline_test;'
+  - psql -c 'create database uonline_test;' -U postgres
 script:
-  - grunt default jscoverage_write_lcov
-after_script:
-  - cat report.lcov | ./node_modules/coveralls/bin/coveralls.js
+  - grunt travis
+# New stack
+sudo: false
+cache:
+  directories:
+  - node_modules

@@ -18,38 +18,54 @@
 
 
 lib = require './lib.coffee'
-
-if process.argv.length != 4
-	console.log 'Usage: <username> <password>'
-	process.exit 2
-
-u = process.argv[2]
-p = process.argv[3]
-
-unless lib.validation.usernameIsValid(u)
-	console.log 'Incorrect username.'
-	console.log 'Must be: 2-32 symbols, [a-zA-Z0-9а-яА-ЯёЁйЙру _-].'
-	process.exit 1
-
-unless lib.validation.passwordIsValid(p)
-	console.log 'Incorrect password.'
-	console.log 'Must be: 4-32 symbols, [!@#$%^&*()_+A-Za-z0-9].'
-	process.exit 1
-
-config = require './config.js'
 sync = require 'sync'
-anyDB = require 'any-db'
-conn = anyDB.createConnection config.MYSQL_DATABASE_URL
 
+readline = require 'readline'
+rl = readline.createInterface
+	input: process.stdin
+	output: process.stdout
+
+u = null
+p = null
+
+ask = (what, checker, rules, callback) ->
+	rl.question "#{what} (#{rules}): ", (answer) ->
+		if checker(answer) is true
+			callback null, answer
+		else
+			ask(what, checker, rules, callback)
 
 sync ->
+	if process.argv[2] is '-h' or process.argv[2] is '--help'
+		console.log 'Usage: no params, or <username>, or <username> <password>'
+		console.log 'You will be prompted to enter missing params from tty.'
+		process.exit 2
+
+	if process.argv.length is 4
+		u = process.argv[2]
+		p = process.argv[3]
+	else if process.argv.length is 3
+		u = process.argv[2]
+		p = ask.sync null, 'Password', lib.validation.passwordIsValid, '4-32 symbols, [!@#$%^&*()_+A-Za-z0-9]'
+	else if process.argv.length is 2
+		u = ask.sync null, 'Username', lib.validation.usernameIsValid, '2-32 symbols, [a-zA-Z0-9а-яА-ЯёЁйЙру _-]'
+		p = ask.sync null, 'Password', lib.validation.passwordIsValid, '4-32 symbols, [!@#$%^&*()_+A-Za-z0-9]'
+	else
+		console.log 'Usage: no params, or <username>, or <username> <password>'
+		console.log 'You will be prompted to enter missing params from tty.'
+		process.exit 2
+
+	config = require './config.js'
+	anyDB = require 'any-db'
+	conn = anyDB.createConnection config.DATABASE_URL
+
 	try
 		exists = lib.user.userExists.sync null, conn, u
 		if exists is true
 			console.log "User `#{u}` already exists."
 			process.exit 1
 
-		lib.user.registerUser.sync null, conn, u, p, config.PERMISSIONS_ADMIN
+		lib.user.registerUser.sync null, conn, u, p, 'admin'
 		console.log "New admin `#{u}` registered successfully."
 		process.exit 0
 	catch ex

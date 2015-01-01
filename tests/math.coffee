@@ -14,15 +14,9 @@
 
 'use strict'
 
-module.exports = (grunt) ->
-	# Please see the Grunt documentation for more information regarding task
-	# creation: http://gruntjs.com/creating-tasks
-	grunt.registerTask 'jscoverage_write_lcov', 'Write jscoverage report in lcov format to file.', ->
-		jsc = require 'jscoverage'
-		lcov = jsc.getLCOV()
-		try
-			require('fs').writeFileSync('./report.lcov', lcov)
-			grunt.log.ok 'report.lcov'
-		catch error
-			grunt.fail.warn(error)
+math = require '../lib-cov/math'
 
+exports.ap = (test) ->
+	test.strictEqual math.ap(1,2,3), 5, 'should return n-th number in arithmetical progression'
+	test.strictEqual math.ap(3,6,9), 153, 'should return n-th number in arithmetical progression'
+	test.done()

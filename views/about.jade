@@ -1,0 +1,19 @@
+extends layout
+block title
+	| Об игре
+block content
+	div.jumbotron
+		h1(style='margin-left: -0.04em;') uonline
+		p Первая в мире текстовая браузерная MMORPG. Альфа-версия.
+		if loggedIn === true
+			p
+				a.pjax.instance-switcher.btn.btn-default.btn-lg(href='/game/', role='button', data-instance='game')
+					i.glyphicon.glyphicon-send
+					| #{' '}Начать играть
+		else
+			p
+				a.pjax.instance-switcher.btn.btn-primary.btn-lg(href='/register/',role='button',data-instance='register')
+					| Регистрация
+				| #{' '}
+				a.pjax.instance-switcher.btn.btn-default.btn-lg(href='/login/', role='button', data-instance='login')
+					| Вход

@@ -21,14 +21,14 @@ module.exports = (grunt) ->
 	# Project configuration.
 	grunt.initConfig
 		nodeunit:
-			js: [
-				'tests_node/health-check.js'
-				'tests_node/*.js'
+			all: [
+				'tests/health-check.js'
+				'tests/health-check.coffee'
+				'tests/*.js'
+				'tests/*.coffee'
 			]
-			coffee: [
-				'tests_node/health-check.coffee'
-				'tests_node/*.coffee'
-			]
+			options:
+				reporter: 'grunt'
 
 		jshint:
 			all:
@@ -37,7 +37,7 @@ module.exports = (grunt) ->
 				src: [
 					'*.js'
 					'lib/*.js'
-					'tests_node/*.js'
+					'tests/*.js'
 					'grunt-custom-tasks/*.js'
 				]
 			verbose:
@@ -47,32 +47,43 @@ module.exports = (grunt) ->
 				src: [
 					'*.js'
 					'lib/*.js'
-					'tests_node/*.js'
+					'tests/*.js'
 					'grunt-custom-tasks/*.js'
 				]
 
 		browserify:
 			all:
-				src: './lib/validation.js'
-				dest: './browserified/validation.js'
-				options:
-					standalone: 'validation'
+				src: []
+				dest: './_build/validation.js'
+			options:
+				require: ['./lib/validation.js']
+
+		concat:
+			scripts:
+				src: [
+					'./bower_components/jquery/dist/jquery.min.js'
+					'./bower_components/bootstrap/dist/js/bootstrap.min.js'
+					'./bower_components/jquery-pjax/jquery.pjax.js'
+					'./_build/validation.js'
+					'./_build/browser.js'
+				]
+				dest: './_build/all.js'
 
 		uglify:
 			all:
-				src: './browserified/validation.js'
-				dest: './browserified/validation.min.js'
+				src: './_build/all.js'
+				dest: './assets/scripts.js'
 
 		mustcontain:
 			license:
 				src: [
 					'*.js'
 					'lib/*.js'
-					'tests_node/*.js'
+					'tests/*.js'
 					'grunt-custom-tasks/*.js'
 					'*.coffee'
 					'lib/*.coffee'
-					'tests_node/*.coffee'
+					'tests/*.coffee'
 					'grunt-custom-tasks/*.coffee'
 				]
 				regex: /WARRANTY/
@@ -83,11 +94,11 @@ module.exports = (grunt) ->
 				src: [
 					'*.js'
 					'lib/*.js'
-					'tests_node/*.js'
+					'tests/*.js'
 					'grunt-custom-tasks/*.js'
 					'*.coffee'
 					'lib/*.coffee'
-					'tests_node/*.coffee'
+					'tests/*.coffee'
 					'grunt-custom-tasks/*.coffee'
 				]
 				regex: /['"]use strict['"]\s*[;\n]/
@@ -96,26 +107,17 @@ module.exports = (grunt) ->
 				fatal: false
 
 		coffee:
-			all:
-				expand: true
-				src: [
-					'lib/*.coffee'
-				]
-				ext: '.js'
-
+			browser:
+				src: './browser.coffee'
+				dest: './_build/browser.js'
 			options:
-				bare: true
-
-		clean:
-			shit: [
-				'lib-cov/*.coffee'
-			]
+				bare: false
 
 		coffeelint:
 			all: [
 				'*.coffee'
 				'lib/*.coffee'
-				'tests_node/*.coffee'
+				'tests/*.coffee'
 				'grunt-custom-tasks/*.coffee'
 			]
 			options: JSON.parse fs.readFileSync('.coffeelintrc', 'utf-8')
@@ -131,27 +133,69 @@ module.exports = (grunt) ->
 				ext: '.js'
 
 		jscoverage:
+			all:
+				expand: true
+				cwd: 'lib/'
+				src: ['*.js']
+				dest: 'lib-cov/'
+				ext: '.js'
+
+		clean:
+			lib_cov: 'lib-cov/'
+
+		codo:
+			all:
+				src: './lib/'
+				dest: './docs/'
 			options:
-				inputDirectory: 'lib'
-				outputDirectory: 'lib-cov'
+				name: 'uonline'
+				title: 'uonline documentation'
+				undocumented: yes
+				stats: no
+
+		coveralls:
+			all:
+				src: 'report.lcov'
+			options:
+				force: true
+
+		jscoverage_report:
+			options:
+				showOnly: /^lib[/]/
 
 
 	# These plugins provide necessary tasks.
-	require('load-grunt-tasks')(grunt)
+	if grunt.option('speedup')?
+		speedup = grunt.option('speedup')
+		if speedup is 'test'
+			grunt.loadNpmTasks 'grunt-contrib-clean'
+			grunt.loadNpmTasks 'grunt-contrib-nodeunit'
+			grunt.loadNpmTasks 'grunt-jscoverage'
+			grunt.loadNpmTasks 'grunt-coffee-coverage'
+		else
+			grunt.log.warn 'Unknown speedup value'
+	else
+		require('load-grunt-tasks')(grunt)
+
+	# Custom plugins.
 	grunt.loadTasks './grunt-custom-tasks/'
 
 	# Custom tasks.
 	grunt.registerTask 'check', ['mustcontain', 'coffeelint', 'jshint:all']
-	grunt.registerTask 'build', ['browserify', 'uglify']
+	grunt.registerTask 'build', ['browserify', 'coffee', 'concat', 'uglify']
+	grunt.registerTask 'docs', ['codo']
 
-	testTask = ['jscoverage', 'clean:shit', 'coffeeCoverage']  # order is important
+	testTask = ['clean:lib_cov', 'jscoverage', 'coffeeCoverage']
 	if grunt.option('single')?  # allow to test a single file, see Readme
-		grunt.config.set 'nodeunit.one', [ 'tests_node/'+grunt.option('single') ]
+		grunt.config.set 'nodeunit.one', [ 'tests/'+grunt.option('single') ]
 		testTask.push 'nodeunit:one'
 	else
-		testTask = testTask.concat ['nodeunit:js', 'nodeunit:coffee']  # order is important
+		testTask.push 'nodeunit:all'
 	testTask.push 'jscoverage_report'
 	grunt.registerTask 'test', testTask
 
 	# Default task.
-	grunt.registerTask 'default', ['check', 'build', 'test']
+	grunt.registerTask 'default', ['check', 'build', 'docs', 'test']
+
+	# And some additional CI stuff.
+	grunt.registerTask 'travis', ['default', 'jscoverage_write_lcov', 'coveralls']
