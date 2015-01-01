@@ -248,8 +248,10 @@ fetchBattleGroups = ((request, response) ->
 	if request.uonline.fight_mode
 		request.uonline.participants = lib.game.getBattleParticipants.sync null,
 			dbConnection, request.uonline.userid
-		request.uonline.our_side = request.uonline.participants.find(
-			(p) -> p.kind=='user' && p.id==request.uonline.userid).side
+		request.uonline.our_side = request.uonline
+			.participants
+			.find((p) -> p.kind is 'user'  and  p.id is request.uonline.userid)
+			.side
 	return
 ).asyncMiddleware()
 
