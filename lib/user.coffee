@@ -18,26 +18,29 @@ config = require '../config.js'
 
 crypto = require 'crypto'
 async = require 'async'
+sync = require 'sync'
 
 
 # Check if a user with the given username exists.
 # Returns true or false, or an error.
 exports.userExists = (dbConnection, username, callback) ->
-	dbConnection.query "SELECT count(*) AS result FROM `uniusers` WHERE user = ?", [username], (error, result) ->
-		callback error, error or (result.rows[0].result > 0)
+	dbConnection.query 'SELECT count(*) AS result FROM uniusers WHERE lower(username) = lower($1)',
+		[username],
+		(error, result) ->
+			callback error, error or (result.rows[0].result > 0)
 
 
 # Check if a user with the given id exists.
 # Returns true or false, or an error.
 exports.idExists = (dbConnection, id, callback) ->
-	dbConnection.query "SELECT count(*) AS result FROM `uniusers` WHERE `id`= ?", [id], (error, result) ->
+	dbConnection.query 'SELECT count(*) AS result FROM uniusers WHERE id = $1', [id], (error, result) ->
 		callback error, error or (result.rows[0].result > 0)
 
 
 # Check if a session with the given sessid exists.
 # Returns true or false, or an error.
 exports.sessionExists = (dbConnection, sess, callback) ->
-	dbConnection.query "SELECT count(*) AS result FROM `uniusers` WHERE `sessid` = ?", [sess], (error, result) ->
+	dbConnection.query 'SELECT count(*) AS result FROM uniusers WHERE sessid = $1', [sess], (error, result) ->
 		callback error, error or (result.rows[0].result > 0)
 
 
@@ -50,39 +53,41 @@ exports.sessionExists = (dbConnection, sess, callback) ->
 # - userid,
 #
 # or an error.
-exports.sessionInfoRefreshing = (dbConnection, sessid, sess_timeexpire, callback) ->
+exports.sessionInfoRefreshing = ((dbConnection, sessid, sess_timeexpire, asyncUpdate, callback) ->
 	unless sessid?
-		callback null, sessionIsActive: false
-		return
-	async.auto
-		getUser: (callback) ->
-			dbConnection.query("SELECT id, user, permissions FROM uniusers " +
-				"WHERE sessid = ? AND sess_time > NOW() - INTERVAL ? SECOND",
-				[ sessid, sess_timeexpire ], callback)
-			return
-		refresh: [
-			"getUser"
-			(callback, results) ->
-				if results.getUser.rowCount is 0
-					callback null, "session does not exist or expired"
-					return
-				dbConnection.query "UPDATE `uniusers` SET `sess_time` = NOW() WHERE `sessid` = ?",
-					[sessid], callback
-		]
-	, (error, results) ->
-		if error?
-			callback error, null
-			return
-		if results.refresh is "session does not exist or expired"
-			callback null, sessionIsActive: false
-			return
-		callback null,
-			sessionIsActive: true
-			username: results.getUser.rows[0].user
-			admin: (results.getUser.rows[0].permissions is config.PERMISSIONS_ADMIN)
-			userid: results.getUser.rows[0].id
-		return
-	return
+		return sessionIsActive: false
+	userdata = dbConnection.query.sync(dbConnection,
+		"SELECT id, username, permissions FROM uniusers "+
+		"WHERE sessid = $1 AND sess_time > NOW() - $2 * INTERVAL '1 SECOND'",
+		[sessid, sess_timeexpire]
+	)
+
+	if userdata.rows.length is 0
+		return sessionIsActive: false
+
+	if asyncUpdate is true
+		process.nextTick ->
+			dbConnection.query(
+				'UPDATE uniusers SET sess_time = NOW() WHERE id = $1',
+				[userdata.rows[0].id],
+				(error, result) ->
+					if error?
+						console.log 'Async update failed'
+						console.log error.stack
+			)
+	else
+		dbConnection.query.sync(dbConnection,
+			'UPDATE uniusers SET sess_time = NOW() WHERE id = $1',
+			[userdata.rows[0].id]
+		)
+
+	return {
+		sessionIsActive: true
+		username: userdata.rows[0].username
+		admin: (userdata.rows[0].permissions is 'admin')
+		userid: userdata.rows[0].id
+	}
+).async()
 
 
 # Generate an unique sessid with the given length.
@@ -108,9 +113,9 @@ exports.generateSessId = (dbConnection, sess_length, callback) ->
 # Get user id using his sessid.
 # Returns a number, or an error.
 exports.idBySession = (dbConnection, sess, callback) ->
-	dbConnection.query "SELECT `id` FROM `uniusers` WHERE `sessid` = ?", [sess], (error, result) ->
-		if result? and result.rowCount is 0
-			error = "Wrong user's id"
+	dbConnection.query 'SELECT id FROM uniusers WHERE sessid = $1', [sess], (error, result) ->
+		if result? and result.rows.length is 0
+			error = new Error "Wrong user's id"
 		callback error, error or result.rows[0].id
 
 
@@ -125,7 +130,7 @@ exports.closeSession = (dbConnection, sessid, callback) ->
 			callback error
 			return
 		else
-			dbConnection.query 'UPDATE `uniusers` SET `sessid` = ? WHERE `sessid` = ?',
+			dbConnection.query 'UPDATE uniusers SET sessid = $1 WHERE sessid = $2',
 				[ newSessid, sessid ], callback
 
 
@@ -138,52 +143,38 @@ exports.createSalt = (length) ->
 
 # Create a new user with given username, password and permissions (see config.js).
 # Returns a string with sessid, or an error.
-exports.registerUser = (dbConnection, user, password, permissions, callback) ->
+exports.registerUser = ((dbConnection, username, password, permissions) ->
+	if exports.userExists.sync(null, dbConnection, username) is true
+		throw new Error 'user already exists'
 	salt = exports.createSalt(16)
-	async.waterfall [
-		(innerCallback) ->
-			crypto.pbkdf2 password, salt, 4096, 256, innerCallback
-		(hash, innerCallback) ->
-			exports.generateSessId dbConnection, config.sessionLength, (error, result) ->
-				innerCallback error, hash, result
-				return
-		(hash, sessid, innerCallback) -> #console.log("reg", hash.toString('hex'))
-			dbConnection.query("INSERT INTO `uniusers` (" +
-				"`user`, `salt`, `hash`, `sessid`, `reg_time`, `sess_time`, " + "`location`, `permissions`" +
-				") VALUES (" +
-				"?, ?, ?, ?, NOW(), NOW(), " +
-				"(SELECT `id` FROM `locations` WHERE `default` = 1), ?" +
-				")",
-				[ user, salt, hash.toString("hex").substr(0, 255), sessid, permissions ], (error, result) ->
-					innerCallback error, error or sessid: sessid
-					return
-			)
-	], callback
-	return
+	hash = crypto.pbkdf2.sync(null, password, salt, 4096, 256)
+	sessid = exports.generateSessId.sync(null, dbConnection, config.sessionLength)
+	dbConnection.query.sync(dbConnection,
+		'INSERT INTO uniusers ('+
+			'username, salt, hash, sessid, reg_time, sess_time, '+
+			'location, permissions'+
+			') VALUES ('+
+			'$1, $2, $3, $4, NOW(), NOW(), '+
+			'(SELECT id FROM locations WHERE initial = 1), $5'+
+			')',
+		[username, salt, hash.toString('hex'), sessid, permissions]
+	)
+	return sessid: sessid
+).async()
 
 
 # Check if the given username-password pair is valid.
 # Returns true or false, or an error.
-exports.accessGranted = (dbConnection, user, password, callback) ->
-	async.waterfall [
-		(innerCallback) ->
-			dbConnection.query "SELECT salt, hash FROM uniusers WHERE user = ?", [user], (error, result) ->
-				if !!result and result.rowCount is 0
-					callback null, false #Wrong user's name
-					return
-				innerCallback error, error or result.rows[0]
-				return
-		(result, innerCallback) ->
-			crypto.pbkdf2 password, result.salt, 4096, 256, (error, hash) ->
-				if result.hash is hash.toString("hex").substr(0, 255)
-					callback null, true
-				else
-					callback null, false #Wrong user's pass
-				return
-	], (error, result) ->
-		callback error, result
-		return
-	return
+exports.accessGranted = ((dbConnection, username, password, callback) ->
+	userdata = dbConnection.query.sync dbConnection,
+		'SELECT salt, hash FROM uniusers WHERE lower(username) = lower($1)', [username]
+	if userdata.rows.length is 0
+		return false  # Wrong username
+	userdata = userdata.rows[0]
+	hash = crypto.pbkdf2.sync null,
+		password, userdata.salt, 4096, 256
+	return (hash.toString('hex') is userdata.hash)
+).async()
 
 
 # Create a new session for user with given username.
@@ -193,13 +184,10 @@ exports.createSession = (dbConnection, username, callback) ->
 		(innerCallback) ->
 			exports.generateSessId dbConnection, config.sessionLength, innerCallback
 		(sessid, innerCallback) ->
-			dbConnection.query "UPDATE uniusers " + "SET sess_time = NOW(), sessid = ? " + "WHERE user = ?", [
-				sessid
-				username
-			], (error, result) ->
-				innerCallback error, result, sessid
-				return
+			dbConnection.query 'UPDATE uniusers SET sess_time = NOW(), sessid = $1 '+
+				'WHERE lower(username) = lower($2)',
+				[sessid, username],
+				(error, result) ->
+					innerCallback error, result, sessid
 	], (error, result, sessid) ->
 		callback error, sessid
-		return
-	return
