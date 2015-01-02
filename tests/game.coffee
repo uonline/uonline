@@ -618,19 +618,18 @@ exports._hitAndGetHealth =
 
 		query 'UPDATE armor_prototypes SET coverage = 0'
 		performSomeAttacks()
-		test.ok 0 not in damages, 'armor should not block anything if total coverage is 0'
+		test.ok 0 not of damages, 'armor should not block anything if total coverage is 0'
 
 		query 'UPDATE armor_prototypes SET coverage = 50'
 		query 'UPDATE armor SET strength = 0'
 		performSomeAttacks()
-		test.ok 0 not in damages, 'armor should not block anything if it is broken'
+		test.ok 0 not of damages, 'armor should not block anything if it is broken'
 
 		query 'UPDATE armor_prototypes SET coverage = 75 WHERE id = 2'
 		query 'UPDATE armor SET strength = 10000'
 		query 'UPDATE armor SET equipped = false'
 		performSomeAttacks()
-		console.log damages
-		test.ok 0 not in damages, 'armor should not block anything if it is unequipped'
+		test.ok 0 not of damages, 'armor should not block anything if it is unequipped'
 
 		test.done()
 
