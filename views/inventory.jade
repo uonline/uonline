@@ -31,7 +31,11 @@ block content
 								td #{ item.type }
 								td #{ item.strength }/#{ item.strength_max }
 								td #{ item.coverage }%
-								td #{ item.equipped===true ? 'да':'нет' }
+								td #{ item.equipped===true ? 'да':'нет' }#{' '}
+									if item.equipped === true
+										a.btn.btn-default.btn-xs(href='/action/unequip/'+item.id) Снять
+									else
+										a.btn.btn-default.btn-xs(href='/action/equip/'+item.id) Надеть
 			h3 Читерская кнопка
 			a.btn.btn-default(href='/ajax/cheatFixAll') Починить всю броню всем игрокам
 		div.col-md-6

@@ -939,8 +939,8 @@ exports.getUserArmor = (test) ->
 
 	armor = game.getUserArmor conn, 1
 	test.deepEqual armor, [
-			{name: 'Magic helmet',  type:'helmet', coverage:50, strength:100, strength_max:120, equipped: true}
-			{name: 'Speed greaves', type:'greave', coverage:25, strength:100, strength_max:110, equipped: false}
+			{id:1,name:'Magic helmet', type:'helmet', coverage:50, strength:100, strength_max:120, equipped:true}
+			{id:2,name:'Speed greaves',type:'greave', coverage:25, strength:100, strength_max:110, equipped:false}
 		] , "should return nesessary characteristics of user's armor"
 	test.done()
 
