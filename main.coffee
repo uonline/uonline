@@ -421,6 +421,7 @@ app.get '/ajax/cheatFixAll',
 
 
 app.get '/action/unequip/:id',
+	mustBeAuthed,
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
 			'UPDATE armor '+
@@ -431,6 +432,7 @@ app.get '/action/unequip/:id',
 
 
 app.get '/action/equip/:id',
+	mustBeAuthed,
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
 			'UPDATE armor '+
