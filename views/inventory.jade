@@ -23,6 +23,7 @@ block content
 							td: b Тип
 							td: b Прочность
 							td: b Покрытие тела
+							td: b Надето?
 					tbody
 						each item in armor
 							tr
@@ -30,6 +31,7 @@ block content
 								td #{ item.type }
 								td #{ item.strength }/#{ item.strength_max }
 								td #{ item.coverage }%
+								td #{ item.equipped===true ? 'да':'нет' }
 			h3 Читерская кнопка
 			a.btn.btn-default(href='/ajax/cheatFixAll') Починить всю броню всем игрокам
 		div.col-md-6
