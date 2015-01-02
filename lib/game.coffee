@@ -403,6 +403,7 @@ exports._hitAndGetHealth = (tx, victimId, victimKind, hunterPower) ->
 				'SELECT armor.id, strength, coverage '+
 					'FROM armor, armor_prototypes '+
 					'WHERE armor.owner = $1 '+
+					'AND armor.equipped = true '+
 					'AND armor.prototype = armor_prototypes.id',
 				[victimId]
 			).rows
