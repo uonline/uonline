@@ -122,6 +122,18 @@ module.exports = (grunt) ->
 			]
 			options: JSON.parse fs.readFileSync('.coffeelintrc', 'utf-8')
 
+		coffee_jshint:
+			all: [
+				'*.coffee'
+				'lib/*.coffee'
+				'tests/*.coffee'
+				'grunt-custom-tasks/*.coffee'
+			]
+			options:
+				jshintOptions: ['node','browser','jquery']
+				withDefaults: true
+				globals: ['_$jscoverage']
+
 		coffeeCoverage:
 			options:
 				path: 'relative'
