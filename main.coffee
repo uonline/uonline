@@ -417,7 +417,27 @@ app.get '/ajax/cheatFixAll',
 				'WHERE armor.prototype = armor_prototypes.id)'+
 				'',
 			[]
-		response.send 'Вроде сработало.'
+		response.redirect '/inventory/'
+
+
+app.get '/action/unequip/:id',
+	(request, response) ->
+		dbConnection.query.sync dbConnection,
+			'UPDATE armor '+
+				'SET equipped = false '+
+				'WHERE id = $1 AND owner = $2',
+			[request.param('id'), request.uonline.userid]
+		response.redirect '/inventory/'
+
+
+app.get '/action/equip/:id',
+	(request, response) ->
+		dbConnection.query.sync dbConnection,
+			'UPDATE armor '+
+				'SET equipped = true '+
+				'WHERE id = $1 AND owner = $2',
+			[request.param('id'), request.uonline.userid]
+		response.redirect '/inventory/'
 
 
 # 404 handling

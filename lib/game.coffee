@@ -403,6 +403,7 @@ exports._hitAndGetHealth = (tx, victimId, victimKind, hunterPower) ->
 				'SELECT armor.id, strength, coverage '+
 					'FROM armor, armor_prototypes '+
 					'WHERE armor.owner = $1 '+
+					'AND armor.equipped = true '+
 					'AND armor.prototype = armor_prototypes.id',
 				[victimId]
 			).rows
@@ -623,9 +624,10 @@ exports.getUserCharacters = ((dbConnection, userIdOrName) ->
 
 exports.getUserArmor = ((dbConnection, userid) ->
 	dbConnection.query.sync(dbConnection,
-		"SELECT name, type, coverage, strength, strength_max "+
+		"SELECT armor.id, name, type, coverage, strength, strength_max, equipped "+
 			"FROM armor, armor_prototypes "+
-			"WHERE armor.owner = $1 AND armor.prototype = armor_prototypes.id",
+			"WHERE armor.owner = $1 AND armor.prototype = armor_prototypes.id "+
+			"ORDER BY armor.id",
 		[userid]
 	).rows
 ).async()
