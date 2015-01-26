@@ -19,6 +19,7 @@ config = require '../config.js'
 crypto = require 'crypto'
 async = require 'async'
 sync = require 'sync'
+transaction = require 'any-db-transaction'
 
 
 # Check if a user with the given username exists.
@@ -149,16 +150,25 @@ exports.registerUser = ((dbConnection, username, password, permissions) ->
 	salt = exports.createSalt(16)
 	hash = crypto.pbkdf2.sync(null, password, salt, 4096, 256)
 	sessid = exports.generateSessId.sync(null, dbConnection, config.sessionLength)
-	dbConnection.query.sync(dbConnection,
+	
+	tx = transaction dbConnection
+	tx.query(
 		'INSERT INTO uniusers ('+
-			'username, salt, hash, sessid, reg_time, sess_time, '+
-			'location, permissions'+
+			'username, salt, hash, sessid, reg_time, sess_time, permissions'+
 			') VALUES ('+
-			'$1, $2, $3, $4, NOW(), NOW(), '+
-			'(SELECT id FROM locations WHERE initial = 1), $5'+
-			')',
+			'$1, $2, $3, $4, NOW(), NOW(), $5'+
+			') RETURNING id',
 		[username, salt, hash.toString('hex'), sessid, permissions]
 	)
+	tx.query(
+		'INSERT INTO characters (name, player, location) VALUES ('+
+			'$1, '+
+			'(SELECT id FROM uniusers WHERE sessid = $2), '+
+			'(SELECT id FROM locations WHERE initial = 1)'+
+		')',
+		[username, sessid]
+	)
+	tx.commit.sync(tx)
 	return sessid: sessid
 ).async()
 

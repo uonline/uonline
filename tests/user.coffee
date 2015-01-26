@@ -20,15 +20,13 @@ mg = require '../lib/migration'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
+queryUtils = require '../lib/query_utils'
 conn = null
-
-
-query = (str, values) ->
-	conn.query.sync(conn, str, values).rows
+query = null
 
 
 queryOne = (str, values) ->
-	rows = query(str, values)
+	rows = query.all(str, values)
 	throw new Error('In query:\n' + query + '\nExpected one row, but got ' + rows.length) if rows.length isnt 1
 	rows[0]
 
@@ -36,10 +34,14 @@ migrateTables = ->
 	args = (i for i in arguments)
 	mg.migrate.sync mg, conn, tables: args
 
+migrate = ->
+	mg.migrate.sync mg, conn
+
 
 exports.setUp = (->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-	query 'DROP TABLE IF EXISTS revision, uniusers, locations'
+	query = queryUtils.getFor conn
+	query 'DROP TABLE IF EXISTS revision, uniusers, locations, characters, monsters, monster_prototypes'
 	query 'DROP TYPE IF EXISTS permission_kind'
 ).async()
 
@@ -267,37 +269,37 @@ exports.createSalt = (test) ->
 
 
 exports.registerUser = (test) ->
-	async.series [
-		(callback) ->
-			mg.migrate conn, { tables: ['permission_kind', 'uniusers', 'locations'] }, callback
-		(callback) ->
-			conn.query 'INSERT INTO locations (id, initial) VALUES (2, 1)', [], callback
-		(callback) ->
-			users.registerUser conn, 'TheUser', 'password', 'admin', callback
-		(callback) ->
-			conn.query 'SELECT * FROM uniusers', callback
-	],
-	(error, result) ->
-		test.ifError error
-		test.strictEqual result[3].rows.length, 1, 'should create exactly one user'
-		user = result[3].rows[0]
-		test.ok user.salt.length > 0, 'should generate salt'
-		test.ok user.hash.length > 0, 'should generate hash'
-		test.ok user.sessid.length > 0, 'should generate sessid'
-		test.ok user.reg_time <= new Date(), 'should not put registration time into future'
-		test.ok user.sess_time <= new Date(), 'should not put session timestamp into future'
-		test.strictEqual user.location, 2, 'should set location to initial one'
-		test.strictEqual user.permissions, 'admin', 'should set specified permissions'
-		users.registerUser conn, 'TheUser', 'password', 1, (error, result) ->
-			test.ok(!!error, 'should fail if user exists')
-			test.done()
+	migrateTables 'permission_kind', 'uniusers', 'locations', 'monsters', 'monster_prototypes', 'characters'
+	query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
+	
+	users.registerUser.sync null, conn, 'TheUser', 'password', 'admin'
+	user = query.row 'SELECT * FROM uniusers'
+	
+	test.ok user.salt.length > 0, 'should generate salt'
+	test.ok user.hash.length > 0, 'should generate hash'
+	test.ok user.sessid.length > 0, 'should generate sessid'
+	test.ok user.reg_time <= new Date(), 'should not put registration time into future'
+	test.ok user.sess_time <= new Date(), 'should not put session timestamp into future'
+	test.strictEqual user.permissions, 'admin', 'should set specified permissions'
+	
+	character = query.row 'SELECT * FROM characters WHERE player = $1', [user.id]
+	test.strictEqual character.name, user.username, 'should set character name'
+	test.strictEqual character.location, 2, 'should set location to initial one'
+	
+	test.throws(
+		-> users.registerUser.sync null, conn, 'TheUser', 'password', 1
+		Error
+		'should fail if user exists'
+	)
+	test.done()
 
 
 exports.accessGranted =
 	testNoErrors: (test) ->
 		async.series [
 			(callback) ->
-				mg.migrate conn, { tables: ['permission_kind', 'uniusers', 'locations'] }, callback
+				mg.migrate conn, { tables: ['permission_kind', 'uniusers', 'locations',
+					'monsters', 'monster_prototypes', 'characters'] }, callback
 			(callback) ->
 				conn.query 'INSERT INTO locations (id, initial) VALUES (2, 1)', callback
 			(callback) ->
@@ -331,7 +333,8 @@ exports.createSession =
 	testNoErrors: (test) ->
 		async.series [
 			(callback) -> #0
-				mg.migrate conn, { tables: ['permission_kind', 'uniusers', 'locations'] }, callback
+				mg.migrate conn, { tables: ['permission_kind', 'uniusers', 'locations',
+					'monsters', 'monster_prototypes', 'characters'] }, callback
 			(callback) ->
 				conn.query 'INSERT INTO locations (id, initial) VALUES (2, 1)', callback
 			(callback) ->
@@ -355,3 +358,17 @@ exports.createSession =
 #		users.createSession conn, 10101, (error, result) ->
 #			test.ok error, 'should crash on wrong sessid'
 #			test.done()
+
+fixTest = (obj) ->
+	for attr of obj
+		if attr is 'setUp' or attr is 'tearDown'
+			continue
+
+		if obj[attr] instanceof Function
+			obj[attr] = ((origTestFunc, t) -> (test) ->
+					console.log(t)
+					origTestFunc(test)
+				)(obj[attr], attr)
+		else
+			fixTest(obj[attr])
+fixTest exports
