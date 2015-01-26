@@ -279,7 +279,7 @@ exports.changeLocation = ((dbConnection, character_id, locid, throughSpaceAndTim
 # prevents starting second battle
 exports.goAttack = ((dbConnection, character_id) ->
 	tx = transaction(dbConnection)
-	
+
 	user = tx.query.sync(tx,
 		'SELECT id, initiative, location '+
 		'FROM characters '+
@@ -290,11 +290,11 @@ exports.goAttack = ((dbConnection, character_id) ->
 		'FOR UPDATE',
 		[ character_id ]
 	).rows[0]
-	
+
 	unless user
 		tx.rollback.sync tx
 		return
-	
+
 	monsters = tx.query.sync(tx,
 		"SELECT id, initiative "+
 			"FROM characters "+
@@ -367,6 +367,7 @@ exports._hitAndGetHealth = (tx, victimId, hunterPower) ->
 		'SELECT armor.id, strength, coverage '+
 			'FROM armor, armor_prototypes '+
 			'WHERE armor.owner = $1 '+
+			'AND armor.equipped = true '+
 			'AND armor.prototype = armor_prototypes.id',
 		[victimId]
 	).rows
@@ -395,7 +396,7 @@ exports._hitAndGetHealth = (tx, victimId, hunterPower) ->
 
 exports._handleDeathInBattle = (tx, character_id) ->
 	isUser = !!tx.query.sync(tx, 'SELECT player FROM characters WHERE id = $1', [character_id]).rows[0].player
-	
+
 	if isUser
 		tx.query.sync(tx,
 			"UPDATE characters "+
@@ -547,7 +548,8 @@ exports.getCharacterArmor = ((dbConnection, character_id) ->
 	dbConnection.query.sync(dbConnection,
 		"SELECT name, type, coverage, strength, strength_max "+
 		"FROM armor, armor_prototypes "+
-		"WHERE armor.owner = $1 AND armor.prototype = armor_prototypes.id",
+		"WHERE armor.owner = $1 AND armor.prototype = armor_prototypes.id "+
+		"ORDER BY armor.id",
 		[ character_id ]
 	).rows
 ).async()

@@ -1,4 +1,4 @@
-mixin instanceLink(name, url, text, icon, forceInactive, noIndication)
+mixin instanceLink(name, url, text, bold, icon, forceInactive, noIndication)
 	- var isActive = (instance === name);
 	- if (forceInactive) isActive = false;
 	- if (noIndication) isActive = false;
@@ -9,9 +9,17 @@ mixin instanceLink(name, url, text, icon, forceInactive, noIndication)
 		if icon != null
 			a.pjax(href=url)
 				i.glyphicon(class=icon)
-				| #{' '}#{text}
+				| #{' '}
+				if bold == true
+					b #{text}
+				else
+					| #{text}
 		else
-			a.pjax(href=url) #{text}
+			a.pjax(href=url)
+				if bold == true
+					b #{text}
+				else
+					| #{text}
 
 if !pjax
 	doctype html
@@ -26,15 +34,17 @@ if !pjax
 			//- and here we go
 			title
 				block title
-			//- easier to inline than mess with it
-			:stylus
-				.button-row
-					line-height: 2.8em
+			//- easier to inline than to mess with it
+			style(type="text/css")
+				:stylus
+					.button-row
+						line-height: 2.8em
 			//- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries
 			//- WARNING: Respond.js doesn't work if you view the page via file://
-			// if lt IE 9
-				script(src='https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js')
-				script(src='https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js')
+			<!--[if lt IE 9]>
+			script(src='https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js')
+			script(src='https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js')
+			<![endif]-->
 		body
 			div.navbar.navbar-default.navbar-static-top(role='navigation')
 				div.container
@@ -68,16 +78,14 @@ if !pjax
 										a(href='#') One more separated link
 						ul.nav.navbar-nav.navbar-right
 							if loggedIn === true
-								+instanceLink('profile', '/profile/', username, 'glyphicon-'+(admin?'certificate':'user'), false, true)
-								//- OH BOLDS
-								+instanceLink('game', '/game/', 'Игра')
-								//- ^^^^^^^^
-								+instanceLink('profile', '/profile/', 'Профиль', null, !profileIsMine)
+								+instanceLink('myprofile', '/profile/', username, false, 'glyphicon-'+(isAdmin?'certificate':'user'), false, true)
+								+instanceLink('game', '/game/', 'Игра', true)
+								+instanceLink('myprofile', '/profile/', 'Профиль')
 								+instanceLink('inventory', '/inventory/', 'Инвентарь')
 								li
 									a(href='/action/logout') Выйти
 							else
-								+instanceLink('login', '/login/', 'Вход', 'glyphicon-chevron-right')
+								+instanceLink('login', '/login/', 'Вход', false, 'glyphicon-chevron-right')
 								+instanceLink('register', '/register/', 'Регистрация')
 			div.container
 				div.row

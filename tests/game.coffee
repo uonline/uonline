@@ -265,11 +265,11 @@ exports._stopBattle = (test) ->
 	insert 'battles', id: 1
 	insert 'battle_participants', battle: 1, character_id: 1
 	insert 'battle_participants', battle: 1, character_id: 2
-	
+
 	tx = transaction conn
 	game._stopBattle(tx, 1)
 	tx.commit.sync tx
-	
+
 	test.strictEqual +query.val("SELECT count(*) FROM battles"), 0, 'should remove battle'
 	test.strictEqual +query.val("SELECT count(*) FROM battle_participants"), 0, 'should remove participants'
 	test.strictEqual +query.val("SELECT autoinvolved_fm FROM characters WHERE id=1"), 0, 'should uninvolve user'
@@ -288,45 +288,45 @@ exports._leaveBattle = (test) ->
 	insert 'battles', id: 2
 	insert 'battle_participants', battle: 2, character_id: 4, side: 0, index: 0
 	insert 'battle_participants', battle: 2, character_id: 5, side: 1, index: 1
-	
-	
+
+
 	tx = transaction conn
-	
+
 	res = game._leaveBattle(tx, 1, 1)
 	test.strictEqual res.battleEnded, false, "should return false if wasn't ended"
-	
+
 	test.strictEqual query.val("SELECT autoinvolved_fm FROM characters WHERE id=1"), false,
 		'should uninvolve user'
-	
+
 	rows = query.all "SELECT character_id AS id, index FROM battle_participants WHERE battle = 1 ORDER by id"
 	test.deepEqual rows, [
 			{id:2, index:0}
 			{id:3, index:1}
 			{id:6, index:2}
 		], "should update indexes if participant has gone"
-	
-	
+
+
 	res = game._leaveBattle(tx, 1, 3, 'user')
 	test.strictEqual res.battleEnded, true, 'should return true if battle was ended'
-	
+
 	test.strictEqual query.val("SELECT autoinvolved_fm FROM characters WHERE id=2"), false,
 		'should uninvolve involved if one side become empty'
 	test.strictEqual +query.val("SELECT count(*) FROM battles WHERE id = 1"), 0,
 		'should remove battle if one side become empty'
 	test.strictEqual +query.val("SELECT count(*) FROM battle_participants WHERE battle = 1"), 0,
 		'should remove participants if one side become empty'
-	
+
 	test.strictEqual +query.val("SELECT count(*) FROM battles"), 1,
 		'should not affect other battles'
 	test.strictEqual +query.val("SELECT count(*) FROM battle_participants"), 2,
 		'should not affect other participants'
-	
+
 	test.throws(
 		-> game._leaveBattle(tx, 1, 123)
 		Error
 		'should throw error if unable to find anyone to leave'
 	)
-	
+
 	tx.commit.sync tx
 	test.done()
 
@@ -381,11 +381,11 @@ exports.changeLocation =
 
 	'in fight already': (test) ->
 		insert 'battle_participants', character_id: 1
-		
+
 		game.changeLocation.sync null, conn, 1, 2
 		locid = game.getCharacterLocationId.sync null, conn, 1
 		test.strictEqual locid, 1, 'should not change location if user is in fight'
-		
+
 		game.changeLocation.sync null, conn, 1, 2, true
 		locid = game.getCharacterLocationId.sync null, conn, 1
 		test.strictEqual game.isInFight.sync(null, conn, 1), false, 'should remove user from fight...'
@@ -394,11 +394,11 @@ exports.changeLocation =
 
 	'no way to location': (test) ->
 		insert 'locations', id: 3
-		
+
 		game.changeLocation.sync null, conn, 1, 3
 		locid = game.getCharacterLocationId.sync null, conn, 1
 		test.strictEqual locid, 1, 'should not change location if there is no such way'
-		
+
 		game.changeLocation.sync null, conn, 1, 3, true
 		locid = game.getCharacterLocationId.sync null, conn, 1
 		test.strictEqual locid, 3, 'should change location despite all roads if force flag is set'
@@ -432,13 +432,13 @@ exports.goAttack =
 		test.strictEqual envolvedCountBefore, envolvedCountAfter,
 			'no more participants should appear if user already in battle'
 		test.done()
-	
+
 	'when one monster is busy': (test) ->
 		insert 'characters', id: 11, location: 1, initiative: 20
 		insert 'characters', id: 12, location: 1, initiative: 30
 		insert 'battle_participants', character_id: 12
 		game.goAttack.sync null, conn, 1
-		
+
 		count = +query.val "SELECT count(*) FROM battle_participants WHERE character_id=12"
 		test.strictEqual count, 1, 'should not envolve monster in second battle'
 		test.done()
@@ -502,14 +502,14 @@ exports._lockAndGetStatsForBattle = (test) ->
 	insert 'battles', id: 3
 	insert 'battle_participants', battle: 3, character_id: 1,  side: 1
 	insert 'battle_participants', battle: 3, character_id: 11, side: 2
-	
+
 	#select t.relname,mode,granted from pg_locks l, pg_stat_all_tables t where l.relation=t.relid;
-	
+
 	tx = transaction(conn)
 	user = game._lockAndGetStatsForBattle(tx, 1)
 	test.deepEqual user, {side: 1, power: 100, battle: 3}, 'should return nesessary data'
 	tx.rollback.sync(tx)
-	
+
 	tx = transaction(conn)
 	user = game._lockAndGetStatsForBattle(tx, 11)
 	test.deepEqual user, {side: 2, power: 200, battle: 3}, 'should return nesessary data'
@@ -523,91 +523,94 @@ exports._hitAndGetHealth =
 		insert 'characters', id: 1,  health: 1000, defense: 50
 		insert 'characters', id: 11, health: 1000, defense: 50
 		done()
-	
+
 	simple: (test) ->
 		power = 70
 		minDmg = (power - 50) / 2 * 0.8
 		maxDmg = (power - 50) / 2 * 1.2
 		victim_id = 1
-		
+
 		tx = transaction(conn)
-		
+
 		damages = {}
 		prevHP = 1000
-		
+
 		for i in [0..100]
 			hp = game._hitAndGetHealth tx, victim_id, power
 			hpActual = query.val "SELECT health FROM characters WHERE id=$1", [victim_id]
 			test.strictEqual hp, hpActual, "should return current characters's health"
-			
+
 			dmg = prevHP - hp
 			test.ok minDmg <= dmg <= maxDmg, "dealed damage should be in fixed range"
-			
+
 			damages[dmg] = true
 			prevHP = hp
-		
+
 		test.ok Object.keys(damages).length > 1, "should deal different amounts of damage"
 		test.ok damages[minDmg], 'should sometimes deal minimal damage'
 		test.ok damages[maxDmg], 'should sometimes deal maximal damage'
-		
+
 		query "UPDATE characters SET defense = 9001"
-		
+
 		hpBefore = prevHP
 		hpAfter = game._hitAndGetHealth tx, victim_id, power
 		test.strictEqual hpBefore, hpAfter,
 			"should not change health if defense is greater than damage"
-		
+
 		tx.rollback.sync(tx)
 		test.done()
-	
+
 	'with armor': (test) ->
 		power = 70
 		damages = null
-		
+
 		userHP = -> query.val 'SELECT health FROM characters WHERE id=1'
 		totalStringth = -> query.val 'SELECT SUM(strength) FROM armor'
-		
+
 		performSomeAttacks = ->
 			damages = {}
 			tx = transaction(conn)
 			for i in [0..20]
 				prevHP = userHP()
 				prevSt = totalStringth()
-				
+
 				hp = game._hitAndGetHealth tx, 1, power
 				dmg = prevHP - hp
 				damages[dmg] = true
-				
+
 				if dmg is 0
 					test.ok prevSt > totalStringth(), 'should reduce armor strength if damage was blocked'
 			tx.rollback.sync(tx)
-		
-		
+
+
 		insert 'armor_prototypes', id:1, name: 'breastplate', coverage:25
 		insert 'armor_prototypes', id:2, name: 'greave', coverage:25
-		insert 'armor', prototype:1, owner:1, strength:10000
-		insert 'armor', prototype:2, owner:1, strength:10000
-		
+		insert 'armor', prototype:1, owner:1, strength:10000, equipped: true
+		insert 'armor', prototype:2, owner:1, strength:10000, equipped: true
+
 		performSomeAttacks()
 		test.ok damages[0], 'armor should block some attacks if coverage > 0'
 		test.ok Object.keys(damages).length > 1, 'armor should not block all attacks if total coverage < 100'
-		
-		
+
 		query 'UPDATE armor_prototypes SET coverage = 75 WHERE id = 2'
 		performSomeAttacks()
 		test.deepEqual damages, {'0': true}, 'armor should block all if total coverage is 100'
-		
-		
+
 		query 'UPDATE armor_prototypes SET coverage = 0'
 		performSomeAttacks()
-		test.ok 0 not in damages, 'armor should not block anyting if total coverage is 0'
-		
-		
+		test.ok 0 not of damages, 'armor should not block anything if total coverage is 0'
+
 		query 'UPDATE armor_prototypes SET coverage = 50'
 		query 'UPDATE armor SET strength = 0'
 		performSomeAttacks()
-		test.ok 0 not in damages, 'armor should not block anyting if it is broken'
-		
+		test.ok 0 not of damages, 'armor should not block anything if it is broken'
+
+		query 'UPDATE armor_prototypes SET coverage = 75 WHERE id = 2'
+		query 'UPDATE armor SET strength = 10000'
+		query 'UPDATE armor SET equipped = false'
+		performSomeAttacks()
+		test.ok 0 not of damages, 'armor should not block anything if it is unequipped'
+
 		test.done()
 
 
@@ -615,26 +618,26 @@ exports._handleDeathInBattle = (test) ->
 	clearTables 'characters', 'locations'
 	insert 'locations', id: 5, initial: 1
 	insert 'characters', id: 1, health: 0, health_max: 1000, player: 1
-	
+
 	tx = transaction(conn)
-	
+
 	game._handleDeathInBattle tx, 1
 	test.strictEqual query.val('SELECT location from characters'), 5, 'should return user back to initial location'
 	test.strictEqual query.val('SELECT health from characters'), 1000, "should restore user's health"
-	
+
 	clearTables 'characters'
 	insert 'characters', id: 11, player: null
-	
+
 	game._handleDeathInBattle tx, 11
 	test.strictEqual +query.val('SELECT count(*) FROM characters'), 0, 'should remove monster'
-	
+
 	tx.rollback.sync(tx)
 	test.done()
 
 
 exports._hit = (test) ->
 	clearTables 'characters', 'battles', 'battle_participants', 'armor', 'armor_prototypes'
-	
+
 	insert 'characters', id: 1, name: 'SomeUser',    defense: 1, power: 40, health: 5
 	insert 'characters', id: 2, name: 'AnotherUser', defense: 1, power: 50, health: 1000
 	insert 'characters', id: 5, name: 'SomeMonster', defense: 5, power: 20, health: 500
@@ -642,14 +645,14 @@ exports._hit = (test) ->
 	insert 'battle_participants', battle: 3, character_id: 5, side: 1, index: 1
 	insert 'battle_participants', battle: 3, character_id: 1, side: 0, index: 0
 	insert 'battle_participants', battle: 3, character_id: 2, side: 0, index: 2
-	
+
 	insert 'characters', id: 3, name: 'FarAwayUser', power: 10, health: 1000
 	insert 'characters', id: 4, name: 'FarAwayMonster', health: 500
 	insert 'battles', id: 8
 	insert 'battle_participants', battle: 8, character_id: 4, side: 1, index: 1
 	insert 'battle_participants', battle: 8, character_id: 3, side: 0, index: 0
-	
-	
+
+
 	result = game._hit conn, 1, 4
 	hp = query.val 'SELECT health FROM characters WHERE id = 4'
 	test.strictEqual hp, 500, 'should not do anything if victim is in another battle'
@@ -657,7 +660,7 @@ exports._hit = (test) ->
 			state: 'canceled'
 			reason: 'different battles'
 		'should describe premature termination reason'
-	
+
 	result = game._hit conn, 1, 2
 	hp = query.val 'SELECT health FROM characters WHERE id = 2'
 	test.strictEqual hp, 1000, 'should not hit teammate'
@@ -665,7 +668,7 @@ exports._hit = (test) ->
 			state: 'canceled'
 			reason: "can't hit teammate"
 		'should describe premature termination reason'
-	
+
 	result = game._hit conn, 15, 2
 	hp = query.val 'SELECT health FROM characters WHERE id = 2'
 	test.strictEqual hp, 1000, 'should not do anything if hunter does not exist'
@@ -673,14 +676,14 @@ exports._hit = (test) ->
 			state: 'canceled'
 			reason: 'hunter not found'
 		'should describe premature termination reason'
-	
+
 	result = game._hit conn, 5, 12
 	test.deepEqual result,
 			state: 'canceled'
 			reason: 'victim not found'
 		'should describe premature termination reason'
-	
-	
+
+
 	result = game._hit conn, 1, 5
 	hp = query.val 'SELECT health FROM characters WHERE id = 5'
 	test.ok hp < 500, 'should deal damage to victim'
@@ -689,7 +692,7 @@ exports._hit = (test) ->
 			victimKilled: false
 			battleEnded: false
 		'should describe what had happened'
-	
+
 	result = game._hit conn, 5, 1
 	rows = query.all "SELECT * FROM battle_participants WHERE character_id = 1"
 	test.strictEqual rows.length, 0, 'should remove participant if one was killed'
@@ -698,7 +701,7 @@ exports._hit = (test) ->
 			victimKilled: true
 			battleEnded: false
 		'should describe what had happened'
-	
+
 	query 'UPDATE characters SET health = 5 WHERE id = 5'
 	result = game._hit conn, 2, 5
 	battles = query.all 'SELECT * FROM battles WHERE id = 3'
@@ -710,7 +713,7 @@ exports._hit = (test) ->
 			victimKilled: true
 			battleEnded: true
 		'should describe what had happened'
-	
+
 	test.done()
 
 
@@ -725,32 +728,32 @@ exports.hitOpponent =
 		insert 'battle_participants', battle: 3, character_id: 5, side: 1, index: 2
 		insert 'battle_participants', battle: 3, character_id: 1, side: 0, index: 0
 		done()
-	
+
 	'normal attack': (test) ->
 		minDmg = (20-10)/2 * 0.8
-		
+
 		game.hitOpponent conn, 1, 4
 		hp = query.val 'SELECT health FROM characters WHERE id = 4'
 		test.ok hp <= 1000-minDmg, 'should hit'
 		hp = query.val 'SELECT health FROM characters WHERE id = 1'
 		test.ok hp <= 1000-minDmg*2, 'victims should hit back'
-		
+
 		query 'UPDATE characters SET health=1 WHERE id = 4'
 		query 'UPDATE characters SET health=1000 WHERE id = 1'
 		game.hitOpponent conn, 1, 4
 		hp = query.val 'SELECT health FROM characters WHERE id = 1'
 		test.ok hp <= 1000-minDmg, 'only alive opponents should hit back'
 		test.done()
-	
+
 	'defeating target': (test) ->
 		query "DELETE FROM battle_participants WHERE character_id = 5"
 		query 'UPDATE characters SET health=1 WHERE id=4'
-		
+
 		game.hitOpponent conn, 1, 4
 		count = +query.val 'SELECT count(*) FROM battles'
 		test.strictEqual count, 0, 'should correctly handle defeating last opponent'
 		test.done()
-	
+
 	'defeated by target': (test) ->
 		query 'UPDATE characters SET health = 1'
 		game.hitOpponent conn, 1, 4
@@ -903,7 +906,7 @@ exports.getCharacterArmor = (test) ->
 	insert 'armor', id:1, prototype:1, owner:1, strength:100
 	insert 'armor', id:2, prototype:2, owner:1, strength:100
 	insert 'armor', id:3, prototype:1, owner:2, strength:110
-	
+
 	armor = game.getCharacterArmor conn, 1
 	test.deepEqual armor, [
 			{name: 'Magic helmet',  type:'helmet', coverage:50, strength:100, strength_max:120}

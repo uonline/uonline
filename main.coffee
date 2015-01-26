@@ -16,7 +16,7 @@
 
 'use strict'
 
-if process.env.NODE_ENV is 'production'
+if process.env.NEW_RELIC_LICENSE_KEY?
 	console.log 'Loading New Relic...'
 	newrelic = require 'newrelic'
 	console.log 'Loaded New Relic.'
@@ -67,7 +67,22 @@ if process.env.SQLPROF is 'true'
 
 app = express()
 app.enable 'trust proxy'
-app.use express.logger()
+
+# logger
+morgan = require 'morgan'
+morgan.token 'coloredStatus', (req, res) ->
+	color = (x) -> x
+	status = res.statusCode
+	if status >= 200 and status < 300 then color = chalk.green
+	if status >= 300 and status < 400 then color = chalk.blue
+	if status >= 400 and status < 500 then color = chalk.yellow
+	if status >= 500 and status < 600 then color = chalk.red
+	return color(status)
+morgan.token 'uu', (req, res) ->
+	name = req.uonline?.username or '-'
+	return chalk.gray(name)
+app.use morgan ":remote-addr :uu  :coloredStatus :method :url  #{chalk.gray '":user-agent"'}  :response-time ms"
+
 app.use express.cookieParser()
 app.use express.json()
 app.use express.urlencoded()
@@ -95,33 +110,20 @@ if newrelic?
 	app.locals.newrelic = newrelic
 
 
-# Middlewares
-
-mustBeAuthed = (request, response, next) ->
-	if request.uonline.basicOpts.loggedIn is true
-		next()
-	else
-		response.redirect '/login/'
-
-mustNotBeAuthed = (request, response, next) ->
-	if request.uonline.basicOpts.loggedIn is true
-		response.redirect config.defaultInstanceForUsers
-	else
-		next()
-
+# Hallway middleware
 
 app.use ((request, response) ->
-	# Read basic stuff
+	request.uonline =
+		now: new Date()
+		pjax: request.header('X-PJAX')?
+		sessid: request.cookies.sessid
+	# Read session data
 	sessionData = lib.user.sessionInfoRefreshing.sync(null,
 		dbConnection, request.cookies.sessid, config.sessionExpireTime, true)
-	request.uonline =
-		basicOpts:
-			now: new Date()
-			pjax: request.header('X-PJAX')?
-			loggedIn: sessionData.sessionIsActive
-			username: sessionData.username
-			admin: sessionData.admin
-			userid: sessionData.userid
+	request.uonline.loggedIn = sessionData.sessionIsActive
+	request.uonline.username = sessionData.username
+	request.uonline.isAdmin = sessionData.admin
+	request.uonline.userid = sessionData.userid
 	# CSP
 	response.header 'Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'"
 	# Anti-clickjacking
@@ -133,14 +135,128 @@ app.use ((request, response) ->
 ).asyncMiddleware()
 
 
-# Trivial pages
+# Middlewares
 
-quickRender = (template) ->
+mustBeAuthed = (request, response, next) ->
+	if request.uonline.loggedIn is true
+		next()
+	else
+		response.redirect '/login/'
+
+
+mustNotBeAuthed = (request, response, next) ->
+	if request.uonline.loggedIn is true
+		response.redirect config.defaultInstanceForUsers
+	else
+		next()
+
+
+setInstance = (x) ->
+	((request, response) ->
+		request.uonline.instance = x
+		return
+	).asyncMiddleware()
+
+
+render = (template) ->
 	(request, response) ->
-		options = request.uonline.basicOpts
-		options.instance = template
-		response.render template, options
+		response.render template, request.uonline
 
+
+fetchMonsterFromURL = ((request, response) ->
+	chars = lib.game.getMonsterPrototypeCharacters.sync null, dbConnection, request.param 'id'
+	if not chars?
+		throw new Error '404'
+	for i of chars
+		request.uonline[i] = chars[i]
+	return
+).asyncMiddleware()
+
+
+fetchFightMode = ((request, response) ->
+	# TODO: merge these two queries
+	# TODO: merge everything from uniusers into one SELECT
+	request.uonline.fight_mode = lib.game.isInFight.sync null, dbConnection, request.uonline.userid
+	request.uonline.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, request.uonline.userid
+	return
+).asyncMiddleware()
+
+
+fetchArmor = ((request, response) ->
+	request.uonline.armor = lib.game.getUserArmor.sync null, dbConnection, request.uonline.userid
+	return
+).asyncMiddleware()
+
+
+fetchLocation = ((request, response) ->
+	try
+		location = lib.game.getUserLocation.sync null, dbConnection, request.uonline.userid
+		request.uonline.location_id = location.id
+		request.uonline.location_name = location.title
+		#request.uonline.pic = request.uonline.picture  if request.uonline.picture?  # TODO: LOLWHAT
+		request.uonline.description = location.description
+		request.uonline.ways = location.ways
+	catch e
+		console.error e.stack
+		location = lib.game.getInitialLocation.sync null, dbConnection
+		lib.game.changeLocation.sync null, dbConnection, request.uonline.userid, location.id
+	return
+).asyncMiddleware()
+
+
+fetchArea = ((request, response) ->
+	area = lib.game.getUserArea.sync null, dbConnection, request.uonline.userid
+	request.uonline.area_name = area.title
+	return
+).asyncMiddleware()
+
+
+fetchUsersNearby = ((request, response) ->
+	tmpUsers = lib.game.getNearbyUsers.sync null,
+		dbConnection, request.uonline.userid, request.uonline.location_id
+	request.uonline.players_list = tmpUsers
+	return
+).asyncMiddleware()
+
+
+fetchMonstersNearby = ((request, response) ->
+	tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, request.uonline.location_id
+	request.uonline.monsters_list = tmpMonsters
+	return
+).asyncMiddleware()
+
+
+fetchStats = ((request, response) ->
+	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.userid
+	for i of chars
+		request.uonline[i] = chars[i]
+	return
+).asyncMiddleware()
+
+
+fetchStatsFromURL = ((request, response) ->
+	chars = lib.game.getUserCharacters.sync null, dbConnection, request.param 'username'
+	if not chars?
+		throw new Error '404'
+	for i of chars
+		request.uonline[i] = chars[i]
+	return
+).asyncMiddleware()
+
+
+fetchBattleGroups = ((request, response) ->
+	if request.uonline.fight_mode
+		request.uonline.participants = lib.game.getBattleParticipants.sync null,
+			dbConnection, request.uonline.userid
+		request.uonline.our_side = request.uonline
+			.participants
+			.find((p) -> p.kind is 'user'  and  p.id is request.uonline.userid)
+			.side
+	return
+).asyncMiddleware()
+
+
+# Pages
 
 app.get '/node/', (request, response) ->
 	response.send 'Node.js is up and running.'
@@ -151,198 +267,179 @@ app.get '/explode/', (request, response) ->
 
 
 app.get '/', (request, response) ->
-	if request.uonline.basicOpts.loggedIn is true
+	if request.uonline.loggedIn is true
 		response.redirect config.defaultInstanceForUsers
 	else
 		response.redirect config.defaultInstanceForGuests
 
 
-app.get '/about/', quickRender 'about'
-app.get '/register/', mustNotBeAuthed, quickRender 'register'
-app.get '/login/', mustNotBeAuthed, quickRender 'login'
+app.get '/about/',
+	setInstance('about'), render('about')
 
 
-# And the rest
-
-app.post '/register/', mustNotBeAuthed, (request, response) ->
-	options = request.uonline.basicOpts
-	options.instance = 'register'
-	usernameIsValid = lib.validation.usernameIsValid(request.body.user)
-	passwordIsValid = lib.validation.passwordIsValid(request.body.pass)
-	userExists = lib.user.userExists.sync(null, dbConnection, request.body.user)
-	if (usernameIsValid is true) and (passwordIsValid is true) and (userExists is false)
-		result = lib.user.registerUser.sync(
-			null
-			dbConnection
-			request.body.user
-			request.body.pass
-			'user'
-		)
-		response.cookie 'sessid', result.sessid
-		response.redirect '/'
-	else
-		options.error = true
-		options.invalidLogin = !usernameIsValid
-		options.invalidPass = !passwordIsValid
-		options.loginIsBusy = userExists
-		options.user = request.body.user
-		options.pass = request.body.pass
-		response.render 'register', options
+app.get '/login/',
+	mustNotBeAuthed,
+	setInstance('login'), render('login')
 
 
-app.post '/login/', mustNotBeAuthed, (request, response) ->
-	if lib.user.accessGranted.sync null, dbConnection, request.body.user, request.body.pass
-		sessid = lib.user.createSession.sync null, dbConnection, request.body.user
-		response.cookie 'sessid', sessid
-		response.redirect '/'
-	else
-		options = request.uonline.basicOpts
-		options.instance = 'login'
-		options.error = true
-		options.user = request.body.user
-		response.render 'login', options
-
-
-app.get '/profile/', mustBeAuthed, (request, response) -> sync ->
-	options = request.uonline.basicOpts
-	options.instance = 'profile'
-	options.username = request.uonline.basicOpts.username
-	options.profileIsMine = true
-	options.id = request.uonline.basicOpts.userid
-	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
-	for i of chars
-		options[i] = chars[i]
-	response.render 'profile', options
-
-
-app.get '/profile/:username/', (request, response) ->
-	username = request.param('username')
-	chars = lib.game.getUserCharacters.sync null, dbConnection, username
-	if chars is null
-		throw new Error '404'
-	options = request.uonline.basicOpts
-	options.instance = 'profile'
-	options.profileIsMine = (options.loggedIn is true) and (chars.id == options.userid)
-	for i of chars
-		options[i] = chars[i]
-	options.username = username
-	response.render 'profile', options
-
-
-app.get '/monster/:id/', (request, response) ->
-	options = request.uonline.basicOpts
-	options.instance = 'monster'
-	chars = lib.game.getMonsterPrototypeCharacters.sync null, dbConnection, request.param('id')
-
-	if not chars?
-		throw new Error '404'
-
-	for i of chars
-		options[i] = chars[i]
-
-	response.render 'monster', options
-
-
-app.get '/action/logout', mustBeAuthed, (request, response) ->
-	# TODO: move sessid to uonline{}
-	lib.user.closeSession dbConnection, request.cookies.sessid, (error, result) ->
-		if error?
-			response.send 500
-		else
+app.post '/login/',
+	mustNotBeAuthed,
+	setInstance('login'),
+	(request, response) ->
+		if lib.user.accessGranted.sync null, dbConnection, request.body.user, request.body.pass
+			sessid = lib.user.createSession.sync null, dbConnection, request.body.user
+			response.cookie 'sessid', sessid
 			response.redirect '/'
+		else
+			options = request.uonline
+			options.error = true
+			options.user = request.body.user
+			response.render 'login', options
 
 
-app.get '/game/', mustBeAuthed, (request, response) -> sync ->
-	userid = request.uonline.basicOpts.userid
-	options = request.uonline.basicOpts
-	options.instance = 'game'
-
-	try
-		location = lib.game.getUserLocation.sync null, dbConnection, userid
-	catch e
-		console.error e.stack
-		location = lib.game.getInitialLocation.sync null, dbConnection
-		lib.game.changeLocation.sync null, dbConnection, userid, location.id
-
-	area = lib.game.getUserArea.sync null, dbConnection, userid
-	options.location_name = location.title
-	options.area_name = area.title
-	options.pic = options.picture  if options.picture?
-	options.description = location.description
-	options.ways = location.ways
-	tmpUsers = lib.game.getNearbyUsers.sync null,
-		dbConnection, userid, location.id
-	options.players_list = tmpUsers
-	tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, location.id
-	options.monsters_list = tmpMonsters
-	options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
-	options.autoinvolved_fm = lib.game.isAutoinvolved.sync null, dbConnection, userid
-
-	if options.fight_mode
-		options.participants = lib.game.getBattleParticipants.sync null, dbConnection, userid
-		options.our_side = options.participants.find((p) -> p.kind=='user' && p.id==userid).side
-
-	chars = lib.game.getUserCharacters.sync null, dbConnection, request.uonline.basicOpts.userid
-	for i of chars
-		options[i] = chars[i]
-
-	response.render 'game', options
+app.get '/register/',
+	mustNotBeAuthed,
+	setInstance('register'), render('register')
 
 
-app.get '/inventory/', mustBeAuthed, (request, response) ->
-	userid = request.uonline.basicOpts.userid
-	options = request.uonline.basicOpts
-	options.instance = 'inventory'
-	options.fight_mode = lib.game.isInFight.sync null, dbConnection, userid
-	options.armor = lib.game.getUserArmor.sync null, dbConnection, userid
-	response.render 'inventory', options
+app.post '/register/',
+	mustNotBeAuthed,
+	setInstance('register'),
+	(request, response) ->
+		usernameIsValid = lib.validation.usernameIsValid(request.body.user)
+		passwordIsValid = lib.validation.passwordIsValid(request.body.pass)
+		userExists = lib.user.userExists.sync(null, dbConnection, request.body.user)
+		if (usernameIsValid is true) and (passwordIsValid is true) and (userExists is false)
+			result = lib.user.registerUser.sync(
+				null
+				dbConnection
+				request.body.user
+				request.body.pass
+				'user'
+			)
+			response.cookie 'sessid', result.sessid
+			response.redirect '/'
+		else
+			options = request.uonline
+			options.error = true
+			options.invalidLogin = !usernameIsValid
+			options.invalidPass = !passwordIsValid
+			options.loginIsBusy = userExists
+			options.user = request.body.user
+			options.pass = request.body.pass
+			response.render 'register', options
 
 
-app.get '/action/go/:to', mustBeAuthed, (request, response) ->
-	userid = request.uonline.basicOpts.userid
-	to = request.param('to')
-
-	result = lib.game.changeLocation.sync null, dbConnection, userid, to
-	if result.result != 'ok'
-		console.error "Location change failed: #{result.reason}"
-
-	response.redirect '/game/'
+app.get '/profile/',
+	mustBeAuthed,
+	fetchStats,
+	setInstance('myprofile'), render('profile')
 
 
-app.get '/action/attack', mustBeAuthed, (request, response) ->
-	lib.game.goAttack.sync null, dbConnection, request.uonline.basicOpts.userid
-	response.redirect '/game/'
+app.get '/profile/:username/',
+	fetchStatsFromURL,
+	setInstance('profile'), render('profile')
 
 
-app.get '/action/escape', mustBeAuthed, (request, response) ->
-	lib.game.goEscape.sync null, dbConnection, request.uonline.basicOpts.userid
-	response.redirect '/game/'
+app.get '/monster/:id/',
+	fetchMonsterFromURL,
+	setInstance('monster'), render('monster')
 
 
-app.get '/action/hit/:kind/:id', mustBeAuthed, (request, response) ->
-	lib.game.hitOpponent.sync(
-		null, dbConnection,
-		request.uonline.basicOpts.userid,
-		request.param('id'), request.param('kind')
-	)
-	response.redirect '/game/'
+app.get '/action/logout',
+	mustBeAuthed,
+	(request, response) ->
+		lib.user.closeSession.sync null,
+			dbConnection, request.uonline.sessid
+		response.redirect '/'
 
 
-app.get '/ajax/isNickBusy/:nick', (request, response) ->
-	response.json
-		nick: request.param('nick')
-		isNickBusy: lib.user.userExists.sync null, dbConnection, request.param('nick')
+app.get '/game/',
+	mustBeAuthed,
+	fetchLocation, fetchArea, fetchUsersNearby, fetchMonstersNearby,
+	fetchFightMode, fetchStats, fetchBattleGroups,
+	setInstance('game'), render('game')
 
 
-app.get '/ajax/cheatFixAll', (request, response) ->
-	dbConnection.query.sync dbConnection,
-		'UPDATE armor '+
-			'SET strength = '+
-			'(SELECT strength_max FROM armor_prototypes '+
-			'WHERE armor.prototype = armor_prototypes.id)'+
-			'',
-		[]
-	response.send 'Вроде сработало.'
+app.get '/inventory/',
+	mustBeAuthed,
+	fetchFightMode, fetchArmor,
+	setInstance('inventory'), render('inventory')
+
+
+app.get '/action/go/:to',
+	mustBeAuthed,
+	(request, response) ->
+		result = lib.game.changeLocation.sync null, dbConnection, request.uonline.userid, request.param 'to'
+		if result.result != 'ok'
+			console.error "Location change failed: #{result.reason}"
+		response.redirect '/game/'
+
+
+app.get '/action/attack',
+	mustBeAuthed,
+	(request, response) ->
+		lib.game.goAttack.sync null, dbConnection, request.uonline.userid
+		response.redirect '/game/'
+
+
+app.get '/action/escape',
+	mustBeAuthed,
+	(request, response) ->
+		lib.game.goEscape.sync null, dbConnection, request.uonline.userid
+		response.redirect '/game/'
+
+
+app.get '/action/hit/:kind/:id',
+	mustBeAuthed,
+	(request, response) ->
+		lib.game.hitOpponent.sync(
+			null, dbConnection,
+			request.uonline.userid,
+			request.param('id'), request.param('kind')
+		)
+		response.redirect '/game/'
+
+
+app.get '/ajax/isNickBusy/:nick',
+	(request, response) ->
+		response.json
+			nick: request.param('nick')
+			isNickBusy: lib.user.userExists.sync null, dbConnection, request.param('nick')
+
+
+app.get '/ajax/cheatFixAll',
+	(request, response) ->
+		dbConnection.query.sync dbConnection,
+			'UPDATE armor '+
+				'SET strength = '+
+				'(SELECT strength_max FROM armor_prototypes '+
+				'WHERE armor.prototype = armor_prototypes.id)'+
+				'',
+			[]
+		response.redirect '/inventory/'
+
+
+app.get '/action/unequip/:id',
+	mustBeAuthed,
+	(request, response) ->
+		dbConnection.query.sync dbConnection,
+			'UPDATE armor '+
+				'SET equipped = false '+
+				'WHERE id = $1 AND owner = $2',
+			[request.param('id'), request.uonline.userid]
+		response.redirect '/inventory/'
+
+
+app.get '/action/equip/:id',
+	mustBeAuthed,
+	(request, response) ->
+		dbConnection.query.sync dbConnection,
+			'UPDATE armor '+
+				'SET equipped = true '+
+				'WHERE id = $1 AND owner = $2',
+			[request.param('id'), request.uonline.userid]
+		response.redirect '/inventory/'
 
 
 # 404 handling
@@ -357,7 +454,7 @@ app.use (error, request, response, next) ->
 		code = 404
 	else
 		console.error error.stack
-	options = request.uonline.basicOpts
+	options = request.uonline
 	options.code = code
 	options.instance = 'error'
 	response.status code
