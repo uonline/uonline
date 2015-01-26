@@ -25,24 +25,14 @@ conn = null
 query = null
 
 
-queryOne = (str, values) ->
-	rows = query.all(str, values)
-	throw new Error('In query:\n' + query + '\nExpected one row, but got ' + rows.length) if rows.length isnt 1
-	rows[0]
-
-migrateTables = ->
-	args = (i for i in arguments)
-	mg.migrate.sync mg, conn, tables: args
-
-migrate = ->
-	mg.migrate.sync mg, conn
+clearTables = ->
+	query 'TRUNCATE ' + [].join.call(arguments, ', ')
 
 
 exports.setUp = (->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
 	query = queryUtils.getFor conn
-	query 'DROP TABLE IF EXISTS revision, uniusers, locations, characters, monsters, monster_prototypes'
-	query 'DROP TYPE IF EXISTS permission_kind'
+	mg.migrate.sync mg, conn
 ).async()
 
 exports.tearDown = (->
@@ -60,7 +50,7 @@ exports.userExists = (test) ->
 #		'should fail on nonexistent table'
 #	)
 
-	migrateTables 'permission_kind', 'uniusers'
+	clearTables 'uniusers'
 	query 'INSERT INTO uniusers (username) VALUES ( $1 )', ['Sauron']
 	
 	test.strictEqual userExists('Sauron'), true, 'should return true if user exists'
@@ -73,7 +63,7 @@ exports.userExists = (test) ->
 
 
 exports.idExists = (test) ->
-	migrateTables 'permission_kind', 'uniusers'
+	clearTables 'uniusers'
 	query 'INSERT INTO uniusers (id) VALUES ( $1 )', [114]
 	
 	test.strictEqual users.idExists.sync(null, conn, 114), true, 'should return true when user exists'
@@ -83,7 +73,7 @@ exports.idExists = (test) ->
 
 exports.sessionExists =
 	testNoErrors: (test) ->
-		migrateTables 'permission_kind', 'uniusers'
+		clearTables 'uniusers'
 		query "INSERT INTO uniusers (sessid) VALUES ('someid')"
 		
 		exists = users.sessionExists.sync(null, conn, 'someid')
@@ -93,15 +83,10 @@ exports.sessionExists =
 		test.strictEqual exists, false, 'should return false when sessid does not exist'
 		test.done()
 
-#	testErrors: (test) ->
-#		users.sessionExists conn, 'someid', (error, result) ->
-#			test.ok error, 'should return error without table'
-#			test.done()
-
 
 exports.sessionInfoRefreshing =
 	testNoErrors: (test) ->
-		migrateTables 'permission_kind', 'uniusers'
+		clearTables 'uniusers'
 		query "INSERT INTO uniusers " +
 			"(id, username, permissions, sessid, sess_time) " +
 			"VALUES (8, 'user0', 'admin', 'expiredid', NOW() - INTERVAL '3600 SECOND' )"
@@ -117,7 +102,7 @@ exports.sessionInfoRefreshing =
 		
 		query "UPDATE uniusers SET sessid = 'someid'"
 		
-		timeBefore = new Date(queryOne('SELECT sess_time FROM uniusers').sess_time)
+		timeBefore = new Date(query.val 'SELECT sess_time FROM uniusers')
 		
 		res = users.sessionInfoRefreshing.sync null, conn, 'someid', 7200, false
 		test.deepEqual res, {
@@ -127,7 +112,7 @@ exports.sessionInfoRefreshing =
 			userid: 8
 		}, 'session should be active if not expired and user data should be returned'
 		
-		timeAfter = new Date(queryOne('SELECT sess_time FROM uniusers').sess_time)
+		timeAfter = new Date(query.val 'SELECT sess_time FROM uniusers')
 		test.ok timeBefore < timeAfter, 'should update session timestamp'
 		
 		res = users.sessionInfoRefreshing.sync null, conn, undefined, 7200, false
@@ -151,10 +136,10 @@ exports.sessionInfoRefreshing =
 			"(id, username, permissions, sessid, sess_time) " +
 			"VALUES (112, '112', 'admin', '123456', NOW() - INTERVAL '3600 SECOND' )"
 		
-		timeBefore = new Date(queryOne('SELECT sess_time FROM uniusers WHERE id = 112').sess_time)
+		timeBefore = new Date(query.val('SELECT sess_time FROM uniusers WHERE id = 112').sess_time)
 		users.sessionInfoRefreshing.sync null, conn, '123456', 7200, true
 		sync.sleep 100
-		timeAfter = new Date(queryOne('SELECT sess_time FROM uniusers WHERE id = 112').sess_time)
+		timeAfter = new Date(query.val('SELECT sess_time FROM uniusers WHERE id = 112').sess_time)
 		
 		#test.ok timeBefore < timeAfter, 'should update session timestamp with asyncUpdate'
 		test.done()
@@ -165,95 +150,50 @@ exports.sessionInfoRefreshing =
 #			test.done()
 
 
-exports.generateSessId =
-	testNoErrors: (test) ->
-		_createSalt = users.createSalt
-		i = 0
-		users.createSalt = (len) ->
-			'someid' + (++i)
+exports.generateSessId = (test) ->
+	_createSalt = users.createSalt
+	i = 0
+	users.createSalt = (len) ->
+		'someid' + (++i)
 
-		async.series [
-			(callback) ->
-				mg.migrate conn, { tables: ['permission_kind', 'uniusers'] }, callback
-			(callback) ->
-				conn.query "INSERT INTO uniusers (sessid) VALUES ('someid1')", callback
-			(callback) ->
-				conn.query "INSERT INTO uniusers (sessid) VALUES ('someid2')", callback
-			(callback) ->
-				users.generateSessId conn, 16, callback
-			(callback) ->
-				conn.query 'DROP TABLE uniusers', [], callback
-		],
-		(error, result) ->
-			users.createSalt = _createSalt
-			test.ifError error
-			test.strictEqual result[3], 'someid3', 'sessid should be unique'
-			test.done()
+	clearTables 'uniusers'
+	query "INSERT INTO uniusers (sessid) VALUES ('someid1')"
+	query "INSERT INTO uniusers (sessid) VALUES ('someid2')"
+	sessid = users.generateSessId.sync users, conn, 16
 
-	testErrors: (test) ->
-		users.generateSessId conn, 16, (error, result) ->
-			test.ok error, 'should return error without table'
-			test.done()
+	users.createSalt = _createSalt
+	test.strictEqual sessid, 'someid3', 'sessid should be unique'
+	test.done()
 
 
 exports.idBySession =
 	testNoErrors: (test) ->
-		async.series [
-			(callback) ->
-				mg.migrate conn, { tables: ['permission_kind', 'uniusers'] }, callback
-			(callback) ->
-				conn.query "INSERT INTO uniusers ( id, sessid ) VALUES ( 3, 'someid' )", callback
-			(callback) ->
-				users.idBySession conn, "someid", callback
-		],
-		(error, result) ->
-			test.ifError error
-			test.strictEqual result[2], 3, 'should return correct user id'
-			test.done()
+		clearTables 'uniusers'
+		query "INSERT INTO uniusers ( id, sessid ) VALUES ( 3, 'someid' )"
+		userid = users.idBySession.sync null, conn, "someid"
+		test.strictEqual userid, 3, 'should return correct user id'
+		test.done()
 
 	testWrongSessid: (test) ->
-		async.series [
-			(callback) ->
-				mg.migrate conn, { tables: ['permission_kind', 'uniusers'] }, callback
-			(callback) ->
-				users.idBySession conn, 'someid', callback
-			(callback) ->
-				conn.query 'DROP TABLE uniusers', [], callback
-		],
-		(error, result) ->
-			test.ok error, 'should return error on wrong sessid'
-			test.done()
-
-	testQueryError: (test) ->
-		users.idBySession conn, 'someid', (error, result) ->
-			test.ok error, 'should return error without table'
-			test.done()
+		clearTables 'uniusers'
+		test.throws(
+			-> users.idBySession.sync null, conn, 'someid'
+			Error
+			'should return error on wrong sessid'
+		)
+		test.done()
 
 
-exports.closeSession =
-	testNoErrors: (test) ->
-		async.series [
-			(callback) -> #0
-				mg.migrate conn, { tables: ['permission_kind', 'uniusers'] }, callback
-			(callback) ->
-				conn.query "INSERT INTO uniusers ( sessid, sess_time ) VALUES ( 'someid', NOW() )", [], callback
-			(callback) ->
-				users.closeSession conn, 'someid', callback
-			(callback) ->
-				users.sessionInfoRefreshing conn, 'someid', 3600, callback
-			(callback) ->
-				users.closeSession conn, undefined, callback
-		],
-		(error, result) ->
-			test.ifError error
-			test.strictEqual result[3].sessionIsActive, false, 'session should have expired'
-			test.strictEqual result[4], 'Not closing: empty sessid', 'should not fail with empty sessid'
-			test.done()
-
-	testErrors: (test) ->
-		users.closeSession conn, 'someid', (error, result) ->
-			test.ok error, 'should return error without table'
-			test.done()
+exports.closeSession = (test) ->
+	clearTables 'uniusers'
+	query "INSERT INTO uniusers ( sessid, sess_time ) VALUES ( 'someid', NOW() )"
+	users.closeSession.sync null, conn, 'someid'
+	refr = users.sessionInfoRefreshing.sync null, conn, 'someid', 3600
+	warn1 = users.closeSession.sync null, conn, undefined
+	
+	test.strictEqual refr.sessionIsActive, false, 'session should have expired'
+	test.strictEqual warn1, 'Not closing: empty sessid', 'should not fail with empty sessid'
+	test.done()
 
 
 exports.createSalt = (test) ->
@@ -269,7 +209,7 @@ exports.createSalt = (test) ->
 
 
 exports.registerUser = (test) ->
-	migrateTables 'permission_kind', 'uniusers', 'locations', 'monsters', 'monster_prototypes', 'characters'
+	clearTables 'uniusers', 'locations', 'monsters', 'monster_prototypes', 'characters'
 	query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
 	
 	users.registerUser.sync null, conn, 'TheUser', 'password', 'admin'
@@ -294,81 +234,32 @@ exports.registerUser = (test) ->
 	test.done()
 
 
-exports.accessGranted =
-	testNoErrors: (test) ->
-		async.series [
-			(callback) ->
-				mg.migrate conn, { tables: ['permission_kind', 'uniusers', 'locations',
-					'monsters', 'monster_prototypes', 'characters'] }, callback
-			(callback) ->
-				conn.query 'INSERT INTO locations (id, initial) VALUES (2, 1)', callback
-			(callback) ->
-				users.registerUser conn, 'TheUser', 'password', 'user', callback
-			(callback) ->
-				users.accessGranted conn, 'TheUser', 'password', callback
-			(callback) ->
-				users.accessGranted conn, 'WrongUser', 'password', callback
-			(callback) ->
-				users.accessGranted conn, 'TheUser', 'wrongpass', callback
-			(callback) ->
-				users.accessGranted conn, 'THEUSER', 'password', callback
-			(callback) ->
-				users.accessGranted conn, 'theuser', 'password', callback
-		], (error, result) ->
-			test.ifError error
-			test.strictEqual result[3], true, 'should return true for valid data'
-			test.strictEqual result[4], false, 'should return false if user does not exist'
-			test.strictEqual result[5], false, 'should return false if password is wrong'
-			test.strictEqual result[6], true, 'should ignore capitalization'
-			test.strictEqual result[7], true, 'should ignore capitalization'
-			test.done()
-
-	testErrors: (test) ->
-		users.accessGranted conn, 'TheUser', 'password', (error, result) ->
-			test.ok error
-			test.done()
+exports.accessGranted = (test) ->
+	clearTables 'uniusers', 'characters', 'locations'
+	query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
+	users.registerUser.sync null, conn, 'TheUser', 'password', 'user'
+	
+	[
+		{name:'TheUser',   pass:'password',  ok:true,  msg:'should return true for valid data'}
+		{name:'WrongUser', pass:'password',  ok:false, msg:'should return false if user does not exist'}
+		{name:'WrongUser', pass:'wrongpass', ok:false, msg:'should return false if password is wrong'}
+		{name:'THEUSER',   pass:'password',  ok:true,  msg:'should ignore capitalization'}
+		{name:'theuser',   pass:'password',  ok:true,  msg:'should ignore capitalization (2)'}
+	].forEach (t) ->
+		granted = users.accessGranted.sync null, conn, t.name, t.pass
+		test.strictEqual granted, t.ok, t.msg
+	test.done()
 
 
-exports.createSession =
-	testNoErrors: (test) ->
-		async.series [
-			(callback) -> #0
-				mg.migrate conn, { tables: ['permission_kind', 'uniusers', 'locations',
-					'monsters', 'monster_prototypes', 'characters'] }, callback
-			(callback) ->
-				conn.query 'INSERT INTO locations (id, initial) VALUES (2, 1)', callback
-			(callback) ->
-				users.registerUser conn, 'Мохнатый Ангел', 'password', 'user', callback
-			(callback) ->
-				conn.query 'SELECT sessid FROM uniusers', [], callback
-			(callback) ->
-				users.createSession conn, 'МОХНАТЫЙ ангел', callback
-			(callback) -> #5
-				conn.query 'SELECT sessid, sess_time FROM uniusers', [], callback
-		],
-		(error, result) ->
-			test.ifError error
-			test.ok result[3].rows[0].sessid isnt result[5].rows[0].sessid,
-				'should change sessid'
-			test.ok result[5].rows[0].sess_time.getTime() > new Date().getTime() - 60000,
-				'should update session timestamp'
-			test.done()
+exports.createSession = (test) ->
+	clearTables 'uniusers', 'locations', 'characters'
+	query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
+	users.registerUser.sync null, conn, 'Мохнатый Ангел', 'password', 'user'
+	user0 = query.row 'SELECT sessid FROM uniusers'
+	users.createSession.sync null, conn, 'МОХНАТЫЙ ангел'
+	user1 = query.row 'SELECT sessid, sess_time FROM uniusers'
+	
+	test.ok user0.sessid isnt user1.sessid, 'should change sessid'
+	test.ok user1.sess_time.getTime() > Date.now() - 60000, 'should update session timestamp'
+	test.done()
 
-#	testErrors: (test) ->
-#		users.createSession conn, 10101, (error, result) ->
-#			test.ok error, 'should crash on wrong sessid'
-#			test.done()
-
-fixTest = (obj) ->
-	for attr of obj
-		if attr is 'setUp' or attr is 'tearDown'
-			continue
-
-		if obj[attr] instanceof Function
-			obj[attr] = ((origTestFunc, t) -> (test) ->
-					console.log(t)
-					origTestFunc(test)
-				)(obj[attr], attr)
-		else
-			fixTest(obj[attr])
-fixTest exports
