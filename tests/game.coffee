@@ -477,7 +477,7 @@ exports.goEscape =
 exports.getBattleParticipants =
 	setUp: (done) ->
 		clearTables 'characters', 'battle_participants'
-		insert 'characters', id: 1,  name: 'SomeUser'
+		insert 'characters', id: 1,  name: 'SomeUser', player: 2
 		insert 'characters', id: 11, name: 'SomeMonster 1'
 		insert 'characters', id: 12, name: 'SomeMonster 2'
 		insert 'battle_participants', battle: 3, character_id: 1,  side: 1, index: 1
@@ -488,9 +488,9 @@ exports.getBattleParticipants =
 	test: (test) ->
 		participants = game.getBattleParticipants.sync(null, conn, 1)
 		test.deepEqual participants, [
-			{ character_id: 11, name: 'SomeMonster 1', side: 0, index: 0 }
-			{ character_id: 1,  name: 'SomeUser',      side: 1, index: 1 }
-			{ character_id: 12, name: 'SomeMonster 2', side: 0, index: 2 }
+			{ character_id: 11, name: 'SomeMonster 1', side: 0, index: 0, player: null }
+			{ character_id: 1,  name: 'SomeUser',      side: 1, index: 1, player: 2    }
+			{ character_id: 12, name: 'SomeMonster 2', side: 0, index: 2, player: null }
 		], 'should return participants with names'
 		test.done()
 
@@ -870,7 +870,7 @@ exports.getCharacterFeatures =
 			player: 1
 			location: 2
 
-		clearTables 'characters'
+		clearTables 'characters', 'battle_participants'
 		insert 'characters', data
 
 		expectedData = Object.clone(data)
@@ -878,11 +878,17 @@ exports.getCharacterFeatures =
 		expectedData.mana_percent = 25
 		expectedData.exp_max = 3000
 		expectedData.exp_percent = 0
+		expectedData.fight_mode = false
 
 		user = game.getCharacterFeatures.sync null, conn, 1
 		test.deepEqual user, expectedData, 'should return specific fields by id'
 		#user = game.getCharacterFeatures.sync null, conn, 'someuser'
 		#test.deepEqual user, expectedData, 'should return specific fields by nickname'
+
+		insert 'battle_participants', character_id: 1
+		expectedData.fight_mode = true
+		user = game.getCharacterFeatures.sync null, conn, 1
+		test.deepEqual user, expectedData, 'should return also return id character is in fight'
 
 		user = game.getCharacterFeatures.sync null, conn, 2
 		test.strictEqual user, null, 'should return null if no such user exists'

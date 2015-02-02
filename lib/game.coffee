@@ -335,10 +335,11 @@ exports.goEscape = ((dbConnection, character_id) ->
 #    name: "Vasya", // user's or monster's name
 #    index: 3, // turn number, starts from 0
 #    side: 0, // side in battle, 0 or 1
+#    player: 1 // id of character's player (null for monters)
 # }
 exports.getBattleParticipants = ((dbConnection, character_id) ->
 	return dbConnection.query.sync(dbConnection,
-		"SELECT character_id, index, side, name "+
+		"SELECT character_id, index, side, name, player "+
 		"FROM battle_participants, characters "+
 		"WHERE battle = ("+
 				"SELECT battle from battle_participants "+
@@ -532,7 +533,10 @@ exports.uninvolve = (dbConnection, character_id, callback) ->
 
 # Returns character's features.
 exports.getCharacterFeatures = ((dbConnection, character_id) ->
-	c = dbConnection.query.sync(dbConnection, "SELECT * FROM characters WHERE id = $1", [character_id]).rows[0]
+	c = dbConnection.query.sync(dbConnection,
+		"SELECT *, "+
+		"  EXISTS(SELECT * FROM battle_participants WHERE character_id = $1) AS fight_mode "+
+		"FROM characters WHERE id = $1", [character_id]).rows[0]
 	return null unless c?
 
 	c.health_percent = c.health * 100 / c.health_max
