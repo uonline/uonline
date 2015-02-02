@@ -276,40 +276,28 @@ insertMonsters = ->
 		[15,"Грязевой голем",21,300,20,100,0,50,2500,0,0,5,16]
 	]
 
-	dbConnection.query.sync(dbConnection, "TRUNCATE monster_prototypes", [])
-	for i in prototypes
-		dbConnection.query.sync(
-			dbConnection
-			"INSERT INTO monster_prototypes "+
-				"(id, name, level, power, agility, defense, intelligence, accuracy, "+
-				"health_max, mana_max, energy, initiative_min, initiative_max) "+
-				"VALUES "+
-				"($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)"
-			i
-		)
-
-	console.log('Inserting monsters...')
-
 	locs = dbConnection.query.sync(dbConnection, "SELECT id FROM locations").rows
 	if (locs.length == 0)
 		throw new Error("No locations found. Forgot unify data?")
 
-	dbConnection.query.sync(dbConnection, "TRUNCATE monsters", [])
-	prototypesFromDB = dbConnection.query.sync(dbConnection, "SELECT * FROM monster_prototypes").rows
-	for i in [0...50]
-		soul = prototypesFromDB.sample()
-		dbConnection.query.sync(
-			dbConnection
-			"INSERT INTO monsters "+
-				"(id, prototype, location, health, mana, effects,"+
-				" attack_chance, initiative) "+
-				"VALUES "+
-				"($1, $2, $3, $4, $5, $6, $7, $8)"
-			[
-				i, soul.id, locs.sample().id, soul.health_max, soul.mana_max, null,
-				Number.random(25), Number.random(soul.initiative_min, soul.initiative_max)
-			]
-		)
+	console.log('Inserting monsters...')
+
+	dbConnection.query.sync(dbConnection, "DELETE FROM characters WHERE player IS NULL", [])
+	for i in prototypes
+		for j in [1..5]
+			dbConnection.query.sync(
+				dbConnection
+				"INSERT INTO characters "+
+					"(name, level, power, agility, defense, intelligence, accuracy, "+
+					"health_max, mana_max, energy, "+
+					"location, health, mana, attack_chance, initiative) "+
+					"VALUES "+
+					"($1, $2, $3, $4, $5, $6, $7, "+
+					" $8, $9, $10, "+
+					" $11, $12, $13, $14, $15)"
+				i.slice(1, i.length-2) # cut id (first) and minitiative_min|max (last two)
+					.concat(locs.sample().id, i[8], i[9], Number.random(25), Number.random(i[11], i[12]))
+			)
 
 	console.log('Done.')
 
