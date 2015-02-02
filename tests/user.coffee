@@ -77,17 +77,16 @@ exports.idExists = (test) ->
 	test.done()
 
 
-exports.sessionExists =
-	testNoErrors: (test) ->
-		clearTables 'uniusers'
-		query "INSERT INTO uniusers (sessid) VALUES ('someid')"
-		
-		exists = users.sessionExists.sync(null, conn, 'someid')
-		test.strictEqual exists, true, 'should return true when sessid exists'
-		
-		exists = users.sessionExists.sync(null, conn, 'wrongid')
-		test.strictEqual exists, false, 'should return false when sessid does not exist'
-		test.done()
+exports.sessionExists = (test) ->
+	clearTables 'uniusers'
+	query "INSERT INTO uniusers (sessid) VALUES ('someid')"
+	
+	exists = users.sessionExists.sync(null, conn, 'someid')
+	test.strictEqual exists, true, 'should return true when sessid exists'
+	
+	exists = users.sessionExists.sync(null, conn, 'wrongid')
+	test.strictEqual exists, false, 'should return false when sessid does not exist'
+	test.done()
 
 
 exports.sessionInfoRefreshing =

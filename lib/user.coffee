@@ -112,22 +112,15 @@ exports.getFeatures = ((dbConnection, id_or_name) ->
 
 # Generate an unique sessid with the given length.
 # Returns a string, or an error.
-exports.generateSessId = (dbConnection, sess_length, callback) ->
+exports.generateSessId = ((dbConnection, sess_length) ->
 	# check random sessid for uniqueness
-	(iteration = ->
+	loop
 		sessid = exports.createSalt(sess_length)
-		exports.sessionExists dbConnection, sessid, (error, exists) ->
-			if error?
-				callback error, null
-				return
-			if exists
-				iteration()
-				return
-			callback null, sessid
-			return
-		return
-	)()
+		exists = exports.sessionExists.sync null, dbConnection, sessid
+		unless exists
+			return sessid
 	return
+).async()
 
 
 # Get user id using his sessid.
@@ -141,17 +134,14 @@ exports.idBySession = (dbConnection, sess, callback) ->
 
 # Close a session with given sessid.
 # Returns an error (if any), a string 'Not closing: empty sessid' (if it was empty), or nothing.
-exports.closeSession = (dbConnection, sessid, callback) ->
+exports.closeSession = ((dbConnection, sessid) ->
 	unless sessid?
-		callback null, 'Not closing: empty sessid'
-		return
-	exports.generateSessId dbConnection, config.sessionLength, (error, newSessid) ->
-		if error?
-			callback error
-			return
-		else
-			dbConnection.query 'UPDATE uniusers SET sessid = $1 WHERE sessid = $2',
-				[ newSessid, sessid ], callback
+		return 'Not closing: empty sessid'
+	newSessid = exports.generateSessId.sync null, dbConnection, config.sessionLength
+	dbConnection.query.sync dbConnection,
+		'UPDATE uniusers SET sessid = $1 WHERE sessid = $2', [ newSessid, sessid ]
+	return
+).async()
 
 
 # Generate a random sequence of printable characters with given length.
