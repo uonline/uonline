@@ -48,29 +48,32 @@ exports.sessionExists = (dbConnection, sess, callback) ->
 # Get information about a user with the given sessid.
 # Takes session expiration time as an argument.
 # Returns an object with fields:
-# - sessionIsActive
-# - username
-# - admin
-# - userid,
+# - loggedIn
+# - {other user's fields},
 #
 # or an error.
-exports.sessionInfoRefreshing = ((dbConnection, sessid, sess_timeexpire, asyncUpdate, callback) ->
+exports.sessionInfoRefreshing = ((dbConnection, sessid, sess_timeexpire, asyncUpdate) ->
 	unless sessid?
-		return sessionIsActive: false
-	userdata = dbConnection.query.sync(dbConnection,
-		"SELECT id, username, permissions FROM uniusers "+
-		"WHERE sessid = $1 AND sess_time > NOW() - $2 * INTERVAL '1 SECOND'",
-		[sessid, sess_timeexpire]
-	)
+		return loggedIn: false
 
-	if userdata.rows.length is 0
-		return sessionIsActive: false
+	#TODO: maybe users.character_id instead of characters.player?
+	user = dbConnection.query.sync(dbConnection,
+		"SELECT uniusers.*, characters.id AS character_id "+
+		"FROM uniusers, characters "+
+		"WHERE sessid = $1 "+
+		"  AND sess_time > NOW() - $2 * INTERVAL '1 SECOND' "+
+		"  AND uniusers.id = characters.player",
+		[sessid, sess_timeexpire]
+	).rows[0]
+
+	unless user
+		return loggedIn: false
 
 	if asyncUpdate is true
 		process.nextTick ->
 			dbConnection.query(
 				'UPDATE uniusers SET sess_time = NOW() WHERE id = $1',
-				[userdata.rows[0].id],
+				[user.id],
 				(error, result) ->
 					if error?
 						console.log 'Async update failed'
@@ -79,15 +82,31 @@ exports.sessionInfoRefreshing = ((dbConnection, sessid, sess_timeexpire, asyncUp
 	else
 		dbConnection.query.sync(dbConnection,
 			'UPDATE uniusers SET sess_time = NOW() WHERE id = $1',
-			[userdata.rows[0].id]
+			[user.id]
 		)
 
-	return {
-		sessionIsActive: true
-		username: userdata.rows[0].username
-		admin: (userdata.rows[0].permissions is 'admin')
-		userid: userdata.rows[0].id
-	}
+	user.loggedIn = true
+	user.isAdmin = (user.permissions is 'admin')
+	return user
+).async()
+
+
+exports.getFeatures = ((dbConnection, id_or_name) ->
+	field = if typeof id_or_name is 'number' then 'uniusers.id' else 'username'
+	
+	user = dbConnection.query.sync(dbConnection,
+		"SELECT uniusers.*, characters.id AS character_id "+
+		"FROM uniusers, characters "+
+		"WHERE #{field} = $1 "+
+		"  AND uniusers.id = characters.player",
+		[id_or_name]
+	).rows[0]
+	
+	unless user?
+		return null
+	
+	user.isAdmin = (user.permissions is 'admin')
+	return user
 ).async()
 
 

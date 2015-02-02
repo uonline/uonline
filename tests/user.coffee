@@ -21,6 +21,7 @@ async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
 queryUtils = require '../lib/query_utils'
+sugar = require 'sugar'
 conn = null
 query = null
 
@@ -28,11 +29,16 @@ query = null
 clearTables = ->
 	query 'TRUNCATE ' + [].join.call(arguments, ', ')
 
+#TODO: to utils
+insert = (dbName, fields) ->
+	values = (v for _,v of fields)
+	query "INSERT INTO #{dbName} (#{k for k of fields}) VALUES (#{values.map (_,i) -> '$'+(i+1)})", values
+
 
 exports.setUp = (->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
 	query = queryUtils.getFor conn
-	mg.migrate.sync mg, conn
+	#mg.migrate.sync mg, conn
 ).async()
 
 exports.tearDown = (->
@@ -86,17 +92,21 @@ exports.sessionExists =
 
 exports.sessionInfoRefreshing =
 	testNoErrors: (test) ->
-		clearTables 'uniusers'
+		clearTables 'characters', 'uniusers'
 		query "INSERT INTO uniusers " +
 			"(id, username, permissions, sessid, sess_time) " +
 			"VALUES (8, 'user0', 'admin', 'expiredid', NOW() - INTERVAL '3600 SECOND' )"
+		insert 'characters', id: 5, player: 8
+		
+		testingProps = 'id loggedIn username isAdmin character_id'.split(' ')
+		
 		
 		res = users.sessionInfoRefreshing.sync null, conn, 'someid', 7200, false
-		test.deepEqual res, { sessionIsActive: false },
+		test.deepEqual res, { loggedIn: false },
 			'session should not be active if expired'
 		
 		res = users.sessionInfoRefreshing.sync null, conn, 'someid', 7200, false
-		test.deepEqual res, { sessionIsActive: false },
+		test.deepEqual res, { loggedIn: false },
 				'sesson expire time should not be updated if expired'
 		
 		
@@ -105,30 +115,33 @@ exports.sessionInfoRefreshing =
 		timeBefore = new Date(query.val 'SELECT sess_time FROM uniusers')
 		
 		res = users.sessionInfoRefreshing.sync null, conn, 'someid', 7200, false
-		test.deepEqual res, {
-			sessionIsActive: true
+		test.deepEqual Object.select(res, testingProps), {
+			id: 8
+			loggedIn: true
 			username: 'user0'
-			admin: true
-			userid: 8
+			isAdmin: true
+			character_id: 5
 		}, 'session should be active if not expired and user data should be returned'
 		
 		timeAfter = new Date(query.val 'SELECT sess_time FROM uniusers')
 		test.ok timeBefore < timeAfter, 'should update session timestamp'
 		
 		res = users.sessionInfoRefreshing.sync null, conn, undefined, 7200, false
-		test.deepEqual res, { sessionIsActive: false }, 'should not fail on empty sessid'
+		test.deepEqual res, { loggedIn: false }, 'should not fail on empty sessid'
 		
 		
 		query "INSERT INTO uniusers " +
 			"(id, username, permissions, sessid, sess_time) " +
 			"VALUES (99, 'user1', 'user', 'otherid', NOW() + INTERVAL '3600 SECOND' )"
+		insert 'characters', id: 6, player: 99
 		
 		res = users.sessionInfoRefreshing.sync null, conn, 'otherid', 7200, false
-		test.deepEqual res, {
-			sessionIsActive: true
+		test.deepEqual Object.select(res, testingProps), {
+			id: 99
+			loggedIn: true
 			username: "user1"
-			admin: false
-			userid: 99
+			isAdmin: false
+			character_id: 6
 		}, 'should return admin: false if user is not admin'
 		
 		
@@ -148,6 +161,36 @@ exports.sessionInfoRefreshing =
 #		users.sessionInfoRefreshing conn, 'someid', 0, (error, result) ->
 #			test.ok error, 'should return error without table'
 #			test.done()
+
+
+exports.getFeatures = (test) ->
+	props =
+		id: 8
+		username: 'user0'
+		mail: 'test@mail.com'
+		reg_time: new Date '2015-01-02 15:03:04'
+		permissions: 'admin'
+		sessid: 'sessid'
+		sess_time: new Date '2015-01-02 15:03:44'
+		salt: 'salt'
+		hash: 'hash'
+	
+	clearTables 'characters', 'uniusers'
+	insert 'uniusers', props
+	insert 'characters', id: 4, player: 8
+	
+	Object.merge props, character_id: 4, isAdmin: true
+	
+	[
+		{val: 8,       res: props, msg: 'user attributes by id'}
+		{val: 'user0', res: props, msg: 'user attributes by name'}
+		{val: 123,     res: null,  msg: 'null if id is wrong'}
+		{val: 'user1', res: null,  msg: 'null if name is wrong'}
+	].forEach (param) ->
+		user = users.getFeatures.sync null, conn, param.val
+		test.deepEqual user, param.res, "should return #{param.what}"
+	
+	test.done()
 
 
 exports.generateSessId = (test) ->
@@ -191,7 +234,7 @@ exports.closeSession = (test) ->
 	refr = users.sessionInfoRefreshing.sync null, conn, 'someid', 3600
 	warn1 = users.closeSession.sync null, conn, undefined
 	
-	test.strictEqual refr.sessionIsActive, false, 'session should have expired'
+	test.strictEqual refr.loggedIn, false, 'session should have expired'
 	test.strictEqual warn1, 'Not closing: empty sessid', 'should not fail with empty sessid'
 	test.done()
 
@@ -263,3 +306,17 @@ exports.createSession = (test) ->
 	test.ok user1.sess_time.getTime() > Date.now() - 60000, 'should update session timestamp'
 	test.done()
 
+
+fixTest = (obj) ->
+	for attr of obj
+		if attr is 'setUp' or attr is 'tearDown'
+			continue
+
+		if obj[attr] instanceof Function
+			obj[attr] = ((origTestFunc, t) -> (test) ->
+					console.log(t)
+					origTestFunc(test)
+				)(obj[attr], attr)
+		else
+			fixTest(obj[attr])
+fixTest exports
