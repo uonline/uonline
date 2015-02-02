@@ -22,6 +22,8 @@ exports.DATABASE_URL = process.env.DATABASE_URL ||
 exports.DATABASE_URL_TEST = process.env.DATABASE_URL_TEST ||
 	'postgres://anonymous:nopassword@localhost/uonline_test';
 
+exports.defaultPort = 5000;
+
 exports.sessionLength = 64;
 exports.sessionExpireTime = 3600; // seconds
 exports.userOnlineTimeout = 300; // seconds

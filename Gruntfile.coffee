@@ -21,14 +21,32 @@ module.exports = (grunt) ->
 	# Project configuration.
 	grunt.initConfig
 		nodeunit:
-			all: [
-				'tests/health-check.js'
-				'tests/health-check.coffee'
-				'tests/*.js'
-				'tests/*.coffee'
-			]
-			options:
-				reporter: 'grunt'
+			all:
+				src: [
+					'tests/health-check.js'
+					'tests/health-check.coffee'
+					'tests/*.js'
+					'tests/*.coffee'
+				]
+				options:
+					reporter: 'grunt'
+
+			http:
+				src: [
+					'tests-http/*.js'
+					'tests-http/*.coffee'
+				]
+				options:
+					reporter: 'default'
+
+		express:
+			server:
+				options:
+					opts: ['./node_modules/coffee-script/bin/coffee']
+					script: './main.coffee'
+					port: 9623
+					output: "Listening on port 9623"
+					background: true
 
 		jshint:
 			all:
@@ -192,6 +210,8 @@ module.exports = (grunt) ->
 	else
 		testTask.push 'nodeunit:all'
 	testTask.push 'jscoverage_report'
+	testTask.push 'express'
+	testTask.push 'nodeunit:http'
 	grunt.registerTask 'test', testTask
 
 	# Default task.
