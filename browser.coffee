@@ -39,10 +39,10 @@ $(document).ready ->
 	# Registration page stuff
 
 	# Selectors
-	usernameField = 'input[name=user]'
-	usernameFormGroup = '#user-form-group'
+	usernameField = 'input[name=username]'
+	usernameFormGroup = '#username-form-group'
 	usernameFeedback = '#username-feedback'
-	passwordField = 'input[name=pass]'
+	passwordField = 'input[name=password]'
 	passwordFormGroup = '#password-form-group'
 	passwordRevealButton = '#revealpass'
 	passwordRevealIcon = '#revealpass i'
