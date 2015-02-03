@@ -332,12 +332,14 @@ insertArmor = ->
 	console.log chalk.green 'ok'
 
 	process.stdout.write '  '+'Fetching users'+'... '
-	users = query.all 'SELECT id, username FROM uniusers', []
+	users = query.all(
+		'SELECT username, characters.id AS character_id '+
+		'FROM uniusers, characters WHERE uniusers.id = characters.player')
 	console.log chalk.green "found #{users.length}"
 	for user in users
 		process.stdout.write '  '+"Giving some armor to #{user.username}"+'... '
 		for item in prototypes
-			query 'INSERT INTO armor (prototype, owner, strength) VALUES ($1,$2,$3)', [item[0], user.id, item[3]]
+			query 'INSERT INTO armor (prototype, owner, strength) VALUES ($1,$2,$3)', [item[0], user.character_id, item[3]]
 		console.log chalk.green 'ok'
 
 
