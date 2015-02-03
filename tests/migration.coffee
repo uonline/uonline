@@ -16,20 +16,14 @@
 
 config = require '../config.js'
 tables = require '../lib/tables.js'
+queryUtils = require '../lib/query_utils'
 mg = require '../lib-cov/migration'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
 
 conn = null
-
-query = (str, values) ->
-	conn.query.sync(conn, str, values).rows
-
-queryOne = (str, values) ->
-	rows = query(str, values)
-	throw new Error('In query:\n' + query + '\nExpected one row, but got ' + rows.length) if rows.length isnt 1
-	rows[0]
+query = null
 
 
 migrationData = [
@@ -54,17 +48,27 @@ migrationData = [
 ]
 
 
-exports.setUp = (done) -> sync ->
+# if this won't crash, everything should be OK
+revisionBackup = null
+
+exports.setUp = (->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+	query = queryUtils.getFor conn
+	try
+		revisionBackup = query.val 'SELECT revision FROM revision'
+	catch e
+		console.log e
+		revisionBackup = null
 	query 'DROP TABLE IF EXISTS test_table, other_table, revision'
 	mg.setMigrationsData migrationData
-	done()
+).async()
 
-
-exports.tearDown = (done) -> sync ->
+exports.tearDown = ( ->
 	query 'DROP TABLE IF EXISTS test_table, other_table, revision'
+	if revisionBackup != null
+		mg.setRevision.sync null, conn, revisionBackup
 	conn.end()
-	done()
+).async()
 
 
 exports.getCurrentRevision =
@@ -201,9 +205,9 @@ exports.migrate =
 	'usual': (test) ->
 		mg.migrate.sync null, conn, {dest_revision: 1}
 
-		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
+		rows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
-		orows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
+		orows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
 		test.ok rows.length is 3 and
 			rows[0].column_name is 'col0' and
@@ -223,9 +227,9 @@ exports.migrate =
 
 		mg.migrate.sync null, conn
 
-		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
+		rows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
-		orows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
+		orows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
 		test.ok rows.length is 4 and
 			rows[0].column_name is 'col0' and
@@ -253,13 +257,14 @@ exports.migrate =
 		rev1 = mg.getCurrentRevision.sync null, conn
 		test.strictEqual rev0, rev1, 'should not change version for one table'
 
-		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
+		row = query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		exists = tables.tableExists.sync null, conn, 'other_table'
 
-		test.ok rows.length is 1 and
-			rows[0].column_name is 'id',
-			'should correctly perform migration for specified table'
+		test.deepEqual row, {
+			column_name: 'id'
+			data_type: 'integer'
+		}, 'should correctly perform migration for specified table'
 		test.ok not exists, 'migration for other tables should not have been performed'
 		test.done()
 
@@ -269,17 +274,19 @@ exports.migrate =
 		rev1 = mg.getCurrentRevision.sync null, conn
 		test.strictEqual rev0, rev1, 'should not change version'
 
-		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
+		row = query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
-		test.ok rows.length is 1 and
-			rows[0].column_name is 'id',
-			'should correctly perform migration for specified tables'
+		test.deepEqual row, {
+			column_name: 'id'
+			data_type: 'integer'
+		}, 'should correctly perform migration for specified tables'
 
-		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
-			"WHERE table_name = 'test_table' ORDER BY column_name"
-		test.ok rows.length is 1 and
-			rows[0].column_name is 'id',
-			'should correctly perform migration for specified tables'
+		row = query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
+			"WHERE table_name = 'other_table' ORDER BY column_name"
+		test.ok row, {
+			column_name: 'id'
+			data_type: 'integer'
+		}, 'should correctly perform migration for specified tables'
 		test.done()
 
 	'verbose': (test) ->

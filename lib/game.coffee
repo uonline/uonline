@@ -550,7 +550,7 @@ exports.getCharacterFeatures = ((dbConnection, character_id) ->
 
 exports.getCharacterArmor = ((dbConnection, character_id) ->
 	dbConnection.query.sync(dbConnection,
-		"SELECT name, type, coverage, strength, strength_max "+
+		"SELECT armor.id, name, type, coverage, strength, strength_max, equipped "+
 		"FROM armor, armor_prototypes "+
 		"WHERE armor.owner = $1 AND armor.prototype = armor_prototypes.id "+
 		"ORDER BY armor.id",

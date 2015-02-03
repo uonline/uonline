@@ -38,7 +38,7 @@ insert = (dbName, fields) ->
 exports.setUp = (->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
 	query = queryUtils.getFor conn
-	#mg.migrate.sync mg, conn
+	mg.migrate.sync mg, conn
 ).async()
 
 exports.tearDown = (->
@@ -305,17 +305,3 @@ exports.createSession = (test) ->
 	test.ok user1.sess_time.getTime() > Date.now() - 60000, 'should update session timestamp'
 	test.done()
 
-
-fixTest = (obj) ->
-	for attr of obj
-		if attr is 'setUp' or attr is 'tearDown'
-			continue
-
-		if obj[attr] instanceof Function
-			obj[attr] = ((origTestFunc, t) -> (test) ->
-					console.log(t)
-					origTestFunc(test)
-				)(obj[attr], attr)
-		else
-			fixTest(obj[attr])
-fixTest exports

@@ -75,9 +75,10 @@ exports.setUp = (->
 						cb(err, res)
 				queryf.apply this, args
 			query = queryUtils.getFor conn
-			query 'DROP TABLE IF EXISTS ' + usedTables.join(', ')
-			query 'DROP TYPE IF EXISTS ' + usedCustomTypes.join(', ')
-			migrateTables.apply null, usedCustomTypes.concat(usedTables)
+			#query 'DROP TABLE IF EXISTS ' + usedTables.join(', ')
+			#query 'DROP TYPE IF EXISTS ' + usedCustomTypes.join(', ')
+			#migrateTables.apply null, usedCustomTypes.concat(usedTables)
+			mg.migrate.sync mg, conn
 		catch e
 			console.error e
 ).async() # the entrance to the Fieber land
@@ -246,7 +247,8 @@ exports.createBattleBetween = (test) ->
 	test.strictEqual battle.location, locid, 'should create battle on specified location'
 	test.strictEqual battle.turn_number, 0, 'should create battle that is on first turn'
 
-	participants = query.all 'SELECT character_id AS id, index, side FROM battle_participants WHERE battle = $1', [battle.id]
+	participants = query.all 'SELECT character_id AS id, index, side FROM battle_participants WHERE battle = $1',
+		[battle.id]
 	test.deepEqual participants, [
 		{id: 5, index: 0, side: 0}
 		{id: 6, index: 1, side: 1}
@@ -333,7 +335,7 @@ exports._leaveBattle = (test) ->
 
 exports.changeLocation =
 	setUp: (done) ->
-		clearTables 'characters', 'locations', 'battles', 'battle_participants'
+		clearTables 'characters', 'locations', 'battles', 'battle_participants', 'monsters'
 		insert 'characters', id: 1, location: 1, initiative: 50
 		insert 'locations', id: 1, ways: 'Left=2'
 		insert 'locations', id: 2
@@ -719,7 +721,7 @@ exports._hit = (test) ->
 
 exports.hitOpponent =
 	setUp: (done) ->
-		clearTables 'characters', 'battles', 'battle_participants', 'armor', 'armor_prototypes'
+		clearTables 'characters', 'battles', 'battle_participants', 'armor', 'armor_prototypes', 'monsters'
 		insert 'characters', id: 1, name: 'SomeUser', power: 20, defense: 10, health: 1000, player: 1
 		insert 'characters', id: 4, name: 'SomeMonster 1', power: 20, defense: 10, health: 1000
 		insert 'characters', id: 5, name: 'SomeMonster 2', power: 20, defense: 10, health: 1000
@@ -766,7 +768,7 @@ exports.getNearbyUsers =
 	setUp: (done) ->
 		d = new Date()
 		now = (d.getFullYear() + 1) + '-' + (d.getMonth() + 1) + '-' + d.getDate()
-		clearTables 'characters', 'locations'
+		clearTables 'characters', 'uniusers', 'locations'
 		insert 'uniusers', id: 1, sess_time: now
 		insert 'uniusers', id: 2, sess_time: now
 		insert 'uniusers', id: 3, sess_time: now
@@ -915,8 +917,8 @@ exports.getCharacterArmor = (test) ->
 
 	armor = game.getCharacterArmor conn, 1
 	test.deepEqual armor, [
-			{name: 'Magic helmet',  type:'helmet', coverage:50, strength:100, strength_max:120}
-			{name: 'Speed greaves', type:'greave', coverage:25, strength:100, strength_max:110}
+			{id: 1, name: 'Magic helmet',  type:'helmet', coverage:50, strength:100, strength_max:120, equipped: true}
+			{id: 2, name: 'Speed greaves', type:'greave', coverage:25, strength:100, strength_max:110, equipped: true}
 		] , "should return nesessary characteristics of user's armor"
 	test.done()
 
