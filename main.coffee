@@ -162,7 +162,7 @@ render = (template) ->
 fetchCharacter = ((request, response) ->
 	character = lib.game.getCharacterFeatures.sync null, dbConnection, request.uonline.user.character_id
 	character.location_id = character.location
-	request.uonline.user.character = character
+	request.uonline.character = character
 ).asyncMiddleware()
 
 
@@ -177,7 +177,6 @@ fetchMonsterFromURL = ((request, response) ->
 
 
 fetchArmor = ((request, response) ->
-	#TODO: request.uonline.user.character.armor ?
 	request.uonline.armor = lib.game.getCharacterArmor.sync null, dbConnection, request.uonline.user.character_id
 	return
 ).asyncMiddleware()
@@ -191,30 +190,28 @@ fetchLocation = ((request, response) ->
 		console.error e.stack
 		location = lib.game.getInitialLocation.sync null, dbConnection
 		lib.game.changeLocation.sync null, dbConnection, request.uonline.user.character_id, location.id
-	location.name = location.title #TODO: ???
-	request.uonline.user.location = location
+	request.uonline.location = location
 	return
 ).asyncMiddleware()
 
 
 fetchArea = ((request, response) ->
 	area = lib.game.getCharacterArea.sync null, dbConnection, request.uonline.user.character_id
-	area.name = area.title #TODO: ???
-	request.uonline.user.area = area
+	request.uonline.area = area
 	return
 ).asyncMiddleware()
 
 
 fetchUsersNearby = ((request, response) ->
 	tmpUsers = lib.game.getNearbyUsers.sync null,
-		dbConnection, request.uonline.user.id, request.uonline.user.character.location_id
+		dbConnection, request.uonline.user.id, request.uonline.character.location_id
 	request.uonline.players_list = tmpUsers
 	return
 ).asyncMiddleware()
 
 
 fetchMonstersNearby = ((request, response) ->
-	tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, request.uonline.user.character.location_id
+	tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, request.uonline.character.location_id
 	request.uonline.monsters_list = tmpMonsters
 	return
 ).asyncMiddleware()
@@ -239,13 +236,13 @@ fetchStatsFromURL = ((request, response) ->
 
 
 fetchBattleGroups = ((request, response) ->
-	if request.uonline.user.character.fight_mode
+	if request.uonline.character.fight_mode
 		participants = lib.game.getBattleParticipants.sync null, dbConnection, request.uonline.user.character_id
 		our_side = participants
 			.find((p) -> p.character_id is request.uonline.user.character_id)
 			.side
 		
-		request.uonline.user.battle =
+		request.uonline.battle =
 			participants: participants
 			our_side: our_side
 	return

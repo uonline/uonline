@@ -1,19 +1,19 @@
 extends layout
 block title
 	//- TODO: typography
-	| #{user.location.name}
+	| #{location.title}
 block content
 	//- TODO: typography
 	.page-header
-		h1 #{ user.location.name }#{' '}
-			small #{ user.area.name }
-	if user.location.pic != null
-		img.img-thumbnail(src=user.location.pic, style="float: right; margin-left: 1em; margin-bottom: 1em;")
-	if user.character.fight_mode == false
+		h1 #{ location.title }#{' '}
+			small #{ area.title }
+	if location.pic != null
+		img.img-thumbnail(src=location.pic, style="float: right; margin-left: 1em; margin-bottom: 1em;")
+	if character.fight_mode == false
 		div(style='max-width: 50em')
 			//- TODO: {{ description | tf | nl2p | nl2br }}
 			//- p #{ description }
-			each i in user.location.description.split('\n\n')
+			each i in location.description.split('\n\n')
 				if i.substring(0,5)=='*****'
 					//- каменты имени Андрея
 					//
@@ -25,19 +25,19 @@ block content
 					p= i
 		div
 			p.button-row
-				each i in user.location.ways
+				each i in location.ways
 					//- TODO: typography
 					a.pjax.btn.btn-default(href="/action/go/"+i.target) #{i.text}
 					| #{'\n'}
 	else
 		h4 Здоровье
 		.progress
-			.progress-bar.progress-bar-success(style='width: '+user.character.health_percent+'%;')
-				| #{ user.character.health }/#{ user.character.health_max }
+			.progress-bar.progress-bar-success(style='width: '+character.health_percent+'%;')
+				| #{ character.health }/#{ character.health_max }
 		h4 Мана
 		.progress
-			.progress-bar(style='width: '+user.character.mana_percent+'%;')
-				| #{ user.character.mana }/#{ user.character.mana_max }
+			.progress-bar(style='width: '+character.mana_percent+'%;')
+				| #{ character.mana }/#{ character.mana_max }
 	div
 		p
 			case players_list.length
@@ -60,7 +60,7 @@ block content
 		p
 			if monsters_list.length > 0
 				| Монстры:
-				if user.character.fight_mode == true
+				if character.fight_mode == true
 					each i,index in monsters_list
 						div(style="float:left;")
 							| #{i.name}:&nbsp;
@@ -76,13 +76,13 @@ block content
 					| #{'.'}
 			else
 				| На этой локации нет монстров.
-		if user.character.fight_mode == true
+		if character.fight_mode == true
 			ol
-				each p, index in user.battle.participants
+				each p, index in battle.participants
 					li
 						| #{p.name} (#{p.player ? 'игрок' : 'монстр'}),
 						| #{' '}
-						if p.side == user.battle.our_side
+						if p.side == battle.our_side
 							| #{ user.character_id==p.character_id ? 'вы' : 'союзник' }
 						else
 							| противник
@@ -90,11 +90,11 @@ block content
 							a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id) Ударить
 		p
 			small
-				if user.character.autoinvolved_fm == true
+				if character.autoinvolved_fm == true
 					b Вас атаковали!
 		if monsters_list.length > 0
 			p.button-row
-				if user.character.fight_mode == true
+				if character.fight_mode == true
 					a.btn.btn-default.disabled Атака
 					| #{' '}
 					a.btn.btn-default.disabled Защита
