@@ -49,20 +49,19 @@ exports.sessionExists = (dbConnection, sess, callback) ->
 # Takes session expiration time as an argument.
 # Returns an object with fields:
 # - loggedIn
-# - {other user's fields},
+# - isAdmin
+# - {other user's fields}
 #
 # or an error.
 exports.sessionInfoRefreshing = ((dbConnection, sessid, sess_timeexpire, asyncUpdate) ->
 	unless sessid?
 		return loggedIn: false
 
-	#TODO: maybe users.character_id instead of characters.player?
 	user = dbConnection.query.sync(dbConnection,
-		"SELECT uniusers.*, characters.id AS character_id "+
-		"FROM uniusers, characters "+
+		"SELECT uniusers.* "+
+		"FROM uniusers "+
 		"WHERE sessid = $1 "+
-		"  AND sess_time > NOW() - $2 * INTERVAL '1 SECOND' "+
-		"  AND uniusers.id = characters.player",
+		"  AND sess_time > NOW() - $2 * INTERVAL '1 SECOND'",
 		[sessid, sess_timeexpire]
 	).rows[0]
 
@@ -95,10 +94,9 @@ exports.getFeatures = ((dbConnection, id_or_name) ->
 	field = if typeof id_or_name is 'number' then 'uniusers.id' else 'username'
 	
 	user = dbConnection.query.sync(dbConnection,
-		"SELECT uniusers.*, characters.id AS character_id "+
-		"FROM uniusers, characters "+
-		"WHERE #{field} = $1 "+
-		"  AND uniusers.id = characters.player",
+		"SELECT uniusers.* "+
+		"FROM uniusers "+
+		"WHERE #{field} = $1",
 		[id_or_name]
 	).rows[0]
 	
@@ -161,21 +159,25 @@ exports.registerUser = ((dbConnection, username, password, permissions) ->
 	sessid = exports.generateSessId.sync(null, dbConnection, config.sessionLength)
 	
 	tx = transaction dbConnection
-	tx.query(
-		'INSERT INTO uniusers ('+
-			'username, salt, hash, sessid, reg_time, sess_time, permissions'+
-			') VALUES ('+
-			'$1, $2, $3, $4, NOW(), NOW(), $5'+
-			') RETURNING id',
-		[username, salt, hash.toString('hex'), sessid, permissions]
-	)
-	tx.query(
+	character_id = tx.query.sync(tx,
 		'INSERT INTO characters (name, player, location) VALUES ('+
 			'$1, '+
-			'(SELECT id FROM uniusers WHERE sessid = $2), '+
+			'NULL, '+ # player is null for now, will update later
 			'(SELECT id FROM locations WHERE initial = 1)'+
-		')',
-		[username, sessid]
+		') RETURNING id',
+		[username]
+	).rows[0].id
+	user_id = tx.query.sync(tx,
+		'INSERT INTO uniusers ('+
+			'username, salt, hash, sessid, reg_time, sess_time, permissions, character_id'+
+			') VALUES ('+
+			'$1, $2, $3, $4, NOW(), NOW(), $5, $6'+
+		') RETURNING id',
+		[username, salt, hash.toString('hex'), sessid, permissions, character_id]
+	).rows[0].id
+	tx.query(
+		'UPDATE characters SET player = $1 WHERE id = $2',
+		[user_id, character_id]
 	)
 	tx.commit.sync(tx)
 	return sessid: sessid

@@ -92,10 +92,10 @@ exports.sessionExists = (test) ->
 exports.sessionInfoRefreshing =
 	testNoErrors: (test) ->
 		clearTables 'characters', 'uniusers'
-		query "INSERT INTO uniusers " +
-			"(id, username, permissions, sessid, sess_time) " +
-			"VALUES (8, 'user0', 'admin', 'expiredid', NOW() - INTERVAL '3600 SECOND' )"
 		insert 'characters', id: 5, player: 8
+		insert 'uniusers',
+			id: 8, username: 'user0', character_id: 5,
+			permissions: 'admin', sessid: 'expiredid', sess_time: 1.hourAgo()
 		
 		testingProps = 'id loggedIn username isAdmin character_id'.split(' ')
 		
@@ -106,7 +106,7 @@ exports.sessionInfoRefreshing =
 		
 		res = users.sessionInfoRefreshing.sync null, conn, 'someid', 7200, false
 		test.deepEqual res, { loggedIn: false },
-				'sesson expire time should not be updated if expired'
+			'session expire time should not be updated if expired'
 		
 		
 		query "UPDATE uniusers SET sessid = 'someid'"
@@ -129,10 +129,10 @@ exports.sessionInfoRefreshing =
 		test.deepEqual res, { loggedIn: false }, 'should not fail on empty sessid'
 		
 		
-		query "INSERT INTO uniusers " +
-			"(id, username, permissions, sessid, sess_time) " +
-			"VALUES (99, 'user1', 'user', 'otherid', NOW() + INTERVAL '3600 SECOND' )"
 		insert 'characters', id: 6, player: 99
+		insert 'uniusers',
+			id: 99, username: 'user1', character_id: 6,
+			permissions: 'user', sessid: 'otherid', sess_time: 1.hourAgo()
 		
 		res = users.sessionInfoRefreshing.sync null, conn, 'otherid', 7200, false
 		test.deepEqual Object.select(res, testingProps), {
@@ -144,9 +144,9 @@ exports.sessionInfoRefreshing =
 		}, 'should return admin: false if user is not admin'
 		
 		
-		query "INSERT INTO uniusers " +
-			"(id, username, permissions, sessid, sess_time) " +
-			"VALUES (112, '112', 'admin', '123456', NOW() - INTERVAL '3600 SECOND' )"
+		insert 'uniusers',
+			id: 112, username: '112', character_id: 6,
+			permissions: 'admin', sessid: '123456', sess_time: 1.hourAgo()
 		
 		timeBefore = new Date(query.val('SELECT sess_time FROM uniusers WHERE id = 112').sess_time)
 		users.sessionInfoRefreshing.sync null, conn, '123456', 7200, true
@@ -155,11 +155,6 @@ exports.sessionInfoRefreshing =
 		
 		#test.ok timeBefore < timeAfter, 'should update session timestamp with asyncUpdate'
 		test.done()
-
-#	testErrors: (test) ->
-#		users.sessionInfoRefreshing conn, 'someid', 0, (error, result) ->
-#			test.ok error, 'should return error without table'
-#			test.done()
 
 
 exports.getFeatures = (test) ->
@@ -173,12 +168,13 @@ exports.getFeatures = (test) ->
 		sess_time: new Date '2015-01-02 15:03:44'
 		salt: 'salt'
 		hash: 'hash'
+		character_id: 4
 	
 	clearTables 'characters', 'uniusers'
 	insert 'uniusers', props
 	insert 'characters', id: 4, player: 8
 	
-	Object.merge props, character_id: 4, isAdmin: true
+	Object.merge props, isAdmin: true
 	
 	[
 		{val: 8,       res: props, msg: 'user attributes by id'}
@@ -187,7 +183,7 @@ exports.getFeatures = (test) ->
 		{val: 'user1', res: null,  msg: 'null if name is wrong'}
 	].forEach (param) ->
 		user = users.getFeatures.sync null, conn, param.val
-		test.deepEqual user, param.res, "should return #{param.what}"
+		test.deepEqual user, param.res, "should return #{param.msg}"
 	
 	test.done()
 
@@ -267,6 +263,9 @@ exports.registerUser = (test) ->
 	character = query.row 'SELECT * FROM characters WHERE player = $1', [user.id]
 	test.strictEqual character.name, user.username, 'should set character name'
 	test.strictEqual character.location, 2, 'should set location to initial one'
+	
+	test.strictEqual character.id, user.character_id, 'user should get a character'
+	test.strictEqual user.id, character.player, 'and character should know his user'
 	
 	test.throws(
 		-> users.registerUser.sync null, conn, 'TheUser', 'password', 1
