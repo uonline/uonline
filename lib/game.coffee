@@ -291,7 +291,7 @@ exports.goAttack = ((dbConnection, character_id) ->
 		[ character_id ]
 	).rows[0]
 
-	unless user
+	unless user?
 		tx.rollback.sync tx
 		return
 
@@ -531,13 +531,15 @@ exports.uninvolve = (dbConnection, character_id, callback) ->
 	dbConnection.query "UPDATE characters SET autoinvolved_fm = FALSE WHERE id = $1", [character_id], callback
 
 
-# Returns character's features.
-exports.getCharacterFeatures = ((dbConnection, character_id) ->
+# Returns character's attributes.
+exports.getCharacter = ((dbConnection, character_id) ->
 	c = dbConnection.query.sync(dbConnection,
 		"SELECT *, "+
 		"  EXISTS(SELECT * FROM battle_participants WHERE character_id = $1) AS fight_mode "+
 		"FROM characters WHERE id = $1", [character_id]).rows[0]
-	return null unless c?
+
+	unless c?
+		return null
 
 	c.health_percent = c.health * 100 / c.health_max
 	c.mana_percent = c.mana * 100 / c.mana_max

@@ -65,7 +65,7 @@ exports.sessionInfoRefreshing = ((dbConnection, sessid, sess_timeexpire, asyncUp
 		[sessid, sess_timeexpire]
 	).rows[0]
 
-	unless user
+	unless user?
 		return loggedIn: false
 
 	if asyncUpdate is true
@@ -90,7 +90,8 @@ exports.sessionInfoRefreshing = ((dbConnection, sessid, sess_timeexpire, asyncUp
 ).async()
 
 
-exports.getFeatures = ((dbConnection, id_or_name) ->
+# Returns users's attributes
+exports.getUser = ((dbConnection, id_or_name) ->
 	field = if typeof id_or_name is 'number' then 'uniusers.id' else 'username'
 	
 	user = dbConnection.query.sync(dbConnection,

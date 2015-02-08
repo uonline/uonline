@@ -849,7 +849,7 @@ exports.uninvolve = (test) ->
 	test.done()
 
 
-exports.getCharacterFeatures =
+exports.getCharacter =
 	testNoErrors: (test) ->
 		data =
 			id: 1
@@ -882,25 +882,25 @@ exports.getCharacterFeatures =
 		expectedData.exp_percent = 0
 		expectedData.fight_mode = false
 
-		user = game.getCharacterFeatures.sync null, conn, 1
+		user = game.getCharacter.sync null, conn, 1
 		test.deepEqual user, expectedData, 'should return specific fields by id'
-		#user = game.getCharacterFeatures.sync null, conn, 'someuser'
+		#user = game.getCharacter.sync null, conn, 'someuser'
 		#test.deepEqual user, expectedData, 'should return specific fields by nickname'
 
 		insert 'battle_participants', character_id: 1
 		expectedData.fight_mode = true
-		user = game.getCharacterFeatures.sync null, conn, 1
+		user = game.getCharacter.sync null, conn, 1
 		test.deepEqual user, expectedData, 'should return also return id character is in fight'
 
-		user = game.getCharacterFeatures.sync null, conn, 2
+		user = game.getCharacter.sync null, conn, 2
 		test.strictEqual user, null, 'should return null if no such user exists'
-		#user = game.getCharacterFeatures.sync null, conn, 'anotheruser'
+		#user = game.getCharacter.sync null, conn, 'anotheruser'
 		#test.strictEqual user, null, 'should return null if no such user exists'
 		test.done()
 
 	testErrors: (test) ->
 		test.throws(
-			-> game.getCharacterFeatures.sync conn, 1
+			-> game.getCharacter.sync conn, 1
 			Error
 			''
 		)

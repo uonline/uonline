@@ -157,7 +157,7 @@ exports.sessionInfoRefreshing =
 		test.done()
 
 
-exports.getFeatures = (test) ->
+exports.getUser = (test) ->
 	props =
 		id: 8
 		username: 'user0'
@@ -182,7 +182,7 @@ exports.getFeatures = (test) ->
 		{val: 123,     res: null,  msg: 'null if id is wrong'}
 		{val: 'user1', res: null,  msg: 'null if name is wrong'}
 	].forEach (param) ->
-		user = users.getFeatures.sync null, conn, param.val
+		user = users.getUser.sync null, conn, param.val
 		test.deepEqual user, param.res, "should return #{param.msg}"
 	
 	test.done()
