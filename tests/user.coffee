@@ -36,14 +36,13 @@ insert = (dbName, fields) ->
 
 
 exports.setUp = (->
-	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-	query = queryUtils.getFor conn
-	mg.migrate.sync mg, conn
+	unless conn?
+		conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+		query = queryUtils.getFor conn
+		mg.migrate.sync mg, conn
 ).async()
 
-exports.tearDown = (->
-	conn.end()
-).async()
+# exports.tearDown = (->).async()
 
 
 exports.userExists = (test) ->

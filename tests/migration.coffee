@@ -15,7 +15,7 @@
 'use strict'
 
 config = require '../config.js'
-tables = require '../lib/tables.js'
+tables = require '../lib/tables'
 queryUtils = require '../lib/query_utils'
 mg = require '../lib-cov/migration'
 async = require 'async'

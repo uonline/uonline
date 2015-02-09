@@ -28,9 +28,6 @@ conn = null
 query = null
 
 
-migrateTables = ->
-	mg.migrate.sync mg, conn, tables: (i for i in arguments)
-
 clearTables = ->
 	query 'TRUNCATE ' + [].join.call(arguments, ', ')
 
@@ -75,9 +72,6 @@ exports.setUp = (->
 						cb(err, res)
 				queryf.apply this, args
 			query = queryUtils.getFor conn
-			#query 'DROP TABLE IF EXISTS ' + usedTables.join(', ')
-			#query 'DROP TYPE IF EXISTS ' + usedCustomTypes.join(', ')
-			#migrateTables.apply null, usedCustomTypes.concat(usedTables)
 			mg.migrate.sync mg, conn
 		catch e
 			console.error e
