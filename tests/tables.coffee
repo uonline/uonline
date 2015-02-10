@@ -117,13 +117,25 @@ exports.changeDefault = (test) ->
 
 
 exports.dropCol = (test) ->
-	tables.create.sync null, conn, "test_table", "id INTEGER"
-	tables.addCol.sync null, conn, "test_table", "col INTEGER"
+	# single column
+	tables.create.sync null, conn, "test_table", "id INT"
+	tables.addCol.sync null, conn, "test_table", "col INT"
 	tables.dropCol.sync null, conn, "test_table", "col"
 	
 	rows = query.all "SELECT column_name, data_type FROM information_schema.columns WHERE table_name='test_table'"
-	test.strictEqual rows.length, 1, "should remove column"
-	test.strictEqual rows[0].column_name, "id", "should remove specified column and not another"
+	test.deepEqual rows, [
+		{column_name: 'id', data_type: 'integer'}
+	], "should remove specified column and not another"
+	
+	# multiple columns
+	tables.addCol.sync null, conn, "test_table", "col INT"
+	tables.addCol.sync null, conn, "test_table", "col2 TEXT"
+	tables.dropCol.sync null, conn, "test_table", "id", "col2"
+	
+	rows = query.all "SELECT column_name, data_type FROM information_schema.columns WHERE table_name='test_table'"
+	test.deepEqual rows, [
+		{column_name: 'col', data_type: 'integer'}
+	], "should remove only specified columns"
 	test.done()
 
 

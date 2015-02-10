@@ -12,6 +12,15 @@
 # along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
 
+'use strict'
+
+sync = require 'sync'
+tables = require './tables'
+
+TABLE_NAME_COLUMN = 0
+FUNC_NAME_COLUMN = 1
+RAWSQL_COLUMN = 2
+
 justMigrate = (dbConnection, revision, for_tables) ->
 	migration = exports.getMigrationsData()[revision]
 	for params in migration
@@ -32,12 +41,7 @@ justMigrate = (dbConnection, revision, for_tables) ->
 			throw new Error("While performing\n[#{params}]\n#{ex.toString()}\n#{ex.stack}")
 	return
 
-'use strict'
-sync = require('sync')
-tables = require('./tables')
-TABLE_NAME_COLUMN = 0
-FUNC_NAME_COLUMN = 1
-RAWSQL_COLUMN = 2
+
 migrationData = [
 	[
 		# create uniusers

@@ -47,8 +47,9 @@ exports.changeDefault = (dbConnection, table, colName, value, callback) ->
 	dbConnection.query "ALTER TABLE #{table} ALTER COLUMN #{colName} SET DEFAULT #{value}", callback
 	return
 
-exports.dropCol = (dbConnection, table, column, callback) ->
-	dbConnection.query "ALTER TABLE #{table} DROP COLUMN #{column}", (error, result) ->
+exports.dropCol = (dbConnection, table, columns..., callback) ->
+	drop = columns.map((col) -> "DROP COLUMN #{col}").join(', ')
+	dbConnection.query "ALTER TABLE #{table} #{drop}", (error, result) ->
 		callback error, error or true
 	return
 
