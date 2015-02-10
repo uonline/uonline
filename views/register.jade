@@ -14,18 +14,18 @@ block content
 				b Ой! Вы что-то не так ввели.
 				| #{' '}Исправьте ошибки и попробуйте ещё раз.
 	form.form-horizontal(method='post', action='/register/')
-		#user-form-group.form-group.has-feedback(class=((invalidLogin || loginIsBusy)?'has-error':''))
-			label.col-sm-2.control-label(for='user') Логин
+		#username-form-group.form-group.has-feedback(class=((invalidLogin || loginIsBusy)?'has-error':''))
+			label.col-sm-2.control-label(for='username') Логин
 			.col-sm-3
-				input.form-control#user(type='text', name='user', maxlength='32', value=user, required, autofocus)
+				input.form-control#username(type='text', name='username', maxlength='32', value=user.username, required, autofocus)
 				span#username-feedback.glyphicon.glyphicon-ok.form-control-feedback(style='display: none')
 			span.col-sm-7.help-block
 				small От 2 до 32 символов, [a-zA-Z0-9а-яА-Я -].
 		#password-form-group.form-group.has-feedback(class=(invalidPass?'has-error':''))
-			label.col-sm-2.control-label(for='pass') Пароль
+			label.col-sm-2.control-label(for='password') Пароль
 			.col-sm-3
 				.input-group
-					input.form-control#pass(type='password', name='pass', maxlength='32', value=pass, required)
+					input.form-control#password(type='password', name='password', maxlength='32', value=user.password, required)
 					a#revealpass.btn.btn-default.input-group-addon(title='Показать пароль')
 						i.glyphicon.glyphicon-eye-close
 			span.col-sm-7.help-block
