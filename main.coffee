@@ -160,14 +160,14 @@ render = (template) ->
 
 
 fetchCharacter = ((request, response) ->
-	character = lib.game.getCharacterFeatures.sync null, dbConnection, request.uonline.user.character_id
+	character = lib.game.getCharacter.sync null, dbConnection, request.uonline.user.character_id
 	character.location_id = character.location
 	request.uonline.character = character
 ).asyncMiddleware()
 
 
 fetchMonsterFromURL = ((request, response) ->
-	chars = lib.game.getCharacterFeatures.sync null, dbConnection, request.param 'id'
+	chars = lib.game.getCharacter.sync null, dbConnection, request.param 'id'
 	if not chars?
 		throw new Error '404'
 	for i of chars
@@ -335,8 +335,8 @@ app.get '/profile/',
 app.get '/profile/:username/',
 	setInstance('profile'),
 	(request, response) ->
-		user = lib.user.getFeatures.sync null, dbConnection, request.param 'username'
-		user.character = lib.game.getCharacterFeatures.sync null, dbConnection, user.character_id
+		user = lib.user.getUser.sync null, dbConnection, request.param 'username'
+		user.character = lib.game.getCharacter.sync null, dbConnection, user.character_id
 		user.isMe = user.id == request.uonline.user.id
 		request.uonline.owner = user
 		response.render 'profile', request.uonline
