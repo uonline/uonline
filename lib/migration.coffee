@@ -266,6 +266,25 @@ migrationData = [
 		['battle_participants', 'rawsql', 'TRUNCATE battle_participants']
 		['armor', 'rawsql', 'TRUNCATE armor']
 	]
+	[
+		['uniusers', 'rawsql',
+			'UPDATE uniusers '+
+			'SET character_id = (SELECT id FROM characters WHERE player = uniusers.id)'],
+		['characters', 'rawsql',
+			'DELETE FROM characters WHERE player IS NULL']
+		['characters', 'rawsql',
+			'INSERT INTO characters ('+
+				'name, level, exp, '+
+				'health, health_max, mana, mana_max, '+
+				'energy, power, defense, agility, accuracy, intelligence, initiative, '+
+				'player, location, autoinvolved_fm, attack_chance) '+
+			'(SELECT name, level, 0, '+
+				'health, health_max, mana, mana_max, '+
+				'energy, power, defense, agility, accuracy, intelligence, initiative, '+
+				'NULL, location, FALSE, attack_chance '+
+			'FROM monsters, monster_prototypes AS proto '+
+			'WHERE monsters.prototype = proto.id)']
+	]
 ]
 
 exports.getMigrationsData = ->
