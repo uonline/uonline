@@ -144,6 +144,11 @@ module.exports = (grunt) ->
 		clean:
 			lib_cov: 'lib-cov/'
 
+		mkdir:
+			lib_cov:
+				options:
+					create: ['lib-cov/']
+
 		codo:
 			all:
 				src: './lib/'
@@ -186,7 +191,7 @@ module.exports = (grunt) ->
 	grunt.registerTask 'build', ['browserify', 'coffee', 'concat', 'uglify']
 	grunt.registerTask 'docs', ['codo']
 
-	testTask = ['clean:lib_cov', 'jscoverage', 'coffeeCoverage']
+	testTask = ['clean:lib_cov', 'mkdir:lib_cov', 'jscoverage', 'coffeeCoverage']
 	if grunt.option('single')?  # allow to test a single file, see Readme
 		grunt.config.set 'nodeunit.one', [ 'tests/'+grunt.option('single') ]
 		testTask.push 'nodeunit:one'
