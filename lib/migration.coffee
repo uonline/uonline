@@ -38,7 +38,7 @@ justMigrate = (dbConnection, revision, for_tables) ->
 				params.unshift null
 				func.sync.apply func, params
 		catch ex
-			throw new Error("While performing\n[#{params}]\n#{ex.toString()}\n#{ex.stack}")
+			throw new Error("While performing #{funcName} \n[#{params}]\n#{ex.toString()}\n#{ex.stack}")
 	return
 
 
