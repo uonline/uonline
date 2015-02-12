@@ -14,7 +14,7 @@
 
 'use strict'
 
-prettyprint = require("../lib-cov/prettyprint")
+prettyprint = require '../lib/prettyprint'
 
 
 exports.spaces = (test) ->

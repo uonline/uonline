@@ -14,10 +14,10 @@
 
 'use strict'
 
-config = require '../config.js'
+config = require '../config'
 tables = require '../lib/tables'
 queryUtils = require '../lib/query_utils'
-mg = require '../lib-cov/migration'
+mg = require '../lib/migration'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'

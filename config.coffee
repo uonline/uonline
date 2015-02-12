@@ -14,9 +14,24 @@
 
 'use strict'
 
-math = require '../lib/math'
+exports.DATABASE_URL = process.env.DATABASE_URL or
+	'postgres://anonymous:nopassword@localhost/uonline'
+exports.DATABASE_URL_TEST = process.env.DATABASE_URL_TEST or
+	'postgres://anonymous:nopassword@localhost/uonline_test'
 
-exports.ap = (test) ->
-	test.strictEqual math.ap(1,2,3), 5, 'should return n-th number in arithmetical progression'
-	test.strictEqual math.ap(3,6,9), 153, 'should return n-th number in arithmetical progression'
-	test.done()
+exports.sessionLength = 64
+exports.sessionExpireTime = 3600 # seconds
+exports.userOnlineTimeout = 300 # seconds
+
+exports.defaultInstanceForGuests = '/about/'
+exports.defaultInstanceForUsers = '/game/'
+
+exports.expStart = 1000
+exports.expStep = 1000
+
+exports.PERMISSIONS_USER = 'user'
+exports.PERMISSIONS_ADMIN = 'admin'
+
+exports.EXP_STEP = 1000
+exports.EXP_MAX_START = 1000
+

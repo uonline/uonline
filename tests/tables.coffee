@@ -14,8 +14,8 @@
 
 'use strict'
 
-config = require '../config.js'
-tables = require '../lib-cov/tables'
+config = require '../config'
+tables = require '../lib/tables'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'

@@ -15,7 +15,7 @@
 'use strict'
 
 
-config = require '../config.js'
+config = require '../config'
 sync = require 'sync'
 anyDB = require 'any-db'
 queryUtils = require '../lib/query_utils'

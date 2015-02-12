@@ -15,8 +15,8 @@
 'use strict'
 
 
-config = require '../config.js'
-game = require '../lib-cov/game'
+config = require '../config'
+game = require '../lib/game'
 mg = require '../lib/migration'
 async = require 'async'
 sync = require 'sync'

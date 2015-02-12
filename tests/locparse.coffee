@@ -15,10 +15,10 @@
 'use strict'
 
 fs = require 'fs'
-parser = require '../lib-cov/locparse'
+config = require '../config'
+parser = require '../lib/locparse'
 anyDB = require 'any-db'
 mg = require '../lib/migration'
-config = require '../config.js'
 rmrf = require 'rmrf'
 copy = require('ncp').ncp
 copy.limit = 16 #concurrency limit

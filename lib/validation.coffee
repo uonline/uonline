@@ -14,9 +14,12 @@
 
 'use strict'
 
-math = require '../lib/math'
+exports.usernameIsValid = (nick) ->
+	!!nick and /^[a-zA-Z0-9а-яА-ЯёЁ][a-zA-Z0-9а-яА-ЯёЁ -]{0,30}[a-zA-Z0-9а-яА-ЯёЁ]$/.test(nick)
 
-exports.ap = (test) ->
-	test.strictEqual math.ap(1,2,3), 5, 'should return n-th number in arithmetical progression'
-	test.strictEqual math.ap(3,6,9), 153, 'should return n-th number in arithmetical progression'
-	test.done()
+exports.emailIsValid = (email) ->
+	!!email and /^([a-z0-9_\.\-]{1,20})@([a-z0-9\.\-]{1,20})\.([a-z]{2,4})$/i.test(email)
+
+exports.passwordIsValid = (pass) ->
+	!!pass and /^[-!@#$%^&*()_+A-Za-z0-9 ]{4,32}$/.test(pass)
+

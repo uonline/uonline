@@ -14,7 +14,7 @@
 
 'use strict'
 
-config = require '../config.js'
+config = require '../config'
 
 crypto = require 'crypto'
 async = require 'async'

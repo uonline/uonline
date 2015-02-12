@@ -14,8 +14,8 @@
 
 'use strict'
 
-config = require '../config.js'
-users = require '../lib-cov/user'
+config = require '../config'
+users = require '../lib/user'
 mg = require '../lib/migration'
 async = require 'async'
 sync = require 'sync'
