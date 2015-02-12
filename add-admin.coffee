@@ -55,7 +55,7 @@ sync ->
 		console.log 'You will be prompted to enter missing params from tty.'
 		process.exit 2
 
-	config = require './config.js'
+	config = require './config'
 	anyDB = require 'any-db'
 	conn = anyDB.createConnection config.DATABASE_URL
 
