@@ -15,11 +15,11 @@
 'use strict'
 
 config = require '../config'
-tables = require '../lib/tables'
+tables = require '../lib-cov/tables'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
-queryUtils = require '../lib/query_utils'
+queryUtils = require '../lib-cov/query_utils'
 conn = null
 query = null
 

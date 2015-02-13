@@ -16,13 +16,13 @@
 
 
 config = require '../config'
-game = require '../lib/game'
-mg = require '../lib/migration'
+game = require '../lib-cov/game'
+mg = require '../lib-cov/migration'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
-queryUtils = require '../lib/query_utils'
+queryUtils = require '../lib-cov/query_utils'
 sugar = require 'sugar'
 conn = null
 query = null

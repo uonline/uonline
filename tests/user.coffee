@@ -15,12 +15,12 @@
 'use strict'
 
 config = require '../config'
-users = require '../lib/user'
-mg = require '../lib/migration'
+users = require '../lib-cov/user'
+mg = require '../lib-cov/migration'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
-queryUtils = require '../lib/query_utils'
+queryUtils = require '../lib-cov/query_utils'
 sugar = require 'sugar'
 conn = null
 query = null

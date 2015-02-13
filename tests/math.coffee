@@ -14,7 +14,7 @@
 
 'use strict'
 
-math = require '../lib/math'
+math = require '../lib-cov/math'
 
 exports.ap = (test) ->
 	test.strictEqual math.ap(1,2,3), 5, 'should return n-th number in arithmetical progression'

@@ -16,9 +16,9 @@
 
 fs = require 'fs'
 config = require '../config'
-parser = require '../lib/locparse'
+parser = require '../lib-cov/locparse'
 anyDB = require 'any-db'
-mg = require '../lib/migration'
+mg = require '../lib-cov/migration'
 rmrf = require 'rmrf'
 copy = require('ncp').ncp
 copy.limit = 16 #concurrency limit

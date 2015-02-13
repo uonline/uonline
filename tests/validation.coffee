@@ -14,7 +14,7 @@
 
 'use strict'
 
-validation = require '../lib/validation'
+validation = require '../lib-cov/validation'
 
 
 exports.usernameIsValid = (test) ->

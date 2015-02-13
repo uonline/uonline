@@ -15,9 +15,9 @@
 'use strict'
 
 config = require '../config'
-tables = require '../lib/tables'
-queryUtils = require '../lib/query_utils'
-mg = require '../lib/migration'
+tables = require '../lib-cov/tables'
+queryUtils = require '../lib-cov/query_utils'
+mg = require '../lib-cov/migration'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
