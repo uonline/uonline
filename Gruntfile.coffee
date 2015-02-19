@@ -178,6 +178,7 @@ module.exports = (grunt) ->
 			grunt.loadNpmTasks 'grunt-contrib-nodeunit'
 			grunt.loadNpmTasks 'grunt-jscoverage'
 			grunt.loadNpmTasks 'grunt-coffee-coverage'
+			grunt.loadNpmTasks 'grunt-mkdir'
 		else
 			grunt.log.warn 'Unknown speedup value'
 	else

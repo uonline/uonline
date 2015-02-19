@@ -75,8 +75,8 @@ exports.sessionInfoRefreshing = ((dbConnection, sessid, sess_timeexpire, asyncUp
 				[user.id],
 				(error, result) ->
 					if error?
-						console.log 'Async update failed'
-						console.log error.stack
+						console.error 'Async update failed'
+						console.error error.stack
 			)
 	else
 		dbConnection.query.sync(dbConnection,
@@ -118,7 +118,6 @@ exports.generateSessId = ((dbConnection, sess_length) ->
 		exists = exports.sessionExists.sync null, dbConnection, sessid
 		unless exists
 			return sessid
-	return
 ).async()
 
 
