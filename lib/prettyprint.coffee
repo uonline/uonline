@@ -24,15 +24,11 @@ exports.spaces = (count) ->
 		i++
 	s
 
-exports.writeln = (text, targetFunction) ->
-	if !targetFunction
-		targetFunction = console.log
+exports.writeln = (text, targetFunction = console.log) ->
 	targetFunction @spaces(offset) + text
 	return
 
-exports.section = (name, targetFunction) ->
-	if !targetFunction
-		targetFunction = console.log
+exports.section = (name, targetFunction = console.log) ->
 	@writeln name + '...', targetFunction
 	offset += 2
 	offset
@@ -41,14 +37,10 @@ exports.endSection = ->
 	offset -= 2
 	offset
 
-exports.action = (name, targetFunction) ->
-	unless targetFunction?
-		targetFunction = process.stdout.write
+exports.action = (name, targetFunction = process.stdout.write) ->
 	targetFunction @spaces(offset) + name + '...'
 	return
 
-exports.result = (result, targetFunction) ->
-	unless targetFunction?
-		targetFunction = console.log
+exports.result = (result, targetFunction = console.log) ->
 	targetFunction ' ' + result
 	return
