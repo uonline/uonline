@@ -50,6 +50,7 @@ migrationData = [
 
 # if this won't crash, everything should be OK
 revisionBackup = null
+migrationDataBackup = []
 
 exports.setUp = (->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
@@ -58,12 +59,14 @@ exports.setUp = (->
 		revisionBackup = query.val 'SELECT revision FROM revision'
 	catch e
 		revisionBackup = null
+	migrationDataBackup = mg.getMigrationsData()
 	query 'DROP TABLE IF EXISTS test_table, other_table, revision'
 	mg.setMigrationsData migrationData
 ).async()
 
 exports.tearDown = ( ->
 	query 'DROP TABLE IF EXISTS test_table, other_table, revision'
+	mg.setMigrationsData migrationDataBackup
 	if revisionBackup != null
 		mg.setRevision.sync null, conn, revisionBackup
 	conn.end()

@@ -297,7 +297,7 @@ exports.setMigrationsData = (data) ->
 exports.getNewestRevision = ->
 	exports.getMigrationsData().length - 1
 
-exports.getCurrentRevision = ((dbConnection, callback) ->
+exports.getCurrentRevision = ((dbConnection) ->
 	try
 		result = dbConnection.query.sync(dbConnection, 'SELECT revision FROM revision', [])
 		return result.rows[0].revision
@@ -308,7 +308,7 @@ exports.getCurrentRevision = ((dbConnection, callback) ->
 			throw error
 ).async()
 
-exports.setRevision = ((dbConnection, revision, callback) ->
+exports.setRevision = ((dbConnection, revision) ->
 	dbConnection.query.sync dbConnection, 'CREATE TABLE IF NOT EXISTS revision (revision INT NOT NULL)', []
 	dbConnection.query.sync dbConnection, 'DELETE FROM revision', []
 	dbConnection.query.sync dbConnection, 'INSERT INTO revision VALUES ($1)', [ revision ]
@@ -326,8 +326,7 @@ exports.migrateOne = ((dbConnection, revision) ->
 	return
 ).async()
 
-exports.migrate = ((dbConnection, opts) ->
-	opts = opts or {}
+exports.migrate = ((dbConnection, opts = {}) ->
 	unless opts.dest_revision?
 		opts.dest_revision = Infinity
 
