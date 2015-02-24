@@ -16,7 +16,7 @@
 
 'use strict'
 
-config = require './config.js'
+config = require './config'
 lib = require './lib.coffee'
 sync = require 'sync'
 dashdash = require 'dashdash'

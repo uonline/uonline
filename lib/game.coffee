@@ -15,8 +15,8 @@
 'use strict'
 
 sync = require 'sync'
-config = require '../config.js'
-math = require './math.js'
+config = require '../config'
+math = require './math'
 transaction = require 'any-db-transaction'
 
 

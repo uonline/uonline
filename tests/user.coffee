@@ -14,13 +14,13 @@
 
 'use strict'
 
-config = require '../config.js'
+config = require '../config'
 users = require '../lib-cov/user'
-mg = require '../lib/migration'
+mg = require '../lib-cov/migration'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
-queryUtils = require '../lib/query_utils'
+queryUtils = require '../lib-cov/query_utils'
 sugar = require 'sugar'
 conn = null
 query = null
@@ -36,14 +36,13 @@ insert = (dbName, fields) ->
 
 
 exports.setUp = (->
-	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-	query = queryUtils.getFor conn
-	mg.migrate.sync mg, conn
+	unless conn?
+		conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+		query = queryUtils.getFor conn
+		mg.migrate.sync mg, conn
 ).async()
 
-exports.tearDown = (->
-	conn.end()
-).async()
+# exports.tearDown = (->).async()
 
 
 exports.userExists = (test) ->
@@ -90,7 +89,7 @@ exports.sessionExists = (test) ->
 
 
 exports.sessionInfoRefreshing =
-	testNoErrors: (test) ->
+	'usual': (test) ->
 		clearTables 'characters', 'uniusers'
 		insert 'characters', id: 5, player: 8
 		insert 'uniusers',
@@ -142,18 +141,38 @@ exports.sessionInfoRefreshing =
 			isAdmin: false
 			character_id: 6
 		}, 'should return admin: false if user is not admin'
-		
-		
+		test.done()
+
+	'async update': (test) ->
 		insert 'uniusers',
 			id: 112, username: '112', character_id: 6,
 			permissions: 'admin', sessid: '123456', sess_time: 1.hourAgo()
 		
-		timeBefore = new Date(query.val('SELECT sess_time FROM uniusers WHERE id = 112').sess_time)
+		timeBefore = new Date(query.val('SELECT sess_time FROM uniusers WHERE id = 112'))
 		users.sessionInfoRefreshing.sync null, conn, '123456', 7200, true
 		sync.sleep 100
-		timeAfter = new Date(query.val('SELECT sess_time FROM uniusers WHERE id = 112').sess_time)
+		timeAfter = new Date(query.val('SELECT sess_time FROM uniusers WHERE id = 112'))
 		
-		#test.ok timeBefore < timeAfter, 'should update session timestamp with asyncUpdate'
+		test.ok timeBefore < timeAfter, 'should update session timestamp with asyncUpdate'
+		
+		# test fail
+		q = conn.query
+		conn.query = (sql, args, callback) ->
+			if sql.match /UPDATE uniusers/
+				callback(new Error('test error'), null)
+			else
+				q.apply(conn, arguments)
+		
+		errCalled = false
+		errlog = console.error
+		console.error = -> errCalled = true
+		
+		users.sessionInfoRefreshing.sync null, conn, '123456', 7200, true
+		sync.sleep 100
+		test.ok errCalled, 'should tell about error'
+		
+		conn.query = q
+		console.error = errlog
 		test.done()
 
 

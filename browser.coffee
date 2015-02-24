@@ -47,7 +47,7 @@ $(document).ready ->
 	passwordRevealButton = '#revealpass'
 	passwordRevealIcon = '#revealpass i'
 	# Deps
-	validation = require './lib/validation.js'  # virtual name
+	validation = require './lib/validation.coffee'  # virtual name
 	# Reveal password
 	$("body").on 'click', passwordRevealButton, ->
 		switch $(passwordField).prop('type')

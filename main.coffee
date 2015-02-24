@@ -21,7 +21,7 @@ if process.env.NEW_RELIC_LICENSE_KEY?
 	newrelic = require 'newrelic'
 	console.log 'Loaded New Relic.'
 
-config = require "#{__dirname}/config.js"
+config = require "#{__dirname}/config"
 lib = require "#{__dirname}/lib.coffee"
 
 chalk = require 'chalk'

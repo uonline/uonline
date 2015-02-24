@@ -15,21 +15,18 @@
 'use strict'
 
 
-config = require '../config.js'
+config = require '../config'
 game = require '../lib-cov/game'
-mg = require '../lib/migration'
+mg = require '../lib-cov/migration'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
-queryUtils = require '../lib/query_utils'
+queryUtils = require '../lib-cov/query_utils'
 sugar = require 'sugar'
 conn = null
 query = null
 
-
-migrateTables = ->
-	mg.migrate.sync mg, conn, tables: (i for i in arguments)
 
 clearTables = ->
 	query 'TRUNCATE ' + [].join.call(arguments, ', ')
@@ -75,9 +72,6 @@ exports.setUp = (->
 						cb(err, res)
 				queryf.apply this, args
 			query = queryUtils.getFor conn
-			#query 'DROP TABLE IF EXISTS ' + usedTables.join(', ')
-			#query 'DROP TYPE IF EXISTS ' + usedCustomTypes.join(', ')
-			#migrateTables.apply null, usedCustomTypes.concat(usedTables)
 			mg.migrate.sync mg, conn
 		catch e
 			console.error e
