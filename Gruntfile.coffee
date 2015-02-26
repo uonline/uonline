@@ -171,18 +171,8 @@ module.exports = (grunt) ->
 
 
 	# These plugins provide necessary tasks.
-	if grunt.option('speedup')?
-		speedup = grunt.option('speedup')
-		if speedup is 'test'
-			grunt.loadNpmTasks 'grunt-contrib-clean'
-			grunt.loadNpmTasks 'grunt-contrib-nodeunit'
-			grunt.loadNpmTasks 'grunt-jscoverage'
-			grunt.loadNpmTasks 'grunt-coffee-coverage'
-			grunt.loadNpmTasks 'grunt-mkdir'
-		else
-			grunt.log.warn 'Unknown speedup value'
-	else
-		require('load-grunt-tasks')(grunt)
+	require('time-grunt')(grunt)
+	require('jit-grunt')(grunt)
 
 	# Custom plugins.
 	grunt.loadTasks './grunt-custom-tasks/'

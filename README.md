@@ -57,7 +57,6 @@ Useful subtasks:
 Useful options:
 
 * `grunt test --single health-check.coffee` — run only one testsuite;
-* `grunt test --speedup=test` — skip loading some modules;
 * `grunt --stack` — show stack trace on error.
 
 
