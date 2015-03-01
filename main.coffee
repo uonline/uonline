@@ -213,6 +213,8 @@ fetchUsersNearby = ((request, response) ->
 fetchMonstersNearby = ((request, response) ->
 	tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, request.uonline.character.location_id
 	request.uonline.monsters_list = tmpMonsters
+	request.uonline.monsters_list.in_fight = tmpMonsters.filter((m) -> m.fight_mode)
+	request.uonline.monsters_list.not_in_fight = tmpMonsters.filter((m) -> not m.fight_mode)
 	return
 ).asyncMiddleware()
 

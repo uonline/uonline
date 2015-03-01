@@ -1,3 +1,10 @@
+mixin monsters_list(mosters)
+	each i,index in mosters
+		| #{' '}
+		a.pjax(href = '/monster/'+i.id+'/')= i.name
+		if index < mosters.length-1
+			| ,
+
 extends layout
 block title
 	//- TODO: typography
@@ -59,8 +66,8 @@ block content
 				| #{' '}И откуда здесь столько народа?
 		p
 			if monsters_list.length > 0
-				| Монстры:
 				if character.fight_mode == true
+					| Монстры:
 					each i,index in monsters_list
 						div(style="float:left;")
 							| #{i.name}:&nbsp;
@@ -68,11 +75,15 @@ block content
 							.progress-bar.progress-bar-success(style='width: '+(Math.round(i.health*100/i.health_max))+'%;', role="progressbar", aria-valuenow=(Math.round(i.health*100/i.health_max)), aria-valuemin="0", aria-valuemax="100")
 								| #{ i.health }/#{ i.health_max }
 				else
-					each i,index in monsters_list
-						| #{' '}
-						a.pjax(href = '/monster/'+i.id+'/')= i.name
-						if index < monsters_list.length-1
-							| ,
+					if monsters_list.not_in_fight.length > 0
+						| Монстры:
+						+monsters_list(monsters_list.not_in_fight)
+						if monsters_list.in_fight.length > 0
+							| , в бою с кем-то:
+					else
+						| Монстры уже с кем-то в бою:
+					if monsters_list.in_fight.length > 0
+						+monsters_list(monsters_list.in_fight)
 					| #{'.'}
 			else
 				| На этой локации нет монстров.
@@ -104,7 +115,7 @@ block content
 					a.btn.btn-default.disabled Магия
 					| #{' '}
 					a.btn.btn-default.pjax(href="/action/escape") Сбежать
-				else
+				else if monsters_list.not_in_fight.length > 0
 					a.btn.btn-default.pjax(href="/action/attack") Атаковать
 	//- fit picture
 	div(style="clear: both;")

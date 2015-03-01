@@ -504,7 +504,9 @@ exports.getNearbyUsers = (dbConnection, userid, locid, callback) ->
 # Select nearby monsters with their characteristics
 exports.getNearbyMonsters = (dbConnection, locid, callback) ->
 	dbConnection.query(
-		"SELECT * FROM characters WHERE location = $1 AND player IS NULL"
+		"SELECT *, "+
+		"  EXISTS(SELECT * FROM battle_participants WHERE character_id = characters.id) AS fight_mode "+
+		"FROM characters WHERE location = $1 AND player IS NULL"
 		[ locid ],
 		(error, result) ->
 			callback(error, error || result.rows)
