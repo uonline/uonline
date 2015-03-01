@@ -53,6 +53,14 @@ block content
 				.progress
 					.progress-bar(style='width: '+mana_percent+'%;', role="progressbar", aria-valuenow=mana_percent, aria-valuemin="0", aria-valuemax="100")
 						| #{ mana }/#{ mana_max }
+				h4 Энергия#{' '}
+				div.profile-help.text-muted
+					small Чем выше, тем большее расстояние может пройти персонаж, не уставая.
+				div.profile-help.text-muted
+					+growth(10, 5)
+				.progress
+					.progress-bar.progress-bar-success(style='width: '+energy_percent+'%;', role="progressbar", aria-valuenow=energy_percent, aria-valuemin="0", aria-valuemax="100")
+						| #{ energy }/#{ energy_max }
 				h4 Опыт
 				.progress
 					.progress-bar.progress-bar-warning(style='width: '+exp_percent+'%;', role="progressbar", aria-valuenow=exp_percent, aria-valuemin="0", aria-valuemax="100")
@@ -67,4 +75,3 @@ block content
 					+tr_td_ch('Точность', accuracy, 'Влияет на шанс нанести точный удар вне зависимости от шанса уворота противника.', 5, 3)
 					+tr_td_ch('Интеллект', intelligence, 'Влияет на скорость регенерации маны.', 5, 3, true)
 					+tr_td_ch('Инициатива', initiative, 'Влияет на очерёдность ходов в бою.', 2, 2)
-					+tr_td_ch('Энергия', energy, 'Чем выше, тем большее расстояние может пройти персонаж, не уставая.', 10, 5)

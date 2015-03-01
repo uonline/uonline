@@ -856,6 +856,7 @@ exports.getCharacter =
 			exp: 1000
 			level: 2
 			energy: 128
+			energy_max: 256
 			power: 1
 			defense: 2
 			agility: 3
@@ -874,6 +875,7 @@ exports.getCharacter =
 		expectedData.mana_percent = 25
 		expectedData.exp_max = 3000
 		expectedData.exp_percent = 0
+		expectedData.energy_percent = 50
 		expectedData.fight_mode = false
 
 		user = game.getCharacter.sync null, conn, 1

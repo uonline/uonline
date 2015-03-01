@@ -543,6 +543,7 @@ exports.getCharacter = ((dbConnection, character_id) ->
 
 	c.health_percent = c.health * 100 / c.health_max
 	c.mana_percent = c.mana * 100 / c.mana_max
+	c.energy_percent = c.energy * 100 / c.energy_max
 	expPrevMax = math.ap(config.EXP_MAX_START, c.level - 1, config.EXP_STEP)
 	c.exp_max = math.ap(config.EXP_MAX_START, c.level, config.EXP_STEP)
 	c.exp_percent = (c.exp - expPrevMax) * 100 / (c.exp_max - expPrevMax)

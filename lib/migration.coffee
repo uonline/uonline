@@ -285,6 +285,10 @@ migrationData = [
 			'FROM monsters, monster_prototypes AS proto '+
 			'WHERE monsters.prototype = proto.id)']
 	]
+	[
+		['characters', 'addCol', 'energy_max INT DEFAULT 100']
+		['characters', 'rawsql', 'UPDATE characters SET energy_max = energy']
+	]
 ]
 
 exports.getMigrationsData = ->
