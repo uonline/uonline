@@ -24,8 +24,11 @@ module.exports = (grunt) ->
 		if showOnly?
 			files = Object.keys(_$jscoverage)
 			shallDelete = files.filter (x) -> not x.match(showOnly)
+			console.log 'deleting this:', shallDelete
 			for key in shallDelete
+				console.log('before', key, key of _$jscoverage)
 				delete _$jscoverage[key]
+				console.log('after', key, key of _$jscoverage)
 		# out
 		exports.coverageDetail()
 
