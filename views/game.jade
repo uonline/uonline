@@ -56,7 +56,7 @@ block content
 					| Рядом с вами стоят#{' '}
 			each i,index in players_list
 				| #{' '}
-				a.pjax(href="/profile/"+i.username+"/") #{i.username}
+				a.pjax(href="/profile/"+i.name+"/") #{i.name}
 				if index == players_list.length-2
 					| #{' '}и
 				if index < players_list.length-2
