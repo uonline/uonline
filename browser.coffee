@@ -18,6 +18,7 @@
 $(document).ready ->
 	# Start up pjax
 	$(document).pjax('a.pjax', '#content', timeout: 2000)
+	$(document).pjax('a.pjax-replace', '#content', timeout: 2000, replace: true)
 	$(document).on 'pjax:send', ->
 		$('#content').animate opacity: 0.3, 'fast'
 	$(document).on 'pjax:complete', ->
