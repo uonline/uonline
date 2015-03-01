@@ -366,7 +366,7 @@ app.get '/game/',
 
 
 app.get '/inventory/',
-	mustBeAuthed, fetchArmor,
+	mustBeAuthed, fetchCharacter, fetchArmor,
 	setInstance('inventory'), render('inventory')
 
 
