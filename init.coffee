@@ -122,6 +122,12 @@ options = [
 	]
 	type: 'bool'
 	help: 'Set predefined attributes for all players.'
+,
+	names: [
+		'fix-energy'
+	]
+	type: 'bool'
+	help: 'Set predefined energy level for all players.'
 ]
 
 
@@ -375,6 +381,16 @@ fixAttrs = ->
 	console.log chalk.green 'ok'
 
 
+fixEnergy = ->
+	process.stdout.write chalk.magenta 'Setting predefined energy'+'... '
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+	dbConnection.query.sync(
+		dbConnection
+		'UPDATE characters SET energy = 220, energy_max = 220'
+	)
+	console.log chalk.green 'ok'
+
+
 
 sync(
 	->
@@ -393,6 +409,7 @@ sync(
 		unifyExport() if opts.unify_export
 		insertMonsters() if opts.monsters
 		fixAttrs() if opts.fix_attributes
+		fixEnergy() if opts.fix_energy
 		insertArmor() if opts.armor
 		optimize() if opts.optimize_tables # must always be the last
 		process.exit 0
