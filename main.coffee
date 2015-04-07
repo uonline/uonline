@@ -120,6 +120,9 @@ app.use ((request, response) ->
 	user = lib.user.sessionInfoRefreshing.sync(null,
 		dbConnection, request.cookies.sessid, config.sessionExpireTime, true)
 	request.uonline.user = user
+	# Read character data
+	character = lib.game.getCharacter.sync null, dbConnection, request.uonline.user.character_id
+	request.uonline.character = character
 	# CSP
 	response.header 'Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'"
 	# Anti-clickjacking
@@ -163,6 +166,11 @@ fetchCharacter = ((request, response) ->
 	character = lib.game.getCharacter.sync null, dbConnection, request.uonline.user.character_id
 	character.location_id = character.location
 	request.uonline.character = character
+).asyncMiddleware()
+
+
+fetchCharacterFromURL = ((request, response) ->
+	request.uonline.fetched_character = lib.game.getCharacter.sync null, dbConnection, request.param('name')
 ).asyncMiddleware()
 
 
@@ -323,6 +331,24 @@ app.post '/register/',
 			options.user.username = request.body.username
 			options.user.password = request.body.password
 			response.render 'register', options
+
+
+app.get '/character/',
+	mustBeAuthed,
+	setInstance('mycharacter'),
+	(request, response) ->
+		#request.uonline.fetched_character_owner = request.uonline.user  # пока не вижу смысла его запрашивать
+		request.uonline.fetched_character = request.uonline.character
+		response.render 'character', request.uonline
+
+
+app.get '/character/:name/',
+	mustBeAuthed,
+	fetchCharacterFromURL,
+	setInstance('character'),
+	(request, response) ->
+		#console.log(require('util').inspect(request.uonline, depth: null))
+		response.render 'character', request.uonline
 
 
 app.get '/profile/',

@@ -78,9 +78,10 @@ if !pjax
 										a(href='#') One more separated link
 						ul.nav.navbar-nav.navbar-right
 							if user.loggedIn === true
-								+instanceLink('myprofile', '/profile/', username, false, 'glyphicon-'+(isAdmin?'certificate':'user'), false, true)
+								//- TODO: выпадайка
+								+instanceLink('myprofile', '/profile/', user.username, false, 'glyphicon-'+(user.isAdmin?'certificate':'sunglasses'))
+								+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
 								+instanceLink('game', '/game/', 'Игра', true)
-								+instanceLink('myprofile', '/profile/', 'Профиль')
 								+instanceLink('inventory', '/inventory/', 'Инвентарь')
 								li
 									a(href='/action/logout') Выйти
