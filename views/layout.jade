@@ -58,29 +58,36 @@ if !pjax
 					div.navbar-collapse.collapse
 						ul.nav.navbar-nav
 							+instanceLink('about','/about/','Об игре')
-							//- Dropdown example
-							//- li.dropdown
-								a.dropdown-toggle(href='#', data-toggle='dropdown')
-									| Dropdown
-									b.caret
-								ul.dropdown-menu
-									li
-										a(href='#') Action
-									li
-										a(href='#') Another action
-									li
-										a(href='#') Something else here
-									li.divider
-									li.dropdown-header Nav header
-									li
-										a(href='#') Separated link
-									li
-										a(href='#') One more separated link
 						ul.nav.navbar-nav.navbar-right
 							if user.loggedIn === true
 								//- TODO: выпадайка
 								+instanceLink('myprofile', '/profile/', user.username, false, 'glyphicon-'+(user.isAdmin?'certificate':'sunglasses'))
-								+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
+								//+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
+								li.dropdown.instance-indicator(data-instance='mycharacter', class=(instance=='mycharacter'?'active':''))
+									a.dropdown-toggle(href='#', data-toggle='dropdown')
+										i.glyphicon.glyphicon-user
+										| #{' '}#{character.name}
+										b.caret
+									ul.dropdown-menu
+										li
+											a.pjax.instance-switcher(href='/character/', data-instance='mycharacter')
+												| Профиль
+										li.divider
+										li.dropdown-header
+											| Переключить персонажа
+										//-li
+											a(href='/game/')
+												| m1kc
+										li.disabled
+											a(href='/game/')
+												i.glyphicon.glyphicon-menu-right
+												| #{' '}#{character.name}
+										//-li
+											a(href='/game/')
+												| dicks
+										//-li
+											a(href='/game/')
+												| Clinkz
 								+instanceLink('game', '/game/', 'Игра', true)
 								+instanceLink('inventory', '/inventory/', 'Инвентарь')
 								li
