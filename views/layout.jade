@@ -75,19 +75,11 @@ if !pjax
 										li.divider
 										li.dropdown-header
 											| Переключить персонажа
-										//-li
-											a(href='/game/')
-												| m1kc
-										li.disabled
-											a(href='/game/')
-												i.glyphicon.glyphicon-menu-right
-												| #{' '}#{character.name}
-										//-li
-											a(href='/game/')
-												| dicks
-										//-li
-											a(href='/game/')
-												| Clinkz
+										each char in characters
+											li.disabled
+												a(href='/action/switch_character/'+char.id)
+													i.glyphicon.glyphicon-menu-right
+													| #{' '}#{char.name}
 								+instanceLink('game', '/game/', 'Игра', true)
 								+instanceLink('inventory', '/inventory/', 'Инвентарь')
 								li

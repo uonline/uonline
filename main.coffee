@@ -123,6 +123,9 @@ app.use ((request, response) ->
 	# Read character data
 	character = lib.game.getCharacter.sync null, dbConnection, request.uonline.user.character_id
 	request.uonline.character = character
+	# Read all user's characters data
+	characters = lib.game.getCharacters.sync null, dbConnection, request.uonline.user.id
+	request.uonline.characters = characters
 	# CSP
 	response.header 'Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'"
 	# Anti-clickjacking
@@ -470,6 +473,12 @@ app.get '/action/equip/:id',
 				'WHERE id = $1 AND owner = $2',
 			[request.param('id'), request.uonline.user.character_id]
 		response.redirect '/inventory/'
+
+app.get '/action/switch_character/:id',
+	mustBeAuthed,
+	(request, response) ->
+		lib.game.switchCharacter dbConnection, request.uonline.user.id, request.param('id')
+		response.redirect 'back'
 
 
 # 404 handling
