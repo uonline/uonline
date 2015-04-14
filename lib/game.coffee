@@ -554,6 +554,27 @@ exports.getCharacter = ((dbConnection, character_id_or_name) ->
 ).async()
 
 
+exports.getCharacters = ((dbConnection, user_id) ->
+	dbConnection.query.sync(dbConnection,
+		"SELECT id, name FROM characters WHERE player = $1 ORDER BY id", [ user_id ]).rows
+).async()
+
+
+exports.switchCharacter = ((dbConnection, user_id, new_character_id) ->
+	#dbConnection.query.sync(dbConnection, "SELECT 1 WHERE 1 = 2")
+	res = dbConnection.query.sync(dbConnection,
+		"UPDATE uniusers SET character_id = $1 "+
+		"WHERE id = $2 AND "+
+			"EXISTS(SELECT * FROM characters WHERE id = $1 AND player = $2)",
+		[ new_character_id, user_id ])
+
+	if res.rowCount == 0
+		throw new Error("User ##{qwe} doesn't have character ##{new_character_id}")
+
+	return
+).async()
+
+
 exports.getCharacterArmor = ((dbConnection, character_id) ->
 	dbConnection.query.sync(dbConnection,
 		"SELECT armor.id, name, type, coverage, strength, strength_max, equipped "+

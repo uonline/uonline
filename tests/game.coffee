@@ -904,6 +904,51 @@ exports.getCharacter =
 		test.done()
 
 
+exports.getCharacters = (test) ->
+	clearTables 'characters'
+	chars = game.getCharacters(conn, 1)
+	test.deepEqual chars, [], 'should return no characters if user does not have any'
+	
+	insert 'characters', id: 1, player: 1, name: 'Nagibator'
+	insert 'characters', id: 2, player: 1, name: 'Ybivator'
+	insert 'characters', id: 3, player: 2, name: 'Voskreshator'
+	chars = game.getCharacters(conn, 1)
+	test.deepEqual chars, [
+		{id: 1, name: 'Nagibator'}
+		{id: 2, name: 'Ybivator'}
+	], 'should return some characters info'
+	test.done()
+
+
+exports.switchCharacter =
+	testNoErrors: (test) ->
+		clearTables 'uniusers', 'characters'
+		insert 'uniusers', id: 1, character_id: 10
+		insert 'characters', id: 2, player: 1
+		
+		game.switchCharacter(conn, 1, 2)
+		charid = query.val "SELECT character_id FROM uniusers"
+		test.strictEqual charid, 2, 'should change character_id'
+		test.done()
+
+	testErrors: (test) ->
+		clearTables 'uniusers', 'characters'
+		test.throws(
+			-> game.switchCharacter(conn, 1, 2)
+			Error
+			'should throw if user does not exist'
+		)
+
+		insert 'uniusers', id: 1
+		insert 'characters', id: 1, player: 1
+		test.throws(
+			-> game.switchCharacter(conn, 1, 2)
+			Error
+			'should throw if user does not have such character'
+		)
+		test.done()
+
+
 exports.getCharacterArmor = (test) ->
 	clearTables 'armor', 'armor_prototypes'
 	insert 'armor_prototypes', id:1, name:'Magic helmet', type:'helmet', coverage:50, strength_max:120
