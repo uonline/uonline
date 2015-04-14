@@ -534,19 +534,12 @@ exports.uninvolve = (dbConnection, character_id, callback) ->
 
 
 # Returns character's attributes.
-exports.getCharacter = ((dbConnection, character_id) ->
-	c = null
-	if typeof(character_id) == 'number'
-		c = dbConnection.query.sync(dbConnection,
-			"SELECT *, "+
-			"  EXISTS(SELECT * FROM battle_participants WHERE character_id = $1) AS fight_mode "+
-			"FROM characters WHERE id = $1", [character_id]).rows[0]
-	else
-		c = dbConnection.query.sync(dbConnection,
-			"SELECT * "+
-			# TODO: fix
-			#"  , EXISTS(SELECT * FROM battle_participants WHERE character_id = $1) AS fight_mode "+
-			"FROM characters WHERE name = $1", [character_id]).rows[0]
+exports.getCharacter = ((dbConnection, character_id_or_name) ->
+	field = if typeof(character_id_or_name) == 'number' then 'id' else 'name'
+	c = dbConnection.query.sync(dbConnection,
+		"SELECT *, "+
+		"  EXISTS(SELECT * FROM battle_participants WHERE character_id = characters.id) AS fight_mode "+
+		"FROM characters WHERE #{field} = $1", [character_id_or_name]).rows[0]
 
 	unless c?
 		return null

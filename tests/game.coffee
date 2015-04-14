@@ -880,8 +880,8 @@ exports.getCharacter =
 
 		user = game.getCharacter.sync null, conn, 1
 		test.deepEqual user, expectedData, 'should return specific fields by id'
-		#user = game.getCharacter.sync null, conn, 'someuser'
-		#test.deepEqual user, expectedData, 'should return specific fields by nickname'
+		user = game.getCharacter.sync null, conn, 'someuser'
+		test.deepEqual user, expectedData, 'should return specific fields by nickname'
 
 		insert 'battle_participants', character_id: 1
 		expectedData.fight_mode = true
@@ -890,11 +890,12 @@ exports.getCharacter =
 
 		user = game.getCharacter.sync null, conn, 2
 		test.strictEqual user, null, 'should return null if no such user exists'
-		#user = game.getCharacter.sync null, conn, 'anotheruser'
-		#test.strictEqual user, null, 'should return null if no such user exists'
+		user = game.getCharacter.sync null, conn, 'anotheruser'
+		test.strictEqual user, null, 'should return null if no such user exists'
 		test.done()
 
 	testErrors: (test) ->
+		# What?..
 		test.throws(
 			-> game.getCharacter.sync conn, 1
 			Error
