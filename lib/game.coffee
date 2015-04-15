@@ -533,6 +533,22 @@ exports.uninvolve = (dbConnection, character_id, callback) ->
 	dbConnection.query "UPDATE characters SET autoinvolved_fm = FALSE WHERE id = $1", [character_id], callback
 
 
+# Creates new character for user.
+# Returns id of new character.
+exports.createCharacter = ((dbConnection, user_id, name) ->
+	tx = transaction dbConnection
+	charid = tx.query.sync(tx,
+		"INSERT INTO characters (name, player, location) "+
+		"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1)) RETURNING id",
+		[ name, user_id ]).rows[0].id
+	tx.query.sync(tx,
+		"UPDATE uniusers SET character_id = $1 WHERE id = $2",
+		[ charid, user_id ])
+	tx.commit.sync(tx)
+	return charid
+).async()
+
+
 # Returns character's attributes.
 exports.getCharacter = ((dbConnection, character_id_or_name) ->
 	field = if typeof(character_id_or_name) == 'number' then 'id' else 'name'
@@ -554,12 +570,14 @@ exports.getCharacter = ((dbConnection, character_id_or_name) ->
 ).async()
 
 
+# Returns user's characters list with some basic attributes.
 exports.getCharacters = ((dbConnection, user_id) ->
 	dbConnection.query.sync(dbConnection,
 		"SELECT id, name FROM characters WHERE player = $1 ORDER BY id", [ user_id ]).rows
 ).async()
 
 
+# Switches user's character.
 exports.switchCharacter = ((dbConnection, user_id, new_character_id) ->
 	#dbConnection.query.sync(dbConnection, "SELECT 1 WHERE 1 = 2")
 	res = dbConnection.query.sync(dbConnection,
@@ -575,6 +593,7 @@ exports.switchCharacter = ((dbConnection, user_id, new_character_id) ->
 ).async()
 
 
+# Returns character's armor parameters.
 exports.getCharacterArmor = ((dbConnection, character_id) ->
 	dbConnection.query.sync(dbConnection,
 		"SELECT armor.id, name, type, coverage, strength, strength_max, equipped "+

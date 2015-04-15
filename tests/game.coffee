@@ -843,6 +843,23 @@ exports.uninvolve = (test) ->
 	test.done()
 
 
+exports.createCharacter = (test) ->
+	clearTables 'uniusers', 'characters', 'locations'
+	insert 'locations', id: 1, initial: 0
+	insert 'locations', id: 2, initial: 1
+	insert 'uniusers', id: 1
+	
+	charid = game.createCharacter(conn, 1, 'My First Character')
+	char = query.row "SELECT * FROM characters"
+	user = query.row "SELECT * FROM uniusers"
+	
+	test.strictEqual user.character_id, charid, "should switch user's character to new character"
+	test.strictEqual charid, char.id, 'should return new character id'
+	test.strictEqual char.name, 'My First Character', 'should create character with specified name'
+	test.strictEqual char.location, 2, 'should create character in initial location'
+	test.done()
+
+
 exports.getCharacter =
 	testNoErrors: (test) ->
 		data =
