@@ -78,7 +78,7 @@ if !pjax
 										each x in characters
 											if x.id == character.id
 												li.disabled
-													a(href='/action/switch_character/'+x.id)
+													a(style='cursor:initial;')
 														i.glyphicon.glyphicon-menu-right
 														| #{' '}#{x.name}
 											else
