@@ -269,6 +269,7 @@ exports.registerUser = (test) ->
 	clearTables 'uniusers', 'locations', 'monsters', 'monster_prototypes', 'characters'
 	query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
 	
+	#TODO: check return value
 	users.registerUser.sync null, conn, 'TheUser', 'password', 'admin'
 	user = query.row 'SELECT * FROM uniusers'
 	
@@ -278,13 +279,10 @@ exports.registerUser = (test) ->
 	test.ok user.reg_time <= new Date(), 'should not put registration time into future'
 	test.ok user.sess_time <= new Date(), 'should not put session timestamp into future'
 	test.strictEqual user.permissions, 'admin', 'should set specified permissions'
+	test.strictEqual user.character_id, null, 'should not assign character'
 	
-	character = query.row 'SELECT * FROM characters WHERE player = $1', [user.id]
-	test.strictEqual character.name, user.username, 'should set character name'
-	test.strictEqual character.location, 2, 'should set location to initial one'
-	
-	test.strictEqual character.id, user.character_id, 'user should get a character'
-	test.strictEqual user.id, character.player, 'and character should know his user'
+	count = +query.val 'SELECT count(*) FROM characters WHERE player = $1', [user.id]
+	test.strictEqual count, 0, 'should not create character now'
 	
 	test.throws(
 		-> users.registerUser.sync null, conn, 'TheUser', 'password', 1

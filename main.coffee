@@ -153,6 +153,13 @@ mustNotBeAuthed = (request, response, next) ->
 		next()
 
 
+mustHaveCharacter = (request, response, next) ->
+	if request.uonline.character
+		next()
+	else
+		response.redirect '/new_character/'
+
+
 setInstance = (x) ->
 	((request, response) ->
 		request.uonline.instance = x
@@ -167,7 +174,6 @@ render = (template) ->
 
 fetchCharacter = ((request, response) ->
 	character = lib.game.getCharacter.sync null, dbConnection, request.uonline.user.character_id
-	character.location_id = character.location
 	request.uonline.character = character
 ).asyncMiddleware()
 
@@ -215,14 +221,14 @@ fetchArea = ((request, response) ->
 
 fetchUsersNearby = ((request, response) ->
 	tmpUsers = lib.game.getNearbyUsers.sync null,
-		dbConnection, request.uonline.user.id, request.uonline.character.location_id
+		dbConnection, request.uonline.user.id, request.uonline.character.location
 	request.uonline.players_list = tmpUsers
 	return
 ).asyncMiddleware()
 
 
 fetchMonstersNearby = ((request, response) ->
-	tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, request.uonline.character.location_id
+	tmpMonsters = lib.game.getNearbyMonsters.sync null, dbConnection, request.uonline.character.location
 	request.uonline.monsters_list = tmpMonsters
 	request.uonline.monsters_list.in_fight = tmpMonsters.filter((m) -> m.fight_mode)
 	request.uonline.monsters_list.not_in_fight = tmpMonsters.filter((m) -> not m.fight_mode)
@@ -337,7 +343,7 @@ app.post '/register/',
 
 
 app.get '/character/',
-	mustBeAuthed,
+	mustBeAuthed, mustHaveCharacter,
 	setInstance('mycharacter'),
 	(request, response) ->
 		#request.uonline.fetched_character_owner = request.uonline.user  # пока не вижу смысла его запрашивать
@@ -356,7 +362,6 @@ app.get '/character/:name/',
 
 app.get '/profile/',
 	mustBeAuthed,
-	fetchCharacter,
 	setInstance('myprofile'),
 	(request, response) ->
 		request.uonline.owner = request.uonline.user
@@ -387,16 +392,35 @@ app.get '/action/logout',
 		response.redirect '/'
 
 
+app.get '/new_character/',
+	mustBeAuthed,
+	setInstance('new_character'),
+	(request, response) ->
+		response.render 'new_character', request.uonline
+
+
+app.post '/new_character/',
+	mustBeAuthed,
+	setInstance('new_character'),
+	(request, response) ->
+		nameIsValid = true
+		if nameIsValid
+			charid = lib.game.createCharacter(dbConnection, request.uonline.user.id, request.body.character_name)
+			response.redirect '/character/'
+		else
+			response.render 'new_character', request.uonline
+
+
 app.get '/game/',
 	mustBeAuthed,
-	fetchCharacter, fetchLocation, fetchArea,
+	mustHaveCharacter, fetchLocation, fetchArea,
 	fetchUsersNearby, fetchMonstersNearby,
 	fetchBattleGroups,
 	setInstance('game'), render('game')
 
 
 app.get '/inventory/',
-	mustBeAuthed, fetchCharacter, fetchArmor,
+	mustBeAuthed, mustHaveCharacter, fetchArmor,
 	setInstance('inventory'), render('inventory')
 
 
@@ -473,6 +497,7 @@ app.get '/action/equip/:id',
 				'WHERE id = $1 AND owner = $2',
 			[request.param('id'), request.uonline.user.character_id]
 		response.redirect '/inventory/'
+
 
 app.get '/action/switch_character/:id',
 	mustBeAuthed,

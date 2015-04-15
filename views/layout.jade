@@ -60,31 +60,36 @@ if !pjax
 							+instanceLink('about','/about/','Об игре')
 						ul.nav.navbar-nav.navbar-right
 							if user.loggedIn === true
-								//- TODO: выпадайка
+								//- TODO: выпадайка. дак она вроде бы уже
 								+instanceLink('myprofile', '/profile/', user.username, false, 'glyphicon-'+(user.isAdmin?'certificate':'sunglasses'))
-								//+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
-								li.dropdown.instance-indicator(data-instance='mycharacter', class=(instance=='mycharacter'?'active':''))
-									a.dropdown-toggle(href='#', data-toggle='dropdown')
-										i.glyphicon.glyphicon-user
-										| #{' '}#{character.name}
-										b.caret
-									ul.dropdown-menu
-										li
-											a.pjax.instance-switcher(href='/character/', data-instance='mycharacter')
-												| Профиль
-										li.divider
-										li.dropdown-header
-											| Переключить персонажа
-										each x in characters
-											if x.id == character.id
-												li.disabled
-													a(style='cursor:initial;')
-														i.glyphicon.glyphicon-menu-right
-														| #{' '}#{x.name}
-											else
-												li
-													a(href='/action/switch_character/'+x.id)
-														| #{x.name}
+								if character
+									//+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
+									li.dropdown.instance-indicator(data-instance='mycharacter', class=(instance=='mycharacter'?'active':''))
+										a.dropdown-toggle(href='#', data-toggle='dropdown')
+											i.glyphicon.glyphicon-user
+											| #{' '}#{character.name}
+											b.caret
+										ul.dropdown-menu
+											li
+												a.pjax.instance-switcher(href='/character/', data-instance='mycharacter')
+													| Профиль
+											li.divider
+											li.dropdown-header
+												| Переключить персонажа
+											each x in characters
+												if x.id == character.id
+													li.disabled
+														a(style='cursor:initial;')
+															i.glyphicon.glyphicon-menu-right
+															| #{' '}#{x.name}
+												else
+													li
+														a(href='/action/switch_character/'+x.id)
+															| #{x.name}
+											li.divider
+											li
+												a.pjax.instance-switcher(href='/new_character/', data-instance='new_character')
+													| Создать ещё одного
 								+instanceLink('game', '/game/', 'Игра', true)
 								+instanceLink('inventory', '/inventory/', 'Инвентарь')
 								li

@@ -158,29 +158,15 @@ exports.registerUser = ((dbConnection, username, password, permissions) ->
 	hash = crypto.pbkdf2.sync(null, password, salt, 4096, 256)
 	sessid = exports.generateSessId.sync(null, dbConnection, config.sessionLength)
 	
-	tx = transaction dbConnection
-	character_id = tx.query.sync(tx,
-		'INSERT INTO characters (name, player, location) VALUES ('+
-			'$1, '+
-			'NULL, '+ # player is null for now, will update later
-			'(SELECT id FROM locations WHERE initial = 1)'+
-		') RETURNING id',
-		[username]
-	).rows[0].id
-	user_id = tx.query.sync(tx,
+	user_id = dbConnection.query.sync(dbConnection,
 		'INSERT INTO uniusers ('+
 			'username, salt, hash, sessid, reg_time, sess_time, permissions, character_id'+
 			') VALUES ('+
 			'$1, $2, $3, $4, NOW(), NOW(), $5, $6'+
 		') RETURNING id',
-		[username, salt, hash.toString('hex'), sessid, permissions, character_id]
+		[ username, salt, hash.toString('hex'), sessid, permissions, null ]
 	).rows[0].id
-	tx.query(
-		'UPDATE characters SET player = $1 WHERE id = $2',
-		[user_id, character_id]
-	)
-	tx.commit.sync(tx)
-	return sessid: sessid
+	return sessid: sessid, userid: user_id
 ).async()
 
 
