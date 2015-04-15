@@ -75,11 +75,16 @@ if !pjax
 										li.divider
 										li.dropdown-header
 											| Переключить персонажа
-										each char in characters
-											li.disabled
-												a(href='/action/switch_character/'+char.id)
-													i.glyphicon.glyphicon-menu-right
-													| #{' '}#{char.name}
+										each x in characters
+											if x.id == character.id
+												li.disabled
+													a(href='/action/switch_character/'+x.id)
+														i.glyphicon.glyphicon-menu-right
+														| #{' '}#{x.name}
+											else
+												li
+													a(href='/action/switch_character/'+x.id)
+														| #{x.name}
 								+instanceLink('game', '/game/', 'Игра', true)
 								+instanceLink('inventory', '/inventory/', 'Инвентарь')
 								li
