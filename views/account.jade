@@ -23,14 +23,10 @@ block content
 					| #{' '}
 					a.pjax(href='/new_character/')
 						| Создать ещё одного
-				//p
-					a.pjax.btn.btn-default.btn-sm(href='/new_character/')
-						i.glyphicon.glyphicon-plus
-						| #{' '}Создать ещё одного
 			else
 				p Персонажей пока нет.
 				p
-					a.pjax.btn.btn-default(href='/new_character/')
+					a.pjax.btn.btn-primary(href='/new_character/')
 						i.glyphicon.glyphicon-plus
 						| #{' '}Создать
 		.col-sm-5

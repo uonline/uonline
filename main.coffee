@@ -367,25 +367,6 @@ app.get '/account/',
 		response.render 'account', request.uonline
 
 
-app.get '/profile/',
-	mustBeAuthed,
-	setInstance('myprofile'),
-	(request, response) ->
-		request.uonline.owner = request.uonline.user
-		request.uonline.owner_character = request.uonline.character
-		response.render 'profile', request.uonline
-
-
-app.get '/profile/:username/',
-	setInstance('profile'),
-	(request, response) ->
-		user = lib.user.getUser.sync null, dbConnection, request.param 'username'
-		user.isMe = user.id == request.uonline.user.id
-		request.uonline.owner = user
-		request.uonline.owner_character = lib.game.getCharacter.sync null, dbConnection, user.character_id
-		response.render 'profile', request.uonline
-
-
 app.get '/monster/:id/',
 	fetchMonsterFromURL,
 	setInstance('monster'), render('monster')

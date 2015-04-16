@@ -61,7 +61,6 @@ if !pjax
 						ul.nav.navbar-nav.navbar-right
 							if user.loggedIn === true
 								+instanceLink('account', '/account/', user.username, false, 'glyphicon-credit-card')
-								+instanceLink('myprofile', '/profile/', user.username, false, 'glyphicon-'+(user.isAdmin?'certificate':'credit-card'))
 								if character
 									//+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
 									li.dropdown.instance-indicator(data-instance='mycharacter', class=(instance=='mycharacter'?'active':''))
@@ -86,10 +85,6 @@ if !pjax
 													li
 														a(href='/action/switch_character/'+x.id)
 															| #{x.name}
-											li.divider
-											li
-												a.pjax.instance-switcher(href='/new_character/', data-instance='new_character')
-													| Создать ещё одного
 								+instanceLink('game', '/game/', 'Игра', true)
 								+instanceLink('inventory', '/inventory/', 'Инвентарь')
 								li
