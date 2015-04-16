@@ -64,7 +64,7 @@ if !pjax
 								if character
 									//+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
 									li.dropdown.instance-indicator(data-instance='mycharacter', class=(instance=='mycharacter'?'active':''))
-										a.dropdown-toggle(href='#', data-toggle='dropdown')
+										a.dropdown-toggle(href='/character/', data-toggle='dropdown')
 											i.glyphicon.glyphicon-user
 											| #{' '}#{character.name}
 											b.caret
