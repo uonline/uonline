@@ -3,7 +3,7 @@ all:
 
 
 monitor:
-	./node_modules/nodemon/bin/nodemon.js -e 'coffee,js,twig,css' -x coffee main.coffee
+	./node_modules/nodemon/bin/nodemon.js ./main.coffee -V
 
 grunt:
 	./node_modules/grunt-cli/bin/grunt
