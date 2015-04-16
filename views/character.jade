@@ -23,6 +23,23 @@ mixin tr_td_ch(name, value, desc, perLevel, perSP, isPersonal)
 			//- | #{' '}
 			//- a.btn.btn-mini(href='javascript://') &plus;
 
+mixin polosa(name, current, max, color, isPersonal, growthPerLevel, growthPerSP, helpText)
+	- percent = Math.round(current*100/max)
+	if isPersonal
+		h4 #{name}#{' '}
+			+personalSign
+	else
+		h4 #{name}
+	if !!helpText
+		div.profile-help.text-muted
+			small #{helpText}
+	if growthPerLevel != -1
+		div.profile-help.text-muted
+			+growth(growthPerLevel, growthPerSP)
+	.progress
+		.progress-bar(class='progress-bar-'+color, style='width: '+percent+'%;', role='progressbar', aria-valuenow=percent, aria-valuemin='0', aria-valuemax=max)
+			| #{ current }/#{ max }
+
 
 extends layout
 block title
@@ -39,32 +56,10 @@ block content
 	.row
 		- with(fetched_character)
 			.col-sm-5
-				h4 Здоровье#{' '}
-					+personalSign()
-				div.profile-help.text-muted
-					+growth(40, 10)
-				.progress
-					.progress-bar.progress-bar-success(style='width: '+health_percent+'%;', role="progressbar", aria-valuenow=health_percent, aria-valuemin="0", aria-valuemax="100")
-						| #{ health }/#{ health_max }
-				h4 Мана#{' '}
-					+personalSign()
-				div.profile-help.text-muted
-					+growth(20, 5)
-				.progress
-					.progress-bar(style='width: '+mana_percent+'%;', role="progressbar", aria-valuenow=mana_percent, aria-valuemin="0", aria-valuemax="100")
-						| #{ mana }/#{ mana_max }
-				h4 Энергия#{' '}
-				div.profile-help.text-muted
-					small Чем выше, тем большее расстояние может пройти персонаж, не уставая.
-				div.profile-help.text-muted
-					+growth(10, 5)
-				.progress
-					.progress-bar.progress-bar-danger(style='width: '+energy_percent+'%;', role="progressbar", aria-valuenow=energy_percent, aria-valuemin="0", aria-valuemax="100")
-						| #{ energy }/#{ energy_max }
-				h4 Опыт
-				.progress
-					.progress-bar.progress-bar-warning(style='width: '+exp_percent+'%;', role="progressbar", aria-valuenow=exp_percent, aria-valuemin="0", aria-valuemax="100")
-						| #{ exp }/#{ exp_max }
+				+polosa('Здоровье', health, health_max, 'success', true, 40, 10, null)
+				+polosa('Мана', mana, mana_max, 'default', true, 20, 5, null)
+				+polosa('Энергия', energy, energy_max, 'danger', false, 10, 5, 'Чем выше, тем большее расстояние персонаж может пройти, не уставая.')
+				+polosa('Опыт', exp, exp_max, 'warning', false, -1, -1, null)
 			.col-sm-1
 			.col-sm-6
 				h3 Характеристики
