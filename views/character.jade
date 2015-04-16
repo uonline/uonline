@@ -24,7 +24,7 @@ mixin tr_td_ch(name, value, desc, perLevel, perSP, isPersonal)
 			//- a.btn.btn-mini(href='javascript://') &plus;
 
 mixin polosa(name, current, max, color, isPersonal, growthPerLevel, growthPerSP, helpText)
-	- percent = Math.round(current*100/max)
+	- var percent = Math.round(current*100/max)
 	if isPersonal
 		h4 #{name}#{' '}
 			+personalSign
