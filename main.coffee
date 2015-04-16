@@ -79,7 +79,7 @@ morgan.token 'coloredStatus', (req, res) ->
 	if status >= 500 and status < 600 then color = chalk.red
 	return color(status)
 morgan.token 'uu', (req, res) ->
-	name = req.uonline?.username or '-'
+	name = req.uonline?.user?.username or '-'
 	return chalk.gray(name)
 app.use morgan ":remote-addr :uu  :coloredStatus :method :url  #{chalk.gray '":user-agent"'}  :response-time ms"
 
@@ -260,7 +260,7 @@ fetchBattleGroups = ((request, response) ->
 		our_side = participants
 			.find((p) -> p.character_id is request.uonline.user.character_id)
 			.side
-		
+
 		request.uonline.battle =
 			participants: participants
 			our_side: our_side
