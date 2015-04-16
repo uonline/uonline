@@ -60,8 +60,8 @@ if !pjax
 							+instanceLink('about','/about/','Об игре')
 						ul.nav.navbar-nav.navbar-right
 							if user.loggedIn === true
-								//- TODO: выпадайка. дак она вроде бы уже
-								+instanceLink('myprofile', '/profile/', user.username, false, 'glyphicon-'+(user.isAdmin?'certificate':'sunglasses'))
+								+instanceLink('account', '/account/', user.username, false, 'glyphicon-credit-card')
+								+instanceLink('myprofile', '/profile/', user.username, false, 'glyphicon-'+(user.isAdmin?'certificate':'credit-card'))
 								if character
 									//+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
 									li.dropdown.instance-indicator(data-instance='mycharacter', class=(instance=='mycharacter'?'active':''))

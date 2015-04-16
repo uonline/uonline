@@ -360,6 +360,13 @@ app.get '/character/:name/',
 		response.render 'character', request.uonline
 
 
+app.get '/account/',
+	mustBeAuthed,
+	setInstance('account'),
+	(request, response) ->
+		response.render 'account', request.uonline
+
+
 app.get '/profile/',
 	mustBeAuthed,
 	setInstance('myprofile'),
