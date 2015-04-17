@@ -190,7 +190,7 @@ module.exports = (grunt) ->
 	grunt.loadTasks './grunt-custom-tasks/'
 
 	# Custom tasks.
-	grunt.registerTask 'check', ['mustcontain', 'coffeelint', 'jshint:all']
+	grunt.registerTask 'check', ['mustcontain', 'coffeelint', 'm1kc_coffee_jshint', 'jshint:all']
 	grunt.registerTask 'build', ['browserify', 'coffee', 'concat', 'uglify']
 	grunt.registerTask 'docs', ['codo']
 

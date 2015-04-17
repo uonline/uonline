@@ -15,6 +15,7 @@
 'use strict';
 
 var hintFiles = require("grunt-coffee-jshint/node_modules/coffee-jshint/lib-js/hint");
+var chalk = require('chalk');
 
 
 module.exports = function(grunt) {
@@ -58,7 +59,7 @@ module.exports = function(grunt) {
                                false);
         var flattened_errors = [].concat.apply([], errors);
         var formatted_errors = flattened_errors.map(function(error) {
-            return '' + path + ': ' + error.line + ":" + error.character + " " + error.reason;
+            return chalk.magenta(path + ': ' + error.line + ":" + error.character) + " " + error.reason;
         });
 
         return formatted_errors.join('\n');
