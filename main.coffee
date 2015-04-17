@@ -129,7 +129,8 @@ app.use ((request, response) ->
 	characters = lib.game.getCharacters.sync null, dbConnection, request.uonline.user.id
 	request.uonline.characters = characters
 	# CSP
-	response.header 'Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'"
+	if !process.env.NOCSP
+		response.header 'Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'"
 	# Anti-clickjacking
 	response.header 'X-Frame-Options', 'DENY'
 	# PJAX
