@@ -5,12 +5,10 @@ block content
 	.page-header
 		h1 #{user.username}
 	.row
-		.col-sm-7
+		.col-sm-6
 			if characters.length > 0
-				//- TODO: ссылки на профили?
 				//- TODO: местоположение каждого
 				//- TODO: дата создания?
-				//- TODO: выделять активного
 				p Персонажи на этом аккаунте:
 				each x in characters
 					p
@@ -19,7 +17,8 @@ block content
 								a.confirm.btn.btn-danger.btn-xs(href='/action/deleteCharacter/'+x.id) Удалить
 							i.glyphicon.glyphicon-menu-right
 							| #{' '}
-							b #{x.name}
+							a.pjax.instance-switcher(href='/character/'+x.name+'/', data-instance='mycharacter')
+								b #{x.name}
 							| &nbsp;&nbsp;
 							span.text-muted
 								| орк 1-го уровня
@@ -30,15 +29,16 @@ block content
 								a.confirm.btn.btn-danger.btn-xs(href='/action/deleteCharacter/'+x.id) Удалить
 							i.glyphicon.glyphicon-user
 							| #{' '}
-							| #{x.name}
+							a.pjax.instance-switcher(href='/character/'+x.name+'/', data-instance='character')
+								| #{x.name}
 							| &nbsp;&nbsp;
 							span.text-muted
 								| орк 1-го уровня
 				p
-					a.pjax(href='/newCharacter/')
+					a.pjax.instance-switcher(href='/newCharacter/', data-instance='newCharacter')
 						i.glyphicon.glyphicon-plus
 					| #{' '}
-					a.pjax(href='/newCharacter/')
+					a.pjax.instance-switcher(href='/newCharacter/', data-instance='newCharacter')
 						| Создать ещё одного
 			else
 				p Персонажей пока нет.
@@ -46,6 +46,7 @@ block content
 					a.pjax.btn.btn-primary(href='/newCharacter/')
 						i.glyphicon.glyphicon-plus
 						| #{' '}Создать
+		.col-sm-1
 		.col-sm-5
 			p
 				.alert.alert-info(role='alert')
