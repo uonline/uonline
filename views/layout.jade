@@ -66,10 +66,10 @@ if !pjax
 									li.dropdown.instance-indicator(data-instance='mycharacter', class=(instance=='mycharacter'?'active':''))
 										a.dropdown-toggle(href='/character/', data-toggle='dropdown')
 											i.glyphicon.glyphicon-user
-												if character
-													| #{' '}#{character.name}
-												else
-													| ???
+											if character
+												| #{' '}#{character.name}
+											else
+												| ???
 											b.caret
 										ul.dropdown-menu
 											li
