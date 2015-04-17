@@ -37,6 +37,12 @@ $(document).ready ->
 		$('.profile-help-switcher').toggleClass 'active'
 		$('.profile-help').toggle()
 
+	# Buttons with confirmation
+	$('body').on 'click', '.confirm', (event) ->
+		if confirm('Вы уверены?') == false
+			event.preventDefault()
+		return
+
 	# Registration page stuff
 
 	# Selectors

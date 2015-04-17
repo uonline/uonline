@@ -65,17 +65,18 @@ if !pjax
 									//+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
 									li.dropdown.instance-indicator(data-instance='mycharacter', class=(instance=='mycharacter'?'active':''))
 										a.dropdown-toggle(href='/character/', data-toggle='dropdown')
-											i.glyphicon.glyphicon-user
-											if character
+											if !!character
+												i.glyphicon.glyphicon-user
 												| #{' '}#{character.name}
 											else
-												| ???
+												| Персонаж не выбран
 											b.caret
 										ul.dropdown-menu
-											li
-												a.pjax.instance-switcher(href='/character/', data-instance='mycharacter')
-													| Профиль
-											li.divider
+											if !!character
+												li
+													a.pjax.instance-switcher(href='/character/', data-instance='mycharacter')
+														| Профиль
+												li.divider
 											li.dropdown-header
 												| Переключить персонажа
 											each x in characters

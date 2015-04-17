@@ -14,11 +14,26 @@ block content
 				p Персонажи на этом аккаунте:
 				each x in characters
 					p
-						i.glyphicon.glyphicon-user
-						| #{' '}#{x.name}&nbsp;&nbsp;
-						span.text-muted
-							| орк 1-го уровня
-						a.btn.btn-default.btn-xs(href='/action/deleteCharacter/'+x.id) Удалить
+						if (!!character) && (x.id === character.id)
+							div.pull-right
+								a.confirm.btn.btn-danger.btn-xs(href='/action/deleteCharacter/'+x.id) Удалить
+							i.glyphicon.glyphicon-menu-right
+							| #{' '}
+							b #{x.name}
+							| &nbsp;&nbsp;
+							span.text-muted
+								| орк 1-го уровня
+						else
+							div.pull-right
+								a.btn.btn-default.btn-xs(href='/action/switchCharacter/'+x.id) Переключиться
+								| #{' '}
+								a.confirm.btn.btn-danger.btn-xs(href='/action/deleteCharacter/'+x.id) Удалить
+							i.glyphicon.glyphicon-user
+							| #{' '}
+							| #{x.name}
+							| &nbsp;&nbsp;
+							span.text-muted
+								| орк 1-го уровня
 				p
 					a.pjax(href='/newCharacter/')
 						i.glyphicon.glyphicon-plus
