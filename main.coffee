@@ -83,11 +83,12 @@ morgan.token 'uu', (req, res) ->
 	return chalk.gray(name)
 app.use morgan ":remote-addr :uu  :coloredStatus :method :url  #{chalk.gray '":user-agent"'}  :response-time ms"
 
-app.use express.cookieParser()
-app.use express.json()
-app.use express.urlencoded()
-app.use express.compress()
+# middlewares
+app.use(require('cookie-parser')())
+app.use(require('body-parser').urlencoded(extended: false))
+app.use(require('compression')())
 
+# cachify
 assets =
 	'/assets/scripts.js': [
 		'/assets/scripts.js'
@@ -102,16 +103,17 @@ app.use(cachify.setup(assets,
 app.use '/assets', express.static "#{__dirname}/assets"
 app.use '/static/bower_components', express.static "#{__dirname}/bower_components"
 
+# Jade
 app.set 'view engine', 'jade'
 app.locals.pretty = true
 app.set 'views', "#{__dirname}/views"
 
+# expose New Relic
 if newrelic?
 	app.locals.newrelic = newrelic
 
 
 # Hallway middleware
-
 app.use ((request, response) ->
 	request.uonline =
 		now: new Date()
@@ -179,12 +181,12 @@ fetchCharacter = ((request, response) ->
 
 
 fetchCharacterFromURL = ((request, response) ->
-	request.uonline.fetched_character = lib.game.getCharacter.sync null, dbConnection, request.param('name')
+	request.uonline.fetched_character = lib.game.getCharacter.sync null, dbConnection, request.params.name
 ).asyncMiddleware()
 
 
 fetchMonsterFromURL = ((request, response) ->
-	chars = lib.game.getCharacter.sync null, dbConnection, request.param 'id'
+	chars = lib.game.getCharacter.sync null, dbConnection, request.params.id
 	if not chars?
 		throw new Error '404'
 	for i of chars
@@ -245,7 +247,7 @@ fetchMonstersNearby = ((request, response) ->
 
 
 fetchStatsFromURL = ((request, response) ->
-	chars = lib.game.getUserCharacters.sync null, dbConnection, request.param 'username'
+	chars = lib.game.getUserCharacters.sync null, dbConnection, request.params.username
 	if not chars?
 		throw new Error '404'
 	for i of chars
@@ -415,7 +417,7 @@ app.get '/inventory/',
 app.get '/action/go/:to',
 	mustBeAuthed,
 	(request, response) ->
-		result = lib.game.changeLocation.sync null, dbConnection, request.uonline.user.character_id, request.param 'to'
+		result = lib.game.changeLocation.sync null, dbConnection, request.uonline.user.character_id, request.params.to
 		if result.result != 'ok'
 			console.error "Location change failed: #{result.reason}"
 		response.redirect '/game/'
@@ -441,7 +443,7 @@ app.get '/action/hit/:id',
 		lib.game.hitOpponent.sync(
 			null, dbConnection,
 			request.uonline.user.character_id,
-			request.param('id')
+			request.params.id
 		)
 		response.redirect '/game/'
 
@@ -449,8 +451,8 @@ app.get '/action/hit/:id',
 app.get '/ajax/isNickBusy/:nick',
 	(request, response) ->
 		response.json
-			nick: request.param('nick')
-			isNickBusy: lib.user.userExists.sync null, dbConnection, request.param('nick')
+			nick: request.params.nick
+			isNickBusy: lib.user.userExists.sync null, dbConnection, request.params.nick
 
 
 app.get '/ajax/cheatFixAll',
@@ -472,7 +474,7 @@ app.get '/action/unequip/:id',
 			'UPDATE armor '+
 				'SET equipped = false '+
 				'WHERE id = $1 AND owner = $2',
-			[request.param('id'), request.uonline.user.character_id]
+			[request.params.id, request.uonline.user.character_id]
 		response.redirect '/inventory/'
 
 
@@ -483,14 +485,14 @@ app.get '/action/equip/:id',
 			'UPDATE armor '+
 				'SET equipped = true '+
 				'WHERE id = $1 AND owner = $2',
-			[request.param('id'), request.uonline.user.character_id]
+			[request.params.id, request.uonline.user.character_id]
 		response.redirect '/inventory/'
 
 
 app.get '/action/switch_character/:id',
 	mustBeAuthed,
 	(request, response) ->
-		lib.game.switchCharacter dbConnection, request.uonline.user.id, request.param('id')
+		lib.game.switchCharacter dbConnection, request.uonline.user.id, request.params.id
 		response.redirect 'back'
 
 
