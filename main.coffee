@@ -382,14 +382,14 @@ app.get '/action/logout',
 		response.redirect '/'
 
 
-app.get '/new_character/',
+app.get '/newCharacter/',
 	mustBeAuthed,
 	setInstance('new_character'),
 	(request, response) ->
 		response.render 'new_character', request.uonline
 
 
-app.post '/new_character/',
+app.post '/newCharacter/',
 	mustBeAuthed,
 	setInstance('new_character'),
 	(request, response) ->
@@ -489,7 +489,7 @@ app.get '/action/equip/:id',
 		response.redirect '/inventory/'
 
 
-app.get '/action/switch_character/:id',
+app.get '/action/switchCharacter/:id',
 	mustBeAuthed,
 	(request, response) ->
 		lib.game.switchCharacter dbConnection, request.uonline.user.id, request.params.id
