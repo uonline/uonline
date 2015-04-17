@@ -85,6 +85,7 @@ app.use morgan ":remote-addr :uu  :coloredStatus :method :url  #{chalk.gray '":u
 
 # middlewares
 app.use(require('cookie-parser')())
+app.use(require('body-parser').urlencoded())
 app.use(require('compression')())
 
 # cachify
