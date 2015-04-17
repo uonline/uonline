@@ -18,6 +18,7 @@
 $(document).ready ->
 	# Start up pjax
 	$(document).pjax('a.pjax', '#content', timeout: 2000)
+	$(document).pjax('a.pjax-replace', '#content', timeout: 2000, replace: true)
 	$(document).on 'pjax:send', ->
 		$('#content').animate opacity: 0.3, 'fast'
 	$(document).on 'pjax:complete', ->
@@ -39,15 +40,15 @@ $(document).ready ->
 	# Registration page stuff
 
 	# Selectors
-	usernameField = 'input[name=user]'
-	usernameFormGroup = '#user-form-group'
+	usernameField = 'input[name=username]'
+	usernameFormGroup = '#username-form-group'
 	usernameFeedback = '#username-feedback'
-	passwordField = 'input[name=pass]'
+	passwordField = 'input[name=password]'
 	passwordFormGroup = '#password-form-group'
 	passwordRevealButton = '#revealpass'
 	passwordRevealIcon = '#revealpass i'
 	# Deps
-	validation = require './lib/validation.js'  # virtual name
+	validation = require '/lib/validation.coffee'  # virtual name
 	# Reveal password
 	$("body").on 'click', passwordRevealButton, ->
 		switch $(passwordField).prop('type')

@@ -1,0 +1,72 @@
+mixin personalSign()
+	i.text-muted.glyphicon.glyphicon-leaf(title='Это личный параметр, его нельзя увеличить вещами.')
+
+mixin growth(perLevel, perSP)
+	small Прирост#{' '}
+		b +#{perLevel}
+		| #{' '}за уровень,#{' '}
+		b +#{perSP}
+		| #{' '}за очко навыка.
+
+mixin tr_td_ch(name, value, desc, perLevel, perSP, isPersonal)
+	tr
+		td
+			div #{name}
+				if isPersonal === true
+					| #{' '}
+					+personalSign()
+			div.profile-help.text-muted
+				small= desc
+			div.profile-help.text-muted
+				+growth(perLevel, perSP)
+		td= value
+			//- | #{' '}
+			//- a.btn.btn-mini(href='javascript://') &plus;
+
+mixin polosa(name, current, max, color, isPersonal, growthPerLevel, growthPerSP, helpText)
+	- var percent = Math.round(current*100/max)
+	if isPersonal
+		h4 #{name}#{' '}
+			+personalSign
+	else
+		h4 #{name}
+	if !!helpText
+		div.profile-help.text-muted
+			small #{helpText}
+	if growthPerLevel != -1
+		div.profile-help.text-muted
+			+growth(growthPerLevel, growthPerSP)
+	.progress
+		.progress-bar(class='progress-bar-'+color, style='width: '+percent+'%;', role='progressbar', aria-valuenow=percent, aria-valuemin='0', aria-valuemax=max)
+			| #{ current }/#{ max }
+
+
+extends layout
+block title
+	| #{fetched_character.name}
+block content
+	.page-header
+		button.pull-right.profile-help-switcher.btn.btn-default
+			i.glyphicon.glyphicon-question-sign
+			| #{' '}Что означают все эти цифры?
+		h1 #{fetched_character.name}&nbsp;&nbsp;
+			small орк #{fetched_character.level}-го уровня
+				if fetched_character.id == character.id
+					| #{' '}(это&nbsp;вы)
+	.row
+		- with(fetched_character)
+			.col-sm-5
+				+polosa('Здоровье', health, health_max, 'success', true, 40, 10, null)
+				+polosa('Мана', mana, mana_max, 'default', true, 20, 5, null)
+				+polosa('Энергия', energy, energy_max, 'danger', false, 10, 5, 'Чем выше, тем большее расстояние персонаж может пройти, не уставая.')
+				+polosa('Опыт', exp, exp_max, 'warning', false, -1, -1, null)
+			.col-sm-1
+			.col-sm-6
+				h3 Характеристики
+				table.table.table-striped.table-hover
+					+tr_td_ch('Сила', power, 'Даёт от 0,8 до 1,2 урона за удар.', 5, 3)
+					+tr_td_ch('Защита', defense, 'Поглощает 1 единицу урона за удар.', 5, 3)
+					+tr_td_ch('Ловкость', agility, 'Влияет на количество ударов за ход и шанс уворота.', 5, 3)
+					+tr_td_ch('Точность', accuracy, 'Влияет на шанс нанести точный удар вне зависимости от шанса уворота противника.', 5, 3)
+					+tr_td_ch('Интеллект', intelligence, 'Влияет на скорость регенерации маны.', 5, 3, true)
+					+tr_td_ch('Инициатива', initiative, 'Влияет на очерёдность ходов в бою.', 2, 2)

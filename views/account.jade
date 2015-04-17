@@ -1,0 +1,36 @@
+extends layout
+block title
+	| #{user.username}
+block content
+	.page-header
+		h1 #{user.username}
+	.row
+		.col-sm-7
+			if characters.length > 0
+				//- TODO: ссылки на профили?
+				//- TODO: местоположение каждого
+				//- TODO: дата создания?
+				//- TODO: выделять активного
+				p Персонажи на этом аккаунте:
+				each x in characters
+					p
+						i.glyphicon.glyphicon-user
+						| #{' '}#{x.name}&nbsp;&nbsp;
+						span.text-muted
+							| орк 1-го уровня
+				p
+					a.pjax(href='/new_character/')
+						i.glyphicon.glyphicon-plus
+					| #{' '}
+					a.pjax(href='/new_character/')
+						| Создать ещё одного
+			else
+				p Персонажей пока нет.
+				p
+					a.pjax.btn.btn-primary(href='/new_character/')
+						i.glyphicon.glyphicon-plus
+						| #{' '}Создать
+		.col-sm-5
+			p
+				.alert.alert-info(role='alert')
+					| Это безлимитный аккаунт, его не нужно оплачивать.

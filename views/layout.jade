@@ -58,29 +58,34 @@ if !pjax
 					div.navbar-collapse.collapse
 						ul.nav.navbar-nav
 							+instanceLink('about','/about/','Об игре')
-							//- Dropdown example
-							//- li.dropdown
-								a.dropdown-toggle(href='#', data-toggle='dropdown')
-									| Dropdown
-									b.caret
-								ul.dropdown-menu
-									li
-										a(href='#') Action
-									li
-										a(href='#') Another action
-									li
-										a(href='#') Something else here
-									li.divider
-									li.dropdown-header Nav header
-									li
-										a(href='#') Separated link
-									li
-										a(href='#') One more separated link
 						ul.nav.navbar-nav.navbar-right
-							if loggedIn === true
-								+instanceLink('myprofile', '/profile/', username, false, 'glyphicon-'+(isAdmin?'certificate':'user'), false, true)
+							if user.loggedIn === true
+								+instanceLink('account', '/account/', user.username, false, 'glyphicon-credit-card')
+								if character
+									//+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
+									li.dropdown.instance-indicator(data-instance='mycharacter', class=(instance=='mycharacter'?'active':''))
+										a.dropdown-toggle(href='/character/', data-toggle='dropdown')
+											i.glyphicon.glyphicon-user
+											| #{' '}#{character.name}
+											b.caret
+										ul.dropdown-menu
+											li
+												a.pjax.instance-switcher(href='/character/', data-instance='mycharacter')
+													| Профиль
+											li.divider
+											li.dropdown-header
+												| Переключить персонажа
+											each x in characters
+												if x.id == character.id
+													li.disabled
+														a(style='cursor:initial;')
+															i.glyphicon.glyphicon-menu-right
+															| #{' '}#{x.name}
+												else
+													li
+														a(href='/action/switch_character/'+x.id)
+															| #{x.name}
 								+instanceLink('game', '/game/', 'Игра', true)
-								+instanceLink('myprofile', '/profile/', 'Профиль')
 								+instanceLink('inventory', '/inventory/', 'Инвентарь')
 								li
 									a(href='/action/logout') Выйти

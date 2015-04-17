@@ -14,22 +14,16 @@
 
 'use strict'
 
-config = require '../config.js'
-tables = require '../lib/tables.js'
+config = require '../config'
+tables = require '../lib-cov/tables'
+queryUtils = require '../lib-cov/query_utils'
 mg = require '../lib-cov/migration'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
 
 conn = null
-
-query = (str, values) ->
-	conn.query.sync(conn, str, values).rows
-
-queryOne = (str, values) ->
-	rows = query(str, values)
-	throw new Error('In query:\n' + query + '\nExpected one row, but got ' + rows.length) if rows.length isnt 1
-	rows[0]
+query = null
 
 
 migrationData = [
@@ -54,17 +48,29 @@ migrationData = [
 ]
 
 
-exports.setUp = (done) -> sync ->
+# if this won't crash, everything should be OK
+revisionBackup = null
+migrationDataBackup = []
+
+exports.setUp = (->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+	query = queryUtils.getFor conn
+	try
+		revisionBackup = query.val 'SELECT revision FROM revision'
+	catch e
+		revisionBackup = null
+	migrationDataBackup = mg.getMigrationsData()
 	query 'DROP TABLE IF EXISTS test_table, other_table, revision'
 	mg.setMigrationsData migrationData
-	done()
+).async()
 
-
-exports.tearDown = (done) -> sync ->
+exports.tearDown = ( ->
 	query 'DROP TABLE IF EXISTS test_table, other_table, revision'
+	mg.setMigrationsData migrationDataBackup
+	if revisionBackup != null
+		mg.setRevision.sync null, conn, revisionBackup
 	conn.end()
-	done()
+).async()
 
 
 exports.getCurrentRevision =
@@ -126,84 +132,82 @@ exports.setRevision = (test) ->
 
 exports.migrateOne =
 	'usual': (test) ->
-		async.series [
-			(callback) ->
-				mg.migrateOne conn, 0, callback
-			(callback) ->
-				conn.query 'SELECT column_name FROM information_schema.columns ' +
-					"WHERE table_name = 'test_table' ORDER BY column_name", [], callback
-			(callback) ->
-				conn.query 'SELECT column_name FROM information_schema.columns ' +
-					"WHERE table_name = 'other_table' ORDER BY column_name", [], callback
-			(callback) ->
-				mg.migrateOne conn, 1, callback
-			(callback) ->
-				mg.migrateOne conn, 1, callback
-			(callback) ->
-				conn.query 'SELECT column_name FROM information_schema.columns ' +
-					"WHERE table_name = 'test_table' ORDER BY column_name", [], callback
-			(callback) ->
-				conn.query 'SELECT column_name FROM information_schema.columns ' +
-					"WHERE table_name = 'other_table' ORDER BY column_name", [], callback
-			(callback) ->
-				mg.getCurrentRevision conn, callback
-		], (error, result) ->
-			test.ifError error, 'should not fail if destination revision is current'
-			test.ok result[1].rows.length is 1 and
-				result[1].rows[0].column_name is 'id' and
-				result[2].rows.length is 1 and
-				result[2].rows[0].column_name is 'id',
-				'should correctly perform first migration'
-			test.ok result[5].rows.length is 3 and
-				result[5].rows[0].column_name is 'col0' and
-				result[5].rows[1].column_name is 'col1' and
-				result[5].rows[2].column_name is 'id' and
-				result[6].rows.length is 1 and
-				result[6].rows[0].column_name is 'id',
-				'should correctly add second migration'
-			test.strictEqual result[7], 1, 'should update revision'
-			test.done()
+		mg.migrateOne.sync null, conn, 0
+		tt = query.all 'SELECT column_name FROM information_schema.columns ' +
+			"WHERE table_name = 'test_table' ORDER BY column_name"
+		ot = query.all 'SELECT column_name FROM information_schema.columns ' +
+			"WHERE table_name = 'other_table' ORDER BY column_name"
+		
+		test.deepEqual [tt, ot], [
+				[{column_name: 'id'}]
+				[{column_name: 'id'}]
+			], 'should correctly perform first migration'
+		
+		
+		mg.migrateOne.sync null, conn, 1
+		mg.migrateOne.sync null, conn, 1
+		tt = query.all 'SELECT column_name FROM information_schema.columns ' +
+			"WHERE table_name = 'test_table' ORDER BY column_name"
+		ot = query.all 'SELECT column_name FROM information_schema.columns ' +
+			"WHERE table_name = 'other_table' ORDER BY column_name"
+		
+		test.deepEqual [tt, ot], [
+				[{column_name: 'col0'}, {column_name: 'col1'}, {column_name: 'id'}]
+				[{column_name: 'id'}]
+			], 'should correctly add second migration'
+		test.done()
+
+	'rawsql': (test) ->
+		mg.setMigrationsData [[
+			[ 'test_table', 'create', 'id INT' ]
+			[ 'test_table', 'rawsql', 'INSERT INTO test_table (id) VALUES (1), (2), (5)' ]
+		]]
+		mg.migrateOne.sync null, conn, 0
+		
+		rows = query.all 'SELECT * FROM test_table'
+		test.deepEqual rows, [
+			{id: 1}, {id: 2}, {id: 5}
+		], 'should perform raw SQL commands'
+		test.done()
 
 	'too new': (test) ->
-		async.series [
-			(callback) ->
-				mg.migrateOne conn, 1, callback
-		], (error, result) ->
-			test.ok error, 'should fail if destination revision is too new'
-			test.done()
+		test.throws(
+			-> mg.migrateOne.sync null, conn, 1
+			Error
+			'should fail if destination revision is too new'
+		)
+		test.done()
 
 	'too old': (test) ->
-		async.series [
-			(callback) ->
-				mg.migrateOne conn, 0, callback
-			(callback) ->
-				mg.migrateOne conn, 1, callback
-			(callback) ->
-				mg.migrateOne conn, 0, callback
-		], (error, result) ->
-			test.ok error, 'should fail if destination revision is too old'
-			test.done()
+		mg.migrateOne conn, 0
+		mg.migrateOne conn, 1
+
+		test.throws(
+			-> mg.migrateOne conn, 0
+			Error
+			'should fail if destination revision is too old'
+		)
+		test.done()
 
 	'errors': (test) ->
-		async.series [
-			(callback) ->
-				conn.query 'DROP TABLE IF EXISTS test_table', callback
-			(callback) ->
-				mg.setRevision conn, 0, callback
-			(callback) ->
-				mg.migrateOne conn, 1, callback
-		], (error, result) ->
-			test.ok error, 'should return error if failed to migrate'
-			test.done()
+		query 'DROP TABLE IF EXISTS test_table'
+		mg.setRevision.sync null, conn, 0
+
+		test.throws(
+			-> mg.migrateOne.sync null, conn, 1
+			Error
+			'should return error if failed to migrate'
+		)
+		test.done()
 
 
 exports.migrate =
 	'usual': (test) ->
 		mg.migrate.sync null, conn, {dest_revision: 1}
 
-		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
+		rows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
-		orows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
+		orows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
 		test.ok rows.length is 3 and
 			rows[0].column_name is 'col0' and
@@ -223,9 +227,9 @@ exports.migrate =
 
 		mg.migrate.sync null, conn
 
-		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
+		rows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
-		orows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
+		orows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
 		test.ok rows.length is 4 and
 			rows[0].column_name is 'col0' and
@@ -253,13 +257,14 @@ exports.migrate =
 		rev1 = mg.getCurrentRevision.sync null, conn
 		test.strictEqual rev0, rev1, 'should not change version for one table'
 
-		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
+		row = query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		exists = tables.tableExists.sync null, conn, 'other_table'
 
-		test.ok rows.length is 1 and
-			rows[0].column_name is 'id',
-			'should correctly perform migration for specified table'
+		test.deepEqual row, {
+			column_name: 'id'
+			data_type: 'integer'
+		}, 'should correctly perform migration for specified table'
 		test.ok not exists, 'migration for other tables should not have been performed'
 		test.done()
 
@@ -269,17 +274,19 @@ exports.migrate =
 		rev1 = mg.getCurrentRevision.sync null, conn
 		test.strictEqual rev0, rev1, 'should not change version'
 
-		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
+		row = query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
-		test.ok rows.length is 1 and
-			rows[0].column_name is 'id',
-			'should correctly perform migration for specified tables'
+		test.deepEqual row, {
+			column_name: 'id'
+			data_type: 'integer'
+		}, 'should correctly perform migration for specified tables'
 
-		rows = query 'SELECT column_name, data_type FROM information_schema.columns ' +
-			"WHERE table_name = 'test_table' ORDER BY column_name"
-		test.ok rows.length is 1 and
-			rows[0].column_name is 'id',
-			'should correctly perform migration for specified tables'
+		row = query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
+			"WHERE table_name = 'other_table' ORDER BY column_name"
+		test.ok row, {
+			column_name: 'id'
+			data_type: 'integer'
+		}, 'should correctly perform migration for specified tables'
 		test.done()
 
 	'verbose': (test) ->

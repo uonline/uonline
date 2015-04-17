@@ -5,6 +5,7 @@ docs/
 test/
 lib-cov/
 report.lcov
+jsc_dump.json
 
 # Third-party tools
 node_modules/
