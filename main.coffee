@@ -395,7 +395,7 @@ app.post '/newCharacter/',
 	(request, response) ->
 		nameIsValid = true
 		if nameIsValid
-			charid = lib.game.createCharacter(dbConnection, request.uonline.user.id, request.body.character_name)
+			charid = lib.game.createCharacter.sync(null, dbConnection, request.uonline.user.id, request.body.character_name)
 			response.redirect '/character/'
 		else
 			response.render 'new_character', request.uonline
@@ -492,7 +492,7 @@ app.get '/action/equip/:id',
 app.get '/action/switchCharacter/:id',
 	mustBeAuthed,
 	(request, response) ->
-		lib.game.switchCharacter dbConnection, request.uonline.user.id, request.params.id
+		lib.game.switchCharacter.sync null, dbConnection, request.uonline.user.id, request.params.id
 		response.redirect 'back'
 
 
