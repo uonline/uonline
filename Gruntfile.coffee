@@ -172,10 +172,9 @@ module.exports = (grunt) ->
 
 	# These plugins provide necessary tasks.
 	require('time-grunt')(grunt)
-	require('jit-grunt')(grunt)
-
-	# Custom plugins.
-	grunt.loadTasks './grunt-custom-tasks/'
+	require('jit-grunt')(grunt)({
+		customTasksDir: './grunt-custom-tasks/'
+	})
 
 	# Custom tasks.
 	grunt.registerTask 'check', ['mustcontain', 'coffeelint', 'jshint:all']

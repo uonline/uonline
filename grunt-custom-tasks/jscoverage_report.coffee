@@ -14,6 +14,8 @@
 
 'use strict'
 
+require 'sugar'
+
 module.exports = (grunt) ->
 	# Please see the Grunt documentation for more information regarding task
 	# creation: http://gruntjs.com/creating-tasks
@@ -22,10 +24,8 @@ module.exports = (grunt) ->
 		showOnly = @options().showOnly
 		# filter
 		if showOnly?
-			files = Object.keys(_$jscoverage)
-			shallDelete = files.filter (x) -> not x.match(showOnly)
-			for key in shallDelete
-				delete _$jscoverage[key]
+			newCoverage = Object.findAll(_$jscoverage, (file,_) -> file.match(showOnly))
+			eval '_$jscoverage = newCoverage'
 		# out
 		exports.coverageDetail()
 
