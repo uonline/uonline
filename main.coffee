@@ -83,11 +83,11 @@ morgan.token 'uu', (req, res) ->
 	return chalk.gray(name)
 app.use morgan ":remote-addr :uu  :coloredStatus :method :url  #{chalk.gray '":user-agent"'}  :response-time ms"
 
-app.use express.cookieParser()
-app.use express.json()
-app.use express.urlencoded()
-app.use express.compress()
+# middlewares
+app.use(require('cookie-parser')())
+app.use(require('compression')())
 
+# cachify
 assets =
 	'/assets/scripts.js': [
 		'/assets/scripts.js'
@@ -102,16 +102,17 @@ app.use(cachify.setup(assets,
 app.use '/assets', express.static "#{__dirname}/assets"
 app.use '/static/bower_components', express.static "#{__dirname}/bower_components"
 
+# Jade
 app.set 'view engine', 'jade'
 app.locals.pretty = true
 app.set 'views', "#{__dirname}/views"
 
+# expose New Relic
 if newrelic?
 	app.locals.newrelic = newrelic
 
 
 # Hallway middleware
-
 app.use ((request, response) ->
 	request.uonline =
 		now: new Date()
