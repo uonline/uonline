@@ -549,6 +549,27 @@ exports.createCharacter = ((dbConnection, user_id, name) ->
 ).async()
 
 
+exports.deleteCharacter = ((dbConnection, user_id, character_id) ->
+	#TODO: armor? other items?
+	tx = transaction dbConnection
+
+	tx.query.sync(tx,
+		"UPDATE uniusers SET character_id = NULL WHERE id = $1 AND character_id = $2",
+		[ user_id, character_id ])
+
+	res = tx.query.sync(tx,
+		"DELETE FROM characters WHERE id = $1 AND player = $2",
+		[ character_id, user_id ])
+
+	if res.rowCount == 0
+		tx.rollback.sync(tx)
+		return false
+	else
+		tx.commit.sync(tx)
+		return true
+).async()
+
+
 # Returns character's attributes.
 exports.getCharacter = ((dbConnection, character_id_or_name) ->
 	field = if typeof(character_id_or_name) == 'number' then 'id' else 'name'

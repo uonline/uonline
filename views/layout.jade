@@ -61,12 +61,15 @@ if !pjax
 						ul.nav.navbar-nav.navbar-right
 							if user.loggedIn === true
 								+instanceLink('account', '/account/', user.username, false, 'glyphicon-credit-card')
-								if character
+								if characters.length > 0
 									//+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
 									li.dropdown.instance-indicator(data-instance='mycharacter', class=(instance=='mycharacter'?'active':''))
 										a.dropdown-toggle(href='/character/', data-toggle='dropdown')
 											i.glyphicon.glyphicon-user
-											| #{' '}#{character.name}
+												if character
+													| #{' '}#{character.name}
+												else
+													| ???
 											b.caret
 										ul.dropdown-menu
 											li
@@ -76,14 +79,14 @@ if !pjax
 											li.dropdown-header
 												| Переключить персонажа
 											each x in characters
-												if x.id == character.id
+												if character && x.id == character.id
 													li.disabled
 														a(style='cursor:initial;')
 															i.glyphicon.glyphicon-menu-right
 															| #{' '}#{x.name}
 												else
 													li
-														a(href='/action/switch_character/'+x.id)
+														a(href='/action/switchCharacter/'+x.id)
 															| #{x.name}
 								+instanceLink('game', '/game/', 'Игра', true)
 								+instanceLink('inventory', '/inventory/', 'Инвентарь')

@@ -860,6 +860,42 @@ exports.createCharacter = (test) ->
 	test.done()
 
 
+exports.deleteCharacter = (test) ->
+	clearTables 'uniusers', 'characters'
+	insert 'characters', id: 1, player: 2
+	insert 'characters', id: 2, player: 1
+	insert 'characters', id: 3, player: 1
+	insert 'characters', id: 4, player: 1
+	insert 'characters', id: 5, player: 3
+	insert 'uniusers', id: 1, character_id: 2
+	
+	# deleting inactive character
+	ok = game.deleteCharacter conn, 1, 4
+	user = query.row "SELECT * FROM uniusers"
+	chars = query.all "SELECT id FROM characters WHERE player = 1 ORDER BY id"
+	
+	test.strictEqual ok, true, 'should return true if deleted'
+	test.deepEqual chars, [{id:2}, {id:3}], 'should delete inactive character'
+	test.strictEqual user.character_id, 2, 'should not switch character'
+	
+	# deleting current character
+	ok = game.deleteCharacter conn, 1, 2
+	user = query.row "SELECT * FROM uniusers"
+	chars = query.all "SELECT id FROM characters WHERE player = 1 ORDER BY id"
+	
+	test.strictEqual ok, true, 'should return true if deleted'
+	test.deepEqual chars, [{id:3}], 'should delete active character'
+	test.strictEqual user.character_id, null, "should clear user's character if deleted was active"
+	
+	# deleting character of other user
+	ok = game.deleteCharacter conn, 1, 5
+	count = +query.val "SELECT count(*) FROM characters"
+	
+	test.strictEqual ok, false, "should return false if couldn't delete"
+	test.strictEqual count, 3, 'should not delete character'
+	test.done()
+
+
 exports.getCharacter =
 	testNoErrors: (test) ->
 		data =

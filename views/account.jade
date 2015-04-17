@@ -18,6 +18,7 @@ block content
 						| #{' '}#{x.name}&nbsp;&nbsp;
 						span.text-muted
 							| орк 1-го уровня
+						a.btn.btn-default.btn-xs(href='/action/deleteCharacter/'+x.id) Удалить
 				p
 					a.pjax(href='/newCharacter/')
 						i.glyphicon.glyphicon-plus

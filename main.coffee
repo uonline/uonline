@@ -159,7 +159,7 @@ mustHaveCharacter = (request, response, next) ->
 	if request.uonline.character
 		next()
 	else
-		response.redirect '/new_character/'
+		response.redirect '/account/'
 
 
 setInstance = (x) ->
@@ -494,6 +494,13 @@ app.get '/action/switchCharacter/:id',
 	(request, response) ->
 		lib.game.switchCharacter.sync null, dbConnection, request.uonline.user.id, request.params.id
 		response.redirect 'back'
+
+
+app.get '/action/deleteCharacter/:id',
+	mustBeAuthed,
+	(request, response) ->
+		lib.game.deleteCharacter.sync null, dbConnection, request.uonline.user.id, request.params.id
+		response.redirect '/account/'
 
 
 # 404 handling
