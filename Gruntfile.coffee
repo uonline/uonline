@@ -123,7 +123,7 @@ module.exports = (grunt) ->
 			]
 			options: JSON.parse fs.readFileSync('.coffeelintrc', 'utf-8')
 
-		coffee_jshint:
+		m1kc_coffee_jshint:
 			all: [
 				'*.coffee'
 				'lib/*.coffee'
