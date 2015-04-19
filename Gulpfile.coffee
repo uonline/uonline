@@ -45,18 +45,20 @@ gulp.task 'build', ->
 	,
 		gulp
 		.src './bower_components/jquery-pjax/jquery.pjax.js'
+		.pipe uglify()
 	,
 		gulp
 		.src './browser.coffee'
 		.pipe coffee()
+		.pipe uglify()
 	,
 		browserify()
 		.transform coffeeify
 		.require './lib/validation.coffee', expose: 'validation'
 		.bundle().pipe(source('validation.js')).pipe(buffer())  # epic wrapper, don't ask how does it work
+		.pipe uglify()
 	)
 	.pipe concat 'scripts.js'
-	.pipe uglify()
 	.pipe cleanDest './assets'
 	.pipe gulp.dest './assets'
 
