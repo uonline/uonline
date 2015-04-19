@@ -56,7 +56,7 @@ module.exports = (grunt) ->
 				src: []
 				dest: './_build/validation.js'
 			options:
-				require: ['./lib/validation.coffee']
+				require: ['./lib/validation.coffee:validation']
 				transform: ['coffeeify']
 
 		concat:

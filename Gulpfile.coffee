@@ -18,23 +18,25 @@ notify = require 'gulp-notify'
 console.timeEnd 'Loading deps'
 
 
+saneMerge = (streams...) ->
+	if streams.length is 1
+		return streams[0]
+	if streams.length is 2
+		return merge streams[0], streams[1]
+	if streams.length > 2
+		out = merge streams[0], streams[1]
+		for i in [2...streams.length]
+			#console.log "Merging in stream ##{i}"
+			out = merge out, streams[i]
+		return out
+
+
 gulp.task 'default', ->
 	console.log chalk.green "Specify a task, like 'build' or 'watch'."
 
 
 gulp.task 'build', ->
-	return merge(
-		browserify()
-		.transform coffeeify
-		.require './lib/validation.coffee'  # TODO: use 'expose' option to use just require('validation')
-		.bundle().pipe(source('validation.js')).pipe(buffer())  # epic wrapper, don't ask how does it work
-		.pipe uglify()
-	,
-		gulp
-		.src './browser.coffee'
-		.pipe coffee()
-		.pipe uglify()
-	,
+	return saneMerge(
 		gulp
 		.src './bower_components/jquery/dist/jquery.min.js'
 	,
@@ -43,9 +45,18 @@ gulp.task 'build', ->
 	,
 		gulp
 		.src './bower_components/jquery-pjax/jquery.pjax.js'
-		.pipe uglify()
+	,
+		gulp
+		.src './browser.coffee'
+		.pipe coffee()
+	,
+		browserify()
+		.transform coffeeify
+		.require './lib/validation.coffee', expose: 'validation'
+		.bundle().pipe(source('validation.js')).pipe(buffer())  # epic wrapper, don't ask how does it work
 	)
 	.pipe concat 'scripts.js'
+	.pipe uglify()
 	.pipe cleanDest './assets'
 	.pipe gulp.dest './assets'
 
