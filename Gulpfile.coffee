@@ -1,4 +1,8 @@
+console.time 'Loading gulp'
 gulp = require 'gulp'
+console.timeEnd 'Loading gulp'
+
+console.time 'Loading deps'
 chalk = require 'chalk'
 coffee = require 'gulp-coffee'
 cleanDest = require 'gulp-clean-dest'
@@ -9,14 +13,12 @@ browserify = require 'browserify'
 coffeeify = require 'coffeeify'
 source = require 'vinyl-source-stream'
 buffer = require 'vinyl-buffer'
+require('gulp-grunt')(gulp)
+notify = require 'gulp-notify'
+console.timeEnd 'Loading deps'
 
 
-gulp.task 'default', ['warn', 'build']
-
-
-gulp.task 'warn', (done) ->
-	console.log chalk.red 'Warning: gulp support is experimental, better use Grunt instead.'
-	done()
+gulp.task 'default', ['build']
 
 
 gulp.task 'build', ->
@@ -45,3 +47,13 @@ gulp.task 'build', ->
 	.pipe concat 'scripts.js'
 	.pipe cleanDest './assets'
 	.pipe gulp.dest './assets'
+
+
+gulp.task 'build-and-notify', ['build'], ->
+	gulp
+		.src ''
+		.pipe notify 'Assets were rebuilt.'
+
+
+gulp.task 'watch', ['build'], ->
+	gulp.watch ['./browser.coffee', './lib/validation.coffee'], ['build-and-notify']
