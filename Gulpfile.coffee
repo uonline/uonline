@@ -18,7 +18,8 @@ notify = require 'gulp-notify'
 console.timeEnd 'Loading deps'
 
 
-gulp.task 'default', ['build']
+gulp.task 'default', ->
+	console.log chalk.green "Specify a task, like 'build' or 'watch'."
 
 
 gulp.task 'build', ->
