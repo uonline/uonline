@@ -861,13 +861,16 @@ exports.createCharacter = (test) ->
 
 
 exports.deleteCharacter = (test) ->
-	clearTables 'uniusers', 'characters'
+	clearTables 'uniusers', 'characters', 'armor'
 	insert 'characters', id: 1, player: 2
 	insert 'characters', id: 2, player: 1
 	insert 'characters', id: 3, player: 1
 	insert 'characters', id: 4, player: 1
 	insert 'characters', id: 5, player: 3
 	insert 'uniusers', id: 1, character_id: 2
+	[1,2,2,3,4,4].forEach (c) -> insert 'armor', owner: c
+	
+	armorOwners = -> query.all("SELECT owner FROM armor ORDER BY owner").map 'owner'
 	
 	# deleting inactive character
 	ok = game.deleteCharacter conn, 1, 4
@@ -877,6 +880,7 @@ exports.deleteCharacter = (test) ->
 	test.strictEqual ok, true, 'should return true if deleted'
 	test.deepEqual chars, [{id:2}, {id:3}], 'should delete inactive character'
 	test.strictEqual user.character_id, 2, 'should not switch character'
+	test.deepEqual armorOwners(), [1,2,2,3], "should delete character's armor"
 	
 	# deleting current character
 	ok = game.deleteCharacter conn, 1, 2
@@ -886,13 +890,29 @@ exports.deleteCharacter = (test) ->
 	test.strictEqual ok, true, 'should return true if deleted'
 	test.deepEqual chars, [{id:3}], 'should delete active character'
 	test.strictEqual user.character_id, null, "should clear user's character if deleted was active"
+	test.deepEqual armorOwners(), [1,3], "should delete character's armor"
 	
 	# deleting character of other user
 	ok = game.deleteCharacter conn, 1, 5
 	count = +query.val "SELECT count(*) FROM characters"
 	
-	test.strictEqual ok, false, "should return false if couldn't delete"
+	test.strictEqual ok, false, "should return false if trying to delete character of other user"
 	test.strictEqual count, 3, 'should not delete character'
+	test.deepEqual armorOwners(), [1,3], "should not delete armor"
+	
+	# deleting character while in battle
+	clearTables 'uniusers', 'characters', 'battle_participants', 'armor'
+	insert 'characters', id: 1, player: 2
+	insert 'uniusers', id: 2, character_id: 3
+	insert 'battle_participants', character_id: 1
+	insert 'armor', owner: 1
+	
+	ok = game.deleteCharacter conn, 2, 1
+	count = +query.val "SELECT count(*) FROM characters"
+	
+	test.strictEqual ok, false, 'should return false if trying to delete in-battle character'
+	test.strictEqual count, 1, 'should not delete character'
+	test.deepEqual armorOwners(), [1], "should not delete armor"
 	test.done()
 
 

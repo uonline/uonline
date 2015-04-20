@@ -557,8 +557,13 @@ exports.deleteCharacter = ((dbConnection, user_id, character_id) ->
 		"UPDATE uniusers SET character_id = NULL WHERE id = $1 AND character_id = $2",
 		[ user_id, character_id ])
 
+	tx.query.sync(tx,
+		"DELETE FROM armor WHERE owner = $1",
+		[ character_id ])
+
 	res = tx.query.sync(tx,
-		"DELETE FROM characters WHERE id = $1 AND player = $2",
+		"DELETE FROM characters WHERE id = $1 AND player = $2 "+
+			"AND NOT EXISTS(SELECT * FROM battle_participants WHERE character_id = $1)", #must not be in battle
 		[ character_id, user_id ])
 
 	if res.rowCount == 0
