@@ -56,7 +56,7 @@ module.exports = (grunt) ->
 				src: []
 				dest: './_build/validation.js'
 			options:
-				require: ['./lib/validation.coffee']
+				require: ['./lib/validation.coffee:validation']
 				transform: ['coffeeify']
 
 		concat:
@@ -171,7 +171,7 @@ module.exports = (grunt) ->
 
 
 	# These plugins provide necessary tasks.
-	require('time-grunt')(grunt)
+	#require('time-grunt')(grunt)
 	require('jit-grunt')(grunt)
 
 	# Custom plugins.
