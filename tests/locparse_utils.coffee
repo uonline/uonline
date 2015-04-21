@@ -14,7 +14,8 @@
 
 'use strict'
 
-parser = require '../lib-cov/locparse'
+requireCovered = require '../require-covered.coffee'
+parser = requireCovered __dirname, '../lib/locparse.coffee'
 
 
 class Log
@@ -34,7 +35,7 @@ class Log
 					return false if obj[field] isnt expected[field]
 				objs.splice i, 1
 				return true
-			
+
 			unless exists
 				test.deepEqual objs, expected, message
 
@@ -48,83 +49,83 @@ exports.makeId_test = (test) ->
 
 exports.isAreaLabel_test = (test) ->
 	log = new Log
-	
+
 	test.ok parser.isAreaLabel('# Area Label', 0, log), 'should detect correct areas'
 	test.deepEqual log.all(), {}, 'correct label should not cause warnings or errors'
-	
+
 	test.ok !parser.isAreaLabel('Just line', 0, log), 'should skip simple lines'
 	test.deepEqual log.all(), {}, 'simple line should not cause warnings or errors'
-	
+
 	test.ok !parser.isAreaLabel('### Location', 0, log), 'should skip location title'
 	test.deepEqual log.all(), {}, 'location title should not cause warnings or errors'
-	
+
 	test.ok !parser.isAreaLabel('#something', 12, log), 'should skip sharped line too'
 	log.testIfCorrect test, 'warns', [pointer:12, id:'W1'], 'should warn about sharped line'
 	test.deepEqual log.errors, {}, 'should not produce errors on sharped line'
-	
+
 	test.done()
 
 
 exports.isLocationLabel_test = (test) ->
 	log = new Log
-	
+
 	test.ok parser.isLocationLabel('### Location', 0, log), 'should detect locations'
 	test.deepEqual log.all(), {}, 'correct label should not cause warnings or errors'
-	
+
 	test.ok !parser.isLocationLabel('Just line', 0, log), 'should skip simple lines'
 	test.deepEqual log.all(), {}, 'simple line should not cause warnings or errors'
-	
+
 	test.ok !parser.isLocationLabel('###something', 5, log), 'should skip sharped line too'
 	log.testIfCorrect test, 'warns', [pointer:5, id:'W2'], 'should warn about sharped line'
 	test.deepEqual log.errors, {}, 'should not produce errors on sharped line'
-	
+
 	test.done()
 
 
 exports.isListItem_test = (test) ->
 	log = new Log
-	
+
 	test.ok parser.isListItem('* go somewhere', 0, log), 'should detect list items'
 	test.deepEqual log.all(), {}, 'correct item should not cause warnings or errors'
-	
+
 	test.ok !parser.isListItem('Just line', 0, log), 'should skip simple lines'
 	test.deepEqual log.all(), {}, 'simple line should not cause warnings or errors'
-	
+
 	test.ok !parser.isListItem('*something', 42, log), 'should skip line if no space after "*"'
 	log.testIfCorrect test, 'warns', [pointer:42, id:'W3'], 'should warn about "*" without space'
 	test.deepEqual log.errors, {}, 'should not produce errors on "*" without space'
-	
+
 	test.done()
 
 
 exports.isEmpty_test = (test) ->
 	log = new Log
-	
+
 	test.ok parser.isEmpty('', 0, log), 'should detect empty lines'
 	test.deepEqual log.all(), {}, 'empty line should not cause warnings or errors'
-	
+
 	test.ok !parser.isEmpty('Just line', 0, log), 'should skip simple lines'
 	test.deepEqual log.all(), {}, 'simple line should not cause warnings or errors'
-	
+
 	test.ok parser.isEmpty('   ', 32, log), 'lines of spaces should be considered empty'
 	log.testIfCorrect test, 'warns', [pointer:32, id:'W4'], 'should warn about line of spaces'
 	test.deepEqual log.errors, {}, 'should not produce errors on line of spaces'
-	
+
 	test.done()
 
 
 exports.checkSpaces_test = (test) ->
 	log = new Log
-	
+
 	parser.checkSpaces('Normal line', 0, log)
 	test.deepEqual log.all(), {}, 'should not generate anything for correct line'
-	
+
 	parser.checkSpaces('   spaces all over there   ', 21, log)
 	log.testIfCorrect test, 'warns',
 		[ {pointer:21, id:'W6'}, {pointer:21, id:'W5'} ],
 		'should warn about spaces on each side'
 	test.deepEqual log.errors, {}, 'should not produce errors'
-	
+
 	test.done()
 
 
@@ -141,12 +142,12 @@ exports.checkPropUniqueness_test = (test) ->
 	]
 	parser.checkPropUniqueness objs, 0, 'N/a', 'a', log
 	test.deepEqual log.all(), {}, 'should not generate anything if properties are unique'
-	
+
 	objs[0].a = 2
 	parser.checkPropUniqueness objs, 8, 'N/a', 'a', log
 	log.testIfCorrect test, 'errors', [pointer:8, id:'N/a'], 'should spawn error about duplicated value'
 	test.deepEqual log.warns, {}, 'should not produce warnings'
-	
+
 	test.done()
 
 
@@ -174,7 +175,7 @@ exports.postCheck_test =
 		parser.postCheck log
 		test.deepEqual log.all(), {}, "should not produce warnings or errors if everything's ok"
 		test.done()
-	
+
 	'errors': (test) ->
 		log = new Log
 		log.result.areas = [

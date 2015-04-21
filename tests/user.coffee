@@ -14,13 +14,15 @@
 
 'use strict'
 
+
+requireCovered = require '../require-covered.coffee'
+users = requireCovered __dirname, '../lib/user.coffee'
 config = require '../config'
-users = require '../lib-cov/user'
-mg = require '../lib-cov/migration'
+mg = require '../lib/migration'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
-queryUtils = require '../lib-cov/query_utils'
+queryUtils = require '../lib/query_utils'
 sugar = require 'sugar'
 conn = null
 query = null
@@ -57,11 +59,11 @@ exports.userExists = (test) ->
 
 	clearTables 'uniusers'
 	query 'INSERT INTO uniusers (username) VALUES ( $1 )', ['Sauron']
-	
+
 	test.strictEqual userExists('Sauron'), true, 'should return true if user exists'
 	test.strictEqual userExists('SAURON'), true, 'should ignore capitalization'
 	test.strictEqual userExists('sauron'), true, 'should ignore capitalization'
-	
+
 	query 'TRUNCATE uniusers'
 	test.strictEqual userExists('Sauron'), false, 'should return false if user does not exist'
 	test.done()
@@ -70,7 +72,7 @@ exports.userExists = (test) ->
 exports.idExists = (test) ->
 	clearTables 'uniusers'
 	query 'INSERT INTO uniusers (id) VALUES ( $1 )', [114]
-	
+
 	test.strictEqual users.idExists.sync(null, conn, 114), true, 'should return true when user exists'
 	test.strictEqual users.idExists.sync(null, conn, 9000), false, 'should return false when user does not exist'
 	test.done()
@@ -79,10 +81,10 @@ exports.idExists = (test) ->
 exports.sessionExists = (test) ->
 	clearTables 'uniusers'
 	query "INSERT INTO uniusers (sessid) VALUES ('someid')"
-	
+
 	exists = users.sessionExists.sync(null, conn, 'someid')
 	test.strictEqual exists, true, 'should return true when sessid exists'
-	
+
 	exists = users.sessionExists.sync(null, conn, 'wrongid')
 	test.strictEqual exists, false, 'should return false when sessid does not exist'
 	test.done()
@@ -95,23 +97,23 @@ exports.sessionInfoRefreshing =
 		insert 'uniusers',
 			id: 8, username: 'user0', character_id: 5,
 			permissions: 'admin', sessid: 'expiredid', sess_time: 1.hourAgo()
-		
+
 		testingProps = 'id loggedIn username isAdmin character_id'.split(' ')
-		
-		
+
+
 		res = users.sessionInfoRefreshing.sync null, conn, 'someid', 7200, false
 		test.deepEqual res, { loggedIn: false },
 			'session should not be active if expired'
-		
+
 		res = users.sessionInfoRefreshing.sync null, conn, 'someid', 7200, false
 		test.deepEqual res, { loggedIn: false },
 			'session expire time should not be updated if expired'
-		
-		
+
+
 		query "UPDATE uniusers SET sessid = 'someid'"
-		
+
 		timeBefore = new Date(query.val 'SELECT sess_time FROM uniusers')
-		
+
 		res = users.sessionInfoRefreshing.sync null, conn, 'someid', 7200, false
 		test.deepEqual Object.select(res, testingProps), {
 			id: 8
@@ -120,19 +122,19 @@ exports.sessionInfoRefreshing =
 			isAdmin: true
 			character_id: 5
 		}, 'session should be active if not expired and user data should be returned'
-		
+
 		timeAfter = new Date(query.val 'SELECT sess_time FROM uniusers')
 		test.ok timeBefore < timeAfter, 'should update session timestamp'
-		
+
 		res = users.sessionInfoRefreshing.sync null, conn, undefined, 7200, false
 		test.deepEqual res, { loggedIn: false }, 'should not fail on empty sessid'
-		
-		
+
+
 		insert 'characters', id: 6, player: 99
 		insert 'uniusers',
 			id: 99, username: 'user1', character_id: 6,
 			permissions: 'user', sessid: 'otherid', sess_time: 1.hourAgo()
-		
+
 		res = users.sessionInfoRefreshing.sync null, conn, 'otherid', 7200, false
 		test.deepEqual Object.select(res, testingProps), {
 			id: 99
@@ -147,14 +149,14 @@ exports.sessionInfoRefreshing =
 		insert 'uniusers',
 			id: 112, username: '112', character_id: 6,
 			permissions: 'admin', sessid: '123456', sess_time: 1.hourAgo()
-		
+
 		timeBefore = new Date(query.val('SELECT sess_time FROM uniusers WHERE id = 112'))
 		users.sessionInfoRefreshing.sync null, conn, '123456', 7200, true
 		sync.sleep 100
 		timeAfter = new Date(query.val('SELECT sess_time FROM uniusers WHERE id = 112'))
-		
+
 		test.ok timeBefore < timeAfter, 'should update session timestamp with asyncUpdate'
-		
+
 		# test fail
 		q = conn.query
 		conn.query = (sql, args, callback) ->
@@ -162,15 +164,15 @@ exports.sessionInfoRefreshing =
 				callback(new Error('test error'), null)
 			else
 				q.apply(conn, arguments)
-		
+
 		errCalled = false
 		errlog = console.error
 		console.error = -> errCalled = true
-		
+
 		users.sessionInfoRefreshing.sync null, conn, '123456', 7200, true
 		sync.sleep 100
 		test.ok errCalled, 'should tell about error'
-		
+
 		conn.query = q
 		console.error = errlog
 		test.done()
@@ -188,13 +190,13 @@ exports.getUser = (test) ->
 		salt: 'salt'
 		hash: 'hash'
 		character_id: 4
-	
+
 	clearTables 'characters', 'uniusers'
 	insert 'uniusers', props
 	insert 'characters', id: 4, player: 8
-	
+
 	Object.merge props, isAdmin: true
-	
+
 	[
 		{val: 8,       res: props, msg: 'user attributes by id'}
 		{val: 'user0', res: props, msg: 'user attributes by name'}
@@ -203,7 +205,7 @@ exports.getUser = (test) ->
 	].forEach (param) ->
 		user = users.getUser.sync null, conn, param.val
 		test.deepEqual user, param.res, "should return #{param.msg}"
-	
+
 	test.done()
 
 
@@ -247,7 +249,7 @@ exports.closeSession = (test) ->
 	users.closeSession.sync null, conn, 'someid'
 	refr = users.sessionInfoRefreshing.sync null, conn, 'someid', 3600
 	warn1 = users.closeSession.sync null, conn, undefined
-	
+
 	test.strictEqual refr.loggedIn, false, 'session should have expired'
 	test.strictEqual warn1, 'Not closing: empty sessid', 'should not fail with empty sessid'
 	test.done()
@@ -268,11 +270,11 @@ exports.createSalt = (test) ->
 exports.registerUser = (test) ->
 	clearTables 'uniusers', 'locations', 'monsters', 'monster_prototypes', 'characters'
 	query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
-	
+
 	#TODO: check return value
 	users.registerUser.sync null, conn, 'TheUser', 'password', 'admin'
 	user = query.row 'SELECT * FROM uniusers'
-	
+
 	test.ok user.salt.length > 0, 'should generate salt'
 	test.ok user.hash.length > 0, 'should generate hash'
 	test.ok user.sessid.length > 0, 'should generate sessid'
@@ -280,10 +282,10 @@ exports.registerUser = (test) ->
 	test.ok user.sess_time <= new Date(), 'should not put session timestamp into future'
 	test.strictEqual user.permissions, 'admin', 'should set specified permissions'
 	test.strictEqual user.character_id, null, 'should not assign character'
-	
+
 	count = +query.val 'SELECT count(*) FROM characters WHERE player = $1', [user.id]
 	test.strictEqual count, 0, 'should not create character now'
-	
+
 	test.throws(
 		-> users.registerUser.sync null, conn, 'TheUser', 'password', 1
 		Error
@@ -296,7 +298,7 @@ exports.accessGranted = (test) ->
 	clearTables 'uniusers', 'characters', 'locations'
 	query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
 	users.registerUser.sync null, conn, 'TheUser', 'password', 'user'
-	
+
 	[
 		{name:'TheUser',   pass:'password',  ok:true,  msg:'should return true for valid data'}
 		{name:'WrongUser', pass:'password',  ok:false, msg:'should return false if user does not exist'}
@@ -316,7 +318,7 @@ exports.createSession = (test) ->
 	user0 = query.row 'SELECT sessid FROM uniusers'
 	users.createSession.sync null, conn, 'МОХНАТЫЙ ангел'
 	user1 = query.row 'SELECT sessid, sess_time FROM uniusers'
-	
+
 	test.ok user0.sessid isnt user1.sessid, 'should change sessid'
 	test.ok user1.sess_time.getTime() > Date.now() - 60000, 'should update session timestamp'
 	test.done()

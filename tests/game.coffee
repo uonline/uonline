@@ -14,15 +14,15 @@
 
 'use strict'
 
-
+requireCovered = require '../require-covered.coffee'
+game = requireCovered __dirname, '../lib/game.coffee'
 config = require '../config'
-game = require '../lib-cov/game'
-mg = require '../lib-cov/migration'
+mg = require '../lib/migration'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
-queryUtils = require '../lib-cov/query_utils'
+queryUtils = require '../lib/query_utils'
 sugar = require 'sugar'
 conn = null
 query = null
@@ -848,11 +848,11 @@ exports.createCharacter = (test) ->
 	insert 'locations', id: 1, initial: 0
 	insert 'locations', id: 2, initial: 1
 	insert 'uniusers', id: 1
-	
+
 	charid = game.createCharacter(conn, 1, 'My First Character')
 	char = query.row "SELECT * FROM characters"
 	user = query.row "SELECT * FROM uniusers"
-	
+
 	test.strictEqual user.character_id, charid, "should switch user's character to new character"
 	test.strictEqual charid, char.id, 'should return new character id'
 	test.strictEqual char.name, 'My First Character', 'should create character with specified name'
@@ -869,47 +869,47 @@ exports.deleteCharacter = (test) ->
 	insert 'characters', id: 5, player: 3
 	insert 'uniusers', id: 1, character_id: 2
 	[1,2,2,3,4,4].forEach (c) -> insert 'armor', owner: c
-	
+
 	armorOwners = -> query.all("SELECT owner FROM armor ORDER BY owner").map 'owner'
-	
+
 	# deleting inactive character
 	ok = game.deleteCharacter conn, 1, 4
 	user = query.row "SELECT * FROM uniusers"
 	chars = query.all "SELECT id FROM characters WHERE player = 1 ORDER BY id"
-	
+
 	test.strictEqual ok, true, 'should return true if deleted'
 	test.deepEqual chars, [{id:2}, {id:3}], 'should delete inactive character'
 	test.strictEqual user.character_id, 2, 'should not switch character'
 	test.deepEqual armorOwners(), [1,2,2,3], "should delete character's armor"
-	
+
 	# deleting current character
 	ok = game.deleteCharacter conn, 1, 2
 	user = query.row "SELECT * FROM uniusers"
 	chars = query.all "SELECT id FROM characters WHERE player = 1 ORDER BY id"
-	
+
 	test.strictEqual ok, true, 'should return true if deleted'
 	test.deepEqual chars, [{id:3}], 'should delete active character'
 	test.strictEqual user.character_id, null, "should clear user's character if deleted was active"
 	test.deepEqual armorOwners(), [1,3], "should delete character's armor"
-	
+
 	# deleting character of other user
 	ok = game.deleteCharacter conn, 1, 5
 	count = +query.val "SELECT count(*) FROM characters"
-	
+
 	test.strictEqual ok, false, "should return false if trying to delete character of other user"
 	test.strictEqual count, 3, 'should not delete character'
 	test.deepEqual armorOwners(), [1,3], "should not delete armor"
-	
+
 	# deleting character while in battle
 	clearTables 'uniusers', 'characters', 'battle_participants', 'armor'
 	insert 'characters', id: 1, player: 2
 	insert 'uniusers', id: 2, character_id: 3
 	insert 'battle_participants', character_id: 1
 	insert 'armor', owner: 1
-	
+
 	ok = game.deleteCharacter conn, 2, 1
 	count = +query.val "SELECT count(*) FROM characters"
-	
+
 	test.strictEqual ok, false, 'should return false if trying to delete in-battle character'
 	test.strictEqual count, 1, 'should not delete character'
 	test.deepEqual armorOwners(), [1], "should not delete armor"
@@ -981,7 +981,7 @@ exports.getCharacters = (test) ->
 	clearTables 'characters'
 	chars = game.getCharacters(conn, 1)
 	test.deepEqual chars, [], 'should return no characters if user does not have any'
-	
+
 	insert 'characters', id: 1, player: 1, name: 'Nagibator'
 	insert 'characters', id: 2, player: 1, name: 'Ybivator'
 	insert 'characters', id: 3, player: 2, name: 'Voskreshator'
@@ -998,7 +998,7 @@ exports.switchCharacter =
 		clearTables 'uniusers', 'characters'
 		insert 'uniusers', id: 1, character_id: 10
 		insert 'characters', id: 2, player: 1
-		
+
 		game.switchCharacter(conn, 1, 2)
 		charid = query.val "SELECT character_id FROM uniusers"
 		test.strictEqual charid, 2, 'should change character_id'

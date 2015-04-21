@@ -15,10 +15,12 @@
 'use strict'
 
 requireFromString = (src, filename) ->
-    Module = module.constructor
-    m = new Module()
-    m._compile(src, filename)
-    return m.exports
+	Module = module.constructor
+	m = new Module()
+	m.paths = module.paths
+	#console.log "Paths: #{m.paths}"
+	m._compile(src, filename)
+	return m.exports
 
 module.exports = (dirname, filename) ->
 	filename = require('path').resolve(dirname, filename)

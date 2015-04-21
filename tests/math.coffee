@@ -14,7 +14,8 @@
 
 'use strict'
 
-math = require '../lib-cov/math'
+requireCovered = require '../require-covered.coffee'
+math = requireCovered __dirname, '../lib/math.coffee'
 
 exports.ap = (test) ->
 	test.strictEqual math.ap(1,2,3), 5, 'should return n-th number in arithmetical progression'

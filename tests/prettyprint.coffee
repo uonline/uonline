@@ -14,7 +14,8 @@
 
 'use strict'
 
-prettyprint = require '../lib-cov/prettyprint'
+requireCovered = require '../require-covered.coffee'
+prettyprint = requireCovered __dirname, '../lib/prettyprint.coffee'
 
 
 exports.spaces = (test) ->

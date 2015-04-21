@@ -15,10 +15,11 @@
 'use strict'
 
 
+requireCovered = require '../require-covered.coffee'
+queryUtils = requireCovered __dirname, '../lib/query_utils.coffee'
 config = require '../config'
 sync = require 'sync'
 anyDB = require 'any-db'
-queryUtils = require '../lib-cov/query_utils'
 conn = null
 query = null
 

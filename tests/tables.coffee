@@ -14,12 +14,13 @@
 
 'use strict'
 
+requireCovered = require '../require-covered.coffee'
+tables = requireCovered __dirname, '../lib/tables.coffee'
 config = require '../config'
-tables = require '../lib-cov/tables'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
-queryUtils = require '../lib-cov/query_utils'
+queryUtils = require '../lib/query_utils'
 conn = null
 query = null
 
@@ -54,7 +55,7 @@ exports.tableExists = (test) ->
 exports.create = (test) ->
 	tables.create.sync null, conn, 'akira', 'id INT'
 	test.strictEqual tables.tableExists.sync(null, conn, 'akira'), true, 'should create table'
-	
+
 	col_name = query.val "SELECT column_name AS result FROM information_schema.columns WHERE table_name = 'akira'"
 	test.strictEqual col_name, 'id', 'and its columns'
 	test.done()
@@ -63,7 +64,7 @@ exports.create = (test) ->
 exports.addCol = (test) ->
 	tables.create.sync null, conn, 'test_table', 'id INT'
 	tables.addCol.sync null, conn, 'test_table', 'zoich INT'
-	
+
 	rows = query.all "SELECT column_name AS result FROM information_schema.columns WHERE table_name = 'test_table'"
 	test.strictEqual rows.length, 2, 'should create a new column'
 	test.done()
@@ -73,7 +74,7 @@ exports.renameCol =
 	testNoErrors: (test) ->
 		tables.create.sync null, conn, "test_table", "id INTEGER"
 		tables.renameCol.sync null, conn, "test_table", "id", "col"
-		
+
 		col = query.row "SELECT column_name, data_type FROM information_schema.columns "+
 			"WHERE table_name = 'test_table'"
 		test.strictEqual col.column_name, "col", "should rename column"
@@ -101,7 +102,7 @@ exports.renameCol =
 exports.changeCol = (test) ->
 	tables.create.sync null, conn, "test_table", "id SMALLINT"
 	tables.changeCol.sync null, conn, "test_table", "id", "INTEGER"
-	
+
 	data_type = query.val "SELECT data_type FROM information_schema.columns WHERE table_name = 'test_table'"
 	test.strictEqual data_type, "integer", "should change type of column"
 	test.done()
@@ -110,7 +111,7 @@ exports.changeCol = (test) ->
 exports.changeDefault = (test) ->
 	tables.create.sync null, conn, "test_table", "id SMALLINT DEFAULT 1"
 	tables.changeDefault.sync null, conn, "test_table", "id", 2
-	
+
 	defaultValue = +query.val "SELECT column_default FROM information_schema.columns WHERE table_name = 'test_table'"
 	test.strictEqual defaultValue, 2, "should change default value"
 	test.done()
@@ -121,17 +122,17 @@ exports.dropCol = (test) ->
 	tables.create.sync null, conn, "test_table", "id INT"
 	tables.addCol.sync null, conn, "test_table", "col INT"
 	tables.dropCol.sync null, conn, "test_table", "col"
-	
+
 	rows = query.all "SELECT column_name, data_type FROM information_schema.columns WHERE table_name='test_table'"
 	test.deepEqual rows, [
 		{column_name: 'id', data_type: 'integer'}
 	], "should remove specified column and not another"
-	
+
 	# multiple columns
 	tables.addCol.sync null, conn, "test_table", "col INT"
 	tables.addCol.sync null, conn, "test_table", "col2 TEXT"
 	tables.dropCol.sync null, conn, "test_table", "id", "col2"
-	
+
 	rows = query.all "SELECT column_name, data_type FROM information_schema.columns WHERE table_name='test_table'"
 	test.deepEqual rows, [
 		{column_name: 'col', data_type: 'integer'}
@@ -142,7 +143,7 @@ exports.dropCol = (test) ->
 exports.createIndex = (test) ->
 	tables.create.sync null, conn, 'test_table', 'id INTEGER'
 	tables.createIndex.sync null, conn, 'test_table', 'id'
-	
+
 	rows = query.all "SELECT * FROM pg_indexes WHERE tablename='test_table' AND indexname='test_table_id'"
 	test.strictEqual rows.length, 1, 'should create index'
 	test.done()

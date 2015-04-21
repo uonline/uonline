@@ -16,7 +16,7 @@
 
 sync = require 'sync'
 config = require '../config'
-math = require './math'
+math = require '../lib/math.coffee'
 transaction = require 'any-db-transaction'
 
 

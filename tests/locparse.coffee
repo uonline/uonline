@@ -14,11 +14,12 @@
 
 'use strict'
 
+requireCovered = require '../require-covered.coffee'
+parser = requireCovered __dirname, '../lib/locparse.coffee'
 fs = require 'fs'
 config = require '../config'
-parser = require '../lib-cov/locparse'
 anyDB = require 'any-db'
-mg = require '../lib-cov/migration'
+mg = require '../lib/migration'
 rmrf = require 'rmrf'
 copy = require('ncp').ncp
 copy.limit = 16 #concurrency limit

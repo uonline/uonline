@@ -14,10 +14,11 @@
 
 'use strict'
 
+requireCovered = require '../require-covered.coffee'
+mg = requireCovered __dirname, '../lib/migration.coffee'
 config = require '../config'
-tables = require '../lib-cov/tables'
-queryUtils = require '../lib-cov/query_utils'
-mg = require '../lib-cov/migration'
+tables = require '../lib/tables'
+queryUtils = require '../lib/query_utils'
 async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
@@ -137,20 +138,20 @@ exports.migrateOne =
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		ot = query.all 'SELECT column_name FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
-		
+
 		test.deepEqual [tt, ot], [
 				[{column_name: 'id'}]
 				[{column_name: 'id'}]
 			], 'should correctly perform first migration'
-		
-		
+
+
 		mg.migrateOne.sync null, conn, 1
 		mg.migrateOne.sync null, conn, 1
 		tt = query.all 'SELECT column_name FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		ot = query.all 'SELECT column_name FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
-		
+
 		test.deepEqual [tt, ot], [
 				[{column_name: 'col0'}, {column_name: 'col1'}, {column_name: 'id'}]
 				[{column_name: 'id'}]
@@ -163,7 +164,7 @@ exports.migrateOne =
 			[ 'test_table', 'rawsql', 'INSERT INTO test_table (id) VALUES (1), (2), (5)' ]
 		]]
 		mg.migrateOne.sync null, conn, 0
-		
+
 		rows = query.all 'SELECT * FROM test_table'
 		test.deepEqual rows, [
 			{id: 1}, {id: 2}, {id: 5}

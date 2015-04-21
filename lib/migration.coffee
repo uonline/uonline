@@ -15,7 +15,7 @@
 'use strict'
 
 sync = require 'sync'
-tables = require './tables'
+tables = require '../lib/tables.coffee'
 
 TABLE_NAME_COLUMN = 0
 FUNC_NAME_COLUMN = 1
@@ -210,7 +210,7 @@ migrationData = [
 		['characters', 'create',
 			'id SERIAL, PRIMARY KEY (id), '+
 			'name TEXT, '+
-			
+
 			'level INT DEFAULT 1, '+
 			'exp INT DEFAULT 0, '+
 			'health INT DEFAULT 1000, '+
@@ -224,12 +224,12 @@ migrationData = [
 			'accuracy INT DEFAULT 50, '+
 			'intelligence INT DEFAULT 50, '+
 			'initiative INT DEFAULT 50, '+
-			
+
 			'player INT DEFAULT NULL, '+
 			'location INT DEFAULT 1, '+
 			'autoinvolved_fm BOOLEAN DEFAULT FALSE, '+
 			'attack_chance INT DEFAULT -1']
-		
+
 		['characters', 'rawsql', # from uniusers
 			'INSERT INTO characters ('+
 				'name, level, exp, '+
@@ -261,7 +261,7 @@ migrationData = [
 		['uniusers', 'addCol', 'character_id INT']
 		['battle_participants', 'dropCol', 'kind']
 		['battle_participants', 'renameCol', 'id', 'character_id']
-		
+
 		['battles', 'rawsql', 'TRUNCATE battles']
 		['battle_participants', 'rawsql', 'TRUNCATE battle_participants']
 		['armor', 'rawsql', 'TRUNCATE armor']
