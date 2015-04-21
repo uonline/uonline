@@ -21,10 +21,7 @@ requireFromString = (src, filename) ->
     return m.exports
 
 module.exports = (dirname, filename) ->
-	path = require('path')
-	# read
-	filename = path.resolve(dirname, filename)
-	# cover
+	filename = require('path').resolve(dirname, filename)
 	cc = require 'coffee-coverage'
 	ci = new cc.CoverageInstrumentor()
 	tmp = ci.instrumentFile(filename)
