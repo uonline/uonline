@@ -23,7 +23,7 @@ requireFromString = (src, filename) ->
 	return m.exports
 
 module.exports = (dirname, filename) ->
-	#console.log ">JSC: #{require('util').inspect global._$jscoverage}"
+	#console.log "JSC: #{require('util').inspect global._$jscoverage}"
 	path = require('path')
 	filename = path.resolve(dirname, filename)
 	filename = path.relative(__dirname, filename)
