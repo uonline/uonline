@@ -167,7 +167,8 @@ module.exports = (grunt) ->
 
 		jscoverage_report:
 			options:
-				showOnly: /^lib[/]/
+				#showOnly: /^lib[/]/
+				showOnly: /.*/
 
 
 	# These plugins provide necessary tasks.
