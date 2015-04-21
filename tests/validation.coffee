@@ -14,7 +14,8 @@
 
 'use strict'
 
-validation = require '../lib-cov/validation'
+requireCovered = require '../require-covered.coffee'
+validation = requireCovered __dirname, '../lib/validation.coffee'
 
 
 exports.usernameIsValid = (test) ->
