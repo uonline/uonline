@@ -504,6 +504,41 @@ app.get '/action/deleteCharacter/:id',
 		response.redirect '/account/'
 
 
+# Yandex.Money notification handler.
+# Just a draft, not complete.
+app.post '/yandex', (request, response) ->
+	log = (x) ->
+		console.log chalk.blue "[billing] #{x}"
+	log 'Got signal.'
+	data = request.body
+	log require('util').inspect data
+	if process.env.YANDEX_SECRET?
+		# "notification_type&operation_id&amount&currency&datetime&sender&codepro&notification_secret&label"
+		challenge = [
+			data.notification_type
+			data.operation_id
+			data.amount
+			data.currency
+			data.datetime
+			data.sender
+			data.codepro
+			process.env.YANDEX_SECRET
+			data.label
+		].join '&'
+		# verify
+		hasher = require('crypto').createHash 'sha1'
+		hasher.update challenge
+		sha1 = hasher.digest 'hex'
+		if sha1 is data.sha1_hash
+			log 'Validation passed, processing.'
+			log 'Money, money, money.'
+		else
+			log 'Hash mismatch, aborting.'
+	else
+		log 'YANDEX_SECRET env is not set, aborting.'
+	response.send 'Queued.'
+
+
 # 404 handling
 app.get '*', (request, response) ->
 	throw new Error '404'
