@@ -24,9 +24,12 @@ requireFromString = (src, filename) ->
 
 module.exports = (dirname, filename) ->
 	#console.log ">JSC: #{require('util').inspect global._$jscoverage}"
-	filename = require('path').resolve(dirname, filename)
+	path = require('path')
+	filename = path.resolve(dirname, filename)
+	filename = path.relative(__dirname, filename)
+	#console.log "FILENAME: #{filename}"
 	cc = require 'coffee-coverage'
-	ci = new cc.CoverageInstrumentor()
+	ci = new cc.CoverageInstrumentor(path: 'relative')
 	tmp = ci.instrumentFile(filename)
 	#console.log "REQ: #{tmp.init}#{tmp.js}"
 	return requireFromString "#{tmp.init}#{tmp.js}"
