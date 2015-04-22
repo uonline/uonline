@@ -23,3 +23,8 @@ exports.emailIsValid = (email) ->
 exports.passwordIsValid = (pass) ->
 	!!pass and /^[-!@#$%^&*()_+A-Za-z0-9 ]{4,32}$/.test(pass)
 
+exports.characterNameIsValid = (name) ->
+	!!name and
+		not (/[a-zA-Z]/.test(name) and /[а-яА-ЯёЁ]/.test(name)) and  # no latin and cyrillic mix
+		/^[a-zA-Zа-яА-ЯёЁ][a-zA-Zа-яА-ЯёЁ -]{0,30}[a-zA-Zа-яА-ЯёЁ]$/.test(name) and  # letters, space, dash
+		not /[ -]{2,}/.test(name)  # no multiple non-word letters in a row

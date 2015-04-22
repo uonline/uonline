@@ -52,3 +52,28 @@ exports.passwordIsValid = (test) ->
 	test.strictEqual validation.passwordIsValid(undefined), false, 'not passed - not valid'
 	test.strictEqual validation.passwordIsValid(null), false, 'not passed - not valid'
 	test.done()
+
+
+exports.characterNameIsValid = (test) ->
+	[
+		['Sashok',        true, 'good name is ok']
+		['Нагибатор',     true, 'good name in russion is ok too']
+		['rm-rf',         true, 'dashes are allowed']
+		['ДитЯ СолныФкА', true, 'spaces are allowed']
+		['InfernaL_DeviL', false, 'no underscores']
+		['Qwerty Йцукен',  false, 'no latin and russian mix']
+		['rm -rf',         false, 'no multiple spaces/dashes in a row']
+		['R2D2',           false, 'no digits']
+		[' spaaace',       false, 'no front spaces']
+		['spaaace ',       false, 'no trailing spaces']
+		['-Infinity',      false, 'no front dashes']
+		['Rainbow-',       false, 'no trailing dashes']
+		['Ты блондинко йа одмин Тибя много йа адин'+
+		' Ты на капсе йа пацтулом Щолкну мышкой плюсадин', false, 'not too long']
+		['q',       false, 'not too short']
+		['',        false, 'empty name - invalid name']
+		[undefined, false, 'empty name - invalid name']
+		[null,      false, 'empty name - invalid name']
+	].forEach (x) ->
+		test.strictEqual validation.characterNameIsValid(x[0]), x[1], x[2]
+	test.done()
