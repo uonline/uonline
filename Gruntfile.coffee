@@ -123,6 +123,18 @@ module.exports = (grunt) ->
 			]
 			options: JSON.parse fs.readFileSync('.coffeelintrc', 'utf-8')
 
+		m1kc_coffee_jshint:
+			all: [
+				'*.coffee'
+				'lib/*.coffee'
+				'tests/*.coffee'
+				'grunt-custom-tasks/*.coffee'
+			]
+			options:
+				jshintOptions: ['node','browser','jquery']
+				withDefaults: true
+				globals: ['_$jscoverage']
+
 		coffeeCoverage:
 			options:
 				path: 'relative'
@@ -179,7 +191,7 @@ module.exports = (grunt) ->
 	grunt.loadTasks './grunt-custom-tasks/'
 
 	# Custom tasks.
-	grunt.registerTask 'check', ['mustcontain', 'coffeelint', 'jshint:all']
+	grunt.registerTask 'check', ['mustcontain', 'coffeelint', 'm1kc_coffee_jshint', 'jshint:all']
 	grunt.registerTask 'build', ['browserify', 'coffee', 'concat', 'uglify']
 	grunt.registerTask 'docs', ['codo']
 
