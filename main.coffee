@@ -397,7 +397,12 @@ app.post '/newCharacter/',
 		alreadyExists = lib.character.characterExists.sync(null, dbConnection, request.body.character_name)
 		
 		if nameIsValid and not alreadyExists
-			charid = lib.character.createCharacter.sync(null, dbConnection, request.uonline.user.id, request.body.character_name)
+			charid = lib.character.createCharacter.sync(
+				null
+				dbConnection
+				request.uonline.user.id
+				request.body.character_name
+			)
 			response.redirect '/character/'
 		else
 			options = request.uonline
