@@ -15,7 +15,7 @@
 'use strict'
 
 exports.usernameIsValid = (nick) ->
-	!!nick and /^[a-zA-Z0-9а-яА-ЯёЁ][a-zA-Z0-9а-яА-ЯёЁ -]{0,30}[a-zA-Z0-9а-яА-ЯёЁ]$/.test(nick)
+	!!nick and /^[a-zA-Z0-9а-яА-ЯёЁ][a-zA-Z0-9а-яА-ЯёЁ -_]{0,30}[a-zA-Z0-9а-яА-ЯёЁ]$/.test(nick)
 
 exports.emailIsValid = (email) ->
 	!!email and /^([a-z0-9_\.\-]{1,20})@([a-z0-9\.\-]{1,20})\.([a-z]{2,4})$/i.test(email)

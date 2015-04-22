@@ -28,7 +28,7 @@ exports.usernameIsValid = (test) ->
 	test.strictEqual validation.usernameIsValid('DROP TABLE `users`;'), false, 'no odd characters'
 	test.strictEqual validation.usernameIsValid(undefined), false, "missing name can't be valid"
 	test.strictEqual validation.usernameIsValid(null), false, "missing name can't be valid"
-	test.strictEqual validation.usernameIsValid('you_shall_not_pass'), false, 'should not pass underscores'
+	test.strictEqual validation.usernameIsValid('you_shall_not_pass_maybe'), true, 'should pass underscores'
 	test.strictEqual validation.usernameIsValid('   '), false, 'should not pass shit'
 	test.strictEqual validation.usernameIsValid('---'), false, 'should not pass shit'
 	test.strictEqual validation.usernameIsValid(' Max '), false, 'should not pass shit'
