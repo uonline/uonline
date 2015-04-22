@@ -35,26 +35,6 @@ insert = (dbName, fields) ->
 	query "INSERT INTO #{dbName} (#{k for k of fields}) VALUES (#{values.map (_,i) -> '$'+(i+1)})", values
 
 
-usedTables = [
-	'revision'
-	'locations'
-	'uniusers'
-	'areas'
-	'monsters'
-	'monster_prototypes'
-	'battles'
-	'battle_participants'
-	'armor'
-	'armor_prototypes'
-	'characters'
-]
-
-usedCustomTypes = [
-	'creature_kind'
-	'permission_kind'
-]
-
-
 exports.setUp = (->
 	unless conn?
 		try
@@ -842,79 +822,6 @@ exports.uninvolve = (test) ->
 	test.done()
 
 
-exports.createCharacter = (test) ->
-	clearTables 'uniusers', 'characters', 'locations'
-	insert 'locations', id: 1, initial: 0
-	insert 'locations', id: 2, initial: 1
-	insert 'uniusers', id: 1
-
-	charid = game.createCharacter(conn, 1, 'My First Character')
-	char = query.row "SELECT * FROM characters"
-	user = query.row "SELECT * FROM uniusers"
-
-	test.strictEqual user.character_id, charid, "should switch user's character to new character"
-	test.strictEqual charid, char.id, 'should return new character id'
-	test.strictEqual char.name, 'My First Character', 'should create character with specified name'
-	test.strictEqual char.location, 2, 'should create character in initial location'
-	test.done()
-
-
-exports.deleteCharacter = (test) ->
-	clearTables 'uniusers', 'characters', 'armor'
-	insert 'characters', id: 1, player: 2
-	insert 'characters', id: 2, player: 1
-	insert 'characters', id: 3, player: 1
-	insert 'characters', id: 4, player: 1
-	insert 'characters', id: 5, player: 3
-	insert 'uniusers', id: 1, character_id: 2
-	[1,2,2,3,4,4].forEach (c) -> insert 'armor', owner: c
-
-	armorOwners = -> query.all("SELECT owner FROM armor ORDER BY owner").map 'owner'
-
-	# deleting inactive character
-	ok = game.deleteCharacter conn, 1, 4
-	user = query.row "SELECT * FROM uniusers"
-	chars = query.all "SELECT id FROM characters WHERE player = 1 ORDER BY id"
-
-	test.strictEqual ok, true, 'should return true if deleted'
-	test.deepEqual chars, [{id:2}, {id:3}], 'should delete inactive character'
-	test.strictEqual user.character_id, 2, 'should not switch character'
-	test.deepEqual armorOwners(), [1,2,2,3], "should delete character's armor"
-
-	# deleting current character
-	ok = game.deleteCharacter conn, 1, 2
-	user = query.row "SELECT * FROM uniusers"
-	chars = query.all "SELECT id FROM characters WHERE player = 1 ORDER BY id"
-
-	test.strictEqual ok, true, 'should return true if deleted'
-	test.deepEqual chars, [{id:3}], 'should delete active character'
-	test.strictEqual user.character_id, null, "should clear user's character if deleted was active"
-	test.deepEqual armorOwners(), [1,3], "should delete character's armor"
-
-	# deleting character of other user
-	ok = game.deleteCharacter conn, 1, 5
-	count = +query.val "SELECT count(*) FROM characters"
-
-	test.strictEqual ok, false, "should return false if trying to delete character of other user"
-	test.strictEqual count, 3, 'should not delete character'
-	test.deepEqual armorOwners(), [1,3], "should not delete armor"
-
-	# deleting character while in battle
-	clearTables 'uniusers', 'characters', 'battle_participants', 'armor'
-	insert 'characters', id: 1, player: 2
-	insert 'uniusers', id: 2, character_id: 3
-	insert 'battle_participants', character_id: 1
-	insert 'armor', owner: 1
-
-	ok = game.deleteCharacter conn, 2, 1
-	count = +query.val "SELECT count(*) FROM characters"
-
-	test.strictEqual ok, false, 'should return false if trying to delete in-battle character'
-	test.strictEqual count, 1, 'should not delete character'
-	test.deepEqual armorOwners(), [1], "should not delete armor"
-	test.done()
-
-
 exports.getCharacter =
 	testNoErrors: (test) ->
 		data =
@@ -990,35 +897,6 @@ exports.getCharacters = (test) ->
 		{id: 2, name: 'Ybivator'}
 	], 'should return some characters info'
 	test.done()
-
-
-exports.switchCharacter =
-	testNoErrors: (test) ->
-		clearTables 'uniusers', 'characters'
-		insert 'uniusers', id: 1, character_id: 10
-		insert 'characters', id: 2, player: 1
-
-		game.switchCharacter(conn, 1, 2)
-		charid = query.val "SELECT character_id FROM uniusers"
-		test.strictEqual charid, 2, 'should change character_id'
-		test.done()
-
-	testErrors: (test) ->
-		clearTables 'uniusers', 'characters'
-		test.throws(
-			-> game.switchCharacter(conn, 1, 2)
-			Error
-			'should throw if user does not exist'
-		)
-
-		insert 'uniusers', id: 1
-		insert 'characters', id: 1, player: 1
-		test.throws(
-			-> game.switchCharacter(conn, 1, 2)
-			Error
-			'should throw if user does not have such character'
-		)
-		test.done()
 
 
 exports.getCharacterArmor = (test) ->

@@ -533,48 +533,6 @@ exports.uninvolve = (dbConnection, character_id, callback) ->
 	dbConnection.query "UPDATE characters SET autoinvolved_fm = FALSE WHERE id = $1", [character_id], callback
 
 
-# Creates new character for user.
-# Returns id of new character.
-exports.createCharacter = ((dbConnection, user_id, name) ->
-	tx = transaction dbConnection
-	charid = tx.query.sync(tx,
-		"INSERT INTO characters (name, player, location) "+
-		"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1)) RETURNING id",
-		[ name, user_id ]).rows[0].id
-	tx.query.sync(tx,
-		"UPDATE uniusers SET character_id = $1 WHERE id = $2",
-		[ charid, user_id ])
-	tx.commit.sync(tx)
-	return charid
-).async()
-
-
-exports.deleteCharacter = ((dbConnection, user_id, character_id) ->
-	#TODO: armor? other items?
-	tx = transaction dbConnection
-
-	tx.query.sync(tx,
-		"UPDATE uniusers SET character_id = NULL WHERE id = $1 AND character_id = $2",
-		[ user_id, character_id ])
-
-	tx.query.sync(tx,
-		"DELETE FROM armor WHERE owner = $1",
-		[ character_id ])
-
-	res = tx.query.sync(tx,
-		"DELETE FROM characters WHERE id = $1 AND player = $2 "+
-			"AND NOT EXISTS(SELECT * FROM battle_participants WHERE character_id = $1)", #must not be in battle
-		[ character_id, user_id ])
-
-	if res.rowCount == 0
-		tx.rollback.sync(tx)
-		return false
-	else
-		tx.commit.sync(tx)
-		return true
-).async()
-
-
 # Returns character's attributes.
 exports.getCharacter = ((dbConnection, character_id_or_name) ->
 	field = if typeof(character_id_or_name) == 'number' then 'id' else 'name'
@@ -600,21 +558,6 @@ exports.getCharacter = ((dbConnection, character_id_or_name) ->
 exports.getCharacters = ((dbConnection, user_id) ->
 	dbConnection.query.sync(dbConnection,
 		"SELECT id, name FROM characters WHERE player = $1 ORDER BY id", [ user_id ]).rows
-).async()
-
-
-# Switches user's character.
-exports.switchCharacter = ((dbConnection, user_id, new_character_id) ->
-	res = dbConnection.query.sync(dbConnection,
-		"UPDATE uniusers SET character_id = $1 "+
-		"WHERE id = $2 AND "+
-			"EXISTS(SELECT * FROM characters WHERE id = $1 AND player = $2)",
-		[ new_character_id, user_id ])
-
-	if res.rowCount == 0
-		throw new Error("User ##{user_id} doesn't have character ##{new_character_id}")
-
-	return
 ).async()
 
 
