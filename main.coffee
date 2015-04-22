@@ -393,12 +393,19 @@ app.post '/newCharacter/',
 	mustBeAuthed,
 	setInstance('new_character'),
 	(request, response) ->
-		nameIsValid = true
-		if nameIsValid
-			charid = lib.game.createCharacter.sync(null, dbConnection, request.uonline.user.id, request.body.character_name)
+		nameIsValid = lib.validation.characterNameIsValid(request.body.character_name)
+		alreadyExists = lib.character.characterExists.sync(null, dbConnection, request.body.character_name)
+		
+		if nameIsValid and not alreadyExists
+			charid = lib.character.createCharacter.sync(null, dbConnection, request.uonline.user.id, request.body.character_name)
 			response.redirect '/character/'
 		else
-			response.render 'new_character', request.uonline
+			options = request.uonline
+			options.error = true
+			options.invalidName = !nameIsValid
+			options.nameIsBusy = alreadyExists
+			options.character_name = request.body.character_name
+			response.render 'new_character', options
 
 
 app.get '/game/',
@@ -455,6 +462,13 @@ app.get '/ajax/isNickBusy/:nick',
 			isNickBusy: lib.user.userExists.sync null, dbConnection, request.params.nick
 
 
+app.get '/ajax/isCharacterNameBusy/:name',
+	(request, response) ->
+		response.json
+			name: request.params.name
+			isCharacterNameBusy: lib.character.characterExists.sync null, dbConnection, request.params.name
+
+
 app.get '/ajax/cheatFixAll',
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
@@ -492,14 +506,14 @@ app.get '/action/equip/:id',
 app.get '/action/switchCharacter/:id',
 	mustBeAuthed,
 	(request, response) ->
-		lib.game.switchCharacter.sync null, dbConnection, request.uonline.user.id, request.params.id
+		lib.character.switchCharacter.sync null, dbConnection, request.uonline.user.id, request.params.id
 		response.redirect 'back'
 
 
 app.get '/action/deleteCharacter/:id',
 	mustBeAuthed,
 	(request, response) ->
-		lib.game.deleteCharacter.sync null, dbConnection, request.uonline.user.id, request.params.id
+		lib.character.deleteCharacter.sync null, dbConnection, request.uonline.user.id, request.params.id
 		response.redirect '/account/'
 
 
