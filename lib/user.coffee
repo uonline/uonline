@@ -17,7 +17,6 @@
 config = require '../config'
 
 crypto = require 'crypto'
-async = require 'async'
 sync = require 'sync'
 transaction = require 'any-db-transaction'
 
@@ -186,15 +185,11 @@ exports.accessGranted = ((dbConnection, username, password, callback) ->
 
 # Create a new session for user with given username.
 # Returns a string with sessid, or an error.
-exports.createSession = (dbConnection, username, callback) ->
-	async.waterfall [
-		(innerCallback) ->
-			exports.generateSessId dbConnection, config.sessionLength, innerCallback
-		(sessid, innerCallback) ->
-			dbConnection.query 'UPDATE uniusers SET sess_time = NOW(), sessid = $1 '+
-				'WHERE lower(username) = lower($2)',
-				[sessid, username],
-				(error, result) ->
-					innerCallback error, result, sessid
-	], (error, result, sessid) ->
-		callback error, sessid
+exports.createSession = ((dbConnection, username) ->
+	sessid = exports.generateSessId.sync null, dbConnection, config.sessionLength
+	dbConnection.query.sync dbConnection,
+		'UPDATE uniusers SET sess_time = NOW(), sessid = $1 '+
+		'WHERE lower(username) = lower($2)',
+		[ sessid, username ]
+	return sessid
+).async()

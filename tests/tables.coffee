@@ -17,7 +17,6 @@
 requireCovered = require '../require-covered.coffee'
 tables = requireCovered __dirname, '../lib/tables.coffee'
 config = require '../config'
-async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
 queryUtils = require '../lib/query_utils'

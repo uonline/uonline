@@ -19,7 +19,6 @@ mg = requireCovered __dirname, '../lib/migration.coffee'
 config = require '../config'
 tables = require '../lib/tables'
 queryUtils = require '../lib/query_utils'
-async = require 'async'
 sync = require 'sync'
 anyDB = require 'any-db'
 
@@ -76,59 +75,47 @@ exports.tearDown = ( ->
 
 exports.getCurrentRevision =
 	'usual': (test) ->
-		async.series [
-			(callback) ->
-				mg.getCurrentRevision conn, callback
-			(callback) ->
-				conn.query 'CREATE TABLE revision (revision INT)', [], callback
-			(callback) ->
-				conn.query 'INSERT INTO revision VALUES (945)', [], callback
-			(callback) ->
-				mg.getCurrentRevision conn, callback
-		], (error, result) ->
-			test.ifError error
-			test.strictEqual result[0], -1, 'should return -1 if revision table is not created'
-			test.strictEqual result[3], 945, 'should return current revision number'
-			test.done()
+		rev = mg.getCurrentRevision.sync null, conn
+		test.strictEqual rev, -1, 'should return -1 if revision table is not created'
+		
+		query 'CREATE TABLE revision (revision INT)'
+		query 'INSERT INTO revision VALUES (945)'
+		rev = mg.getCurrentRevision.sync null, conn
+		test.strictEqual rev, 945, 'should return current revision number'
+		test.done()
 
 	'exceptions': (test) ->
-		async.parallel [
-			(callback) ->
-				mg.getCurrentRevision 'nonsense', callback
-		], (error, result) ->
-			test.ok !!error, 'should fail on exceptions'
-			test.done()
+		test.throws(
+			-> mg.getCurrentRevision.sync null, 'nonsense'
+			Error
+			'should fail on exceptions'
+		)
+		test.done()
 
 	'connection errors': (test) ->
 		fakeConn =
 			query: (text, args, callback) ->
-				callback 'THE_VERY_STRANGE_ERROR'
-		async.parallel [
-			(callback) ->
-				mg.getCurrentRevision fakeConn, callback
-		], (error, result) ->
-			test.ok !!error, 'should fail on connection errors'
-			test.done()
+				callback new Error('THE_VERY_STRANGE_ERROR')
+		test.throws(
+			-> mg.getCurrentRevision.sync null, fakeConn
+			Error
+			'should fail on connection errors'
+		)
+		test.done()
 
 
 exports.setRevision = (test) ->
-	async.series [
-		(callback) ->
-			mg.setRevision conn, 1, callback
-		(callback) ->
-			tables.tableExists conn, 'revision', callback
-		(callback) ->
-			mg.getCurrentRevision conn, callback
-		(callback) ->
-			mg.setRevision conn, 2, callback
-		(callback) ->
-			mg.getCurrentRevision conn, callback
-	], (error, result) ->
-		test.ifError error
-		test.ok result[1], 'table should have been created'
-		test.strictEqual result[2], 1, 'revision should have been set'
-		test.strictEqual result[4], 2, 'revision should have been updated'
-		test.done()
+	mg.setRevision.sync null, conn, 1
+	exists = tables.tableExists.sync null, conn, 'revision'
+	test.ok exists, 'table should have been created'
+	
+	rev = mg.getCurrentRevision.sync null, conn
+	test.strictEqual rev, 1, 'revision should have been set'
+	
+	mg.setRevision.sync null, conn, 2
+	rev = mg.getCurrentRevision.sync null, conn
+	test.strictEqual rev, 2, 'revision should have been updated'
+	test.done()
 
 
 exports.migrateOne =

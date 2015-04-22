@@ -14,8 +14,6 @@
 
 'use strict'
 
-async = require 'async'
-
 
 exports.tableExists = (dbConnection, name, callback) ->
 	dbConnection.query 'SELECT count(*) AS result FROM information_schema.tables WHERE table_name = $1',

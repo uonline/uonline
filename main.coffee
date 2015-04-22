@@ -27,7 +27,6 @@ lib = require "#{__dirname}/lib.coffee"
 chalk = require 'chalk'
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
-async = require 'async'
 express = require 'express'
 cachify = require 'connect-cachify'
 sync = require 'sync'

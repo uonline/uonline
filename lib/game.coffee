@@ -605,7 +605,6 @@ exports.getCharacters = ((dbConnection, user_id) ->
 
 # Switches user's character.
 exports.switchCharacter = ((dbConnection, user_id, new_character_id) ->
-	#dbConnection.query.sync(dbConnection, "SELECT 1 WHERE 1 = 2")
 	res = dbConnection.query.sync(dbConnection,
 		"UPDATE uniusers SET character_id = $1 "+
 		"WHERE id = $2 AND "+
@@ -613,7 +612,7 @@ exports.switchCharacter = ((dbConnection, user_id, new_character_id) ->
 		[ new_character_id, user_id ])
 
 	if res.rowCount == 0
-		throw new Error("User ##{qwe} doesn't have character ##{new_character_id}")
+		throw new Error("User ##{user_id} doesn't have character ##{new_character_id}")
 
 	return
 ).async()
