@@ -18,6 +18,15 @@ sync = require 'sync'
 transaction = require 'any-db-transaction'
 
 
+# Check if a character with the given name exists.
+# Returns true or false, or an error.
+exports.characterExists = (dbConnection, name, callback) ->
+	dbConnection.query 'SELECT count(*) AS result FROM characters WHERE lower(name) = lower($1)',
+		[ name ],
+		(error, result) ->
+			callback error, error or (result.rows[0].result > 0)
+
+
 # Creates new character for user.
 # Returns id of new character.
 exports.createCharacter = ((dbConnection, user_id, name) ->
