@@ -14,63 +14,70 @@
 
 'use strict'
 
+test = require 'unit.js'
 requireCovered = require '../require-covered.coffee'
-tables = requireCovered __dirname, '../lib/tables.coffee'
+sync = require 'sync'
 config = require '../config'
 async = require 'async'
-sync = require 'sync'
 anyDB = require 'any-db'
 queryUtils = require '../lib/query_utils'
+tables = requireCovered __dirname, '../lib/tables.coffee'
 conn = null
 query = null
 
+
+mochasync = (f) ->
+	(done) ->
+		sync ->
+			try
+				f()
+				done()
+			catch ex
+				done(ex)
 
 cleanup = ->
 	query 'DROP TABLE IF EXISTS test_table, akira'
 	query 'DROP TYPE IF EXISTS test_enum'
 
-exports.setUp = (->
+
+exports.tables = {}
+
+exports.tables.before = mochasync ->
 	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
 	query = queryUtils.getFor conn
 	cleanup()
-).async()
 
 
-exports.tearDown = (->
+exports.tables.after = mochasync ->
 	cleanup()
 	conn.end()
-).async()
 
 
-exports.tableExists = (test) ->
+exports.tables.tableExists = mochasync ->
 	query 'CREATE TABLE IF NOT EXISTS test_table (id INT NOT NULL)'
-	test.strictEqual tables.tableExists.sync(null, conn, 'test_table'), true,
-		'should return true if table exists'
+	test.value( tables.tableExists.sync(null, conn, 'test_table') ).is true
 	query 'DROP TABLE test_table'
-	test.strictEqual tables.tableExists.sync(null, conn, 'test_table'), false,
-		'should return false if table does not exist'
-	test.done()
+	test.value( tables.tableExists.sync(null, conn, 'test_table') ).is false
 
 
-exports.create = (test) ->
+exports.tables.create = mochasync ->
 	tables.create.sync null, conn, 'akira', 'id INT'
-	test.strictEqual tables.tableExists.sync(null, conn, 'akira'), true, 'should create table'
+	test.value( tables.tableExists.sync(null, conn, 'akira') ).is true  # should create table
 
 	col_name = query.val "SELECT column_name AS result FROM information_schema.columns WHERE table_name = 'akira'"
-	test.strictEqual col_name, 'id', 'and its columns'
-	test.done()
+	test.string( col_name ).is 'id'  # and its columns
 
 
-exports.addCol = (test) ->
+exports.tables.addCol = mochasync ->
 	tables.create.sync null, conn, 'test_table', 'id INT'
 	tables.addCol.sync null, conn, 'test_table', 'zoich INT'
 
 	rows = query.all "SELECT column_name AS result FROM information_schema.columns WHERE table_name = 'test_table'"
-	test.strictEqual rows.length, 2, 'should create a new column'
-	test.done()
+	test.number( rows.length ).is 2  # should create a new column
 
 
-exports.renameCol =
+###
+exports.tables.renameCol =
 	testNoErrors: (test) ->
 		tables.create.sync null, conn, "test_table", "id INTEGER"
 		tables.renameCol.sync null, conn, "test_table", "id", "col"
@@ -99,7 +106,7 @@ exports.renameCol =
 		test.done()
 
 
-exports.changeCol = (test) ->
+exports.tables.changeCol = (test) ->
 	tables.create.sync null, conn, "test_table", "id SMALLINT"
 	tables.changeCol.sync null, conn, "test_table", "id", "INTEGER"
 
@@ -108,7 +115,7 @@ exports.changeCol = (test) ->
 	test.done()
 
 
-exports.changeDefault = (test) ->
+exports.tables.changeDefault = (test) ->
 	tables.create.sync null, conn, "test_table", "id SMALLINT DEFAULT 1"
 	tables.changeDefault.sync null, conn, "test_table", "id", 2
 
@@ -117,7 +124,7 @@ exports.changeDefault = (test) ->
 	test.done()
 
 
-exports.dropCol = (test) ->
+exports.tables.dropCol = (test) ->
 	# single column
 	tables.create.sync null, conn, "test_table", "id INT"
 	tables.addCol.sync null, conn, "test_table", "col INT"
@@ -140,7 +147,7 @@ exports.dropCol = (test) ->
 	test.done()
 
 
-exports.createIndex = (test) ->
+exports.tables.createIndex = (test) ->
 	tables.create.sync null, conn, 'test_table', 'id INTEGER'
 	tables.createIndex.sync null, conn, 'test_table', 'id'
 
@@ -149,7 +156,7 @@ exports.createIndex = (test) ->
 	test.done()
 
 
-exports.createEnum = (test) -> sync ->
+exports.tables.createEnum = (test) -> sync ->
 	tables.createEnum.sync null, conn, 'test_enum', "'bla', 'blabla', 'for the blah!'"
 
 	enums = query.all "SELECT * FROM pg_type WHERE typname='test_enum'"
@@ -160,3 +167,4 @@ exports.createEnum = (test) -> sync ->
 	test.strictEqual values, '{bla,blabla,"for the blah!"}', 'should create correct enum'
 	test.done()
 
+###

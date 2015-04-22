@@ -31,6 +31,7 @@ source = require 'vinyl-source-stream'
 buffer = require 'vinyl-buffer'
 require('gulp-grunt')(gulp)
 notify = require 'gulp-notify'
+mocha = require 'gulp-mocha'
 console.timeEnd 'Loading deps'
 
 
@@ -87,3 +88,17 @@ gulp.task 'build-and-notify', ['build'], ->
 
 gulp.task 'watch', ['build'], ->
 	gulp.watch ['./browser.coffee', './lib/validation.coffee'], ['build-and-notify']
+
+
+gulp.task 'mocha', ->
+	return gulp
+		.src 'tests_new/*'
+		.pipe mocha(ui: 'exports', reporter: 'spec')
+
+gulp.task 'coverage', ['mocha'], ->
+	pseudogrunt =
+		registerTask: (a,b,c) ->
+			c.call({options: -> {}})
+	require('./grunt-custom-tasks/jscoverage_report.coffee')(pseudogrunt)
+
+gulp.task 'test', ['mocha', 'coverage']

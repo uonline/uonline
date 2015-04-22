@@ -14,10 +14,14 @@
 
 'use strict'
 
+test = require 'unit.js'
 requireCovered = require '../require-covered.coffee'
 math = requireCovered __dirname, '../lib/math.coffee'
 
-exports.ap = (test) ->
-	test.strictEqual math.ap(1,2,3), 5, 'should return n-th number in arithmetical progression'
-	test.strictEqual math.ap(3,6,9), 153, 'should return n-th number in arithmetical progression'
-	test.done()
+exports.math = {}
+
+exports.math.ap = ->
+	# should return n-th number in arithmetical progression
+	test.number( math.ap(1,2,3) ).is 5
+	test.number( math.ap(3,6,9) ).is 153
+	return
