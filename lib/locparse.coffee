@@ -295,7 +295,7 @@ processMap = (filename, areaName, areaLabel, log) ->
 
 			location.actions[target] = name
 
-		else if imageDescr=line.match /!\[(.+)\]\((.+)\)/
+		else if (imageDescr=line.match /!\[(.+)\]\((.+)\)/ )?
 			unless location?
 				log.error i, 'E14', "images are only avaliable for locations" # error 14
 				continue
