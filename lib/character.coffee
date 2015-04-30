@@ -30,11 +30,25 @@ exports.characterExists = (dbConnection, name, callback) ->
 # Creates new character for user.
 # Returns id of new character.
 exports.createCharacter = ((dbConnection, user_id, name) ->
-	tx = transaction dbConnection
-	charid = tx.query.sync(tx,
-		"INSERT INTO characters (name, player, location) "+
-		"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1)) RETURNING id",
-		[ name, user_id ]).rows[0].id
+	# да что за фигня опять тут происходит?!
+	# https://github.com/grncdr/node-any-db-transaction
+	# > by default any queries that error during a transaction will cause an automatic rollback
+	# я уж не знаю, что и куда оно там АВТОМАТИЧЕСКИ откатывает, но
+	# без второго параметра в transaction() 'tx.rollback.sync tx' дальше ВИСНЕТ
+	# если и rollback убрать, в следующий раз из transaction() вывалится
+	#   Fatal error: current transaction is aborted, commands ignored until end of transaction block
+	tx = transaction dbConnection, autoRollback: false
+	try
+		charid = tx.query.sync(tx,
+			"INSERT INTO characters (name, player, location) "+
+			"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1)) RETURNING id",
+			[ name, user_id ]).rows[0].id
+	catch ex
+		tx.rollback.sync tx
+		if (ex.constraint == 'players_character_unique_name_index')
+			throw new Error('character already exists')
+		throw ex
+
 	tx.query.sync(tx,
 		"UPDATE uniusers SET character_id = $1 WHERE id = $2",
 		[ charid, user_id ])

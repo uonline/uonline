@@ -289,6 +289,11 @@ migrationData = [
 		['characters', 'addCol', 'energy_max INT DEFAULT 220']
 		['characters', 'rawsql', 'UPDATE characters SET energy_max = energy']
 	]
+	[
+		['characters', 'rawsql',
+			'CREATE UNIQUE INDEX players_character_unique_name_index '+
+			'ON characters (name) WHERE player IS NOT NULL']
+	]
 ]
 
 exports.getMigrationsData = ->

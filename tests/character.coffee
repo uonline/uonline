@@ -74,6 +74,22 @@ exports.createCharacter = (test) ->
 	test.strictEqual charid, char.id, 'should return new character id'
 	test.strictEqual char.name, 'My First Character', 'should create character with specified name'
 	test.strictEqual char.location, 2, 'should create character in initial location'
+	
+	ex = null
+	try
+		character.createCharacter(conn, 1, 'My First Character')
+	catch _ex
+		ex = _ex
+	test.notStrictEqual ex, null, 'should throw exception if such name has been taken'
+	test.strictEqual ex.message, 'character already exists',
+		'should throw CORRECT exception if such name has been taken'
+	
+	query "UPDATE locations SET initial = 1"
+	test.throws(
+		-> character.createCharacter(conn, null, null)
+		Error
+		'should throw if something bad happened'
+	)
 	test.done()
 
 
