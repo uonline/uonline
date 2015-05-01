@@ -45,10 +45,6 @@ exports.createCharacter = ((dbConnection, user_id, name) ->
 			[ name, user_id ]).rows[0].id
 	catch ex
 		tx.rollback.sync tx
-		console.log(ex)
-		console.log(ex.constraint)
-		console.log(ex.constraint == 'players_character_unique_name_index')
-		console.log(ex.constraint is 'players_character_unique_name_index')
 		if (ex.constraint is 'players_character_unique_name_index')
 			throw new Error('character already exists')
 		throw ex
