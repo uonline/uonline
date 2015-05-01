@@ -42,6 +42,30 @@ $(document).ready ->
 		if confirm('Вы уверены?') == false
 			event.preventDefault()
 		return
+	
+	# Common func for user and character name checking
+	nameStatusHelper = (formGroupSelector, feedbackSelector) ->
+		formGroup = $(formGroupSelector)
+		feedback = $(feedbackSelector)
+		(state, hint) ->
+			$(formGroup).removeClass 'has-error has-success'
+			$(feedback).removeClass 'glyphicon-ok glyphicon-remove glyphicon-refresh'
+			$(feedback).hide()
+			# state
+			if state is 'checking'
+				$(feedback).addClass 'glyphicon-refresh'
+				$(feedback).show()
+			if state is 'ok'
+				$(feedback).addClass 'glyphicon-ok'
+				$(feedback).show()
+				$(formGroup).addClass 'has-success'
+			if state is 'error'
+				$(feedback).addClass 'glyphicon-remove'
+				$(feedback).show()
+				$(formGroup).addClass 'has-error'
+			# hint
+			if not hint? then hint = ''
+			$(feedback).attr('title', hint)
 
 	# Registration page stuff
 
@@ -70,27 +94,8 @@ $(document).ready ->
 		else
 			$(passwordFormGroup).removeClass 'has-success'
 			$(passwordFormGroup).addClass 'has-error'
-	# Username validation helper function
-	usernameStatus = (state, hint) ->
-		$(usernameFormGroup).removeClass 'has-error has-success'
-		$(usernameFeedback).removeClass 'glyphicon-ok glyphicon-remove glyphicon-refresh'
-		$(usernameFeedback).hide()
-		# state
-		if state is 'checking'
-			$(usernameFeedback).addClass 'glyphicon-refresh'
-			$(usernameFeedback).show()
-		if state is 'ok'
-			$(usernameFeedback).addClass 'glyphicon-ok'
-			$(usernameFeedback).show()
-			$(usernameFormGroup).addClass 'has-success'
-		if state is 'error'
-			$(usernameFeedback).addClass 'glyphicon-remove'
-			$(usernameFeedback).show()
-			$(usernameFormGroup).addClass 'has-error'
-		# hint
-		if not hint? then hint = ''
-		$(usernameFeedback).attr('title', hint)
 	# Username validation
+	usernameStatus = nameStatusHelper(usernameFormGroup, usernameFeedback)
 	$("body").on 'change', usernameField, ->
 		if validation.usernameIsValid($(usernameField).val())
 			usernameStatus 'checking', 'Проверяем, свободен ли логин'
@@ -104,3 +109,20 @@ $(document).ready ->
 					usernameStatus 'ok', 'Логин свободен'
 		else
 			usernameStatus 'error', 'Логин неправильный'
+	
+	# Character name validation
+	charnameStatus = nameStatusHelper('#character-name-form-group', '#character-name-feedback')
+	$("body").on 'change', '#character-name', ->
+		name = this.value
+		if validation.characterNameIsValid(name)
+			charnameStatus 'checking', 'Проверяем, свободно ли имя'
+			$.getJSON "/ajax/isCharacterNameBusy/#{encodeURIComponent(name)}", (data) ->
+				if data.name != name
+					charnameStatus 'empty'
+					return
+				if data.isCharacterNameBusy
+					charnameStatus 'error', 'Такое имя уже занято'
+				else
+					charnameStatus 'ok', 'Имя свободно'
+		else
+			charnameStatus 'error', 'Имя неправильное'
