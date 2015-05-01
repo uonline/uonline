@@ -54,6 +54,12 @@ isListItem = (line, lineNumber, log) ->
 	return false
 
 
+# Check if a given string is a link definition.
+# @return [Boolean]
+isLinkLine = (line, lineNumber, log) ->
+	return !!line.match /!\[.+\]\(.+\)/
+
+
 # Check if a given string is empty or contains only whitespaces.
 # @return [Boolean]
 isEmpty = (line, lineNumber, log) ->
@@ -295,14 +301,14 @@ processMap = (filename, areaName, areaLabel, log) ->
 
 			location.actions[target] = name
 
-		else if (imageDescr=line.match /!\[(.+)\]\((.+)\)/ )?
+		else if isLinkLine(line, i, log) # picture link, for now
 			unless location?
 				log.error i, 'E14', "images are only avaliable for locations" # error 14
 				continue
 
 			log.error i, 'E9', "location's image has been doubled" if location.picture? # error 9
 
-			[_, path, path2] = imageDescr
+			[_, path, path2] = line.match /!\[(.+)\]\((.+)\)/
 			if path isnt path2
 				log.error i, 'E10', "image paths are not equal: '#{path}', '#{path2}'" # error 10
 
@@ -358,6 +364,7 @@ exports.makeId = makeId
 exports.isAreaLabel = isAreaLabel
 exports.isLocationLabel = isLocationLabel
 exports.isListItem = isListItem
+exports.isLinkLine = isLinkLine
 exports.isEmpty = isEmpty
 exports.checkSpaces = checkSpaces
 exports.checkPropUniqueness = checkPropUniqueness

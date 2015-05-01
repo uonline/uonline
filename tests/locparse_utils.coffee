@@ -98,6 +98,12 @@ exports.isListItem_test = (test) ->
 	test.done()
 
 
+exports.isLinkLine = (test) ->
+	test.ok parser.isLinkLine('![The Image](/location.jpg)', 0, null), 'should detect link'
+	test.ok !parser.isLinkLine('Just line.', 0, null), 'should skip simple lines'
+	test.done()
+
+
 exports.isEmpty_test = (test) ->
 	log = new Log
 
