@@ -1,8 +1,10 @@
 language: node_js
 node_js:
-  - "0.10"
+  - "0.12"
 services:
   - postgresql
+addons:
+  postgresql: "9.3"
 env:
   - DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test"
 before_script:
