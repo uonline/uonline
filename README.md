@@ -42,6 +42,14 @@ How to run
 
 If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`. If you need to restart server after every change in code — `make monitor`.
 
+The following environment variables are recognized:
+
+* `IP`, `PORT` — IP and port to listen;
+* `DATABASE_URL`, `DATABASE_URL_TEST` — database credentials;
+* `SQLPROF`=`true` — show SQL timings in console (doesn't work with transactions);
+* `NOCSP` — don't output CSP header;
+* `NEW_RELIC_LICENSE_KEY` — you don't need this.
+
 
 Grunt hints
 -----------
@@ -58,6 +66,8 @@ Useful options:
 
 * `grunt test --single health-check.coffee` — run only one testsuite;
 * `grunt --stack` — show stack trace on error.
+
+Also, there is experimental Gulp support. Try `gulp build` and `gulp watch`.
 
 
 Programmers' guidelines
