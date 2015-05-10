@@ -45,27 +45,29 @@ $(document).ready ->
 	
 	# Common func for user and character name checking
 	nameStatusHelper = (formGroupSelector, feedbackSelector) ->
-		formGroup = $(formGroupSelector)
-		feedback = $(feedbackSelector)
 		(state, hint) ->
-			$(formGroup).removeClass 'has-error has-success'
-			$(feedback).removeClass 'glyphicon-ok glyphicon-remove glyphicon-refresh'
-			$(feedback).hide()
+			# init
+			formGroup = $(formGroupSelector)
+			feedback = $(feedbackSelector)
+			# cleanup
+			formGroup.removeClass 'has-error has-success'
+			feedback.removeClass 'glyphicon-ok glyphicon-remove glyphicon-refresh'
+			feedback.hide()
 			# state
 			if state is 'checking'
-				$(feedback).addClass 'glyphicon-refresh'
-				$(feedback).show()
+				feedback.addClass 'glyphicon-refresh'
+				feedback.show()
 			if state is 'ok'
-				$(feedback).addClass 'glyphicon-ok'
-				$(feedback).show()
-				$(formGroup).addClass 'has-success'
+				feedback.addClass 'glyphicon-ok'
+				feedback.show()
+				formGroup.addClass 'has-success'
 			if state is 'error'
-				$(feedback).addClass 'glyphicon-remove'
-				$(feedback).show()
-				$(formGroup).addClass 'has-error'
+				feedback.addClass 'glyphicon-remove'
+				feedback.show()
+				formGroup.addClass 'has-error'
 			# hint
 			if not hint? then hint = ''
-			$(feedback).attr('title', hint)
+			feedback.attr('title', hint)
 
 	# Registration page stuff
 
