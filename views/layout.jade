@@ -61,8 +61,12 @@ if !pjax
 						ul.nav.navbar-nav.navbar-right
 							if user.loggedIn === true
 								+instanceLink('account', '/account/', user.username, false, 'glyphicon-credit-card')
-								if characters.length > 0
-									//+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
+								if characters.length === 1
+									if !!character
+										+instanceLink('mycharacter', '/character/', character.name, false, 'glyphicon-user')
+									else
+										//- персонаж не выбран
+								if characters.length > 1
 									li.dropdown.instance-indicator(data-instance='mycharacter', class=(instance=='mycharacter'?'active':''))
 										a.dropdown-toggle(href='/character/', data-toggle='dropdown')
 											if !!character
