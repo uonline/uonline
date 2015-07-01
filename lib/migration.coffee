@@ -16,15 +16,24 @@
 
 sync = require 'sync'
 tables = require '../lib/tables.coffee'
+chalk = require 'chalk'
 
 TABLE_NAME_COLUMN = 0
 FUNC_NAME_COLUMN = 1
 RAWSQL_COLUMN = 2
 
-justMigrate = (dbConnection, revision, for_tables) ->
+justMigrate = (dbConnection, revision, for_tables, verbose) ->
 	migration = exports.getMigrationsData()[revision]
 	for params in migration
 		params = params.slice()
+
+		t1 = params.map (x) -> x
+		if params[FUNC_NAME_COLUMN] is 'rawsql' then t1[FUNC_NAME_COLUMN] = 'SQL'
+		t2 = t1.slice(2).join ' -> '  # should be ', ', but this one looks better and works for current stuff
+		# maybe -> only if 2 arguments, dunno
+		if verbose
+			process.stdout.write "    Performing #{t1[FUNC_NAME_COLUMN]} on #{t1[TABLE_NAME_COLUMN]}: #{t2}..."
+
 		#mb convert for_tables to hashmap?
 		if for_tables and params[TABLE_NAME_COLUMN] not in for_tables
 			continue
@@ -39,6 +48,9 @@ justMigrate = (dbConnection, revision, for_tables) ->
 				func.sync.apply func, params
 		catch ex
 			throw new Error("While performing #{funcName} \n[#{params}]\n#{ex.toString()}\n#{ex.stack}")
+
+		if verbose
+			console.log " #{chalk.green 'ok'}"
 	return
 
 
@@ -324,13 +336,13 @@ exports.setRevision = ((dbConnection, revision) ->
 	return
 ).async()
 
-exports.migrateOne = ((dbConnection, revision) ->
+exports.migrateOne = ((dbConnection, revision, verbose = false) ->
 	curRevision = exports.getCurrentRevision.sync(null, dbConnection)
 	if curRevision == revision
 		return
 	if curRevision != revision - 1
 		throw new Error('Can\'t migrate to revision <' + revision + '> from current <' + curRevision + '>')
-	justMigrate dbConnection, revision
+	justMigrate dbConnection, revision, verbose
 	exports.setRevision.sync null, dbConnection, revision
 	return
 ).async()
@@ -346,14 +358,20 @@ exports.migrate = ((dbConnection, opts = {}) ->
 	if curRevision < opts.dest_revision
 		for i in [curRevision + 1 .. opts.dest_revision]
 			if opts.verbose
-				console.log 'Migrating ' + (if for_tables then "<#{for_tables}> " else '') + 'to revision ' + i
-			justMigrate dbConnection, i, for_tables
+				console.log chalk.magenta '  Migrating ' +
+					(if for_tables then "<#{for_tables}> " else '') + 'to revision ' + i + '...'
+			justMigrate dbConnection, i, for_tables, !!opts.verbose
+		if opts.verbose
+			console.log chalk.green '  Success.'
+	else
+		if opts.verbose
+			console.log '  No action needed.'
 
+	if opts.verbose
+		console.log chalk.bold chalk.red 'FIXME: setting revision in wrong place'
 	unless for_tables
 		exports.setRevision.sync null, dbConnection, opts.dest_revision
 
-	if opts.verbose
-		console.log 'Migrated.'
 	return
 ).async()
 

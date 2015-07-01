@@ -77,7 +77,7 @@ exports.getCurrentRevision =
 	'usual': (test) ->
 		rev = mg.getCurrentRevision.sync null, conn
 		test.strictEqual rev, -1, 'should return -1 if revision table is not created'
-		
+
 		query 'CREATE TABLE revision (revision INT)'
 		query 'INSERT INTO revision VALUES (945)'
 		rev = mg.getCurrentRevision.sync null, conn
@@ -108,10 +108,10 @@ exports.setRevision = (test) ->
 	mg.setRevision.sync null, conn, 1
 	exists = tables.tableExists.sync null, conn, 'revision'
 	test.ok exists, 'table should have been created'
-	
+
 	rev = mg.getCurrentRevision.sync null, conn
 	test.strictEqual rev, 1, 'revision should have been set'
-	
+
 	mg.setRevision.sync null, conn, 2
 	rev = mg.getCurrentRevision.sync null, conn
 	test.strictEqual rev, 2, 'revision should have been updated'
@@ -278,11 +278,14 @@ exports.migrate =
 		test.done()
 
 	'verbose': (test) ->
-		log = console.log
+		_log = console.log
+		_write = process.stdout.write
 		log_times = 0
-		console.log = (smth) -> log_times++
+		console.log = (x) -> log_times++
+		process.stdout.write = (x) -> log_times++
 		mg.migrate.sync null, conn, {verbose: true}
-		console.log = log
+		console.log = _log
+		process.stdout.write = _write
 
 		test.ok log_times>0, 'should say something'
 		test.done()
