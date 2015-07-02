@@ -20,25 +20,6 @@ math = require '../lib/math.coffee'
 transaction = require 'any-db-transaction'
 
 
-# А вот эта штука может пригодиться, ибо что-то мне подсказывает,
-# что вылетевший после transaction(dbConnection) эксепшен
-# эту транзакцию нифига не отменит...
-#
-#	function doInTransaction(dbConnection, func)
-#	{
-#		var tx = transaction(dbConnection);
-#		try
-#		{
-#			func(tx);
-#		}
-#		catch (e)
-#		{
-#			if (tx.state() == 'open') tx.rollback();
-#			throw e;
-#		}
-#		if (tx.state() == 'open') tx.commit();
-#	}
-
 
 # Converts location ways from string representation to array.
 # For example:

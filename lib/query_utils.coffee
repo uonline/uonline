@@ -16,6 +16,7 @@
 
 
 sync = require 'sync'
+transaction = require 'any-db-transaction'
 
 exports.getFor = (dbConnection) ->
 	query = (sql, params) ->
@@ -46,3 +47,18 @@ exports.getFor = (dbConnection) ->
 		query "INSERT INTO #{dbName} (#{params.join(', ')}) VALUES (#{values.join(', ')})"
 	
 	query
+
+
+# Executes function passing a transaction as a first argument.
+# Rollbacks transaction if any error was thrown from passed function.
+exports.doInTransaction = (dbConnection, func) ->
+	tx = transaction(dbConnection)
+	try
+		func(tx)
+	catch e
+		if tx.state() == 'open'
+			tx.rollback()
+		throw e
+	if tx.state() == 'open'
+		tx.commit()
+
