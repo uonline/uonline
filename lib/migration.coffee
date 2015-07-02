@@ -15,8 +15,9 @@
 'use strict'
 
 sync = require 'sync'
-tables = require '../lib/tables.coffee'
 chalk = require 'chalk'
+tables = require '../lib/tables.coffee'
+qu = require '../lib/query_utils.coffee'
 
 TABLE_NAME_COLUMN = 0
 FUNC_NAME_COLUMN = 1
@@ -47,8 +48,8 @@ justMigrate = (dbConnection, revision, for_tables, verbose) ->
 				params.unshift null
 				func.sync.apply func, params
 		catch ex
+			console.log 'exception drops here'
 			throw new Error("While performing #{funcName} \n[#{params}]\n#{ex.toString()}\n#{ex.stack}")
-
 		if verbose
 			console.log " #{chalk.green 'ok'}"
 	return
@@ -337,13 +338,16 @@ exports.setRevision = ((dbConnection, revision) ->
 ).async()
 
 exports.migrateOne = ((dbConnection, revision, verbose = false) ->
-	curRevision = exports.getCurrentRevision.sync(null, dbConnection)
+	curRevision = exports.getCurrentRevision.sync null, dbConnection
 	if curRevision == revision
 		return
 	if curRevision != revision - 1
 		throw new Error('Can\'t migrate to revision <' + revision + '> from current <' + curRevision + '>')
-	justMigrate dbConnection, revision, verbose
-	exports.setRevision.sync null, dbConnection, revision
+	qu.doInTransaction dbConnection, (tx) ->
+		console.log 'here we are'
+		justMigrate tx, revision, verbose
+		console.log 'here we not'
+		exports.setRevision.sync null, tx, revision
 	return
 ).async()
 
@@ -360,17 +364,15 @@ exports.migrate = ((dbConnection, opts = {}) ->
 			if opts.verbose
 				console.log chalk.magenta '  Migrating ' +
 					(if for_tables then "<#{for_tables}> " else '') + 'to revision ' + i + '...'
-			justMigrate dbConnection, i, for_tables, !!opts.verbose
+			qu.doInTransaction dbConnection, (tx) ->
+				justMigrate tx, i, for_tables, !!opts.verbose
+				unless for_tables
+					exports.setRevision.sync null, tx, i
 		if opts.verbose
 			console.log chalk.green '  Success.'
 	else
 		if opts.verbose
 			console.log '  No action needed.'
-
-	if opts.verbose
-		console.log chalk.bold chalk.red 'FIXME: setting revision in wrong place'
-	unless for_tables
-		exports.setRevision.sync null, dbConnection, opts.dest_revision
 
 	return
 ).async()

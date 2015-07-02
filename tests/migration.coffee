@@ -182,11 +182,18 @@ exports.migrateOne =
 		mg.setRevision.sync null, conn, 0
 
 		test.throws(
-			-> mg.migrateOne.sync null, conn, 1
+			->
+				try
+					mg.migrateOne.sync null, conn, 1
+				catch e
+					console.log e
+					throw new Error(123)
 			Error
 			'should return error if failed to migrate'
 		)
+		console.log " --- "
 		test.done()
+		console.log " --- "
 
 
 exports.migrate =
