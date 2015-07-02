@@ -369,7 +369,8 @@ exports.migrate = ((dbConnection, opts = {}) ->
 				unless for_tables
 					exports.setRevision.sync null, tx, i
 		if opts.verbose
-			console.log chalk.green '  Success.'
+			console.log chalk.green "  Success, migrated from #{chalk.blue curRevision} to "+
+				"#{chalk.blue opts.dest_revision}."
 	else
 		if opts.verbose
 			console.log '  No action needed.'
