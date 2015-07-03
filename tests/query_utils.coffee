@@ -107,7 +107,7 @@ exports.doInTransaction = (test) ->
 	test.throws(
 		-> queryUtils.doInTransaction conn, (tx) ->
 			# uncomment this line and it will break all DB connection
-			#tx.query.sync tx, "SELECT first transaction query with error"
+			tx.query.sync tx, "SELECT first transaction query with error"
 			tx.query.sync tx, "INSERT INTO test_table VALUES (3, 'something')"
 			tx.query.sync tx, "INSERT INTO no_such_table VALUES ('nothing')"
 		Error
