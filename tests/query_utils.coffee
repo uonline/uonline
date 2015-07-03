@@ -94,36 +94,38 @@ exports.ins = (test) ->
 	test.done()
 
 
-exports.doInTransaction =
-	normal: (test) ->
-		queryUtils.doInTransaction conn, (tx) ->
+exports.doInTransaction = (test) ->
+	count = -> +query.val 'SELECT count(*) FROM test_table'
+
+	# normal test
+	queryUtils.doInTransaction conn, (tx) ->
+		tx.query.sync tx, "INSERT INTO test_table VALUES (3, 'something')"
+		tx.query.sync tx, "INSERT INTO test_table VALUES (4, 'very something')"
+	test.strictEqual count(), 4, 'should execute function and commit transaction'
+
+	# error in query
+	test.throws(
+		-> queryUtils.doInTransaction conn, (tx) ->
 			tx.query.sync tx, "INSERT INTO test_table VALUES (3, 'something')"
-			tx.query.sync tx, "INSERT INTO test_table VALUES (4, 'very something')"
-		count = +query.val 'SELECT count(*) FROM test_table'
-		test.strictEqual count, 4, 'should execute function and commit transaction'
-		test.done()
+			tx.query.sync tx, "INSERT INTO no_such_table VALUES ('nothing')"
+		Error
+		'should throw exception from inner function'
+	)
+	test.strictEqual count(), 4, 'should rollback transaction'
 
-	query_error: (test) ->
-		test.throws(
-			-> queryUtils.doInTransaction conn, (tx) ->
-				tx.query.sync tx, "INSERT INTO test_table VALUES (3, 'something')"
-				tx.query.sync tx, "INSERT INTO no_such_table VALUES ('nothing')"
-			Error
-			'should throw exception from inner function'
-		)
-		count = +query.val 'SELECT count(*) FROM test_table'
-		test.strictEqual count, 2, 'should rollback transaction'
-		test.done()
+	# non-query error
+	test.throws(
+		-> queryUtils.doInTransaction conn, (tx) ->
+			tx.query.sync tx, "INSERT INTO test_table VALUES (3, 'something')"
+			throw new Error 'something fell up and broke down'
+		Error
+		'should throw exception from inner function'
+	)
+	test.strictEqual count(), 4, 'should rollback transaction'
 
-	non_query_error: (test) ->
-		test.throws(
-			-> queryUtils.doInTransaction conn, (tx) ->
-				tx.query.sync tx, "INSERT INTO test_table VALUES (3, 'something')"
-				throw new Error 'something fell up and broke down'
-			Error
-			'should throw exception from inner function'
-		)
-		count = +query.val 'SELECT count(*) FROM test_table'
-		test.strictEqual count, 2, 'should rollback transaction'
-		test.done()
+	# normal test, again
+	queryUtils.doInTransaction conn, (tx) ->
+		tx.query.sync tx, "INSERT INTO test_table VALUES (5, 'one more thing')"
+	test.strictEqual count(), 5, 'should correctly perform after some errors'
+	test.done()
 

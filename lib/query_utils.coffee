@@ -56,9 +56,9 @@ exports.doInTransaction = (dbConnection, func) ->
 	try
 		func(tx)
 	catch e
-		if tx.state() == 'open'
+		if tx.state() isnt 'closed'
 			tx.rollback()
 		throw e
-	if tx.state() == 'open'
+	if tx.state() isnt 'closed'
 		tx.commit()
 
