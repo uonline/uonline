@@ -23,7 +23,7 @@ TABLE_NAME_COLUMN = 0
 FUNC_NAME_COLUMN = 1
 RAWSQL_COLUMN = 2
 
-justMigrate = (dbConnection, revision, for_tables, verbose) ->
+exports._justMigrate = (dbConnection, revision, for_tables, verbose) ->
 	migration = exports.getMigrationsData()[revision]
 	for params in migration
 		params = params.slice()
@@ -48,7 +48,6 @@ justMigrate = (dbConnection, revision, for_tables, verbose) ->
 				params.unshift null
 				func.sync.apply func, params
 		catch ex
-			console.log 'exception drops here'
 			throw new Error("While performing #{funcName} \n[#{params}]\n#{ex.toString()}\n#{ex.stack}")
 		if verbose
 			console.log " #{chalk.green 'ok'}"
@@ -337,20 +336,6 @@ exports.setRevision = ((dbConnection, revision) ->
 	return
 ).async()
 
-exports.migrateOne = ((dbConnection, revision, verbose = false) ->
-	curRevision = exports.getCurrentRevision.sync null, dbConnection
-	if curRevision == revision
-		return
-	if curRevision != revision - 1
-		throw new Error('Can\'t migrate to revision <' + revision + '> from current <' + curRevision + '>')
-	qu.doInTransaction dbConnection, (tx) ->
-		console.log 'here we are'
-		justMigrate tx, revision, verbose
-		console.log 'here we not'
-		exports.setRevision.sync null, tx, revision
-	return
-).async()
-
 exports.migrate = ((dbConnection, opts = {}) ->
 	unless opts.dest_revision?
 		opts.dest_revision = Infinity
@@ -365,7 +350,7 @@ exports.migrate = ((dbConnection, opts = {}) ->
 				console.log chalk.magenta '  Migrating ' +
 					(if for_tables then "<#{for_tables}> " else '') + 'to revision ' + i + '...'
 			qu.doInTransaction dbConnection, (tx) ->
-				justMigrate tx, i, for_tables, !!opts.verbose
+				exports._justMigrate tx, i, for_tables, !!opts.verbose
 				unless for_tables
 					exports.setRevision.sync null, tx, i
 		if opts.verbose

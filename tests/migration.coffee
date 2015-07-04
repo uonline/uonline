@@ -118,9 +118,9 @@ exports.setRevision = (test) ->
 	test.done()
 
 
-exports.migrateOne =
+exports._justMigrate =
 	'usual': (test) ->
-		mg.migrateOne.sync null, conn, 0
+		mg._justMigrate conn, 0
 		tt = query.all 'SELECT column_name FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		ot = query.all 'SELECT column_name FROM information_schema.columns ' +
@@ -131,9 +131,7 @@ exports.migrateOne =
 				[{column_name: 'id'}]
 			], 'should correctly perform first migration'
 
-
-		mg.migrateOne.sync null, conn, 1
-		mg.migrateOne.sync null, conn, 1
+		mg._justMigrate conn, 1
 		tt = query.all 'SELECT column_name FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		ot = query.all 'SELECT column_name FROM information_schema.columns ' +
@@ -150,7 +148,7 @@ exports.migrateOne =
 			[ 'test_table', 'create', 'id INT' ]
 			[ 'test_table', 'rawsql', 'INSERT INTO test_table (id) VALUES (1), (2), (5)' ]
 		]]
-		mg.migrateOne.sync null, conn, 0
+		mg._justMigrate conn, 0
 
 		rows = query.all 'SELECT * FROM test_table'
 		test.deepEqual rows, [
@@ -158,42 +156,16 @@ exports.migrateOne =
 		], 'should perform raw SQL commands'
 		test.done()
 
-	'too new': (test) ->
-		test.throws(
-			-> mg.migrateOne.sync null, conn, 1
-			Error
-			'should fail if destination revision is too new'
-		)
-		test.done()
-
-	'too old': (test) ->
-		mg.migrateOne conn, 0
-		mg.migrateOne conn, 1
-
-		test.throws(
-			-> mg.migrateOne conn, 0
-			Error
-			'should fail if destination revision is too old'
-		)
-		test.done()
-
 	'errors': (test) ->
 		query 'DROP TABLE IF EXISTS test_table'
 		mg.setRevision.sync null, conn, 0
 
 		test.throws(
-			->
-				try
-					mg.migrateOne.sync null, conn, 1
-				catch e
-					console.log e
-					throw new Error(123)
+			-> mg._justMigrate conn, 1
 			Error
 			'should return error if failed to migrate'
 		)
-		console.log " --- "
 		test.done()
-		console.log " --- "
 
 
 exports.migrate =
@@ -285,14 +257,21 @@ exports.migrate =
 		test.done()
 
 	'verbose': (test) ->
-		_log = console.log
-		_write = process.stdout.write
-		log_times = 0
-		console.log = (x) -> log_times++
-		process.stdout.write = (x) -> log_times++
-		mg.migrate.sync null, conn, {verbose: true}
-		console.log = _log
-		process.stdout.write = _write
+		testLog = (message, func) ->
+			_log = console.log
+			_write = process.stdout.write
+			log_times = 0
+			console.log = (x) -> log_times++
+			process.stdout.write = (x) -> log_times++
+			func()
+			console.log = _log
+			process.stdout.write = _write
+			test.ok log_times>0, message
 
-		test.ok log_times>0, 'should say something'
+		testLog 'should say something',
+			-> mg.migrate.sync null, conn, {verbose: true}
+
+		testLog 'should say something (when all migrations already completed)',
+			-> mg.migrate.sync null, conn, {verbose: true}
+
 		test.done()
