@@ -183,7 +183,7 @@ info = ->
 createDatabase = (arg) ->
 	checkArgs arg, ['main', 'test', 'both']
 
-	console.log chalk.magenta 'Creating tables...'
+	console.log chalk.magenta 'Creating databases...'
 
 	create = (db_url) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
@@ -206,7 +206,7 @@ createDatabase = (arg) ->
 dropDatabase = (arg) ->
 	checkArgs opts.drop_database, ['main', 'test', 'both']
 
-	console.log chalk.magenta 'Dropping tables...'
+	console.log chalk.magenta 'Dropping databases...'
 
 	drop = (db_url, callback) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
