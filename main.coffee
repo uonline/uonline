@@ -196,7 +196,9 @@ fetchMonsterFromURL = ((request, response) ->
 
 
 fetchArmor = ((request, response) ->
-	request.uonline.armor = lib.game.getCharacterArmor.sync null, dbConnection, request.uonline.user.character_id
+	items = lib.game.getCharacterArmor.sync null, dbConnection, request.uonline.user.character_id
+	request.uonline.equipment = items.filter (x) -> x.equipped
+	request.uonline.backpack = items.filter (x) -> !x.equipped
 	return
 ).asyncMiddleware()
 
@@ -395,7 +397,7 @@ app.post '/newCharacter/',
 	(request, response) ->
 		nameIsValid = lib.validation.characterNameIsValid(request.body.character_name)
 		alreadyExists = lib.character.characterExists.sync(null, dbConnection, request.body.character_name)
-		
+
 		if nameIsValid and not alreadyExists
 			charid = lib.character.createCharacter.sync(
 				null
