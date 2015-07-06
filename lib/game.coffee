@@ -30,7 +30,7 @@ parseLocationWays = (str) ->
 	return [] if str is null
 
 	ways = str.split '|'
-	for i in [0...ways.length]
+	for i of ways
 		s = ways[i].split '='
 		ways[i] = {
 			target: parseInt(s[1], 10)
