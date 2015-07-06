@@ -195,8 +195,8 @@ fetchMonsterFromURL = ((request, response) ->
 ).asyncMiddleware()
 
 
-fetchArmor = ((request, response) ->
-	items = lib.game.getCharacterArmor.sync null, dbConnection, request.uonline.user.character_id
+fetchItems = ((request, response) ->
+	items = lib.game.getCharacterItems.sync null, dbConnection, request.uonline.user.character_id
 	request.uonline.equipment = items.filter (x) -> x.equipped
 	request.uonline.backpack = items.filter (x) -> !x.equipped
 	return
@@ -424,7 +424,7 @@ app.get '/game/',
 
 
 app.get '/inventory/',
-	mustBeAuthed, mustHaveCharacter, fetchArmor,
+	mustBeAuthed, mustHaveCharacter, fetchItems,
 	setInstance('inventory'), render('inventory')
 
 
@@ -479,10 +479,10 @@ app.get '/ajax/isCharacterNameBusy/:name',
 app.get '/ajax/cheatFixAll',
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
-			'UPDATE armor '+
+			'UPDATE items '+
 				'SET strength = '+
-				'(SELECT strength_max FROM armor_prototypes '+
-				'WHERE armor.prototype = armor_prototypes.id)'+
+				'(SELECT strength_max FROM items_proto '+
+				'WHERE items.prototype = items_proto.id)'+
 				'',
 			[]
 		response.redirect '/inventory/'
@@ -492,7 +492,7 @@ app.get '/action/unequip/:id',
 	mustBeAuthed,
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
-			'UPDATE armor '+
+			'UPDATE items '+
 				'SET equipped = false '+
 				'WHERE id = $1 AND owner = $2',
 			[request.params.id, request.uonline.user.character_id]
@@ -503,7 +503,7 @@ app.get '/action/equip/:id',
 	mustBeAuthed,
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
-			'UPDATE armor '+
+			'UPDATE items '+
 				'SET equipped = true '+
 				'WHERE id = $1 AND owner = $2',
 			[request.params.id, request.uonline.user.character_id]

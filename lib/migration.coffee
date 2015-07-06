@@ -306,6 +306,11 @@ migrationData = [
 			'CREATE UNIQUE INDEX players_character_unique_name_index '+
 			'ON characters (name) WHERE player IS NOT NULL']
 	]
+	[
+		# Rename armor to items
+		['armor', 'rawsql', 'ALTER TABLE armor RENAME TO items']
+		['armor_prototypes', 'rawsql', 'ALTER TABLE armor_prototypes RENAME TO items_proto']
+	]
 ]
 
 exports.getMigrationsData = ->

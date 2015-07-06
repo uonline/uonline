@@ -345,21 +345,21 @@ exports._lockAndGetStatsForBattle = (tx, character_id) ->
 
 
 exports._hitAndGetHealth = (tx, victimId, hunterPower) ->
-	armor = tx.query.sync(tx,
-		'SELECT armor.id, strength, coverage '+
-			'FROM armor, armor_prototypes '+
-			'WHERE armor.owner = $1 '+
-			'AND armor.equipped = true '+
-			'AND armor.prototype = armor_prototypes.id',
+	items = tx.query.sync(tx,
+		'SELECT items.id, strength, coverage '+
+			'FROM items, items_proto '+
+			'WHERE items.owner = $1 '+
+			'AND items.equipped = true '+
+			'AND items.prototype = items_proto.id',
 		[victimId]
 	).rows
 
-	armor_item = null
+	item = null
 	percent = 100
-	for item in armor
+	for item in items
 		if Math.random() * percent <= item.coverage
 			delta = Math.min(hunterPower, item.strength)
-			tx.query.sync tx, 'UPDATE armor SET strength = $1 WHERE id = $2', [
+			tx.query.sync tx, 'UPDATE items SET strength = $1 WHERE id = $2', [
 				item.strength - delta
 				item.id
 			]
@@ -398,7 +398,7 @@ exports._hit = (dbConnection, hunterId, victimId) ->
 	unless hunter?
 		tx.rollback.sync(tx)
 		return {
-			state: "canceled"
+			state: "cancelled"
 			reason: "hunter not found"
 		}
 
@@ -406,21 +406,21 @@ exports._hit = (dbConnection, hunterId, victimId) ->
 	unless victim?
 		tx.rollback.sync(tx)
 		return {
-			state: "canceled"
+			state: "cancelled"
 			reason: "victim not found"
 		}
 
 	if victim.battle != hunter.battle
 		tx.rollback.sync(tx)
 		return {
-			state: "canceled"
+			state: "cancelled"
 			reason: "different battles"
 		}
 
 	if victim.side is hunter.side
 		tx.rollback.sync(tx)
 		return {
-			state: "canceled"
+			state: "cancelled"
 			reason: "can't hit teammate"
 		}
 
@@ -542,13 +542,13 @@ exports.getCharacters = ((dbConnection, user_id) ->
 ).async()
 
 
-# Returns character's armor parameters.
-exports.getCharacterArmor = ((dbConnection, character_id) ->
+# Returns character's items.
+exports.getCharacterItems = ((dbConnection, character_id) ->
 	dbConnection.query.sync(dbConnection,
-		"SELECT armor.id, name, type, coverage, strength, strength_max, equipped "+
-		"FROM armor, armor_prototypes "+
-		"WHERE armor.owner = $1 AND armor.prototype = armor_prototypes.id "+
-		"ORDER BY armor.id",
+		"SELECT items.id, name, type, coverage, strength, strength_max, equipped "+
+		"FROM items, items_proto "+
+		"WHERE items.owner = $1 AND items.prototype = items_proto.id "+
+		"ORDER BY items.id",
 		[ character_id ]
 	).rows
 ).async()

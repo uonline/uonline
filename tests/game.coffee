@@ -494,7 +494,7 @@ exports._lockAndGetStatsForBattle = (test) ->
 
 exports._hitAndGetHealth =
 	setUp: (done) ->
-		clearTables 'characters', 'armor', 'armor_prototypes'
+		clearTables 'characters', 'items', 'items_proto'
 		insert 'characters', id: 1,  health: 1000, defense: 50
 		insert 'characters', id: 11, health: 1000, defense: 50
 		done()
@@ -540,7 +540,7 @@ exports._hitAndGetHealth =
 		damages = null
 
 		userHP = -> query.val 'SELECT health FROM characters WHERE id=1'
-		totalStringth = -> query.val 'SELECT SUM(strength) FROM armor'
+		totalStringth = -> query.val 'SELECT SUM(strength) FROM items'
 
 		performSomeAttacks = ->
 			damages = {}
@@ -558,31 +558,31 @@ exports._hitAndGetHealth =
 			tx.rollback.sync(tx)
 
 
-		insert 'armor_prototypes', id:1, name: 'breastplate', coverage:25
-		insert 'armor_prototypes', id:2, name: 'greave', coverage:25
-		insert 'armor', prototype:1, owner:1, strength:10000, equipped: true
-		insert 'armor', prototype:2, owner:1, strength:10000, equipped: true
+		insert 'items_proto', id:1, name: 'breastplate', coverage:25
+		insert 'items_proto', id:2, name: 'greave', coverage:25
+		insert 'items', prototype:1, owner:1, strength:10000, equipped: true
+		insert 'items', prototype:2, owner:1, strength:10000, equipped: true
 
 		performSomeAttacks()
 		test.ok damages[0], 'armor should block some attacks if coverage > 0'
 		test.ok Object.keys(damages).length > 1, 'armor should not block all attacks if total coverage < 100'
 
-		query 'UPDATE armor_prototypes SET coverage = 75 WHERE id = 2'
+		query 'UPDATE items_proto SET coverage = 75 WHERE id = 2'
 		performSomeAttacks()
 		test.deepEqual damages, {'0': true}, 'armor should block all if total coverage is 100'
 
-		query 'UPDATE armor_prototypes SET coverage = 0'
+		query 'UPDATE items_proto SET coverage = 0'
 		performSomeAttacks()
 		test.ok 0 not of damages, 'armor should not block anything if total coverage is 0'
 
-		query 'UPDATE armor_prototypes SET coverage = 50'
-		query 'UPDATE armor SET strength = 0'
+		query 'UPDATE items_proto SET coverage = 50'
+		query 'UPDATE items SET strength = 0'
 		performSomeAttacks()
 		test.ok 0 not of damages, 'armor should not block anything if it is broken'
 
-		query 'UPDATE armor_prototypes SET coverage = 75 WHERE id = 2'
-		query 'UPDATE armor SET strength = 10000'
-		query 'UPDATE armor SET equipped = false'
+		query 'UPDATE items_proto SET coverage = 75 WHERE id = 2'
+		query 'UPDATE items SET strength = 10000'
+		query 'UPDATE items SET equipped = false'
 		performSomeAttacks()
 		test.ok 0 not of damages, 'armor should not block anything if it is unequipped'
 
@@ -611,7 +611,7 @@ exports._handleDeathInBattle = (test) ->
 
 
 exports._hit = (test) ->
-	clearTables 'characters', 'battles', 'battle_participants', 'armor', 'armor_prototypes'
+	clearTables 'characters', 'battles', 'battle_participants', 'items', 'items_proto'
 
 	insert 'characters', id: 1, name: 'SomeUser',    defense: 1, power: 40, health: 5
 	insert 'characters', id: 2, name: 'AnotherUser', defense: 1, power: 50, health: 1000
@@ -632,7 +632,7 @@ exports._hit = (test) ->
 	hp = query.val 'SELECT health FROM characters WHERE id = 4'
 	test.strictEqual hp, 500, 'should not do anything if victim is in another battle'
 	test.deepEqual result,
-			state: 'canceled'
+			state: 'cancelled'
 			reason: 'different battles'
 		'should describe premature termination reason'
 
@@ -640,7 +640,7 @@ exports._hit = (test) ->
 	hp = query.val 'SELECT health FROM characters WHERE id = 2'
 	test.strictEqual hp, 1000, 'should not hit teammate'
 	test.deepEqual result,
-			state: 'canceled'
+			state: 'cancelled'
 			reason: "can't hit teammate"
 		'should describe premature termination reason'
 
@@ -648,13 +648,13 @@ exports._hit = (test) ->
 	hp = query.val 'SELECT health FROM characters WHERE id = 2'
 	test.strictEqual hp, 1000, 'should not do anything if hunter does not exist'
 	test.deepEqual result,
-			state: 'canceled'
+			state: 'cancelled'
 			reason: 'hunter not found'
 		'should describe premature termination reason'
 
 	result = game._hit conn, 5, 12
 	test.deepEqual result,
-			state: 'canceled'
+			state: 'cancelled'
 			reason: 'victim not found'
 		'should describe premature termination reason'
 
@@ -694,7 +694,7 @@ exports._hit = (test) ->
 
 exports.hitOpponent =
 	setUp: (done) ->
-		clearTables 'characters', 'battles', 'battle_participants', 'armor', 'armor_prototypes', 'monsters'
+		clearTables 'characters', 'battles', 'battle_participants', 'items', 'items_proto', 'monsters'
 		insert 'characters', id: 1, name: 'SomeUser', power: 20, defense: 10, health: 1000, player: 1
 		insert 'characters', id: 4, name: 'SomeMonster 1', power: 20, defense: 10, health: 1000
 		insert 'characters', id: 5, name: 'SomeMonster 2', power: 20, defense: 10, health: 1000
@@ -899,19 +899,19 @@ exports.getCharacters = (test) ->
 	test.done()
 
 
-exports.getCharacterArmor = (test) ->
-	clearTables 'armor', 'armor_prototypes'
-	insert 'armor_prototypes', id:1, name:'Magic helmet', type:'helmet', coverage:50, strength_max:120
-	insert 'armor_prototypes', id:2, name:'Speed greaves', type:'greave', coverage:25, strength_max:110
-	insert 'armor', id:1, prototype:1, owner:1, strength:100
-	insert 'armor', id:2, prototype:2, owner:1, strength:100
-	insert 'armor', id:3, prototype:1, owner:2, strength:110
+exports.getCharacterItems = (test) ->
+	clearTables 'items', 'items_proto'
+	insert 'items_proto', id:1, name:'Magic helmet', type:'helmet', coverage:50, strength_max:120
+	insert 'items_proto', id:2, name:'Speed greaves', type:'greave', coverage:25, strength_max:110
+	insert 'items', id:1, prototype:1, owner:1, strength:100
+	insert 'items', id:2, prototype:2, owner:1, strength:100
+	insert 'items', id:3, prototype:1, owner:2, strength:110
 
-	armor = game.getCharacterArmor conn, 1
-	test.deepEqual armor, [
+	items = game.getCharacterItems conn, 1
+	test.deepEqual items, [
 			{id: 1, name: 'Magic helmet',  type:'helmet', coverage:50, strength:100, strength_max:120, equipped: true}
 			{id: 2, name: 'Speed greaves', type:'greave', coverage:25, strength:100, strength_max:110, equipped: true}
-		] , "should return nesessary characteristics of user's armor"
+		] , "should return properties of character's items"
 	test.done()
 
 

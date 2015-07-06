@@ -66,7 +66,7 @@ exports.deleteCharacter = ((dbConnection, user_id, character_id) ->
 		[ user_id, character_id ])
 
 	tx.query.sync(tx,
-		"DELETE FROM armor WHERE owner = $1",
+		"DELETE FROM items WHERE owner = $1",
 		[ character_id ])
 
 	res = tx.query.sync(tx,

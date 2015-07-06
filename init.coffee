@@ -111,11 +111,11 @@ options = [
 	help: 'Insert monsters.'
 ,
 	names: [
-		'armor'
-		'A'
+		'items'
+		'I'
 	]
 	type: 'bool'
-	help: 'Insert test armor.'
+	help: 'Insert test items.'
 ,
 	names: [
 		'fix-attributes'
@@ -315,8 +315,8 @@ insertMonsters = ->
 	console.log('Done.')
 
 
-insertArmor = ->
-	console.log chalk.magenta 'Inserting test armor'+'... '
+insertItems = ->
+	console.log chalk.magenta 'Inserting test items'+'... '
 
 	query = createQueryUtils(config.DATABASE_URL)
 
@@ -333,14 +333,14 @@ insertArmor = ->
 	]
 
 	process.stdout.write '  '+'Cleaning up'+'... '
-	query 'TRUNCATE armor_prototypes', []
-	query 'TRUNCATE armor', []
+	query 'TRUNCATE items_proto', []
+	query 'TRUNCATE items', []
 	console.log chalk.green 'ok'
 
-	process.stdout.write '  '+'Inserting armor prototypes'+'... '
+	process.stdout.write '  '+'Inserting item prototypes'+'... '
 	for proto in prototypes
 		query(
-			'INSERT INTO armor_prototypes (id, name, type, strength_max, coverage) '+
+			'INSERT INTO items_proto (id, name, type, strength_max, coverage) '+
 			'VALUES ($1, $2, $3, $4, $5)', proto)
 	console.log chalk.green 'ok'
 
@@ -350,9 +350,9 @@ insertArmor = ->
 		'FROM uniusers, characters WHERE uniusers.id = characters.player')
 	console.log chalk.green "found #{users.length}"
 	for user in users
-		process.stdout.write '  '+"Giving some armor to #{user.username}"+'... '
+		process.stdout.write '  '+"Giving some items to #{user.username}"+'... '
 		for item in prototypes
-			query 'INSERT INTO armor (prototype, owner, strength) VALUES ($1,$2,$3)', [item[0], user.character_id, item[3]]
+			query 'INSERT INTO items (prototype, owner, strength) VALUES ($1,$2,$3)', [item[0], user.character_id, item[3]]
 		console.log chalk.green 'ok'
 
 
@@ -417,7 +417,7 @@ sync(
 		insertMonsters() if opts.monsters
 		fixAttrs() if opts.fix_attributes
 		fixEnergy() if opts.fix_energy
-		insertArmor() if opts.armor
+		insertItems() if opts.items
 		optimize() if opts.optimize_tables # must always be the last
 		process.exit 0
 	(ex) ->
