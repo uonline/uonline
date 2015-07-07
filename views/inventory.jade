@@ -17,6 +17,13 @@ mixin slot(type, title)
 						span.glyphicon.glyphicon-stop
 						| #{' '}
 						| #{ item.coverage }%
+						if item.type === 'shield'
+							- var size = 'средний'
+							//- TODO: если дамаг > 0, то малый
+							if item.coverage > 45
+								- size = 'большой'
+							| #{' '}
+							span.text-muted (#{size})
 					- count++
 			if count === 0
 				| -
