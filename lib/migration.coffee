@@ -311,6 +311,10 @@ migrationData = [
 		['armor', 'rawsql', 'ALTER TABLE armor RENAME TO items']
 		['armor_prototypes', 'rawsql', 'ALTER TABLE armor_prototypes RENAME TO items_proto']
 	]
+	[
+		# Add damage (right now it's for shields)
+		['items_proto', 'addCol', 'damage INT']
+	]
 ]
 
 exports.getMigrationsData = ->

@@ -10,20 +10,26 @@ mixin slot(type, title)
 						| #{' '}
 						a.pjax-replace.btn.btn-default.btn-xs(href='/action/unequip/'+item.id) Снять
 						br
-						span.glyphicon.glyphicon-cog
+						span.glyphicon.glyphicon-cog(title='Прочность')
 						| #{' '}
 						| #{ item.strength }/#{ item.strength_max }
 						| #{' '}&nbsp;#{' '}
-						span.glyphicon.glyphicon-stop
+						span.glyphicon.glyphicon-stop(title='Покрытие тела')
 						| #{' '}
 						| #{ item.coverage }%
 						if item.type === 'shield'
 							- var size = 'средний'
-							//- TODO: если дамаг > 0, то малый
 							if item.coverage > 45
 								- size = 'большой'
+							if item.damage > 0
+								- size = 'малый'
 							| #{' '}
 							span.text-muted (#{size})
+						if item.damage > 0
+							| #{' '}&nbsp;#{' '}
+							span.glyphicon.glyphicon-tint(title='Бонус к урону при ударе')
+							//- | #{' '}
+							| #{ item.damage }
 					- count++
 			if count === 0
 				| -
