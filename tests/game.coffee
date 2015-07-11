@@ -492,6 +492,26 @@ exports._lockAndGetStatsForBattle = (test) ->
 	test.done()
 
 
+exports._hitItem = (test) ->
+	clearTables 'items'
+	insert 'items', id: 1, strength: 100
+
+	item = query.row 'SELECT id, strength FROM items'
+	power = 80
+
+	queryUtils.doInTransaction conn, (tx) ->
+		delta = game._hitItem(tx, power, item)
+		item = query.row 'SELECT id, strength FROM items'
+		test.strictEqual delta, 80, "should reduce all attacker's power if item is strong"
+		test.strictEqual item.strength, 20, "should reduce item's strength"
+		
+		delta = game._hitItem(tx, power, item)
+		item = query.row 'SELECT id, strength FROM items'
+		test.strictEqual delta, 20, "should reduce part of attacker's power if item was broken"
+		test.strictEqual item.strength, 0, "should reduce item's strength"
+	test.done()
+
+
 exports._hitAndGetHealth =
 	setUp: (done) ->
 		clearTables 'characters', 'items', 'items_proto'
@@ -585,6 +605,51 @@ exports._hitAndGetHealth =
 		query 'UPDATE items SET equipped = false'
 		performSomeAttacks()
 		test.ok 0 not of damages, 'armor should not block anything if it is unequipped'
+
+		test.done()
+
+	'with shield': (test) ->
+		insert 'items_proto', id:1, name: 'The Shield', coverage:100, type: 'shield'
+		insert 'items_proto', id:2, name: 'greave', coverage:100
+		insert 'items', id:10, prototype:1, owner:1, strength:100, equipped: true
+		insert 'items', id:20, prototype:2, owner:1, strength:100, equipped: true
+
+		power = 120
+		shield = -> query.row('SELECT strength FROM items WHERE id=10')
+		greave = -> query.row('SELECT strength FROM items WHERE id=20')
+
+		for i in [0..5]
+			tx = transaction(conn)
+			hp = game._hitAndGetHealth tx, 1, power
+			test.strictEqual hp, 1000, 'both shield and armor should block damage'
+			test.strictEqual shield().strength, 0, 'shield should block damage first'
+			test.strictEqual greave().strength, 80, 'armor should block damage not blocked by shield'
+			tx.rollback.sync(tx)
+
+
+		query 'UPDATE items_proto SET coverage = 50'
+		query 'UPDATE items SET strength = 1000'
+		hits = shield:0, notShield:0
+		for i in [0..100]
+			tx = transaction(conn)
+			hp = game._hitAndGetHealth tx, 1, power
+			if shield().strength != 1000 then hits.shield++
+			if greave().strength != 1000 then hits.notShield++
+			if hp != 1000 then hits.notShield++
+			tx.rollback.sync(tx)
+		test.ok hits.shield > hits.notShield*0.67 and hits.shield < hits.notShield*1.5,
+			"shield should receive hits according to it's coverage"
+
+
+		query 'UPDATE items_proto SET coverage = 100'
+		query 'UPDATE items SET equipped = false WHERE id = 10'
+		query 'UPDATE items SET strength = 100'
+		for i in [0..5]
+			tx = transaction(conn)
+			hp = game._hitAndGetHealth tx, 1, power
+			test.strictEqual shield().strength, 100, 'shield should receive no damage if not equipped'
+			test.strictEqual greave().strength, 0, 'armor should receive all damage if shield is not equipped'
+			tx.rollback.sync(tx)
 
 		test.done()
 

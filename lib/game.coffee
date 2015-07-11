@@ -18,6 +18,7 @@ sync = require 'sync'
 config = require '../config'
 math = require '../lib/math.coffee'
 transaction = require 'any-db-transaction'
+sugar = require 'sugar'
 
 
 
@@ -344,9 +345,18 @@ exports._lockAndGetStatsForBattle = (tx, character_id) ->
 	).rows[0]
 
 
+exports._hitItem = (tx, attackerPower, item) ->
+	delta = Math.min(attackerPower, item.strength)
+	tx.query.sync tx, 'UPDATE items SET strength = $1 WHERE id = $2', [
+		item.strength - delta
+		item.id
+	]
+	return delta
+
+
 exports._hitAndGetHealth = (tx, victimId, hunterPower) ->
 	items = tx.query.sync(tx,
-		'SELECT items.id, strength, coverage '+
+		'SELECT items.id, strength, coverage, type '+
 			'FROM items, items_proto '+
 			'WHERE items.owner = $1 '+
 			'AND items.equipped = true '+
@@ -354,26 +364,32 @@ exports._hitAndGetHealth = (tx, victimId, hunterPower) ->
 		[victimId]
 	).rows
 
-	item = null
-	percent = 100
-	for item in items
-		if Math.random() * percent <= item.coverage
-			delta = Math.min(hunterPower, item.strength)
-			tx.query.sync tx, 'UPDATE items SET strength = $1 WHERE id = $2', [
-				item.strength - delta
-				item.id
-			]
-			hunterPower -= delta
-			break
-		percent -= item.coverage
+	shield = items.find (i) -> i.type == 'shield'
+	if shield? and Math.random() * 100 <= shield.coverage
+		hunterPower -= exports._hitItem(tx, hunterPower, shield)
 
-	tx.query.sync(tx,
-		'UPDATE characters '+
-			'SET health = health - GREATEST(0, $1-defense)/2 * (0.8+RANDOM()*0.4) '+
-			'WHERE id = $2 '+
-			'RETURNING health',
-		[ hunterPower, victimId ]
-	).rows[0].health
+	if hunterPower > 0
+		armor = items.exclude (i) -> i.type == 'shield'
+		percent = 100
+		for item in armor
+			if Math.random() * percent <= item.coverage
+				hunterPower -= exports._hitItem(tx, hunterPower, item)
+				break
+			percent -= item.coverage
+
+	if hunterPower > 0
+		tx.query.sync(tx,
+			'UPDATE characters '+
+				'SET health = health - GREATEST(0, $1-defense)/2 * (0.8+RANDOM()*0.4) '+
+				'WHERE id = $2 '+
+				'RETURNING health',
+			[ hunterPower, victimId ]
+		).rows[0].health
+	else
+		tx.query.sync(tx,
+			'SELECT health FROM characters WHERE id = $1',
+			[ victimId ]
+		).rows[0].health
 
 
 exports._handleDeathInBattle = (tx, character_id) ->
@@ -553,3 +569,5 @@ exports.getCharacterItems = ((dbConnection, character_id) ->
 	).rows
 ).async()
 
+
+process.on 'uncaughtException', (err) -> console.log('Caught exception: ' + err.stack)
