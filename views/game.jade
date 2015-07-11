@@ -99,6 +99,9 @@ block content
 							| противник
 							| #{' '}
 							a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id) Ударить
+							if equipment.shield && equipment.shield.damage > 0
+								| #{' '}
+								a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id+"?with_item_id="+equipment.shield.id) Щитом
 		p
 			small
 				if character.autoinvolved_fm == true

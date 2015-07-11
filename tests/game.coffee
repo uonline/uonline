@@ -675,86 +675,132 @@ exports._handleDeathInBattle = (test) ->
 	test.done()
 
 
-exports._hit = (test) ->
-	clearTables 'characters', 'battles', 'battle_participants', 'items', 'items_proto'
+exports._hit =
+	setUp: (done) ->
+		clearTables 'characters', 'battles', 'battle_participants', 'items', 'items_proto'
 
-	insert 'characters', id: 1, name: 'SomeUser',    defense: 1, power: 40, health: 5
-	insert 'characters', id: 2, name: 'AnotherUser', defense: 1, power: 50, health: 1000
-	insert 'characters', id: 5, name: 'SomeMonster', defense: 5, power: 20, health: 500
-	insert 'battles', id: 3
-	insert 'battle_participants', battle: 3, character_id: 5, side: 1, index: 1
-	insert 'battle_participants', battle: 3, character_id: 1, side: 0, index: 0
-	insert 'battle_participants', battle: 3, character_id: 2, side: 0, index: 2
+		insert 'characters', id: 1, name: 'SomeUser',    defense: 1, power: 40, health: 5
+		insert 'characters', id: 2, name: 'AnotherUser', defense: 1, power: 50, health: 1000
+		insert 'characters', id: 5, name: 'SomeMonster', defense: 5, power: 20, health: 500
+		insert 'battles', id: 3
+		insert 'battle_participants', battle: 3, character_id: 5, side: 1, index: 1
+		insert 'battle_participants', battle: 3, character_id: 1, side: 0, index: 0
+		insert 'battle_participants', battle: 3, character_id: 2, side: 0, index: 2
 
-	insert 'characters', id: 3, name: 'FarAwayUser', power: 10, health: 1000
-	insert 'characters', id: 4, name: 'FarAwayMonster', health: 500
-	insert 'battles', id: 8
-	insert 'battle_participants', battle: 8, character_id: 4, side: 1, index: 1
-	insert 'battle_participants', battle: 8, character_id: 3, side: 0, index: 0
+		insert 'characters', id: 3, name: 'FarAwayUser', power: 10, health: 1000
+		insert 'characters', id: 4, name: 'FarAwayMonster', health: 500
+		insert 'battles', id: 8
+		insert 'battle_participants', battle: 8, character_id: 4, side: 1, index: 1
+		insert 'battle_participants', battle: 8, character_id: 3, side: 0, index: 0
+
+		done()
+
+	'hitting without equipment': (test) ->
+		# wrong battle
+		result = game._hit conn, 1, 4
+		hp = query.val 'SELECT health FROM characters WHERE id = 4'
+		test.strictEqual hp, 500, 'should not do anything if victim is in another battle'
+		test.deepEqual result,
+				state: 'cancelled'
+				reason: 'different battles'
+			'should describe premature termination reason'
+
+		# try hit teammate
+		result = game._hit conn, 1, 2
+		hp = query.val 'SELECT health FROM characters WHERE id = 2'
+		test.strictEqual hp, 1000, 'should not hit teammate'
+		test.deepEqual result,
+				state: 'cancelled'
+				reason: "can't hit teammate"
+			'should describe premature termination reason'
+
+		# wrong hunter
+		result = game._hit conn, 15, 2
+		hp = query.val 'SELECT health FROM characters WHERE id = 2'
+		test.strictEqual hp, 1000, 'should not do anything if hunter does not exist'
+		test.deepEqual result,
+				state: 'cancelled'
+				reason: 'hunter not found'
+			'should describe premature termination reason'
+
+		# wrong victim
+		result = game._hit conn, 5, 12
+		test.deepEqual result,
+				state: 'cancelled'
+				reason: 'victim not found'
+			'should describe premature termination reason'
 
 
-	result = game._hit conn, 1, 4
-	hp = query.val 'SELECT health FROM characters WHERE id = 4'
-	test.strictEqual hp, 500, 'should not do anything if victim is in another battle'
-	test.deepEqual result,
-			state: 'cancelled'
-			reason: 'different battles'
-		'should describe premature termination reason'
+		# simple DD
+		result = game._hit conn, 1, 5
+		hp = query.val 'SELECT health FROM characters WHERE id = 5'
+		test.ok hp < 500, 'should deal damage to victim'
+		test.deepEqual result,
+				state: 'ok'
+				victimKilled: false
+				battleEnded: false
+			'should describe what had happened'
 
-	result = game._hit conn, 1, 2
-	hp = query.val 'SELECT health FROM characters WHERE id = 2'
-	test.strictEqual hp, 1000, 'should not hit teammate'
-	test.deepEqual result,
-			state: 'cancelled'
-			reason: "can't hit teammate"
-		'should describe premature termination reason'
+		# knockout one of opponents
+		result = game._hit conn, 5, 1
+		rows = query.all "SELECT * FROM battle_participants WHERE character_id = 1"
+		test.strictEqual rows.length, 0, 'should remove participant if one was killed'
+		test.deepEqual result,
+				state: 'ok'
+				victimKilled: true
+				battleEnded: false
+			'should describe what had happened'
 
-	result = game._hit conn, 15, 2
-	hp = query.val 'SELECT health FROM characters WHERE id = 2'
-	test.strictEqual hp, 1000, 'should not do anything if hunter does not exist'
-	test.deepEqual result,
-			state: 'cancelled'
-			reason: 'hunter not found'
-		'should describe premature termination reason'
+		# defeated all opponents
+		query 'UPDATE characters SET health = 5 WHERE id = 5'
+		result = game._hit conn, 2, 5
+		battles = query.all 'SELECT * FROM battles WHERE id = 3'
+		participants = query.all 'SELECT * FROM battle_participants WHERE battle = 3'
+		test.strictEqual battles.length, 0, 'should stop battle if one side won'
+		test.strictEqual participants.length, 0, 'should also remove battle participants'
+		test.deepEqual result,
+				state: 'ok'
+				victimKilled: true
+				battleEnded: true
+			'should describe what had happened'
+		
+		test.done()
 
-	result = game._hit conn, 5, 12
-	test.deepEqual result,
-			state: 'cancelled'
-			reason: 'victim not found'
-		'should describe premature termination reason'
 
+	'shields': (test) ->
+		insert 'items_proto', id:1, name: 'The Shield', coverage:100, type: 'shield', damage: 100
+		insert 'items', id:10, prototype:1, owner:1, strength:100, equipped:true
 
-	result = game._hit conn, 1, 5
-	hp = query.val 'SELECT health FROM characters WHERE id = 5'
-	test.ok hp < 500, 'should deal damage to victim'
-	test.deepEqual result,
-			state: 'ok'
-			victimKilled: false
-			battleEnded: false
-		'should describe what had happened'
+		# hit with normal shield
+		result = game._hit conn, 1, 5, 10
+		test.strictEqual result.state, 'ok', 'should hit successfully'
+		hp = query.val 'SELECT health FROM characters WHERE id = 5'
+		test.ok hp < 500-40, 'should deal more damage than barehanded player can'
 
-	result = game._hit conn, 5, 1
-	rows = query.all "SELECT * FROM battle_participants WHERE character_id = 1"
-	test.strictEqual rows.length, 0, 'should remove participant if one was killed'
-	test.deepEqual result,
-			state: 'ok'
-			victimKilled: true
-			battleEnded: false
-		'should describe what had happened'
+		# try hit with 0-damage shield
+		query "UPDATE items_proto SET damage = 0"
+		result = game._hit conn, 1, 5, 10
+		test.deepEqual result,
+				state: 'cancelled'
+				reason: "can't hit with this item"
+			'should cancel hit and describe reason if shield has no dmage gain'
 
-	query 'UPDATE characters SET health = 5 WHERE id = 5'
-	result = game._hit conn, 2, 5
-	battles = query.all 'SELECT * FROM battles WHERE id = 3'
-	participants = query.all 'SELECT * FROM battle_participants WHERE battle = 3'
-	test.strictEqual battles.length, 0, 'should stop battle if one side won'
-	test.strictEqual participants.length, 0, 'should also remove battle participants'
-	test.deepEqual result,
-			state: 'ok'
-			victimKilled: true
-			battleEnded: true
-		'should describe what had happened'
+		# try hit with non-shield
+		query "UPDATE items_proto SET damage = 10, type = 'not-shield'"
+		result = game._hit conn, 1, 5, 10
+		test.deepEqual result,
+				state: 'cancelled'
+				reason: "can't hit with this item"
+			'should cancel hit and describe reason if it is not shield'
 
-	test.done()
+		# try hit with wrong item
+		result = game._hit conn, 1, 5, 123
+		test.deepEqual result,
+				state: 'cancelled'
+				reason: 'weapon item not found'
+			'should cancel hit and describe reason if item id is wrong'
+
+		test.done()
 
 
 exports.hitOpponent =
@@ -966,16 +1012,22 @@ exports.getCharacters = (test) ->
 
 exports.getCharacterItems = (test) ->
 	clearTables 'items', 'items_proto'
-	insert 'items_proto', id:1, name:'Magic helmet', type:'helmet', coverage:50, strength_max:120
-	insert 'items_proto', id:2, name:'Speed greaves', type:'greave', coverage:25, strength_max:110
+	insert 'items_proto', id:1, name:'Magic helmet', type:'helmet', coverage:50, strength_max:120, damage: 0
+	insert 'items_proto', id:2, name:'Speed greaves', type:'greave', coverage:25, strength_max:110, damage: 10
 	insert 'items', id:1, prototype:1, owner:1, strength:100
 	insert 'items', id:2, prototype:2, owner:1, strength:100
 	insert 'items', id:3, prototype:1, owner:2, strength:110
 
 	items = game.getCharacterItems conn, 1
 	test.deepEqual items, [
-			{id: 1, name: 'Magic helmet',  type:'helmet', coverage:50, strength:100, strength_max:120, equipped: true}
-			{id: 2, name: 'Speed greaves', type:'greave', coverage:25, strength:100, strength_max:110, equipped: true}
+			{
+				id: 1, name: 'Magic helmet', type:'helmet',
+				coverage:50, strength:100, strength_max:120, equipped: true, damage: 0
+			}
+			{
+				id: 2, name: 'Speed greaves', type:'greave',
+				coverage:25, strength:100, strength_max:110, equipped: true, damage: 10
+			}
 		] , "should return properties of character's items"
 	test.done()
 

@@ -198,6 +198,7 @@ fetchMonsterFromURL = ((request, response) ->
 fetchItems = ((request, response) ->
 	items = lib.game.getCharacterItems.sync null, dbConnection, request.uonline.user.character_id
 	request.uonline.equipment = items.filter (x) -> x.equipped
+	request.uonline.equipment.shield = request.uonline.equipment.find (x) -> x.type == 'shield'
 	request.uonline.backpack = items.filter (x) -> !x.equipped
 	return
 ).asyncMiddleware()
@@ -419,7 +420,7 @@ app.get '/game/',
 	mustBeAuthed,
 	mustHaveCharacter, fetchLocation, fetchArea,
 	fetchUsersNearby, fetchMonstersNearby,
-	fetchBattleGroups,
+	fetchBattleGroups, fetchItems,
 	setInstance('game'), render('game')
 
 
@@ -457,7 +458,8 @@ app.get '/action/hit/:id',
 		lib.game.hitOpponent.sync(
 			null, dbConnection,
 			request.uonline.user.character_id,
-			request.params.id
+			request.params.id,
+			request.query.with_item_id
 		)
 		response.redirect '/game/'
 

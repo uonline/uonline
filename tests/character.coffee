@@ -94,7 +94,7 @@ exports.createCharacter = (test) ->
 
 
 exports.deleteCharacter = (test) ->
-	clearTables 'uniusers', 'characters', 'items'
+	clearTables 'uniusers', 'characters', 'items', 'items_proto', 'battle_participants', 'battles'
 	insert 'characters', id: 1, player: 2
 	insert 'characters', id: 2, player: 1
 	insert 'characters', id: 3, player: 1

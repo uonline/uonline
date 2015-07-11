@@ -407,40 +407,44 @@ exports._handleDeathInBattle = (tx, character_id) ->
 		tx.query.sync tx, "DELETE FROM characters WHERE id = $1", [character_id]
 
 
-exports._hit = (dbConnection, hunterId, victimId) ->
+exports._hit = (dbConnection, hunterId, victimId, withItemId) ->
 	tx = transaction(dbConnection)
+
+	cancel = (message) ->
+		tx.rollback.sync(tx)
+		return {
+			state: "cancelled"
+			reason: message
+		}
 
 	hunter = exports._lockAndGetStatsForBattle(tx, hunterId)
 	unless hunter?
-		tx.rollback.sync(tx)
-		return {
-			state: "cancelled"
-			reason: "hunter not found"
-		}
+		return cancel "hunter not found"
 
 	victim = exports._lockAndGetStatsForBattle(tx, victimId)
 	unless victim?
-		tx.rollback.sync(tx)
-		return {
-			state: "cancelled"
-			reason: "victim not found"
-		}
+		return cancel "victim not found"
+
+	if withItemId?
+		withItem = tx.query.sync(tx, "SELECT damage, type FROM items, items_proto "+
+			"WHERE owner = $1 AND items.id = $2 AND equipped AND items.prototype = items_proto.id",
+			[ hunterId, withItemId ]).rows[0]
+		unless withItem?
+			return cancel "weapon item not found"
+		if withItem.type isnt 'shield' or withItem.damage == 0
+			return cancel "can't hit with this item"
 
 	if victim.battle != hunter.battle
-		tx.rollback.sync(tx)
-		return {
-			state: "cancelled"
-			reason: "different battles"
-		}
+		return cancel "different battles"
 
 	if victim.side is hunter.side
-		tx.rollback.sync(tx)
-		return {
-			state: "cancelled"
-			reason: "can't hit teammate"
-		}
+		return cancel "can't hit teammate"
 
-	health = exports._hitAndGetHealth(tx, victimId, hunter.power)
+	power = hunter.power
+	if withItem? and withItem.type == 'shield'
+		power += withItem.damage
+
+	health = exports._hitAndGetHealth(tx, victimId, power)
 	victimKilled = (health <= 0)
 	battleEnded = false
 	if victimKilled
@@ -456,8 +460,8 @@ exports._hit = (dbConnection, hunterId, victimId) ->
 
 
 # Deals damage to opponent in user's battle.
-exports.hitOpponent = ((dbConnection, hunterId, victimId) ->
-	result = exports._hit(dbConnection, hunterId, victimId)
+exports.hitOpponent = ((dbConnection, hunterId, victimId, withItemId) ->
+	result = exports._hit(dbConnection, hunterId, victimId, withItemId)
 	return if result.state isnt "ok" or result.battleEnded
 
 	opponents = dbConnection.query.sync(dbConnection,
@@ -561,7 +565,7 @@ exports.getCharacters = ((dbConnection, user_id) ->
 # Returns character's items.
 exports.getCharacterItems = ((dbConnection, character_id) ->
 	dbConnection.query.sync(dbConnection,
-		"SELECT items.id, name, type, coverage, strength, strength_max, equipped "+
+		"SELECT items.id, name, type, coverage, strength, strength_max, equipped, damage "+
 		"FROM items, items_proto "+
 		"WHERE items.owner = $1 AND items.prototype = items_proto.id "+
 		"ORDER BY items.id",
