@@ -618,7 +618,8 @@ exports._hitAndGetHealth =
 		shield = -> query.row('SELECT strength FROM items WHERE id=10')
 		greave = -> query.row('SELECT strength FROM items WHERE id=20')
 
-		for i in [0..5]
+		# shield with 100% coverage
+		for i in [0...5]
 			tx = transaction(conn)
 			hp = game._hitAndGetHealth tx, 1, power
 			test.strictEqual hp, 1000, 'both shield and armor should block damage'
@@ -626,25 +627,34 @@ exports._hitAndGetHealth =
 			test.strictEqual greave().strength, 80, 'armor should block damage not blocked by shield'
 			tx.rollback.sync(tx)
 
-
+		# shield with 50% coverage
 		query 'UPDATE items_proto SET coverage = 50'
 		query 'UPDATE items SET strength = 1000'
 		hits = shield:0, notShield:0
-		for i in [0..100]
+		for i in [0...40]
 			tx = transaction(conn)
 			hp = game._hitAndGetHealth tx, 1, power
-			if shield().strength != 1000 then hits.shield++
-			if greave().strength != 1000 then hits.notShield++
-			if hp != 1000 then hits.notShield++
+			if shield().strength < 1000 then hits.shield++
+			if greave().strength < 1000 then hits.notShield++
+			if hp < 1000 then hits.notShield++
 			tx.rollback.sync(tx)
-		test.ok hits.shield > hits.notShield*0.67 and hits.shield < hits.notShield*1.5,
-			"shield should receive hits according to it's coverage"
+		test.ok hits.shield > 0 and hits.notShield > 0,
+			"shield should block some hits if it's coverage is not 100%"
+		test.strictEqual hits.shield+hits.notShield, 40, 'all attacks should hit something'
 
+		# shield with 0% coverage
+		query 'UPDATE items_proto SET coverage = 0 WHERE id = 1'
+		for i in [0...40]
+			tx = transaction(conn)
+			hp = game._hitAndGetHealth tx, 1, power
+			test.strictEqual shield().strength, 1000, "shield should not block anything if it's coverage is 0%"
+			tx.rollback.sync(tx)
 
+		# shield is not equipped
 		query 'UPDATE items_proto SET coverage = 100'
 		query 'UPDATE items SET equipped = false WHERE id = 10'
 		query 'UPDATE items SET strength = 100'
-		for i in [0..5]
+		for i in [0...5]
 			tx = transaction(conn)
 			hp = game._hitAndGetHealth tx, 1, power
 			test.strictEqual shield().strength, 100, 'shield should receive no damage if not equipped'
