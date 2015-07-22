@@ -778,7 +778,7 @@ exports._hit =
 
 
 	'weapnons': (test) ->
-		['shield', 'sword', 'no-such-item-but-why-not'].forEach (type) ->
+		['shield', 'weapon-one-handed', 'no-such-item-but-why-not'].forEach (type) ->
 			clearTables 'items', 'items_proto'
 			insert 'items_proto', id:1, name: 'Ogrebator 4000', coverage:100, type: type, damage: 100
 			insert 'items', id:10, prototype:1, owner:1, strength:100, equipped:true

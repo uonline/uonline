@@ -101,11 +101,7 @@ block content
 							if !equipment.right_hand
 								a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id) Ударить
 							else
-								a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id+"?with_item_id="+equipment.right_hand.id)
-									| Ударить&nbsp;
-									case equipment.right_hand.type
-										when 'sword'
-											| мечом
+								a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id+"?with_item_id="+equipment.right_hand.id) Ударить оружием
 							if equipment.shield && equipment.shield.damage > 0
 								| #{' '}
 								a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id+"?with_item_id="+equipment.shield.id) Щитом

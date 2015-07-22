@@ -2,36 +2,35 @@ mixin slot(type, title)
 	tr
 		td.text-muted #{title}
 		td
-			- var count = 0
-			each item in equipment
-				if item.type === type && item.equipped === true
-					p
-						| #{ item.name }
-						| #{' '}
-						a.pjax-replace.btn.btn-default.btn-xs(href='/action/unequip/'+item.id) Снять
-						br
-						span.glyphicon.glyphicon-cog(title='Прочность')
-						| #{' '}
-						| #{ item.strength }/#{ item.strength_max }
-						| #{' '}&nbsp;#{' '}
-						span.glyphicon.glyphicon-stop(title='Покрытие тела')
-						| #{' '}
-						| #{ item.coverage }%
-						if item.type === 'shield'
-							- var size = 'средний'
-							if item.coverage > 45
-								- size = 'большой'
-							if item.damage > 0
-								- size = 'малый'
-							| #{' '}
-							span.text-muted (#{size})
+			// TODO: а может просто превратить весь эквипмент в хеш-массив?
+			- var item = equipment[type] || equipment.find(function(x){ return x.type == type })
+			if item
+				p
+					| #{ item.name }
+					| #{' '}
+					a.pjax-replace.btn.btn-default.btn-xs(href='/action/unequip/'+item.id) Снять
+					br
+					span.glyphicon.glyphicon-cog(title='Прочность')
+					| #{' '}
+					| #{ item.strength }/#{ item.strength_max }
+					| #{' '}&nbsp;#{' '}
+					span.glyphicon.glyphicon-stop(title='Покрытие тела')
+					| #{' '}
+					| #{ item.coverage }%
+					if item.type === 'shield'
+						- var size = 'средний'
+						if item.coverage > 45
+							- size = 'большой'
 						if item.damage > 0
-							| #{' '}&nbsp;#{' '}
-							span.glyphicon.glyphicon-tint(title='Бонус к урону при ударе')
-							//- | #{' '}
-							| #{ item.damage }
-					- count++
-			if count === 0
+							- size = 'малый'
+						| #{' '}
+						span.text-muted (#{size})
+					if item.damage > 0
+						| #{' '}&nbsp;#{' '}
+						span.glyphicon.glyphicon-tint(title='Бонус к урону при ударе')
+						//- | #{' '}
+						| #{ item.damage }
+			else
 				| -
 
 
@@ -51,7 +50,7 @@ block content
 			h3 Оружие
 			table.table.table-striped.table-hover.table-condensed
 				tbody
-					+slot('sword', 'Правая рука') // TODO: sword --> right_hand
+					+slot('right_hand', 'Правая рука')
 					+slot('shield', 'Щит')
 			h3 Экипировка
 			table.table.table-striped.table-hover.table-condensed
