@@ -777,38 +777,32 @@ exports._hit =
 		test.done()
 
 
-	'shields': (test) ->
-		insert 'items_proto', id:1, name: 'The Shield', coverage:100, type: 'shield', damage: 100
-		insert 'items', id:10, prototype:1, owner:1, strength:100, equipped:true
+	'weapnons': (test) ->
+		['shield', 'sword', 'no-such-item-but-why-not'].forEach (type) ->
+			clearTables 'items', 'items_proto'
+			insert 'items_proto', id:1, name: 'Ogrebator 4000', coverage:100, type: type, damage: 100
+			insert 'items', id:10, prototype:1, owner:1, strength:100, equipped:true
+			
+			# normal hit with item
+			result = game._hit conn, 1, 5, 10
+			test.strictEqual result.state, 'ok', 'should hit successfully'
+			hp = query.val 'SELECT health FROM characters WHERE id = 5'
+			test.ok hp < 500-40, 'should deal more damage than barehanded player can'
 
-		# hit with normal shield
-		result = game._hit conn, 1, 5, 10
-		test.strictEqual result.state, 'ok', 'should hit successfully'
-		hp = query.val 'SELECT health FROM characters WHERE id = 5'
-		test.ok hp < 500-40, 'should deal more damage than barehanded player can'
+			# try hit with 0-damage item
+			query "UPDATE items_proto SET damage = 0"
+			result = game._hit conn, 1, 5, 10
+			test.deepEqual result,
+					state: 'cancelled'
+					reason: "can't hit with this item"
+				'should cancel hit and describe reason if item has no dmage gain'
 
-		# try hit with 0-damage shield
-		query "UPDATE items_proto SET damage = 0"
-		result = game._hit conn, 1, 5, 10
-		test.deepEqual result,
-				state: 'cancelled'
-				reason: "can't hit with this item"
-			'should cancel hit and describe reason if shield has no dmage gain'
-
-		# try hit with non-shield
-		query "UPDATE items_proto SET damage = 10, type = 'not-shield'"
-		result = game._hit conn, 1, 5, 10
-		test.deepEqual result,
-				state: 'cancelled'
-				reason: "can't hit with this item"
-			'should cancel hit and describe reason if it is not shield'
-
-		# try hit with wrong item
-		result = game._hit conn, 1, 5, 123
-		test.deepEqual result,
-				state: 'cancelled'
-				reason: 'weapon item not found'
-			'should cancel hit and describe reason if item id is wrong'
+			# try hit with wrong item
+			result = game._hit conn, 1, 5, 123
+			test.deepEqual result,
+					state: 'cancelled'
+					reason: 'weapon item not found'
+				'should cancel hit and describe reason if item id is wrong'
 
 		test.done()
 

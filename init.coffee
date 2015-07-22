@@ -328,9 +328,10 @@ insertItems = ->
 		# [4, 'кожаные наплечники', 'pauldron',      20,  6]
 		# [5, 'кожаные наручи',     'vambrace',      30,  6]
 		# [6, 'кожаный шлем',       'helmet',        30,  8]
-		[ 1, 'Железный шлем',              'helmet', 300,  6 ]
-		[ 2, 'Кожаные сапоги',             'shoes',  120,  8 ]
-		[ 3, 'Укреплённый деревянный щит', 'shield', 440, 34 ]
+		[ 1, 'Железный шлем',              'helmet', 300,  6, 0   ]
+		[ 2, 'Кожаные сапоги',             'shoes',  120,  8, 0   ]
+		[ 3, 'Укреплённый деревянный щит', 'shield', 440, 34, 10  ]
+		[ 4, 'Деревянный меч',             'sword',  440,  0, 100 ]
 	]
 
 	process.stdout.write '  '+'Cleaning up'+'... '
@@ -341,8 +342,8 @@ insertItems = ->
 	process.stdout.write '  '+'Inserting item prototypes'+'... '
 	for proto in prototypes
 		query(
-			'INSERT INTO items_proto (id, name, type, strength_max, coverage) '+
-			'VALUES ($1, $2, $3, $4, $5)', proto)
+			'INSERT INTO items_proto (id, name, type, strength_max, coverage, damage) '+
+			'VALUES ($1, $2, $3, $4, $5, $6)', proto)
 	console.log chalk.green 'ok'
 
 	process.stdout.write '  '+'Fetching users'+'... '

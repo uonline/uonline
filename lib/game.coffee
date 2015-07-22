@@ -431,7 +431,7 @@ exports._hit = (dbConnection, hunterId, victimId, withItemId) ->
 			[ hunterId, withItemId ]).rows[0]
 		unless withItem?
 			return cancel "weapon item not found"
-		if withItem.type isnt 'shield' or withItem.damage == 0
+		if withItem.damage == 0
 			return cancel "can't hit with this item"
 
 	if victim.battle != hunter.battle
@@ -441,7 +441,7 @@ exports._hit = (dbConnection, hunterId, victimId, withItemId) ->
 		return cancel "can't hit teammate"
 
 	power = hunter.power
-	if withItem? and withItem.type == 'shield'
+	if withItem?
 		power += withItem.damage
 
 	health = exports._hitAndGetHealth(tx, victimId, power)
@@ -573,5 +573,3 @@ exports.getCharacterItems = ((dbConnection, character_id) ->
 	).rows
 ).async()
 
-
-process.on 'uncaughtException', (err) -> console.log('Caught exception: ' + err.stack)

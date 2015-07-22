@@ -199,6 +199,7 @@ fetchItems = ((request, response) ->
 	items = lib.game.getCharacterItems.sync null, dbConnection, request.uonline.user.character_id
 	request.uonline.equipment = items.filter (x) -> x.equipped
 	request.uonline.equipment.shield = request.uonline.equipment.find (x) -> x.type == 'shield'
+	request.uonline.equipment.right_hand = request.uonline.equipment.find (x) -> x.type == 'sword'
 	request.uonline.backpack = items.filter (x) -> !x.equipped
 	return
 ).asyncMiddleware()
