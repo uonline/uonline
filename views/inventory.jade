@@ -3,8 +3,15 @@ mixin slot(type, title)
 		td.text-muted #{title}
 		td
 			// TODO: а может просто превратить весь эквипмент в хеш-массив?
-			- var item = equipment[type] || equipment.find(function(x){ return x.type == type })
-			if item
+			if equipment[type]
+				- var items = [equipment[type]]
+			else
+				- var items = equipment.filter(function(x){ return x.type == type })
+
+			if items.length == 0
+				| -
+
+			each item in items
 				p
 					| #{ item.name }
 					| #{' '}
@@ -30,8 +37,6 @@ mixin slot(type, title)
 						span.glyphicon.glyphicon-tint(title='Бонус к урону при ударе')
 						//- | #{' '}
 						| #{ item.damage }
-			else
-				| -
 
 
 extends layout
