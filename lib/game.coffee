@@ -558,7 +558,7 @@ exports.getCharacter = ((dbConnection, character_id_or_name) ->
 # Returns user's characters list with some basic attributes.
 exports.getCharacters = ((dbConnection, user_id) ->
 	dbConnection.query.sync(dbConnection,
-		"SELECT id, name FROM characters WHERE player = $1 ORDER BY id", [ user_id ]).rows
+		"SELECT id, name, race, gender FROM characters WHERE player = $1 ORDER BY id", [ user_id ]).rows
 ).async()
 
 

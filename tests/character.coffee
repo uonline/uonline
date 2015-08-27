@@ -66,7 +66,7 @@ exports.createCharacter = (test) ->
 	insert 'locations', id: 2, initial: 1
 	insert 'uniusers', id: 1
 
-	charid = character.createCharacter(conn, 1, 'My First Character')
+	charid = character.createCharacter(conn, 1, 'My First Character', 'elf', 'female')
 	char = query.row "SELECT * FROM characters"
 	user = query.row "SELECT * FROM uniusers"
 
@@ -74,6 +74,8 @@ exports.createCharacter = (test) ->
 	test.strictEqual charid, char.id, 'should return new character id'
 	test.strictEqual char.name, 'My First Character', 'should create character with specified name'
 	test.strictEqual char.location, 2, 'should create character in initial location'
+	test.strictEqual char.race, 'elf', 'should create character with specified race'
+	test.strictEqual char.gender, 'female', 'should create character with specified gender'
 
 	ex = null
 	try

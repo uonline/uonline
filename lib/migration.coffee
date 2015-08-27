@@ -315,6 +315,14 @@ migrationData = [
 		# Add damage (right now it's for shields)
 		['items_proto', 'addCol', 'damage INT']
 	]
+	[
+		# Types and columns for race and gender
+		['characters', 'rawsql', "CREATE TYPE uonline_race AS ENUM ('orc', 'human', 'elf')"]
+		['characters', 'rawsql', "CREATE TYPE uonline_gender AS ENUM ('male', 'female')"]
+		['characters', 'addCol', 'race uonline_race']
+		['characters', 'addCol', 'gender uonline_gender']
+		['characters', 'rawsql', "UPDATE characters SET race='orc', gender='male' WHERE player IS NOT NULL"]
+	]
 ]
 
 exports.getMigrationsData = ->

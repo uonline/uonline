@@ -504,7 +504,7 @@ exports._hitItem = (test) ->
 		item = query.row 'SELECT id, strength FROM items'
 		test.strictEqual delta, 80, "should reduce all attacker's power if item is strong"
 		test.strictEqual item.strength, 20, "should reduce item's strength"
-		
+
 		delta = game._hitItem(tx, power, item)
 		item = query.row 'SELECT id, strength FROM items'
 		test.strictEqual delta, 20, "should reduce part of attacker's power if item was broken"
@@ -773,7 +773,7 @@ exports._hit =
 				victimKilled: true
 				battleEnded: true
 			'should describe what had happened'
-		
+
 		test.done()
 
 
@@ -782,7 +782,7 @@ exports._hit =
 			clearTables 'items', 'items_proto'
 			insert 'items_proto', id:1, name: 'Ogrebator 4000', coverage:100, type: type, damage: 100
 			insert 'items', id:10, prototype:1, owner:1, strength:100, equipped:true
-			
+
 			# normal hit with item
 			result = game._hit conn, 1, 5, 10
 			test.strictEqual result.state, 'ok', 'should hit successfully'
@@ -960,6 +960,8 @@ exports.getCharacter =
 			attack_chance: 32
 			player: 1
 			location: 2
+			race: 'elf'
+			gender: 'female'
 
 		clearTables 'characters', 'battle_participants'
 		insert 'characters', data
@@ -1003,13 +1005,13 @@ exports.getCharacters = (test) ->
 	chars = game.getCharacters(conn, 1)
 	test.deepEqual chars, [], 'should return no characters if user does not have any'
 
-	insert 'characters', id: 1, player: 1, name: 'Nagibator'
-	insert 'characters', id: 2, player: 1, name: 'Ybivator'
-	insert 'characters', id: 3, player: 2, name: 'Voskreshator'
+	insert 'characters', id: 1, player: 1, name: 'Nagibator', race: 'orc', gender: 'male'
+	insert 'characters', id: 2, player: 1, name: 'Ybivator', race: 'elf', gender: 'female'
+	insert 'characters', id: 3, player: 2, name: 'Voskreshator', race: 'human', gender: 'male'
 	chars = game.getCharacters(conn, 1)
 	test.deepEqual chars, [
-		{id: 1, name: 'Nagibator'}
-		{id: 2, name: 'Ybivator'}
+		{ id: 1, name: 'Nagibator', race: 'orc', gender: 'male' }
+		{ id: 2, name: 'Ybivator', race: 'elf', gender: 'female' }
 	], 'should return some characters info'
 	test.done()
 

@@ -121,28 +121,27 @@ app.use ((request, response) ->
 	user = lib.user.sessionInfoRefreshing.sync(null,
 		dbConnection, request.cookies.sessid, config.sessionExpireTime, true)
 	request.uonline.user = user
+	# utility
+	writeDisplayRace = (x) ->
+		tmp = {
+			'orc-male': 'орк'
+			'orc-female': 'женщина-орк'
+			'human-male': 'человек'
+			'human-female': 'человек'
+			'elf-male': 'эльф'
+			'elf-female': 'эльфийка'
+		}
+		key = "#{x.race}-#{x.gender}"
+		x.displayRace = tmp[key]
 	# Read character data
 	character = lib.game.getCharacter.sync null, dbConnection, request.uonline.user.character_id
 	if character?
-		# emulate
-		character.race = 'elf'
-		character.gender = 'woman'
-		tmp = {
-			'orc-man': 'орк'
-			'orc-woman': 'женщина-орк'
-			'human-man': 'человек'
-			'human-woman': 'человек'
-			'elf-man': 'эльф'
-			'elf-woman': 'эльфийка'
-		}
-		character.displayRace = tmp["#{character.race}-#{character.gender}"]
+		writeDisplayRace(character)
 	request.uonline.character = character
 	# Read all user's characters data
 	characters = lib.game.getCharacters.sync null, dbConnection, request.uonline.user.id
 	if characters?
-		for i in characters
-			# emulate
-			i.displayRace = 'эльфийка'
+		characters.forEach writeDisplayRace
 	request.uonline.characters = characters
 	# CSP
 	if !process.env.NOCSP
@@ -423,6 +422,8 @@ app.post '/newCharacter/',
 				dbConnection
 				request.uonline.user.id
 				request.body.character_name
+				request.body.character_race
+				request.body.character_gender
 			)
 			response.redirect '/character/'
 		else

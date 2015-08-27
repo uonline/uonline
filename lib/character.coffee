@@ -29,7 +29,7 @@ exports.characterExists = (dbConnection, name, callback) ->
 
 # Creates new character for user.
 # Returns id of new character.
-exports.createCharacter = ((dbConnection, user_id, name) ->
+exports.createCharacter = ((dbConnection, user_id, name, race, gender) ->
 	# да что за фигня опять тут происходит?!
 	# https://github.com/grncdr/node-any-db-transaction
 	# > by default any queries that error during a transaction will cause an automatic rollback
@@ -40,9 +40,9 @@ exports.createCharacter = ((dbConnection, user_id, name) ->
 	tx = transaction dbConnection, autoRollback: false
 	try
 		charid = tx.query.sync(tx,
-			"INSERT INTO characters (name, player, location) "+
-			"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1)) RETURNING id",
-			[ name, user_id ]).rows[0].id
+			"INSERT INTO characters (name, player, location, race, gender) "+
+			"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1), $3, $4) RETURNING id",
+			[ name, user_id, race, gender ]).rows[0].id
 	catch ex
 		tx.rollback.sync tx
 		if (ex.constraint is 'players_character_unique_name_index')
