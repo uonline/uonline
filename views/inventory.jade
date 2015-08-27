@@ -2,7 +2,7 @@ mixin slot(type, title)
 	tr
 		td.text-muted #{title}
 		td
-			// TODO: а может просто превратить весь эквипмент в хеш-массив?
+			//- TODO: а может просто превратить весь эквипмент в хеш-массив?
 			if equipment[type]
 				- var items = [equipment[type]]
 			else
@@ -64,10 +64,12 @@ block content
 					+slot('', 'Шея')
 					+slot('pauldron', 'Плечи')
 					+slot('', 'Торс')
+					//- TODO: учитывать расу, у орков нет нагрудников
 					+slot('breastplate', 'Грудь')
 					+slot('belt', 'Пояс')
 					+slot('vambrace', 'Предплечья')
 					+slot('gloves', 'Руки')
+					+slot('ring', 'Пальцы')
 					+slot('', 'Ноги')
 					+slot('', 'Бёдра')
 					+slot('', 'Голени')
