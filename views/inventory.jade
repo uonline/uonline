@@ -20,18 +20,19 @@ mixin slot(type, title)
 					span.glyphicon.glyphicon-cog(title='Прочность')
 					| #{' '}
 					| #{ item.strength }/#{ item.strength_max }
-					| #{' '}&nbsp;#{' '}
-					span.glyphicon.glyphicon-stop(title='Покрытие тела')
-					| #{' '}
-					| #{ item.coverage }%
-					if item.type === 'shield'
-						- var size = 'средний'
-						if item.coverage > 45
-							- size = 'большой'
-						if item.damage > 0
-							- size = 'малый'
+					if item.type !== 'weapon-one-handed'
+						| #{' '}&nbsp;#{' '}
+						span.glyphicon.glyphicon-stop(title='Покрытие тела')
 						| #{' '}
-						span.text-muted (#{size})
+						| #{ item.coverage }%
+						if item.type === 'shield'
+							- var size = 'средний'
+							if item.coverage > 45
+								- size = 'большой'
+							if item.damage > 0
+								- size = 'малый'
+							| #{' '}
+							span.text-muted (#{size})
 					if item.damage > 0
 						| #{' '}&nbsp;#{' '}
 						span.glyphicon.glyphicon-tint(title='Бонус к урону при ударе')
@@ -64,8 +65,8 @@ block content
 					+slot('', 'Шея')
 					+slot('pauldron', 'Плечи')
 					+slot('', 'Торс')
-					//- TODO: учитывать расу, у орков нет нагрудников
-					+slot('breastplate', 'Грудь')
+					if character.race !== 'orc'
+						+slot('breastplate', 'Грудь')
 					+slot('belt', 'Пояс')
 					+slot('vambrace', 'Предплечья')
 					+slot('gloves', 'Руки')
@@ -74,8 +75,13 @@ block content
 					+slot('', 'Бёдра')
 					+slot('', 'Голени')
 					+slot('shoes', 'Обувь')
+			if character.race === 'orc'
+				p Орки не носят нагрудников.
 			h3 Читерская кнопка
-			a.pjax.btn.btn-default(href='/ajax/cheatFixAll') Починить всю броню всем игрокам
+			a.pjax.btn.btn-default(href='/ajax/cheatFixAll')
+				span.glyphicon.glyphicon-cog
+				| #{' '}
+				| Починить все предметы всем игрокам
 		div.col-md-6
 			h3 Рюкзак
 			if backpack.length === 0
