@@ -22,6 +22,37 @@ block content
 			span.col-sm-7.help-block
 				small От 2 до 32 символов, [a-zA-Zа-яА-Я -].
 		.form-group
+			label.col-sm-2.control-label(for='character_race') Раса
+			.col-sm-3
+				div.radio
+					label
+						input(type='radio', name='character_race', value='orc', checked='checked')
+						| #{' '}
+						| Орк
+				div.radio
+					label
+						input(type='radio', name='character_race', value='human')
+						| #{' '}
+						| Человек
+				div.radio
+					label
+						input(type='radio', name='character_race', value='elf')
+						| #{' '}
+						| Эльф
+		.form-group
+			label.col-sm-2.control-label(for='character_gender') Пол
+			.col-sm-3
+				div.radio
+					label
+						input(type='radio', name='character_gender', value='man', checked='checked')
+						| #{' '}
+						| Мужчина
+				div.radio
+					label
+						input(type='radio', name='character_gender', value='woman')
+						| #{' '}
+						| Женщина
+		.form-group
 			.col-sm-2
 			.col-sm-3
-				button.btn.btn-default(type='submit') Создать
+				button.btn.btn-primary(type='submit') Создать
