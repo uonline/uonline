@@ -53,13 +53,13 @@ block content
 		hr
 	div.row
 		div.col-md-6
-			h3 Оружие
 			table.table.table-striped.table-hover.table-condensed
+				thead: tr: td(colspan=2): h3 Оружие
 				tbody
 					+slot('right_hand', 'Правая рука')
 					+slot('shield', 'Щит')
-			h3 Экипировка
 			table.table.table-striped.table-hover.table-condensed
+				thead: tr: td(colspan=2): h3 Экипировка
 				tbody
 					+slot('helmet', 'Голова')
 					+slot('', 'Шея')

@@ -123,7 +123,7 @@ app.use ((request, response) ->
 	request.uonline.user = user
 	# Read character data
 	character = lib.game.getCharacter.sync null, dbConnection, request.uonline.user.character_id
-	character.race = 'orc'  # emulated
+	if character? then character.race = 'orc'  # emulated
 	request.uonline.character = character
 	# Read all user's characters data
 	characters = lib.game.getCharacters.sync null, dbConnection, request.uonline.user.id
