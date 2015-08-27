@@ -21,7 +21,7 @@ block content
 								b #{x.name}
 							| &nbsp;&nbsp;
 							span.text-muted
-								| орк 1-го уровня
+								| #{x.displayRace} 1-го уровня
 						else
 							div.pull-right
 								a.btn.btn-default.btn-xs(href='/action/switchCharacter/'+x.id) Переключиться

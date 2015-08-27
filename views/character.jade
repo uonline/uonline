@@ -50,7 +50,7 @@ block content
 			i.glyphicon.glyphicon-question-sign
 			| #{' '}Что означают все эти цифры?
 		h1 #{fetched_character.name}&nbsp;&nbsp;
-			small орк #{fetched_character.level}-го уровня
+			small #{character.displayRace} #{fetched_character.level}-го уровня
 				if fetched_character.id == character.id
 					| #{' '}(это&nbsp;вы)
 	.row

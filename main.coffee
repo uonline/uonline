@@ -123,10 +123,26 @@ app.use ((request, response) ->
 	request.uonline.user = user
 	# Read character data
 	character = lib.game.getCharacter.sync null, dbConnection, request.uonline.user.character_id
-	if character? then character.race = 'orc'  # emulated
+	if character?
+		# emulate
+		character.race = 'elf'
+		character.gender = 'woman'
+		tmp = {
+			'orc-man': 'орк'
+			'orc-woman': 'женщина-орк'
+			'human-man': 'человек'
+			'human-woman': 'человек'
+			'elf-man': 'эльф'
+			'elf-woman': 'эльфийка'
+		}
+		character.displayRace = tmp["#{character.race}-#{character.gender}"]
 	request.uonline.character = character
 	# Read all user's characters data
 	characters = lib.game.getCharacters.sync null, dbConnection, request.uonline.user.id
+	if characters?
+		for i in characters
+			# emulate
+			i.displayRace = 'эльфийка'
 	request.uonline.characters = characters
 	# CSP
 	if !process.env.NOCSP
