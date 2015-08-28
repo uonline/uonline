@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# script/update: Update application to run for its current checkout.
+
+set -e
+cd "$(dirname "$0")/.."
+set -x
+
+script/bootstrap
+./init.coffee --migrate-tables --optimize-tables  # TODO: maybe update unify and items and well?
+./init.coffee --info
