@@ -255,10 +255,14 @@ optimize = ->
 
 
 unifyValidate = ->
-	console.log 'Coming soon...'
+	console.log chalk.magenta 'Validating unify...'
+	dbConnection = createAnyDBConnection(config.DATABASE_URL)
+	locparse = require './lib/locparse'
+	result = locparse.processDir('./unify/Кронт - kront', true)
 
 
 unifyExport = ->
+	console.log chalk.magenta 'Inserting unify data...'
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 	locparse = require './lib/locparse'
 	result = locparse.processDir('./unify/Кронт - kront', true)
@@ -266,9 +270,10 @@ unifyExport = ->
 
 
 insertMonsters = ->
+	console.log chalk.magenta 'Inserting monsters...'
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 
-	console.log('Inserting test prototypes...')
+	process.stdout.write '  '+'Inserting prototypes'+'... '
 
 	prototypes = [
 		[0,"Могильный жук",1,12,6,22,0,10,250,0,0,5,16]
@@ -288,12 +293,14 @@ insertMonsters = ->
 		[14,"Огр",14,180,30,118,0,44,1800,0,0,15,45]
 		[15,"Грязевой голем",21,300,20,100,0,50,2500,0,0,5,16]
 	]
+	
+	console.log chalk.green 'ok'
 
 	locs = dbConnection.query.sync(dbConnection, "SELECT id FROM locations").rows
 	if (locs.length == 0)
 		throw new Error("No locations found. Forgot unify data?")
 
-	console.log('Inserting monsters...')
+	process.stdout.write '  '+'Inserting monsters'+'... '
 
 	dbConnection.query.sync(dbConnection, "DELETE FROM characters WHERE player IS NULL", [])
 	for i in prototypes
@@ -311,8 +318,8 @@ insertMonsters = ->
 				i.slice(1, i.length-2) # cut id (first) and minitiative_min|max (last two)
 					.concat(locs.sample().id, i[8], i[9], Number.random(25), Number.random(i[11], i[12]))
 			)
-
-	console.log('Done.')
+			
+	console.log chalk.green 'ok'
 
 
 insertItems = ->
