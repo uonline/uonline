@@ -1,13 +1,14 @@
 mixin slot(type, title)
+	//- TODO: а может просто превратить весь эквипмент в хеш-массив?
+	- var items;
+	if equipment[type]
+		- items = [equipment[type]]
+	else
+		- items = equipment.filter(function(x){ return x.type == type })
+	//- ...and render
 	tr
-		td.text-muted #{title}
+		td(class=(items.length > 0 ? 'text-warning':'text-muted')) #{title}
 		td
-			//- TODO: а может просто превратить весь эквипмент в хеш-массив?
-			if equipment[type]
-				- var items = [equipment[type]]
-			else
-				- var items = equipment.filter(function(x){ return x.type == type })
-
 			if items.length == 0
 				| -
 
