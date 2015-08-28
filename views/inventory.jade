@@ -1,4 +1,5 @@
-mixin slot(type, title)
+mixin slot(type, title, capacity)
+	- if (!capacity) capacity = 1
 	//- TODO: а может просто превратить весь эквипмент в хеш-массив?
 	- var items;
 	if equipment[type]
@@ -7,7 +8,11 @@ mixin slot(type, title)
 		- items = equipment.filter(function(x){ return x.type == type })
 	//- ...and render
 	tr
-		td(class=(items.length > 0 ? 'text-warning':'text-muted')) #{title}
+		td(class=(items.length > 0 ? 'text-warning':'text-muted'))
+			| #{title}
+			if capacity > 1
+				| #{' '}
+				| (#{items.length}/#{capacity})
 		td
 			if items.length == 0
 				| -
@@ -63,15 +68,15 @@ block content
 				thead: tr: td(colspan=2): h3 Экипировка
 				tbody
 					+slot('helmet', 'Голова')
-					+slot('', 'Шея')
-					+slot('pauldron', 'Плечи')
-					+slot('', 'Торс')
+					+slot('necklace', 'Шея', 3)
+					+slot('pauldron', 'Плечи', 2)
+					+slot('coat', 'Торс')
 					if character.race !== 'orc'
 						+slot('breastplate', 'Грудь')
 					+slot('belt', 'Пояс')
-					+slot('vambrace', 'Предплечья')
+					+slot('vambrace', 'Предплечья', 2)
 					+slot('gloves', 'Руки')
-					+slot('ring', 'Пальцы')
+					+slot('ring', 'Пальцы', 10)
 					+slot('', 'Ноги')
 					+slot('', 'Бёдра')
 					+slot('', 'Голени')
