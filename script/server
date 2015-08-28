@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# script/server: Launch the application and any extra required processes
+#                locally.
+
+# TODO: '--watch' to run with monitor
+
+set -e
+cd "$(dirname "$0")/.."
+set -x
+
+gulp build
+./main.coffee
