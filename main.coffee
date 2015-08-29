@@ -202,11 +202,15 @@ fetchCharacterFromURL = ((request, response) ->
 
 
 fetchMonsterFromURL = ((request, response) ->
-	chars = lib.game.getCharacter.sync null, dbConnection, request.params.id
+	try
+		id = parseInt(request.params.id, 10)
+	catch ex
+		throw new Error '404'
+	chars = lib.game.getCharacter.sync null, dbConnection, id
 	if not chars?
 		throw new Error '404'
 	for i of chars
-		request.uonline[i] = chars[i]
+		request.uonline.fetched_monster = chars
 	return
 ).asyncMiddleware()
 

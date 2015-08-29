@@ -9,11 +9,11 @@ mixin tr_td_ch(name, value)
 
 extends layout
 block title
-	| #{name}
+	| #{fetched_monster.name}
 block content
 	div.page-header
-		h1 #{name}&nbsp;&nbsp;
-			small монстр #{level}-го уровня
+		h1 #{fetched_monster.name}&nbsp;&nbsp;
+			small монстр #{fetched_monster.level}-го уровня
 	.row
 		.col-sm-12
 			//- p= description
@@ -22,12 +22,12 @@ block content
 		.col-sm-6
 			h3 Характеристики
 			table.table.table-striped.table-hover
-				+tr_td_ch('Здоровье', health_max)
-				+tr_td_ch('Мана', mana_max)
-				+tr_td_ch('Энергия', energy)
-				+tr_td_ch('Сила', power)
-				+tr_td_ch('Защита', defense)
-				+tr_td_ch('Ловкость', agility)
-				+tr_td_ch('Точность', accuracy)
-				+tr_td_ch('Интеллект', intelligence)
-				+tr_td_ch('Инициатива', initiative_min+'...'+initiative_max)
+				+tr_td_ch('Здоровье', fetched_monster.health_max)
+				+tr_td_ch('Мана', fetched_monster.mana_max)
+				+tr_td_ch('Энергия', fetched_monster.energy)
+				+tr_td_ch('Сила', fetched_monster.power)
+				+tr_td_ch('Защита', fetched_monster.defense)
+				+tr_td_ch('Ловкость', fetched_monster.agility)
+				+tr_td_ch('Точность', fetched_monster.accuracy)
+				+tr_td_ch('Интеллект', fetched_monster.intelligence)
+				+tr_td_ch('Инициатива', fetched_monster.initiative)
