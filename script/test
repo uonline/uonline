@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 set -x
 
 if [ "$1" "==" "--fast" ]; then
-	grunt test
+	grunt --stack test
 else
-	grunt
+	grunt --stack
 fi
