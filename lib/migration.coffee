@@ -323,6 +323,21 @@ migrationData = [
 		['characters', 'addCol', 'gender uonline_gender']
 		['characters', 'rawsql', "UPDATE characters SET race='orc', gender='male' WHERE player IS NOT NULL"]
 	]
+	[
+		# Fix energy for old characters
+		['characters', 'rawsql',
+			"UPDATE characters SET energy = 220, energy_max = 220 WHERE race = 'orc' AND gender = 'male'"]
+		['characters', 'rawsql',
+			"UPDATE characters SET energy = 200, energy_max = 200 WHERE race = 'orc' AND gender = 'female'"]
+		['characters', 'rawsql',
+			"UPDATE characters SET energy = 170, energy_max = 170 WHERE race = 'human' AND gender = 'male'"]
+		['characters', 'rawsql',
+			"UPDATE characters SET energy = 160, energy_max = 160 WHERE race = 'human' AND gender = 'female'"]
+		['characters', 'rawsql',
+			"UPDATE characters SET energy = 150, energy_max = 150 WHERE race = 'elf' AND gender = 'male'"]
+		['characters', 'rawsql',
+			"UPDATE characters SET energy = 140, energy_max = 140 WHERE race = 'elf' AND gender = 'female'"]
+	]
 ]
 
 exports.getMigrationsData = ->
