@@ -293,7 +293,7 @@ insertMonsters = ->
 		[14,"Огр",14,180,30,118,0,44,1800,0,0,15,45]
 		[15,"Грязевой голем",21,300,20,100,0,50,2500,0,0,5,16]
 	]
-	
+
 	console.log chalk.green 'ok'
 
 	locs = dbConnection.query.sync(dbConnection, "SELECT id FROM locations").rows
@@ -318,7 +318,7 @@ insertMonsters = ->
 				i.slice(1, i.length-2) # cut id (first) and minitiative_min|max (last two)
 					.concat(locs.sample().id, i[8], i[9], Number.random(25), Number.random(i[11], i[12]))
 			)
-			
+
 	console.log chalk.green 'ok'
 
 
@@ -335,10 +335,39 @@ insertItems = ->
 		# [4, 'кожаные наплечники', 'pauldron',      20,  6]
 		# [5, 'кожаные наручи',     'vambrace',      30,  6]
 		# [6, 'кожаный шлем',       'helmet',        30,  8]
-		[ 1, 'Железный шлем',              'helmet', 300,  6, 0   ]
-		[ 2, 'Кожаные сапоги',             'shoes',  120,  8, 0   ]
-		[ 3, 'Укреплённый деревянный щит', 'shield', 440, 34, 10  ]
-		[ 4, 'Деревянный меч', 'weapon-one-handed',  440,  0, 100 ]
+
+		#[ 1, 'Железный шлем',              'helmet', 300,  6, 0   ]
+		#[ 2, 'Кожаные сапоги',             'boots',  120,  8, 0   ]
+		#[ 3, 'Укреплённый деревянный щит', 'shield', 440, 34, 10  ]
+		#[ 4, 'Деревянный меч', 'weapon-one-handed',  440,  0, 100 ]
+
+		[ 1, 'Железный шлем драконопоклонника', 'helmet', 280, 10, 0 ]
+		[ 2, 'Стальной шлем драконопоклонника', 'helmet', 340, 10, 0 ]
+		[ 3, 'Закрытый стальной шлем', 'helmet', 500, 13, 0 ]
+		[ 4, 'Стальной гладиаторский шлем', 'helmet', 505, 13, 0 ]
+		[ 5, 'Гладиаторский шлем из дюрали', 'helmet', 580, 13, 0 ]
+		[ 6, 'Железный топхелм', 'helmet', 320, 12, 0 ]
+		[ 7, 'Простой рогатый шлем', 'helmet', 200, 6, 0 ]
+		[ 8, 'Шипованный правый наплечник', 'pauldron', 480, 8, 0 ]
+		[ 27, 'Железный правый наплечник', 'pauldron', 300, 10, 0 ]
+		[ 9, 'Кожаные сапоги хуманов', 'boots', 100, 10, 0 ]
+		[ 10, 'Кожаные сапоги урук-хаев', 'boots', 100, 10, 0 ]
+		[ 11, 'Кожаные сапоги эльфов', 'boots', 100, 10, 0 ]
+		[ 12, 'Укреплённый деревянный щит', 'shield', 440, 34, 0 ]
+		[ 13, 'Короткий эльфийский меч', 'weapon-one-handed', 500, 0, 70 ]
+		[ 14, 'Стандартный эльфийский меч', 'weapon-one-handed', 750, 0, 105 ]
+		[ 15, 'Прямой стандартный эльфийский клинок', 'weapon-one-handed', 550, 0, 90 ]
+		[ 16, 'Zweihander', 'weapon-two-handed', 1750, 0, 190 ]
+		[ 17, 'Тяжелый тесак', 'weapon-one-handed', 450, 0, 80 ]
+		[ 18, 'Шипованная дубина', 'weapon-one-handed', 350, 0, 90 ]
+		[ 19, 'Посох шамана', 'weapon-two-handed', 350, 0, 35 ]
+		[ 20, 'Деревянный посох', 'weapon-two-handed', 300, 0, 25 ]
+		[ 21, 'Усиленый меч', 'weapon-one-handed', 475, 0, 75 ]
+		[ 22, 'Стальной меч странника', 'weapon-one-handed', 505, 0, 70 ]
+		[ 23, 'Деревянная дубина', 'weapon-two-handed', 200, 0, 105 ]
+		[ 24, 'Простой железный меч', 'weapon-one-handed', 305, 0, 65 ]
+		[ 25, 'Коготь смерти', 'weapon-one-handed', 705, 0, 140 ]
+		[ 26, 'Тесак', 'weapon-one-handed', 205, 0, 45 ]
 	]
 
 	process.stdout.write '  '+'Cleaning up'+'... '
@@ -361,7 +390,7 @@ insertItems = ->
 	for user in users
 		process.stdout.write '  '+"Giving some items to #{user.username}"+'... '
 		for item in prototypes
-			query 'INSERT INTO items (prototype, owner, strength) VALUES ($1,$2,$3)', [item[0], user.character_id, item[3]]
+			query 'INSERT INTO items (prototype, owner, strength, equipped) VALUES ($1,$2,$3,false)', [item[0], user.character_id, item[3]]
 		console.log chalk.green 'ok'
 
 
