@@ -86,12 +86,39 @@ exports.createCharacter = (test) ->
 	test.strictEqual ex.message, 'character already exists',
 		'should throw CORRECT exception if such name has been taken'
 
+	energies = [
+		['orc', 'male', 220 ]
+		['orc', 'female', 200 ]
+		['human', 'male', 170 ]
+		['human', 'female', 160 ]
+		['elf', 'male', 150 ]
+		['elf', 'female', 140 ]
+	]
+	for x in energies
+		character.createCharacter(conn, 1, "#{x[0]}-#{x[1]}", x[0], x[1])
+		char = query.row 'SELECT * FROM characters WHERE name = $1', [ "#{x[0]}-#{x[1]}" ]
+		test.strictEqual char.energy_max, x[2], "should set correct energy_max value for #{x[1]} #{x[0]}"
+		test.strictEqual char.energy, x[2], "should set correct energy value for #{x[1]} #{x[0]}"
+
+	test.throws(
+		-> character.createCharacter(conn, 1, 'My First Character', 'murloc', 'female')
+		Error
+		'should not allow weird races'
+	)
+
+	test.throws(
+		-> character.createCharacter(conn, 1, 'My First Character', 'orc', 'it')
+		Error
+		'should not allow weird genders'
+	)
+
 	query "UPDATE locations SET initial = 1"
 	test.throws(
 		-> character.createCharacter(conn, null, null)
 		Error
 		'should throw if something bad happened'
 	)
+
 	test.done()
 
 
@@ -131,9 +158,9 @@ exports.deleteCharacter = (test) ->
 	ok = character.deleteCharacter conn, 1, 5
 	count = +query.val "SELECT count(*) FROM characters"
 
-	test.strictEqual ok, false, "should return false if trying to delete character of other user"
-	test.strictEqual count, 3, 'should not delete character'
-	test.deepEqual itemOwners(), [1,3], "should not delete items"
+	test.strictEqual ok, false, "should refuse and return false if character belongs to other user"
+	test.strictEqual count, 3, "should refuse and not delete character if character belongs to other user"
+	test.deepEqual itemOwners(), [1,3], "should refuse and not delete items if character belongs to other user"
 
 	# deleting character while in battle
 	clearTables 'uniusers', 'characters', 'battle_participants', 'items'
@@ -145,9 +172,9 @@ exports.deleteCharacter = (test) ->
 	ok = character.deleteCharacter conn, 2, 1
 	count = +query.val "SELECT count(*) FROM characters"
 
-	test.strictEqual ok, false, 'should return false if trying to delete in-battle character'
-	test.strictEqual count, 1, 'should not delete character'
-	test.deepEqual itemOwners(), [1], "should not delete items"
+	test.strictEqual ok, false, 'should refuse and return false if trying to delete in-battle character'
+	test.strictEqual count, 1, "should refuse and don't delete character if trying to delete in-battle character"
+	test.deepEqual itemOwners(), [1], "should refuse and don't delete items if trying to delete in-battle character"
 	test.done()
 
 

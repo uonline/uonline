@@ -39,10 +39,19 @@ exports.createCharacter = ((dbConnection, user_id, name, race, gender) ->
 	#   Fatal error: current transaction is aborted, commands ignored until end of transaction block
 	tx = transaction dbConnection, autoRollback: false
 	try
+		energies = {
+			'orc-male': 220
+			'orc-female': 200
+			'human-male': 170
+			'human-female': 160
+			'elf-male': 150
+			'elf-female': 140
+		}
+		energy = energies["#{race}-#{gender}"]
 		charid = tx.query.sync(tx,
-			"INSERT INTO characters (name, player, location, race, gender) "+
-			"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1), $3, $4) RETURNING id",
-			[ name, user_id, race, gender ]).rows[0].id
+			"INSERT INTO characters (name, player, location, race, gender, energy, energy_max) "+
+			"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1), $3, $4, $5, $5) RETURNING id",
+			[ name, user_id, race, gender, energy ]).rows[0].id
 	catch ex
 		tx.rollback.sync tx
 		if (ex.constraint is 'players_character_unique_name_index')
