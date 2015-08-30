@@ -1,3 +1,37 @@
+mixin item(x, button, renderType)
+	| #{ x.name }
+	| #{' '}
+	if button === 'unequip'
+		a.pjax-replace.btn.btn-default.btn-xs(href='/action/unequip/'+x.id) Снять
+	if button === 'equip'
+		a.pjax-replace.btn.btn-default.btn-xs(href='/action/equip/'+x.id) Надеть
+	if renderType
+		br
+		span.text-muted #{x.type}
+	br
+	span(class=(x.strength===0?'text-danger':''))
+		span.glyphicon.glyphicon-cog(title='Прочность')
+		| #{' '}
+		| #{ x.strength }/#{ x.strength_max }
+	if x.type !== 'weapon-one-handed'
+		| #{' '}&nbsp;#{' '}
+		span.glyphicon.glyphicon-stop(title='Покрытие тела')
+		| #{' '}
+		| #{ x.coverage }%
+		if x.type === 'shield'
+			- var size = 'средний'
+			if x.coverage > 45
+				- size = 'большой'
+			if x.damage > 0
+				- size = 'малый'
+			| #{' '}
+			span.text-muted (#{size})
+	if x.damage > 0
+		| #{' '}&nbsp;#{' '}
+		span.glyphicon.glyphicon-tint(title='Бонус к урону при ударе')
+		//- | #{' '}
+		| #{ x.damage }
+
 mixin slot(type, title, capacity)
 	- if (!capacity) capacity = 1
 	//- TODO: а может просто превратить весь эквипмент в хеш-массив?
@@ -17,33 +51,9 @@ mixin slot(type, title, capacity)
 			if items.length == 0
 				| -
 
-			each item in items
+			each x in items
 				p
-					| #{ item.name }
-					| #{' '}
-					a.pjax-replace.btn.btn-default.btn-xs(href='/action/unequip/'+item.id) Снять
-					br
-					span.glyphicon.glyphicon-cog(title='Прочность')
-					| #{' '}
-					| #{ item.strength }/#{ item.strength_max }
-					if item.type !== 'weapon-one-handed'
-						| #{' '}&nbsp;#{' '}
-						span.glyphicon.glyphicon-stop(title='Покрытие тела')
-						| #{' '}
-						| #{ item.coverage }%
-						if item.type === 'shield'
-							- var size = 'средний'
-							if item.coverage > 45
-								- size = 'большой'
-							if item.damage > 0
-								- size = 'малый'
-							| #{' '}
-							span.text-muted (#{size})
-					if item.damage > 0
-						| #{' '}&nbsp;#{' '}
-						span.glyphicon.glyphicon-tint(title='Бонус к урону при ударе')
-						//- | #{' '}
-						| #{ item.damage }
+					+item(x, 'unequip', true)
 
 
 extends layout
@@ -59,12 +69,29 @@ block content
 		hr
 	div.row
 		div.col-md-6
-			table.table.table-striped.table-hover.table-condensed
+			if backpack.length === 0
+				h3 Рюкзак
+				p В рюкзаке ничего нет.
+			else
+				table.table.table-hover.table-condensed
+					thead: tr: td
+						h3 Рюкзак
+						p.text-muted Всего вещей: #{backpack.length}
+					tbody
+						each x in backpack
+							tr
+								td
+									+item(x, 'equip', true)
+			//-p У вас в рюкзаке ничего нет. Это нормально, потому что на этом сервере нет предметов.
+			//-p У вас в рюкзаке ничего нет.
+			//-Собирайте предметы с убитых монстров, покупайте у торговцев и делайте сами из подручных материалов.
+		div.col-md-6
+			table.table.table-hover.table-condensed
 				thead: tr: td(colspan=2): h3 Оружие
 				tbody
 					+slot('right_hand', 'Правая рука')
 					+slot('shield', 'Щит')
-			table.table.table-striped.table-hover.table-condensed
+			table.table.table-hover.table-condensed
 				thead: tr: td(colspan=2): h3 Экипировка
 				tbody
 					+slot('helmet', 'Голова')
@@ -88,28 +115,3 @@ block content
 				span.glyphicon.glyphicon-cog
 				| #{' '}
 				| Починить все предметы всем игрокам
-		div.col-md-6
-			h3 Рюкзак
-			if backpack.length === 0
-				p В рюкзаке ничего нет.
-			else
-				table.table.table-striped.table-hover
-					thead
-						tr
-							td: b Название
-							td: b Тип
-							td: b Прочность
-							td: b Покрытие тела
-							td: b &nbsp;
-					tbody
-						each item in backpack
-							tr
-								td #{ item.name }
-								td #{ item.type }
-								td #{ item.strength }/#{ item.strength_max }
-								td #{ item.coverage }%
-								td
-									a.pjax-replace.btn.btn-default.btn-xs(href='/action/equip/'+item.id) Надеть
-			//-p У вас в рюкзаке ничего нет. Это нормально, потому что на этом сервере нет предметов.
-			//-p У вас в рюкзаке ничего нет.
-			//-Собирайте предметы с убитых монстров, покупайте у торговцев и делайте сами из подручных материалов.
