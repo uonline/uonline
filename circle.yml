@@ -6,7 +6,7 @@ machine:
 
 dependencies:
   override:
-    - script/setup
+    - script/bootstrap
 
 dependencies:
   cache_directories:
