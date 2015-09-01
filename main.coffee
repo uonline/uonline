@@ -202,9 +202,8 @@ fetchCharacterFromURL = ((request, response) ->
 
 
 fetchMonsterFromURL = ((request, response) ->
-	try
-		id = parseInt(request.params.id, 10)
-	catch ex
+	id = parseInt(request.params.id, 10)
+	if isNaN(id)
 		throw new Error '404'
 	chars = lib.game.getCharacter.sync null, dbConnection, id
 	if not chars?
