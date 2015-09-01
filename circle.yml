@@ -1,17 +1,17 @@
 machine:
-	services:
-		- postgresql
+  services:
+    - postgresql
 #	environment:
 #		DATABASE_URL: postgres://anonymous:nopassword@127.0.0.1:5432/circle_test
 
 dependencies:
-	override:
-		- script/setup
+  override:
+    - script/setup
 
 dependencies:
-	cache_directories:
-		- "node_modules"
+  cache_directories:
+    - "node_modules"
 
 test:
-	override:
-		- script/test
+  override:
+    - script/test
