@@ -6,7 +6,8 @@ machine:
 
 dependencies:
   override:
-    - script/setup
+    - "script/setup":
+      timeout: 240
 
 dependencies:
   cache_directories:
@@ -14,4 +15,4 @@ dependencies:
 
 test:
   override:
-    - script/test
+    - "script/test"
