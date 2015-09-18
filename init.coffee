@@ -341,33 +341,34 @@ insertItems = ->
 		#[ 3, 'Укреплённый деревянный щит', 'shield', 440, 34, 10  ]
 		#[ 4, 'Деревянный меч', 'weapon-one-handed',  440,  0, 100 ]
 
-		[ 1, 'Железный шлем драконопоклонника', 'helmet', 280, 10, 0 ]
-		[ 2, 'Стальной шлем драконопоклонника', 'helmet', 340, 10, 0 ]
-		[ 3, 'Закрытый стальной шлем', 'helmet', 500, 13, 0 ]
-		[ 4, 'Стальной гладиаторский шлем', 'helmet', 505, 13, 0 ]
-		[ 5, 'Гладиаторский шлем из дюрали', 'helmet', 580, 13, 0 ]
-		[ 6, 'Железный топхелм', 'helmet', 320, 12, 0 ]
-		[ 7, 'Простой рогатый шлем', 'helmet', 200, 6, 0 ]
-		[ 8, 'Шипованный правый наплечник', 'pauldron', 480, 8, 0 ]
-		[ 27, 'Железный правый наплечник', 'pauldron', 300, 10, 0 ]
-		[ 9, 'Кожаные сапоги хуманов', 'boots', 100, 10, 0 ]
-		[ 10, 'Кожаные сапоги урук-хаев', 'boots', 100, 10, 0 ]
-		[ 11, 'Кожаные сапоги эльфов', 'boots', 100, 10, 0 ]
-		[ 12, 'Укреплённый деревянный щит', 'shield', 440, 34, 0 ]
-		[ 13, 'Короткий эльфийский меч', 'weapon-one-handed', 500, 0, 70 ]
-		[ 14, 'Стандартный эльфийский меч', 'weapon-one-handed', 750, 0, 105 ]
-		[ 15, 'Прямой стандартный эльфийский клинок', 'weapon-one-handed', 550, 0, 90 ]
-		[ 16, 'Zweihander', 'weapon-two-handed', 1750, 0, 190 ]
-		[ 17, 'Тяжелый тесак', 'weapon-one-handed', 450, 0, 80 ]
-		[ 18, 'Шипованная дубина', 'weapon-one-handed', 350, 0, 90 ]
-		[ 19, 'Посох шамана', 'weapon-two-handed', 350, 0, 35 ]
-		[ 20, 'Деревянный посох', 'weapon-two-handed', 300, 0, 25 ]
-		[ 21, 'Усиленый меч', 'weapon-one-handed', 475, 0, 75 ]
-		[ 22, 'Стальной меч странника', 'weapon-one-handed', 505, 0, 70 ]
-		[ 23, 'Деревянная дубина', 'weapon-two-handed', 200, 0, 105 ]
-		[ 24, 'Простой железный меч', 'weapon-one-handed', 305, 0, 65 ]
-		[ 25, 'Коготь смерти', 'weapon-one-handed', 705, 0, 140 ]
-		[ 26, 'Тесак', 'weapon-one-handed', 205, 0, 45 ]
+		# id, name, type, class, strength, coverage, damage
+		[ 1, 'Железный шлем драконопоклонника', 'helmet', null, 280, 10, null ]
+		[ 2, 'Стальной шлем драконопоклонника', 'helmet', null, 340, 10, null ]
+		[ 3, 'Закрытый стальной шлем', 'helmet', null, 500, 13, null ]
+		[ 4, 'Стальной гладиаторский шлем', 'helmet', null, 505, 13, null ]
+		[ 5, 'Гладиаторский шлем из дюрали', 'helmet', null, 580, 13, null ]
+		[ 6, 'Железный топхелм', 'helmet', null, 320, 12, null ]
+		[ 7, 'Простой рогатый шлем', 'helmet', null, 200, 6, null ]
+		[ 8, 'Шипованный правый наплечник', 'pauldron', null, 480, 8, null ]
+		[ 27, 'Железный правый наплечник', 'pauldron', null, 300, 10, null ]
+		[ 9, 'Кожаные сапоги хуманов', 'boots', null, 100, 10, null ]
+		[ 10, 'Кожаные сапоги урук-хаев', 'boots', null, 100, 10, null ]
+		[ 11, 'Кожаные сапоги эльфов', 'boots', null, 100, 10, null ]
+		[ 12, 'Укреплённый деревянный щит', 'shield', null, 440, 34, null ]
+		[ 13, 'Короткий эльфийский меч', 'weapon-one-handed', 'short', 500, null, 70 ]
+		[ 14, 'Стандартный эльфийский меч', 'weapon-one-handed', 'normal', 750, null, 105 ]
+		[ 15, 'Прямой стандартный эльфийский клинок', 'weapon-one-handed', 'normal', 550, null, 90 ]
+		[ 16, 'Zweihander', 'weapon-two-handed', 'normal', 1750, null, 190 ]
+		[ 17, 'Тяжелый тесак', 'weapon-one-handed', 'heavy', 450, null, 80 ]
+		[ 18, 'Шипованная дубина', 'weapon-one-handed', 'normal', 350, null, 90 ]
+		[ 19, 'Посох шамана', 'weapon-two-handed', 'normal', 350, null, 35 ]
+		[ 20, 'Деревянный посох', 'weapon-two-handed', 'normal', 300, null, 25 ]
+		[ 21, 'Усиленный меч', 'weapon-one-handed', 'normal', 475, null, 75 ]
+		[ 22, 'Стальной меч странника', 'weapon-one-handed', 'normal', 505, null, 70 ]
+		[ 23, 'Деревянная дубина', 'weapon-two-handed', 'normal', 200, null, 105 ]
+		[ 24, 'Простой железный меч', 'weapon-one-handed', 'normal', 305, null, 65 ]
+		[ 25, 'Коготь смерти', 'weapon-one-handed', 'short', 705, null, 140 ]
+		[ 26, 'Тесак', 'weapon-one-handed', 'short', 205, null, 45 ]
 	]
 
 	process.stdout.write '  '+'Cleaning up'+'... '
@@ -378,8 +379,8 @@ insertItems = ->
 	process.stdout.write '  '+'Inserting item prototypes'+'... '
 	for proto in prototypes
 		query(
-			'INSERT INTO items_proto (id, name, type, strength_max, coverage, damage) '+
-			'VALUES ($1, $2, $3, $4, $5, $6)', proto)
+			'INSERT INTO items_proto (id, name, type, class, strength_max, coverage, damage) '+
+			'VALUES ($1, $2, $3, $4, $5, $6, $7)', proto)
 	console.log chalk.green 'ok'
 
 	process.stdout.write '  '+'Fetching users'+'... '
@@ -391,7 +392,7 @@ insertItems = ->
 		process.stdout.write '  '+"Giving some items to #{user.username}"+'... '
 		for item in prototypes
 			query 'INSERT INTO items (prototype, owner, strength, equipped) '+
-				'VALUES ($1, $2, $3, false)', [item[0], user.character_id, item[3]]
+				'VALUES ($1, $2, $3, false)', [item[0], user.character_id, item[4]]
 		console.log chalk.green 'ok'
 
 

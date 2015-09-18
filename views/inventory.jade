@@ -2,18 +2,27 @@ mixin item(x, button, renderType)
 	| #{ x.name }
 	| #{' '}
 	if button === 'unequip'
-		a.pjax-replace.btn.btn-default.btn-xs(href='/action/unequip/'+x.id) Снять
+		a.pjax-replace.btn.btn-default.btn-xs(href='/action/unequip/'+x.id)
+			span.glyphicon.glyphicon-chevron-left
+			| #{' '}
+			| Снять
 	if button === 'equip'
-		a.pjax-replace.btn.btn-default.btn-xs(href='/action/equip/'+x.id) Надеть
+		a.pjax-replace.btn.btn-default.btn-xs(href='/action/equip/'+x.id)
+			span.glyphicon.glyphicon-chevron-right
+			| #{' '}
+			| Надеть
 	if renderType
 		br
-		span.text-muted #{x.type}
+		span.text-muted
+			| #{x.type}
+			if !!x.class
+				| #{', '}#{x.class}
 	br
 	span(class=(x.strength===0?'text-danger':''))
 		span.glyphicon.glyphicon-cog(title='Прочность')
 		| #{' '}
 		| #{ x.strength }/#{ x.strength_max }
-	if x.type !== 'weapon-one-handed'
+	if x.type !== 'weapon-one-handed' && x.type !== 'weapon-two-handed'
 		| #{' '}&nbsp;#{' '}
 		span.glyphicon.glyphicon-stop(title='Покрытие тела')
 		| #{' '}
@@ -32,14 +41,11 @@ mixin item(x, button, renderType)
 		//- | #{' '}
 		| #{ x.damage }
 
-mixin slot(type, title, capacity)
+mixin slot(types, title, capacity)
+	- if (typeof(types) === 'string') { types = [types]; }
 	- if (!capacity) capacity = 1
-	//- TODO: а может просто превратить весь эквипмент в хеш-массив?
 	- var items;
-	if equipment[type]
-		- items = [equipment[type]]
-	else
-		- items = equipment.filter(function(x){ return x.type == type })
+	- items = equipment.filter(function(x){ return types.indexOf(x.type) >= 0 })
 	//- ...and render
 	tr
 		td(class=(items.length > 0 ? 'text-warning':'text-muted'))
@@ -89,7 +95,7 @@ block content
 			table.table.table-hover.table-condensed
 				thead: tr: td(colspan=2): h3 Оружие
 				tbody
-					+slot('right_hand', 'Правая рука')
+					+slot(['weapon-one-handed', 'weapon-two-handed'], 'Правая рука')
 					+slot('shield', 'Щит')
 			table.table.table-hover.table-condensed
 				thead: tr: td(colspan=2): h3 Экипировка

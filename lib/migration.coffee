@@ -338,6 +338,12 @@ migrationData = [
 		['characters', 'rawsql',
 			"UPDATE characters SET energy = 140, energy_max = 140 WHERE race = 'elf' AND gender = 'female'"]
 	]
+	[
+		# Weapon classes
+		['items', 'rawsql',
+			"CREATE TYPE uonline_weapon_class AS ENUM ('short', 'normal', 'chain', 'heavy')"]
+		['items_proto', 'addCol', 'class uonline_weapon_class']
+	]
 ]
 
 exports.getMigrationsData = ->
