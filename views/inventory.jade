@@ -100,9 +100,9 @@ block content
 			table.table.table-hover.table-condensed
 				thead: tr: td(colspan=2): h3 Экипировка
 				tbody
-					+slot('helmet', 'Голова')
+					+slot('hat', 'Голова')
 					+slot('necklace', 'Шея', 3)
-					+slot('pauldron', 'Плечи', 2)
+					+slot('pouldron', 'Плечи', 2)
 					+slot('coat', 'Торс')
 					if character.race !== 'orc'
 						+slot('breastplate', 'Грудь')
@@ -110,9 +110,9 @@ block content
 					+slot('vambrace', 'Предплечья', 2)
 					+slot('gloves', 'Руки')
 					+slot('ring', 'Пальцы', 10)
-					+slot('', 'Ноги')
-					+slot('', 'Бёдра')
-					+slot('', 'Голени')
+					+slot('pants', 'Ноги')
+					+slot('cuisse', 'Бёдра')
+					+slot('chausses', 'Голени')
 					+slot('boots', 'Обувь')
 			if character.race === 'orc'
 				p Орки не носят нагрудников.
