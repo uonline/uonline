@@ -1,11 +1,10 @@
-mixin instanceLink(name, url, text, bold, icon, forceInactive, noIndication)
+mixin instanceLink(name, url, text, bold, icon, forceInactive)
 	- var isActive = (instance === name);
 	- if (forceInactive) isActive = false;
 	- if (noIndication) isActive = false;
 	- var classes = [];
 	- if (isActive) classes.push('active');
-	- if (!noIndication) classes.push('instance-indicator');
-	li.instance-switcher(data-instance=name, class=classes)
+	li(class=classes)
 		if icon != null
 			a.pjax(href=url)
 				i.glyphicon(class=icon)
@@ -44,7 +43,7 @@ mixin main()
 							else
 								//- персонаж не выбран
 						if characters.length > 1
-							li.dropdown.instance-indicator(data-instance='mycharacter', class=(instance=='mycharacter'?'active':''))
+							li.dropdown(class=(instance=='mycharacter'?'active':''))
 								a.dropdown-toggle(href='/character/', data-toggle='dropdown')
 									if !!character
 										i.glyphicon.glyphicon-user
@@ -55,7 +54,7 @@ mixin main()
 								ul.dropdown-menu
 									if !!character
 										li
-											a.pjax.instance-switcher(href='/character/', data-instance='mycharacter')
+											a.pjax(href='/character/')
 												| Профиль
 										li.divider
 									li.dropdown-header

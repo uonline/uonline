@@ -17,7 +17,7 @@ block content
 								a.confirm.btn.btn-danger.btn-xs(href='/action/deleteCharacter/'+x.id) Удалить
 							i.glyphicon.glyphicon-menu-right
 							| #{' '}
-							a.pjax.instance-switcher(href='/character/'+x.name+'/', data-instance='mycharacter')
+							a.pjax(href='/character/'+x.name+'/')
 								b #{x.name}
 							| &nbsp;&nbsp;
 							span.text-muted
@@ -29,16 +29,16 @@ block content
 								a.confirm.btn.btn-danger.btn-xs(href='/action/deleteCharacter/'+x.id) Удалить
 							i.glyphicon.glyphicon-user
 							| #{' '}
-							a.pjax.instance-switcher(href='/character/'+x.name+'/', data-instance='character')
+							a.pjax(href='/character/'+x.name+'/')
 								| #{x.name}
 							| &nbsp;&nbsp;
 							span.text-muted
 								| орк 1-го уровня
 				p
-					a.pjax.instance-switcher(href='/newCharacter/', data-instance='newCharacter')
+					a.pjax(href='/newCharacter/')
 						i.glyphicon.glyphicon-plus
 					| #{' '}
-					a.pjax.instance-switcher(href='/newCharacter/', data-instance='newCharacter')
+					a.pjax(href='/newCharacter/')
 						| Создать ещё одного
 			else
 				p Персонажей пока нет.

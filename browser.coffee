@@ -24,11 +24,6 @@ $(document).ready ->
 	$(document).on 'pjax:complete', ->
 		$('#content').stop().css opacity: 1
 
-	# Instance indication
-	$('body').on 'click', '.instance-switcher', ->
-		$('.instance-indicator').removeClass 'active'
-		$(".instance-indicator[data-instance='#{this.dataset.instance}']").addClass 'active'
-
 	# Help on profile page
 	$('.profile-help').hide()
 	$(document).on 'pjax:complete', ->
@@ -42,7 +37,7 @@ $(document).ready ->
 		if confirm('Вы уверены?') == false
 			event.preventDefault()
 		return
-	
+
 	# Common func for user and character name checking
 	nameStatusHelper = (formGroupSelector, feedbackSelector) ->
 		(state, hint) ->
@@ -111,7 +106,7 @@ $(document).ready ->
 					usernameStatus 'ok', 'Логин свободен'
 		else
 			usernameStatus 'error', 'Логин неправильный'
-	
+
 	# Character name validation
 	charnameStatus = nameStatusHelper('#character-name-form-group', '#character-name-feedback')
 	$("body").on 'change', '#character-name', ->
