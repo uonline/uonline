@@ -68,7 +68,7 @@ mixin main()
 													| #{' '}#{x.name}
 										else
 											li
-												a(href='/action/switchCharacter/'+x.id)
+												a.pjax(href='/action/switchCharacter/'+x.id)
 													| #{x.name}
 						+instanceLink('game', '/game/', 'Игра', true)
 						+instanceLink('inventory', '/inventory/', 'Инвентарь')

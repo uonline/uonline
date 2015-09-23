@@ -24,7 +24,7 @@ block content
 								| #{x.displayRace} 1-го уровня
 						else
 							div.pull-right
-								a.btn.btn-default.btn-xs(href='/action/switchCharacter/'+x.id) Переключиться
+								a.pjax.btn.btn-default.btn-xs(href='/action/switchCharacter/'+x.id) Переключиться
 								| #{' '}
 								a.confirm.btn.btn-danger.btn-xs(href='/action/deleteCharacter/'+x.id) Удалить
 							i.glyphicon.glyphicon-user
