@@ -95,8 +95,8 @@ block content
 			table.table.table-hover.table-condensed
 				thead: tr: td(colspan=2): h3 Оружие
 				tbody
-					+slot(['weapon-one-handed', 'weapon-two-handed'], 'Правая рука')
-					+slot('shield', 'Щит')
+					+slot(['weapon-two-handed', 'weapon-one-handed'], 'Правая рука')
+					+slot(['weapon-two-handed', 'shield'], 'Левая рука')
 			table.table.table-hover.table-condensed
 				thead: tr: td(colspan=2): h3 Экипировка
 				tbody
