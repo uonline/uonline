@@ -102,12 +102,14 @@ block content
 				tbody
 					+slot('hat', 'Голова')
 					+slot('necklace', 'Шея', 3)
-					+slot('pouldron', 'Плечи', 2)
+					+slot('pouldron-left', 'Левое плечо')
+					+slot('pouldron-right', 'Правое плечо')
 					+slot('coat', 'Торс')
 					if character.race !== 'orc'
 						+slot('breastplate', 'Грудь')
 					+slot('belt', 'Пояс')
-					+slot('vambrace', 'Предплечья', 2)
+					+slot('vambrace-left', 'Левое предплечье')
+					+slot('vambrace-right', 'Правое предплечье')
 					+slot('gloves', 'Руки')
 					+slot('ring', 'Пальцы', 10)
 					+slot('pants', 'Ноги')
@@ -115,7 +117,10 @@ block content
 					+slot('chausses', 'Голени')
 					+slot('boots', 'Обувь')
 			if character.race === 'orc'
-				p Орки не носят нагрудников.
+				p
+					span.glyphicon.glyphicon-info-sign
+					| #{' '}
+					| В отличие от других рас, орки не носят нагрудников.
 			h3 Читерская кнопка
 			a.pjax.btn.btn-default(href='/ajax/cheatFixAll')
 				span.glyphicon.glyphicon-cog
