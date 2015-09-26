@@ -11,6 +11,9 @@
   "license": "AGPL-3.0",
   "author": "m1kc <m1kc@yandex.ru>",
   "private": true,
+  "engines": {
+    "node": "0.12.x"
+  },
   "dependencies": {
     "any-db": "^2.1.0",
     "any-db-postgres": "^2.1.1",

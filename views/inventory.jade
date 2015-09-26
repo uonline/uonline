@@ -69,7 +69,7 @@ block content
 	div.page-header
 		h1 Инвентарь
 	if character.fight_mode == true
-		a.pjax.btn.btn-default.instance-switcher(href='/game/', data-instance='game')
+		a.pjax.btn.btn-default(href='/game/')
 			i.glyphicon.glyphicon-chevron-left
 			| #{' '}Вернуться в бой
 		hr
@@ -95,27 +95,32 @@ block content
 			table.table.table-hover.table-condensed
 				thead: tr: td(colspan=2): h3 Оружие
 				tbody
-					+slot(['weapon-one-handed', 'weapon-two-handed'], 'Правая рука')
-					+slot('shield', 'Щит')
+					+slot(['weapon-two-handed', 'weapon-one-handed'], 'Правая рука')
+					+slot(['weapon-two-handed', 'shield'], 'Левая рука')
 			table.table.table-hover.table-condensed
 				thead: tr: td(colspan=2): h3 Экипировка
 				tbody
-					+slot('helmet', 'Голова')
+					+slot('hat', 'Голова')
 					+slot('necklace', 'Шея', 3)
-					+slot('pauldron', 'Плечи', 2)
+					+slot('pouldron-left', 'Левое плечо')
+					+slot('pouldron-right', 'Правое плечо')
 					+slot('coat', 'Торс')
 					if character.race !== 'orc'
 						+slot('breastplate', 'Грудь')
 					+slot('belt', 'Пояс')
-					+slot('vambrace', 'Предплечья', 2)
+					+slot('vambrace-left', 'Левое предплечье')
+					+slot('vambrace-right', 'Правое предплечье')
 					+slot('gloves', 'Руки')
 					+slot('ring', 'Пальцы', 10)
-					+slot('', 'Ноги')
-					+slot('', 'Бёдра')
-					+slot('', 'Голени')
+					+slot('pants', 'Ноги')
+					+slot('cuisse', 'Бёдра')
+					+slot('chausses', 'Голени')
 					+slot('boots', 'Обувь')
 			if character.race === 'orc'
-				p Орки не носят нагрудников.
+				p
+					span.glyphicon.glyphicon-info-sign
+					| #{' '}
+					| В отличие от других рас, орки не носят нагрудников.
 			h3 Читерская кнопка
 			a.pjax.btn.btn-default(href='/ajax/cheatFixAll')
 				span.glyphicon.glyphicon-cog
