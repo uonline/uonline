@@ -1,10 +1,18 @@
 language: node_js
 node_js:
-  - "0.12"
+  - "stable"
 addons:
   postgresql: "9.3"
+  # <DIRTY HACK>
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
+  # </DIRTY HACK>
 env:
-  - DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test"
+  - CXX=g++-4.8 DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test"
+  # ^^^^^^^^^^^ DIRTY HACK
 before_script:
   - # test scripts
   - ./init.coffee --info || true
