@@ -14,7 +14,7 @@
 
 'use strict';
 
-var hintFiles = require("grunt-coffee-jshint/node_modules/coffee-jshint/lib-js/hint");
+var hintFiles = require("coffee-jshint/lib-js/hint");
 var chalk = require('chalk');
 
 

@@ -63,6 +63,7 @@
   },
   "devDependencies": {
     "coffee-coverage": "^0.4.5",
+    "coffee-jshint": "^0.2.3",
     "coffeelint": "^1.5.3",
     "david": "^6.1.6",
     "grunt-codo": "^0.2.0",
