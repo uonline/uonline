@@ -1,0 +1,31 @@
+extends layout
+block title
+	| Состояние сервера
+block content
+	.page-header
+		h1 Состояние сервера
+	.row
+		.col-sm-12
+			p
+				| На этом сервере
+				| #{' '}
+				| #{userstate.length} #{plural(userstate.length, ['аккаунт', 'аккаунта', 'аккаунтов'])}.
+			ul
+				each x in userstate
+					li
+						if x.online === true
+							span.glyphicon.glyphicon-signal.text-success
+						else
+							span.glyphicon.glyphicon-signal.text-danger
+						| #{' '}
+						| #{x.username}
+						span.text-muted
+							| #{' '}
+							| &mdash;
+							| #{' '}
+							if x.online === true
+								| в сети
+							else
+								| заходил
+								| #{' '}
+								| #{moment(x.sess_time).fromNow()}

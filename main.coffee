@@ -31,6 +31,14 @@ express = require 'express'
 cachify = require 'connect-cachify'
 sync = require 'sync'
 sugar = require 'sugar'
+moment = require 'moment'
+moment.locale 'ru'
+plural = (n, f) ->
+	n %= 100
+	if n>10 and n<20 then return f[2]
+	n %= 10
+	if n>1 and n<5 then return f[1]
+	if n is 1 then return f[0] else return f[2]
 
 
 # Connect to database
@@ -117,6 +125,8 @@ app.use ((request, response) ->
 	request.uonline =
 		now: new Date()
 		pjax: request.header('X-PJAX')?
+		moment: moment
+		plural: plural
 	# Read session data
 	user = lib.user.sessionInfoRefreshing.sync(null,
 		dbConnection, request.cookies.sessid, config.sessionExpireTime, true)
@@ -546,6 +556,17 @@ app.get '/action/deleteCharacter/:id',
 	(request, response) ->
 		lib.character.deleteCharacter.sync null, dbConnection, request.uonline.user.id, request.params.id
 		response.redirect '/account/'
+
+
+app.get '/state/',
+	(request, response, next) ->
+		players = dbConnection.query.sync dbConnection,
+			"SELECT *, (sess_time > NOW() - $1 * INTERVAL '1 SECOND') AS online FROM uniusers",
+			[config.sessionExpireTime]
+		request.uonline.userstate = players.rows
+		next()
+	,
+	setInstance('state'), render('state')
 
 
 # 404 handling
