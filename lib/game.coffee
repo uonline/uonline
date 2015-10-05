@@ -565,7 +565,7 @@ exports.getCharacters = ((dbConnection, user_id) ->
 # Returns character's items.
 exports.getCharacterItems = ((dbConnection, character_id) ->
 	dbConnection.query.sync(dbConnection,
-		"SELECT items.id, name, type, class, coverage, strength, strength_max, equipped, damage "+
+		"SELECT items.id, name, type, class, kind, coverage, strength, strength_max, equipped, damage "+
 		"FROM items, items_proto "+
 		"WHERE items.owner = $1 AND items.prototype = items_proto.id "+
 		"ORDER BY items.id",

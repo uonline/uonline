@@ -344,6 +344,12 @@ migrationData = [
 			"CREATE TYPE uonline_weapon_class AS ENUM ('short', 'normal', 'chain', 'heavy')"]
 		['items_proto', 'addCol', 'class uonline_weapon_class']
 	]
+	[
+		# Weapon kind
+		['items', 'rawsql', "CREATE TYPE uonline_weapon_kind AS ENUM "+
+			"('bow','sword','mace','axe','staff','sphere','dagger','scythe','spear','hammer')"]
+		['items_proto', 'addCol', 'kind uonline_weapon_kind']
+	]
 ]
 
 exports.getMigrationsData = ->

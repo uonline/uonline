@@ -16,7 +16,7 @@ mixin item(x, button, renderType)
 		span.text-muted
 			| #{x.type}
 			if !!x.class
-				| #{', '}#{x.class}
+				| , #{x.class}, #{x.kind}
 	br
 	span(class=(x.strength===0?'text-danger':''))
 		span.glyphicon.glyphicon-cog(title='Прочность')
@@ -82,7 +82,10 @@ block content
 				table.table.table-hover.table-condensed
 					thead: tr: td
 						h3 Рюкзак
-						p.text-muted Всего вещей: #{backpack.length}
+						p.text-muted
+							| #{backpack.length}
+							| #{' '}
+							| #{plural(backpack.length, ['предмет', 'предмета', 'предметов'])}
 					tbody
 						each x in backpack
 							tr

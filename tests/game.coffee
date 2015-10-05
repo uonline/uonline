@@ -1023,7 +1023,7 @@ exports.getCharacterItems = (test) ->
 	insert 'items_proto',
 		id:2, name:'Speed greaves', type:'greave', coverage:25, strength_max:110, damage: 10
 	insert 'items_proto',
-		id:3, name:'Mighty sword', type:'weapon-one-handed', class:'normal',
+		id:3, name:'Mighty sword', type:'weapon-one-handed', class:'normal', kind:'sword'
 		coverage: null, strength_max:110, damage: 1000
 	insert 'items', id:1, prototype:1, owner:1, strength:100
 	insert 'items', id:2, prototype:2, owner:1, strength:100
@@ -1033,15 +1033,15 @@ exports.getCharacterItems = (test) ->
 	items = game.getCharacterItems conn, 1
 	test.deepEqual items, [
 			{
-				id: 1, name: 'Magic helmet', type:'helmet', class: null,
+				id: 1, name: 'Magic helmet', type:'helmet', class: null, kind: null,
 				coverage:50, strength:100, strength_max:120, equipped: true, damage: 0
 			}
 			{
-				id: 2, name: 'Speed greaves', type:'greave', class: null,
+				id: 2, name: 'Speed greaves', type:'greave', class: null, kind: null,
 				coverage:25, strength:100, strength_max:110, equipped: true, damage: 10
 			}
 			{
-				id: 4, name:'Mighty sword', type:'weapon-one-handed', class:'normal',
+				id: 4, name:'Mighty sword', type:'weapon-one-handed', class:'normal', kind:'sword',
 				coverage: null, strength:110, strength_max:110, damage: 1000, equipped: true
 			}
 		] , "should return properties of character's items"
