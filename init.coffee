@@ -371,7 +371,7 @@ insertItems = ->
 		[ 23, 'Деревянная дубина', 'weapon-two-handed', 'normal', 'mace', 200, null, 105 ]
 		[ 24, 'Простой железный меч', 'weapon-one-handed', 'normal', 'sword', 305, null, 65 ]
 		[ 25, 'Коготь смерти', 'weapon-one-handed', 'normal', 'sword', 705, null, 140 ]
-		[ 26, 'Тесак', 'weapon-one-handed', 'short', 'sword', 205, null, 45 ]
+		[ 26, 'Тесак', 'weapon-one-handed', 'short', 'dagger', 205, null, 45 ]
 	]
 
 	process.stdout.write '  '+'Cleaning up'+'... '
