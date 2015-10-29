@@ -350,6 +350,13 @@ migrationData = [
 			"('bow','sword','mace','axe','staff','sphere','dagger','scythe','spear','hammer')"]
 		['items_proto', 'addCol', 'kind uonline_weapon_kind']
 	]
+	[
+		# Armor classes
+		['uonline_armor_class', 'createEnum',
+			"'cloth', 'light leather', 'leather', 'bone', "+
+			"'mail', 'lamellar', 'light plate', 'plate', 'heavy plate'"]
+		['items_proto', 'addCol', 'armor_class uonline_armor_class']
+	]
 ]
 
 exports.getMigrationsData = ->

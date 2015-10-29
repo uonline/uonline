@@ -17,6 +17,8 @@ mixin item(x, button, renderType)
 			| #{x.type}
 			if !!x.class
 				| , #{x.class}, #{x.kind}
+			if !!x.armor_class
+				| , #{x.armor_class}
 	br
 	span(class=(x.strength===0?'text-danger':''))
 		span.glyphicon.glyphicon-cog(title='Прочность')
