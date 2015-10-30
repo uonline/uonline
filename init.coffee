@@ -22,6 +22,7 @@ sync = require 'sync'
 dashdash = require 'dashdash'
 chalk = require 'chalk'
 sugar = require 'sugar'
+fs = require 'fs'
 
 
 anyDB = null
@@ -329,50 +330,8 @@ insertItems = ->
 	console.log chalk.magenta 'Inserting test items'+'... '
 
 	query = createQueryUtils(config.DATABASE_URL)
-
-	# protos
-	prototypes = [
-		# [1, 'кожаный нагрудник',  'breastplate',   40, 12]
-		# [2, 'кожаные поножи',     'greave',        35, 20]
-		# [3, 'кожаные сапоги',     'shoes',         20,  8]
-		# [4, 'кожаные наплечники', 'pouldron',      20,  6]
-		# [5, 'кожаные наручи',     'vambrace',      30,  6]
-		# [6, 'кожаный шлем',       'helmet',        30,  8]
-
-		#[ 1, 'Железный шлем',              'helmet', 300,  6, 0   ]
-		#[ 2, 'Кожаные сапоги',             'boots',  120,  8, 0   ]
-		#[ 3, 'Укреплённый деревянный щит', 'shield', 440, 34, 10  ]
-		#[ 4, 'Деревянный меч', 'weapon-one-handed',  440,  0, 100 ]
-
-		# id, name, type, class, kind, armor_class, strength, coverage, damage
-		[ 1, 'Железный шлем драконопоклонника', 'hat', null, null,                      'plate',   280, 10, null ]
-		[ 2, 'Стальной шлем драконопоклонника', 'hat', null, null,                      'plate',   340, 10, null ]
-		[ 3, 'Закрытый стальной шлем', 'hat', null, null,                               'plate',   500, 13, null ]
-		[ 4, 'Стальной гладиаторский шлем', 'hat', null, null,                          'plate',   505, 13, null ]
-		[ 5, 'Гладиаторский шлем из дюрали', 'hat', null, null,                         'plate',   580, 13, null ]
-		[ 6, 'Железный топхелм', 'hat', null, null,                                     'plate',   320, 12, null ]
-		[ 7, 'Простой рогатый шлем', 'hat', null, null,                                 'light plate',200,6,null ]
-		[ 8, 'Шипованный правый наплечник', 'pouldron-right', null, null,               'plate',   480, 8,  null ]
-		[ 27, 'Железный правый наплечник', 'pouldron-right', null, null,                'plate',   300, 10, null ]
-		[ 9, 'Кожаные сапоги хуманов', 'boots', null, null,                             'leather', 100, 10, null ]
-		[ 10, 'Кожаные сапоги урук-хаев', 'boots', null, null,                          'leather', 100, 10, null ]
-		[ 11, 'Кожаные сапоги эльфов', 'boots', null, null,                             'leather', 100, 10, null ]
-		[ 12, 'Укреплённый деревянный щит', 'shield', null, null,                        null,     440, 34, null ]
-		[ 13, 'Короткий эльфийский меч', 'weapon-one-handed', 'normal', 'sword',         null,     500, null, 70 ]
-		[ 14, 'Стандартный эльфийский меч', 'weapon-one-handed', 'normal', 'sword',      null,     750, null,105 ]
-		[ 15, 'Прямой стандартный эльфийский клинок', 'weapon-one-handed', 'normal', 'sword', null, 550, null,90 ]
-		[ 16, 'Zweihander', 'weapon-two-handed', 'normal', 'sword',                      null,     1750,null,190 ]
-		[ 17, 'Тяжелый тесак', 'weapon-one-handed', 'short', 'dagger',                   null,     450, null, 80 ]
-		[ 18, 'Шипованная дубина', 'weapon-one-handed', 'normal', 'mace',                null,     350, null, 90 ]
-		[ 19, 'Посох шамана', 'weapon-two-handed', 'normal', 'staff',                    null,     350, null, 35 ]
-		[ 20, 'Деревянный посох', 'weapon-two-handed', 'normal', 'staff',                null,     300, null, 25 ]
-		[ 21, 'Усиленный меч', 'weapon-one-handed', 'normal', 'sword',                   null,     475, null, 75 ]
-		[ 22, 'Стальной меч странника', 'weapon-one-handed', 'normal', 'sword',          null,     505, null, 70 ]
-		[ 23, 'Деревянная дубина', 'weapon-two-handed', 'normal', 'mace',                null,     200, null,105 ]
-		[ 24, 'Простой железный меч', 'weapon-one-handed', 'normal', 'sword',            null,     305, null, 65 ]
-		[ 25, 'Коготь смерти', 'weapon-one-handed', 'normal', 'sword',                   null,     705, null,140 ]
-		[ 26, 'Тесак', 'weapon-one-handed', 'short', 'dagger',                           null,     205, null, 45 ]
-	]
+	
+	prototypes = JSON.parse fs.readFileSync 'unify/items.json'
 
 	process.stdout.write '  '+'Cleaning up'+'... '
 	query 'TRUNCATE items_proto', []
@@ -381,9 +340,10 @@ insertItems = ->
 
 	process.stdout.write '  '+'Inserting item prototypes'+'... '
 	for proto in prototypes
+		attrs = 'id name type class kind armor_class strength_max coverage damage'.split(' ')
 		query(
-			'INSERT INTO items_proto (id, name, type, class, kind, armor_class, strength_max, coverage, damage) '+
-			'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)', proto)
+			"INSERT INTO items_proto (#{attrs}) "+
+			"VALUES (#{attrs.map (_,i) -> '$'+(i+1)})", attrs.map (a) -> proto[a])
 	console.log chalk.green 'ok'
 
 	process.stdout.write '  '+'Fetching users'+'... '
@@ -395,7 +355,7 @@ insertItems = ->
 		process.stdout.write '  '+"Giving some items to #{user.username}"+'... '
 		for item in prototypes
 			query 'INSERT INTO items (prototype, owner, strength, equipped) '+
-				'VALUES ($1, $2, $3, false)', [item[0], user.character_id, item[6]]
+				'VALUES ($1, $2, $3, false)', [item.id, user.character_id, item.strength]
 		console.log chalk.green 'ok'
 
 
