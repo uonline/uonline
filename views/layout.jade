@@ -116,10 +116,10 @@ if !pjax
 				+main()
 
 			//- Styles
-			link(href='/bower_components/bootstrap/dist/css/bootstrap.min.css', rel='stylesheet')
-			link(href='/bower_components/bootstrap/dist/css/bootstrap-theme.min.css', rel='stylesheet')
+			link(href=as('/bower_components/bootstrap/dist/css/bootstrap.css'), rel='stylesheet')
+			link(href=as('/bower_components/bootstrap/dist/css/bootstrap-theme.css'), rel='stylesheet')
 			//- Scripts
-			script(src='/assets/scripts.js')
+			script(src=as('/assets/scripts.js'))
 else
 	title
 		block title
