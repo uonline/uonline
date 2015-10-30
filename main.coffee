@@ -28,7 +28,6 @@ chalk = require 'chalk'
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
 express = require 'express'
-cachify = require 'connect-cachify'
 sync = require 'sync'
 sugar = require 'sugar'
 moment = require 'moment'
@@ -95,20 +94,9 @@ app.use(require('cookie-parser')())
 app.use(require('body-parser').urlencoded(extended: false))
 app.use(require('compression')())
 
-# cachify
-assets =
-	'/assets/scripts.js': [
-		'/assets/scripts.js'
-	]
-
-app.use(cachify.setup(assets,
-	root: __dirname
-	url_to_paths: {}
-	production: true
-))
-
+# Expose static paths
 app.use '/assets', express.static "#{__dirname}/assets"
-app.use '/static/bower_components', express.static "#{__dirname}/bower_components"
+app.use '/bower_components', express.static "#{__dirname}/bower_components"
 
 # Jade
 app.set 'view engine', 'jade'
