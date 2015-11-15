@@ -71,8 +71,8 @@ mixin main()
 													| #{x.name}
 						+instanceLink('game', '/game/', 'Игра', true)
 						+instanceLink('inventory', '/inventory/', 'Инвентарь')
-						li
-							a(href='/action/logout') Выйти
+						form.pjax.navbar-form.navbar-right.masked-nav-form(method='post', action='/action/logout')
+							button.btn.btn-link.masked-nav-button(type='submit') Выйти
 					else
 						+instanceLink('login', '/login/', 'Вход', false, 'glyphicon-chevron-right')
 						+instanceLink('register', '/register/', 'Регистрация')
@@ -105,6 +105,13 @@ if !pjax
 				:stylus
 					.button-row
 						line-height: 2.8em
+					.masked-nav-form
+						padding: 0px !important
+						margin: 0px !important
+					.masked-nav-button
+						border: none !important
+						text-decoration: none !important
+						padding: 15px !important
 			//- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries
 			//- WARNING: Respond.js doesn't work if you view the page via file://
 			<!--[if lt IE 9]>

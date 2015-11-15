@@ -405,12 +405,12 @@ app.get '/monster/:id/',
 	setInstance('monster'), render('monster')
 
 
-app.get '/action/logout',
+app.post '/action/logout',
 	mustBeAuthed,
 	(request, response) ->
 		lib.user.closeSession.sync null,
 			dbConnection, request.uonline.user.sessid
-		response.redirect '/'
+		response.redirect 303, '/'  # force GET
 
 
 app.get '/newCharacter/',
