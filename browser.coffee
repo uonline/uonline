@@ -20,7 +20,7 @@ $(document).ready ->
 	$(document).pjax('a.pjax', '#content', timeout: 2000)
 	$(document).pjax('a.pjax-replace', '#content', timeout: 2000, replace: true)
 	$(document).on 'submit', 'form.pjax', (event) ->
-		window.FormData = undefined  # dirty hack, but no other ideas
+		#window.FormData = undefined  # dirty hack to disable multipart
 		$.pjax.submit(event, '#content')
 	$(document).on 'pjax:send', ->
 		$('#content').animate opacity: 0.3, 'fast'
