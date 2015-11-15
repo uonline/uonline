@@ -40,6 +40,9 @@ plural = (n, f) ->
 	if n>1 and n<5 then return f[1]
 	if n is 1 then return f[0] else return f[2]
 
+inspect = (x) ->
+	console.log require('util').inspect x, depth: null
+
 
 # Connect to database
 dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
