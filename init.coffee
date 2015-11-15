@@ -330,7 +330,7 @@ insertItems = ->
 	console.log chalk.magenta 'Inserting test items'+'... '
 
 	query = createQueryUtils(config.DATABASE_URL)
-	
+
 	prototypes = JSON.parse fs.readFileSync 'unify/items.json'
 
 	process.stdout.write '  '+'Cleaning up'+'... '
@@ -355,7 +355,7 @@ insertItems = ->
 		process.stdout.write '  '+"Giving some items to #{user.username}"+'... '
 		for item in prototypes
 			query 'INSERT INTO items (prototype, owner, strength, equipped) '+
-				'VALUES ($1, $2, $3, false)', [item.id, user.character_id, item.strength]
+				'VALUES ($1, $2, $3, false)', [item.id, user.character_id, item.strength_max]
 		console.log chalk.green 'ok'
 
 
