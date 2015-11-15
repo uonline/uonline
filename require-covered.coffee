@@ -29,7 +29,7 @@ module.exports = (dirname, filename) ->
 	filename = path.relative(__dirname, filename)
 	#console.log "FILENAME: #{filename}"
 	cc = require 'coffee-coverage'
-	ci = new cc.CoverageInstrumentor(path: 'relative')
+	ci = new cc.CoverageInstrumentor(basePath: process.cwd(), path: 'relative')
 	tmp = ci.instrumentFile(filename)
 	#console.log "REQ: #{tmp.init}#{tmp.js}"
 	return requireFromString "#{tmp.init}#{tmp.js}"
