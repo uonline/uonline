@@ -459,7 +459,7 @@ app.get '/inventory/',
 	setInstance('inventory'), render('inventory')
 
 
-app.get '/action/go/:to',
+app.post '/action/go/:to',
 	mustBeAuthed,
 	(request, response) ->
 		result = lib.game.changeLocation.sync null, dbConnection, request.uonline.user.character_id, request.params.to
@@ -468,21 +468,21 @@ app.get '/action/go/:to',
 		response.redirect '/game/'
 
 
-app.get '/action/attack',
+app.post '/action/attack',
 	mustBeAuthed,
 	(request, response) ->
 		lib.game.goAttack.sync null, dbConnection, request.uonline.user.character_id
 		response.redirect '/game/'
 
 
-app.get '/action/escape',
+app.post '/action/escape',
 	mustBeAuthed,
 	(request, response) ->
 		lib.game.goEscape.sync null, dbConnection, request.uonline.user.character_id
 		response.redirect '/game/'
 
 
-app.get '/action/hit/:id',
+app.post '/action/hit/:id',
 	mustBeAuthed,
 	(request, response) ->
 		lib.game.hitOpponent.sync(

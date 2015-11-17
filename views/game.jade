@@ -5,6 +5,11 @@ mixin monsters_list(mosters)
 		if index < mosters.length-1
 			| ,
 
+mixin post_button(action)
+	form.pjax(method='post', action=action, style='display: inline')
+		button.btn.btn-default&attributes(attributes)
+			block
+
 extends layout
 block title
 	//- TODO: typography
@@ -30,12 +35,11 @@ block content
 					- i = i.replace(/ - /g, ' — ')
 					//- render
 					p= i
-		div
-			p.button-row
-				each i in location.ways
-					//- TODO: typography
-					a.pjax.btn.btn-default(href="/action/go/"+i.target) #{i.text}
-					| #{'\n'}
+		div.button-row(style='margin-bottom: 10px')
+			each i in location.ways
+				//- TODO: typography
+				+post_button('/action/go/'+i.target) #{i.text}
+				| #{'\n'}
 	else
 		h4 Здоровье
 		.progress
@@ -99,18 +103,18 @@ block content
 							| противник
 							| #{' '}
 							if !equipment.right_hand
-								a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id) Ударить
+								+post_button('/action/hit/'+p.character_id).btn-sm Ударить
 							else
-								a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id+"?with_item_id="+equipment.right_hand.id) Ударить оружием
+								+post_button('/action/hit/'+p.character_id+'?with_item_id='+equipment.right_hand.id).btn-sm Ударить оружием
 							if equipment.shield && equipment.shield.damage > 0
 								| #{' '}
-								a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id+"?with_item_id="+equipment.shield.id) Щитом
+								+post_button('/action/hit/'+p.character_id+'?with_item_id='+equipment.shield.id).btn-sm Щитом
 		p
 			small
 				if character.autoinvolved_fm == true
 					b Вас атаковали!
 		if monsters_list.length > 0
-			p.button-row
+			div.button-row
 				if character.fight_mode == true
 					a.btn.btn-default.disabled Атака
 					| #{' '}
@@ -118,10 +122,11 @@ block content
 					| #{' '}
 					a.btn.btn-default.pjax(href='/inventory/') Инвентарь
 					| #{' '}
-					a.btn.btn-default.disabled Магия
+					// а вот тут ИЕ 8 проходит лесом
+					+post_button(disabled=1) Магия
 					| #{' '}
-					a.btn.btn-default.pjax(href="/action/escape") Сбежать
+					+post_button('/action/escape') Сбежать
 				else if monsters_list.not_in_fight.length > 0
-					a.btn.btn-default.pjax(href="/action/attack") Атаковать
+					+post_button('/action/attack') Атаковать
 	//- fit picture
 	div(style="clear: both;")
