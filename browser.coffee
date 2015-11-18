@@ -18,10 +18,12 @@
 $(document).ready ->
 	# Start up pjax
 	$(document).pjax('a.pjax', '#content', timeout: 2000)
-	$(document).pjax('a.pjax-replace', '#content', timeout: 2000, replace: true)
+	#$(document).pjax('a.pjax-replace', '#content', timeout: 2000, replace: true)
 	$(document).on 'submit', 'form.pjax', (event) ->
 		#window.FormData = undefined  # dirty hack to disable multipart
 		$.pjax.submit(event, '#content')
+	$(document).on 'submit', 'form.pjax-replace', (event) ->
+		$.pjax.submit(event, '#content', replace: true)
 	$(document).on 'pjax:send', ->
 		$('#content').animate opacity: 0.3, 'fast'
 	$(document).on 'pjax:complete', ->

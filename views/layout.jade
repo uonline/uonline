@@ -21,6 +21,13 @@ mixin instanceLink(name, url, text, bold, icon, forceInactive)
 					| #{text}
 
 
+mixin post(action, params, do_replace)
+	form.inline(class=do_replace ? 'pjax-replace' : 'pjax', method='post', action=action)
+		each val, name in (params || {})
+			input(type='hidden', name=name, value=val)
+		block
+
+
 mixin main()
 	div.navbar.navbar-default.navbar-static-top(role='navigation')
 		div.container

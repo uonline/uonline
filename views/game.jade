@@ -5,12 +5,6 @@ mixin monsters_list(mosters)
 		if index < mosters.length-1
 			| ,
 
-mixin post(action, params, do_replace)
-	form.inline&attributes({class: do_replace ? 'pjax-replace' : 'pjax'})(method='post', action=action)
-		each val, name in (params || {})
-			input(type='hidden', name=name, value=val)
-		block
-
 extends layout
 block title
 	//- TODO: typography

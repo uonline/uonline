@@ -2,15 +2,17 @@ mixin item(x, button, renderType)
 	| #{ x.name }
 	| #{' '}
 	if button === 'unequip'
-		a.pjax-replace.btn.btn-default.btn-xs(href='/action/unequip/'+x.id)
-			span.glyphicon.glyphicon-chevron-left
-			| #{' '}
-			| Снять
+		+post('/action/unequip/', {id: x.id}, true)
+			button.btn.btn-default.btn-xs
+				span.glyphicon.glyphicon-chevron-left
+				| #{' '}
+				| Снять
 	if button === 'equip'
-		a.pjax-replace.btn.btn-default.btn-xs(href='/action/equip/'+x.id)
-			span.glyphicon.glyphicon-chevron-right
-			| #{' '}
-			| Надеть
+		+post('/action/equip/', {id: x.id}, true)
+			button.btn.btn-default.btn-xs
+				span.glyphicon.glyphicon-chevron-right
+				| #{' '}
+				| Надеть
 	if renderType
 		br
 		span.text-muted
@@ -127,7 +129,8 @@ block content
 					| #{' '}
 					| В отличие от других рас, орки не носят нагрудников.
 			h3 Читерская кнопка
-			a.pjax.btn.btn-default(href='/ajax/cheatFixAll')
-				span.glyphicon.glyphicon-cog
-				| #{' '}
-				| Починить все предметы всем игрокам
+			+post('/ajax/cheatFixAll', {}, true)
+				button.btn.btn-default
+					span.glyphicon.glyphicon-cog
+					| #{' '}
+					| Починить все предметы всем игрокам

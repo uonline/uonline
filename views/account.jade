@@ -14,7 +14,8 @@ block content
 					p
 						if (!!character) && (x.id === character.id)
 							div.pull-right
-								a.confirm.btn.btn-danger.btn-xs(href='/action/deleteCharacter/'+x.id) Удалить
+								+post('/action/deleteCharacter/', {id: x.id}, true)
+									button.confirm.btn.btn-danger.btn-xs Удалить
 							i.glyphicon.glyphicon-menu-right
 							| #{' '}
 							a.pjax(href='/character/'+x.name+'/')
@@ -24,9 +25,11 @@ block content
 								| #{x.displayRace} 1-го уровня
 						else
 							div.pull-right
-								a.pjax.btn.btn-default.btn-xs(href='/action/switchCharacter/'+x.id) Переключиться
+								+post('/action/switchCharacter/', {id: x.id}, true)
+									button.btn.btn-default.btn-xs Переключиться
 								| #{' '}
-								a.confirm.btn.btn-danger.btn-xs(href='/action/deleteCharacter/'+x.id) Удалить
+								+post('/action/deleteCharacter/', {id: x.id}, true)
+									button.confirm.btn.btn-danger.btn-xs Удалить
 							i.glyphicon.glyphicon-user
 							| #{' '}
 							a.pjax(href='/character/'+x.name+'/')

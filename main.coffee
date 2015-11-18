@@ -508,7 +508,7 @@ app.get '/ajax/isCharacterNameBusy/:name',
 			isCharacterNameBusy: lib.character.characterExists.sync null, dbConnection, request.params.name
 
 
-app.get '/ajax/cheatFixAll',
+app.post '/ajax/cheatFixAll',
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
 			'UPDATE items '+
@@ -517,43 +517,43 @@ app.get '/ajax/cheatFixAll',
 				'WHERE items.prototype = items_proto.id)'+
 				'',
 			[]
-		response.redirect '/inventory/'
+		response.redirect 303, '/inventory/'
 
 
-app.get '/action/unequip/:id',
+app.post '/action/unequip/',
 	mustBeAuthed,
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
 			'UPDATE items '+
 				'SET equipped = false '+
 				'WHERE id = $1 AND owner = $2',
-			[request.params.id, request.uonline.user.character_id]
-		response.redirect '/inventory/'
+			[request.body.id, request.uonline.user.character_id]
+		response.redirect 303, '/inventory/'
 
 
-app.get '/action/equip/:id',
+app.post '/action/equip/',
 	mustBeAuthed,
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
 			'UPDATE items '+
 				'SET equipped = true '+
 				'WHERE id = $1 AND owner = $2',
-			[request.params.id, request.uonline.user.character_id]
-		response.redirect '/inventory/'
+			[request.body.id, request.uonline.user.character_id]
+		response.redirect 303, '/inventory/'
 
 
-app.get '/action/switchCharacter/:id',
+app.post '/action/switchCharacter/',
 	mustBeAuthed,
 	(request, response) ->
-		lib.character.switchCharacter.sync null, dbConnection, request.uonline.user.id, request.params.id
-		response.redirect 'back'
+		lib.character.switchCharacter.sync null, dbConnection, request.uonline.user.id, request.body.id
+		response.redirect 303, 'back'
 
 
-app.get '/action/deleteCharacter/:id',
+app.post '/action/deleteCharacter/',
 	mustBeAuthed,
 	(request, response) ->
-		lib.character.deleteCharacter.sync null, dbConnection, request.uonline.user.id, request.params.id
-		response.redirect '/account/'
+		lib.character.deleteCharacter.sync null, dbConnection, request.uonline.user.id, request.body.id
+		response.redirect 303, '/account/'
 
 
 app.get '/state/',
