@@ -459,10 +459,10 @@ app.get '/inventory/',
 	setInstance('inventory'), render('inventory')
 
 
-app.post '/action/go/:to',
+app.post '/action/go/',
 	mustBeAuthed,
 	(request, response) ->
-		result = lib.game.changeLocation.sync null, dbConnection, request.uonline.user.character_id, request.params.to
+		result = lib.game.changeLocation.sync null, dbConnection, request.uonline.user.character_id, request.body.to
 		if result.result != 'ok'
 			console.error "Location change failed: #{result.reason}"
 		response.redirect '/game/'
@@ -482,14 +482,14 @@ app.post '/action/escape',
 		response.redirect '/game/'
 
 
-app.post '/action/hit/:id',
+app.post '/action/hit/',
 	mustBeAuthed,
 	(request, response) ->
 		lib.game.hitOpponent.sync(
 			null, dbConnection,
 			request.uonline.user.character_id,
-			request.params.id,
-			request.query.with_item_id
+			request.body.id,
+			request.body.with_item_id
 		)
 		response.redirect '/game/'
 

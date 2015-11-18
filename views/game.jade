@@ -5,10 +5,12 @@ mixin monsters_list(mosters)
 		if index < mosters.length-1
 			| ,
 
-mixin post_button(action)
+mixin post_button(action, params)
 	form.pjax(method='post', action=action, style='display: inline')
 		button.btn.btn-default&attributes(attributes)
 			block
+		each val, name in (params || {})
+			input(type='hidden', name=name, value=val)
 
 extends layout
 block title
@@ -38,7 +40,7 @@ block content
 		div.paragraph.button-row
 			each i in location.ways
 				//- TODO: typography
-				+post_button('/action/go/'+i.target) #{i.text}
+				+post_button('/action/go/', {to: i.target}) #{i.text}
 				| #{'\n'}
 	else
 		h4 Здоровье
@@ -103,18 +105,18 @@ block content
 							| противник
 							| #{' '}
 							if !equipment.right_hand
-								+post_button('/action/hit/'+p.character_id).btn-sm Ударить
+								+post_button('/action/hit/', {id: p.character_id}).btn-sm Ударить
 							else
-								+post_button('/action/hit/'+p.character_id+'?with_item_id='+equipment.right_hand.id).btn-sm Ударить оружием
+								+post_button('/action/hit/', {id: p.character_id, with_item_id: equipment.right_hand.id}).btn-sm Ударить оружием
 							if equipment.shield && equipment.shield.damage > 0
 								| #{' '}
-								+post_button('/action/hit/'+p.character_id+'?with_item_id='+equipment.shield.id).btn-sm Щитом
+								+post_button('/action/hit/', {id: p.character_id, with_item_id: equipment.shield.id}).btn-sm Щитом
 		p
 			small
 				if character.autoinvolved_fm == true
 					b Вас атаковали!
 		if monsters_list.length > 0
-			div.button-row
+			div.paragraph.button-row
 				if character.fight_mode == true
 					a.btn.btn-default.disabled Атака
 					| #{' '}
@@ -122,8 +124,7 @@ block content
 					| #{' '}
 					a.btn.btn-default.pjax(href='/inventory/') Инвентарь
 					| #{' '}
-					// а вот тут ИЕ 8 проходит лесом
-					+post_button(disabled=1) Магия
+					a.btn.btn-default.disabled Магия
 					| #{' '}
 					+post_button('/action/escape') Сбежать
 				else if monsters_list.not_in_fight.length > 0
