@@ -40,6 +40,9 @@ plural = (n, f) ->
 	if n>1 and n<5 then return f[1]
 	if n is 1 then return f[0] else return f[2]
 
+inspect = (x) ->
+	console.log require('util').inspect x, depth: null
+
 
 # Connect to database
 dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
@@ -93,6 +96,7 @@ app.use morgan ":remote-addr :uu  :coloredStatus :method :url  #{chalk.gray '":u
 # middlewares
 app.use(require('cookie-parser')())
 app.use(require('body-parser').urlencoded(extended: false))
+app.use(require('multer')().fields([]))
 app.use(require('compression')())
 
 # Hashing
@@ -165,12 +169,12 @@ mustBeAuthed = (request, response, next) ->
 	if request.uonline.user.loggedIn is true
 		next()
 	else
-		response.redirect '/login/'
+		response.redirect 303, '/login/'
 
 
 mustNotBeAuthed = (request, response, next) ->
 	if request.uonline.user.loggedIn is true
-		response.redirect config.defaultInstanceForUsers
+		response.redirect 303, config.defaultInstanceForUsers
 	else
 		next()
 
@@ -179,7 +183,7 @@ mustHaveCharacter = (request, response, next) ->
 	if request.uonline.character
 		next()
 	else
-		response.redirect '/account/'
+		response.redirect 303, '/account/'
 
 
 setInstance = (x) ->
@@ -323,14 +327,14 @@ app.get '/login/',
 	setInstance('login'), render('login')
 
 
-app.post '/login/',
+app.post '/action/login',
 	mustNotBeAuthed,
 	setInstance('login'),
 	(request, response) ->
 		if lib.user.accessGranted.sync null, dbConnection, request.body.username, request.body.password
 			sessid = lib.user.createSession.sync null, dbConnection, request.body.username
 			response.cookie 'sessid', sessid
-			response.redirect '/'
+			response.redirect 303, '/'
 		else
 			options = request.uonline
 			options.error = true
@@ -343,7 +347,7 @@ app.get '/register/',
 	setInstance('register'), render('register')
 
 
-app.post '/register/',
+app.post '/action/register',
 	mustNotBeAuthed,
 	setInstance('register'),
 	(request, response) ->
@@ -359,7 +363,7 @@ app.post '/register/',
 				'user'
 			)
 			response.cookie 'sessid', result.sessid
-			response.redirect '/'
+			response.redirect 303, '/'
 		else
 			options = request.uonline
 			options.error = true
@@ -401,12 +405,12 @@ app.get '/monster/:id/',
 	setInstance('monster'), render('monster')
 
 
-app.get '/action/logout',
+app.post '/action/logout',
 	mustBeAuthed,
 	(request, response) ->
 		lib.user.closeSession.sync null,
 			dbConnection, request.uonline.user.sessid
-		response.redirect '/'
+		response.redirect 303, '/'  # force GET
 
 
 app.get '/newCharacter/',
@@ -416,7 +420,7 @@ app.get '/newCharacter/',
 		response.render 'new_character', request.uonline
 
 
-app.post '/newCharacter/',
+app.post '/action/newCharacter',
 	mustBeAuthed,
 	setInstance('new_character'),
 	(request, response) ->
@@ -432,7 +436,7 @@ app.post '/newCharacter/',
 				request.body.character_race
 				request.body.character_gender
 			)
-			response.redirect '/character/'
+			response.redirect 303, '/character/'
 		else
 			options = request.uonline
 			options.error = true
@@ -455,39 +459,39 @@ app.get '/inventory/',
 	setInstance('inventory'), render('inventory')
 
 
-app.get '/action/go/:to',
+app.post '/action/go',
 	mustBeAuthed,
 	(request, response) ->
-		result = lib.game.changeLocation.sync null, dbConnection, request.uonline.user.character_id, request.params.to
+		result = lib.game.changeLocation.sync null, dbConnection, request.uonline.user.character_id, request.body.to
 		if result.result != 'ok'
 			console.error "Location change failed: #{result.reason}"
-		response.redirect '/game/'
+		response.redirect 303, '/game/'
 
 
-app.get '/action/attack',
+app.post '/action/attack',
 	mustBeAuthed,
 	(request, response) ->
 		lib.game.goAttack.sync null, dbConnection, request.uonline.user.character_id
-		response.redirect '/game/'
+		response.redirect 303, '/game/'
 
 
-app.get '/action/escape',
+app.post '/action/escape',
 	mustBeAuthed,
 	(request, response) ->
 		lib.game.goEscape.sync null, dbConnection, request.uonline.user.character_id
-		response.redirect '/game/'
+		response.redirect 303, '/game/'
 
 
-app.get '/action/hit/:id',
+app.post '/action/hit',
 	mustBeAuthed,
 	(request, response) ->
 		lib.game.hitOpponent.sync(
 			null, dbConnection,
 			request.uonline.user.character_id,
-			request.params.id,
-			request.query.with_item_id
+			request.body.id,
+			request.body.with_item_id
 		)
-		response.redirect '/game/'
+		response.redirect 303, '/game/'
 
 
 app.get '/ajax/isNickBusy/:nick',
@@ -504,7 +508,7 @@ app.get '/ajax/isCharacterNameBusy/:name',
 			isCharacterNameBusy: lib.character.characterExists.sync null, dbConnection, request.params.name
 
 
-app.get '/ajax/cheatFixAll',
+app.post '/ajax/cheatFixAll',
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
 			'UPDATE items '+
@@ -513,43 +517,43 @@ app.get '/ajax/cheatFixAll',
 				'WHERE items.prototype = items_proto.id)'+
 				'',
 			[]
-		response.redirect '/inventory/'
+		response.redirect 303, '/inventory/'
 
 
-app.get '/action/unequip/:id',
+app.post '/action/unequip',
 	mustBeAuthed,
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
 			'UPDATE items '+
 				'SET equipped = false '+
 				'WHERE id = $1 AND owner = $2',
-			[request.params.id, request.uonline.user.character_id]
-		response.redirect '/inventory/'
+			[request.body.id, request.uonline.user.character_id]
+		response.redirect 303, '/inventory/'
 
 
-app.get '/action/equip/:id',
+app.post '/action/equip',
 	mustBeAuthed,
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
 			'UPDATE items '+
 				'SET equipped = true '+
 				'WHERE id = $1 AND owner = $2',
-			[request.params.id, request.uonline.user.character_id]
-		response.redirect '/inventory/'
+			[request.body.id, request.uonline.user.character_id]
+		response.redirect 303, '/inventory/'
 
 
-app.get '/action/switchCharacter/:id',
+app.post '/action/switchCharacter',
 	mustBeAuthed,
 	(request, response) ->
-		lib.character.switchCharacter.sync null, dbConnection, request.uonline.user.id, request.params.id
-		response.redirect 'back'
+		lib.character.switchCharacter.sync null, dbConnection, request.uonline.user.id, request.body.id
+		response.redirect 303, 'back'
 
 
-app.get '/action/deleteCharacter/:id',
+app.post '/action/deleteCharacter',
 	mustBeAuthed,
 	(request, response) ->
-		lib.character.deleteCharacter.sync null, dbConnection, request.uonline.user.id, request.params.id
-		response.redirect '/account/'
+		lib.character.deleteCharacter.sync null, dbConnection, request.uonline.user.id, request.body.id
+		response.redirect 303, '/account/'
 
 
 app.get '/state/',

@@ -21,6 +21,13 @@ mixin instanceLink(name, url, text, bold, icon, forceInactive)
 					| #{text}
 
 
+mixin post(action, params, do_replace)
+	form.inline(class=do_replace ? 'pjax-replace' : 'pjax', method='post', action=action)
+		each val, name in (params || {})
+			input(type='hidden', name=name, value=val)
+		block
+
+
 mixin main()
 	div.navbar.navbar-default.navbar-static-top(role='navigation')
 		div.container
@@ -67,12 +74,12 @@ mixin main()
 													| #{' '}#{x.name}
 										else
 											li
-												a.pjax(href='/action/switchCharacter/'+x.id)
-													| #{x.name}
+												+post('/action/switchCharacter', {id: x.id}, true)
+													button.btn.btn-link #{x.name}
 						+instanceLink('game', '/game/', 'Игра', true)
 						+instanceLink('inventory', '/inventory/', 'Инвентарь')
-						li
-							a(href='/action/logout') Выйти
+						form.pjax.navbar-form.navbar-right.masked-nav-form(method='post', action='/action/logout')
+							button.btn.btn-link.masked-nav-button(type='submit') Выйти
 					else
 						+instanceLink('login', '/login/', 'Вход', false, 'glyphicon-chevron-right')
 						+instanceLink('register', '/register/', 'Регистрация')
@@ -100,11 +107,6 @@ if !pjax
 			//- and here we go
 			title
 				block title
-			//- easier to inline than to mess with it
-			style(type="text/css")
-				:stylus
-					.button-row
-						line-height: 2.8em
 			//- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries
 			//- WARNING: Respond.js doesn't work if you view the page via file://
 			<!--[if lt IE 9]>
@@ -118,6 +120,45 @@ if !pjax
 			//- Styles
 			link(href=as('/bower_components/bootstrap/dist/css/bootstrap.css'), rel='stylesheet')
 			link(href=as('/bower_components/bootstrap/dist/css/bootstrap-theme.css'), rel='stylesheet')
+			//- easier to inline than to mess with it
+			style(type="text/css")
+				:stylus
+					.button-row
+						line-height: 2.8em
+					.masked-nav-form
+						padding: 0px
+						margin: 0px
+					.masked-nav-button
+						border: none
+						text-decoration: none
+						padding: 15px
+					.masked-nav-button:hover,
+					.masked-nav-button:focus
+						text-decoration: none
+					.paragraph
+						margin: 0px 0px 10px
+					.inline
+						display: inline
+					
+					.dropdown-menu>li .btn-link
+						display: block
+						padding: 3px 20px
+						color: #333
+						border: none
+						width: 100%
+						text-align: left
+					.dropdown-menu>li .btn-link:hover,
+					.dropdown-menu>li .btn-link:focus
+						text-decoration: none
+						background-color: #e8e8e8
+						background-image: linear-gradient(to bottom,#f5f5f5 0,#e8e8e8 100%)
+					@media (max-width: 767px)
+						.navbar-nav .open .dropdown-menu>li .btn-link
+							padding: 5px 15px 5px 25px
+							color: #777
+							background: none
+						.navbar-nav .open .dropdown-menu>li .btn-link:hover
+							color: #333
 			//- Scripts
 			script(src=as('/assets/scripts.js'))
 else

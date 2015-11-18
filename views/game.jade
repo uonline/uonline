@@ -30,12 +30,12 @@ block content
 					- i = i.replace(/ - /g, ' — ')
 					//- render
 					p= i
-		div
-			p.button-row
-				each i in location.ways
-					//- TODO: typography
-					a.pjax.btn.btn-default(href="/action/go/"+i.target) #{i.text}
-					| #{'\n'}
+		div.paragraph.button-row
+			each i in location.ways
+				//- TODO: typography
+				+post('/action/go', {to: i.target})
+					button.btn.btn-default #{i.text}
+				| #{'\n'}
 	else
 		h4 Здоровье
 		.progress
@@ -99,18 +99,21 @@ block content
 							| противник
 							| #{' '}
 							if !equipment.right_hand
-								a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id) Ударить
+								+post('/action/hit', {id: p.character_id})
+									button.btn.btn-default.btn-sm Ударить
 							else
-								a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id+"?with_item_id="+equipment.right_hand.id) Ударить оружием
+								+post('/action/hit', {id: p.character_id, with_item_id: equipment.right_hand.id})
+									button.btn.btn-default.btn-sm Ударить оружием
 							if equipment.shield && equipment.shield.damage > 0
 								| #{' '}
-								a.btn.btn-default.btn-sm.pjax(href="/action/hit/"+p.character_id+"?with_item_id="+equipment.shield.id) Щитом
+								+post('/action/hit', {id: p.character_id, with_item_id: equipment.shield.id})
+									button.btn.btn-default.btn-sm Щитом
 		p
 			small
 				if character.autoinvolved_fm == true
 					b Вас атаковали!
 		if monsters_list.length > 0
-			p.button-row
+			div.paragraph.button-row
 				if character.fight_mode == true
 					a.btn.btn-default.disabled Атака
 					| #{' '}
@@ -120,8 +123,10 @@ block content
 					| #{' '}
 					a.btn.btn-default.disabled Магия
 					| #{' '}
-					a.btn.btn-default.pjax(href="/action/escape") Сбежать
+					+post('/action/escape')
+						button.btn.btn-default Сбежать
 				else if monsters_list.not_in_fight.length > 0
-					a.btn.btn-default.pjax(href="/action/attack") Атаковать
+					+post('/action/attack').pjax
+						button.btn.btn-default Атаковать
 	//- fit picture
 	div(style="clear: both;")
