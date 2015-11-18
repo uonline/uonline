@@ -74,8 +74,8 @@ mixin main()
 													| #{' '}#{x.name}
 										else
 											li
-												a.pjax(href='/action/switchCharacter/'+x.id)
-													| #{x.name}
+												+post('/action/switchCharacter', {id: x.id}, true)
+													button.btn.btn-link #{x.name}
 						+instanceLink('game', '/game/', 'Игра', true)
 						+instanceLink('inventory', '/inventory/', 'Инвентарь')
 						form.pjax.navbar-form.navbar-right.masked-nav-form(method='post', action='/action/logout')
@@ -107,22 +107,6 @@ if !pjax
 			//- and here we go
 			title
 				block title
-			//- easier to inline than to mess with it
-			style(type="text/css")
-				:stylus
-					.button-row
-						line-height: 2.8em
-					.masked-nav-form
-						padding: 0px !important
-						margin: 0px !important
-					.masked-nav-button
-						border: none !important
-						text-decoration: none !important
-						padding: 15px !important
-					.paragraph
-						margin: 0px 0px 10px
-					.inline
-						display: inline
 			//- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries
 			//- WARNING: Respond.js doesn't work if you view the page via file://
 			<!--[if lt IE 9]>
@@ -136,6 +120,32 @@ if !pjax
 			//- Styles
 			link(href=as('/bower_components/bootstrap/dist/css/bootstrap.css'), rel='stylesheet')
 			link(href=as('/bower_components/bootstrap/dist/css/bootstrap-theme.css'), rel='stylesheet')
+			//- easier to inline than to mess with it
+			style(type="text/css")
+				:stylus
+					.button-row
+						line-height: 2.8em
+					.masked-nav-form
+						padding: 0px
+						margin: 0px
+					.masked-nav-button
+						border: none
+						text-decoration: none
+						padding: 15px
+					.paragraph
+						margin: 0px 0px 10px
+					.inline
+						display: inline
+					
+					.dropdown-menu>li .btn-link
+						display: block
+						padding: 3px 20px
+						color: #333
+						border: none
+					@media (max-width: 767px)
+						.navbar-nav .open .dropdown-menu>li .btn-link
+							padding: 5px 15px 5px 25px
+							color: #777
 			//- Scripts
 			script(src=as('/assets/scripts.js'))
 else
