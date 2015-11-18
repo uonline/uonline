@@ -35,7 +35,7 @@ block content
 					- i = i.replace(/ - /g, ' — ')
 					//- render
 					p= i
-		div.button-row(style='margin-bottom: 10px')
+		div.paragraph.button-row
 			each i in location.ways
 				//- TODO: typography
 				+post_button('/action/go/'+i.target) #{i.text}
