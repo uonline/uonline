@@ -327,7 +327,7 @@ app.get '/login/',
 	setInstance('login'), render('login')
 
 
-app.post '/login/',
+app.post '/action/login',
 	mustNotBeAuthed,
 	setInstance('login'),
 	(request, response) ->
@@ -347,7 +347,7 @@ app.get '/register/',
 	setInstance('register'), render('register')
 
 
-app.post '/register/',
+app.post '/action/register',
 	mustNotBeAuthed,
 	setInstance('register'),
 	(request, response) ->
@@ -420,7 +420,7 @@ app.get '/newCharacter/',
 		response.render 'new_character', request.uonline
 
 
-app.post '/newCharacter/',
+app.post '/action/newCharacter',
 	mustBeAuthed,
 	setInstance('new_character'),
 	(request, response) ->
@@ -459,7 +459,7 @@ app.get '/inventory/',
 	setInstance('inventory'), render('inventory')
 
 
-app.post '/action/go/',
+app.post '/action/go',
 	mustBeAuthed,
 	(request, response) ->
 		result = lib.game.changeLocation.sync null, dbConnection, request.uonline.user.character_id, request.body.to
@@ -482,7 +482,7 @@ app.post '/action/escape',
 		response.redirect 303, '/game/'
 
 
-app.post '/action/hit/',
+app.post '/action/hit',
 	mustBeAuthed,
 	(request, response) ->
 		lib.game.hitOpponent.sync(
@@ -520,7 +520,7 @@ app.post '/ajax/cheatFixAll',
 		response.redirect 303, '/inventory/'
 
 
-app.post '/action/unequip/',
+app.post '/action/unequip',
 	mustBeAuthed,
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
@@ -531,7 +531,7 @@ app.post '/action/unequip/',
 		response.redirect 303, '/inventory/'
 
 
-app.post '/action/equip/',
+app.post '/action/equip',
 	mustBeAuthed,
 	(request, response) ->
 		dbConnection.query.sync dbConnection,
@@ -542,14 +542,14 @@ app.post '/action/equip/',
 		response.redirect 303, '/inventory/'
 
 
-app.post '/action/switchCharacter/',
+app.post '/action/switchCharacter',
 	mustBeAuthed,
 	(request, response) ->
 		lib.character.switchCharacter.sync null, dbConnection, request.uonline.user.id, request.body.id
 		response.redirect 303, 'back'
 
 
-app.post '/action/deleteCharacter/',
+app.post '/action/deleteCharacter',
 	mustBeAuthed,
 	(request, response) ->
 		lib.character.deleteCharacter.sync null, dbConnection, request.uonline.user.id, request.body.id

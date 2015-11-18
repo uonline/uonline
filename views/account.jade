@@ -14,7 +14,7 @@ block content
 					p
 						if (!!character) && (x.id === character.id)
 							div.pull-right
-								+post('/action/deleteCharacter/', {id: x.id}, true)
+								+post('/action/deleteCharacter', {id: x.id}, true)
 									button.confirm.btn.btn-danger.btn-xs Удалить
 							i.glyphicon.glyphicon-menu-right
 							| #{' '}
@@ -25,10 +25,10 @@ block content
 								| #{x.displayRace} 1-го уровня
 						else
 							div.pull-right
-								+post('/action/switchCharacter/', {id: x.id}, true)
+								+post('/action/switchCharacter', {id: x.id}, true)
 									button.btn.btn-default.btn-xs Переключиться
 								| #{' '}
-								+post('/action/deleteCharacter/', {id: x.id}, true)
+								+post('/action/deleteCharacter', {id: x.id}, true)
 									button.confirm.btn.btn-danger.btn-xs Удалить
 							i.glyphicon.glyphicon-user
 							| #{' '}

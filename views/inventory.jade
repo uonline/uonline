@@ -2,13 +2,13 @@ mixin item(x, button, renderType)
 	| #{ x.name }
 	| #{' '}
 	if button === 'unequip'
-		+post('/action/unequip/', {id: x.id}, true)
+		+post('/action/unequip', {id: x.id}, true)
 			button.btn.btn-default.btn-xs
 				span.glyphicon.glyphicon-chevron-left
 				| #{' '}
 				| Снять
 	if button === 'equip'
-		+post('/action/equip/', {id: x.id}, true)
+		+post('/action/equip', {id: x.id}, true)
 			button.btn.btn-default.btn-xs
 				span.glyphicon.glyphicon-chevron-right
 				| #{' '}

@@ -33,7 +33,7 @@ block content
 		div.paragraph.button-row
 			each i in location.ways
 				//- TODO: typography
-				+post('/action/go/', {to: i.target})
+				+post('/action/go', {to: i.target})
 					button.btn.btn-default #{i.text}
 				| #{'\n'}
 	else
@@ -99,14 +99,14 @@ block content
 							| противник
 							| #{' '}
 							if !equipment.right_hand
-								+post('/action/hit/', {id: p.character_id})
+								+post('/action/hit', {id: p.character_id})
 									button.btn.btn-default.btn-sm Ударить
 							else
-								+post('/action/hit/', {id: p.character_id, with_item_id: equipment.right_hand.id})
+								+post('/action/hit', {id: p.character_id, with_item_id: equipment.right_hand.id})
 									button.btn.btn-default.btn-sm Ударить оружием
 							if equipment.shield && equipment.shield.damage > 0
 								| #{' '}
-								+post('/action/hit/', {id: p.character_id, with_item_id: equipment.shield.id})
+								+post('/action/hit', {id: p.character_id, with_item_id: equipment.shield.id})
 									button.btn.btn-default.btn-sm Щитом
 		p
 			small
