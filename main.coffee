@@ -169,12 +169,12 @@ mustBeAuthed = (request, response, next) ->
 	if request.uonline.user.loggedIn is true
 		next()
 	else
-		response.redirect '/login/'
+		response.redirect 303, '/login/'
 
 
 mustNotBeAuthed = (request, response, next) ->
 	if request.uonline.user.loggedIn is true
-		response.redirect config.defaultInstanceForUsers
+		response.redirect 303, config.defaultInstanceForUsers
 	else
 		next()
 
@@ -183,7 +183,7 @@ mustHaveCharacter = (request, response, next) ->
 	if request.uonline.character
 		next()
 	else
-		response.redirect '/account/'
+		response.redirect 303, '/account/'
 
 
 setInstance = (x) ->
@@ -334,7 +334,7 @@ app.post '/login/',
 		if lib.user.accessGranted.sync null, dbConnection, request.body.username, request.body.password
 			sessid = lib.user.createSession.sync null, dbConnection, request.body.username
 			response.cookie 'sessid', sessid
-			response.redirect '/'
+			response.redirect 303, '/'
 		else
 			options = request.uonline
 			options.error = true
@@ -363,7 +363,7 @@ app.post '/register/',
 				'user'
 			)
 			response.cookie 'sessid', result.sessid
-			response.redirect '/'
+			response.redirect 303, '/'
 		else
 			options = request.uonline
 			options.error = true
@@ -436,7 +436,7 @@ app.post '/newCharacter/',
 				request.body.character_race
 				request.body.character_gender
 			)
-			response.redirect '/character/'
+			response.redirect 303, '/character/'
 		else
 			options = request.uonline
 			options.error = true
@@ -465,21 +465,21 @@ app.post '/action/go/',
 		result = lib.game.changeLocation.sync null, dbConnection, request.uonline.user.character_id, request.body.to
 		if result.result != 'ok'
 			console.error "Location change failed: #{result.reason}"
-		response.redirect '/game/'
+		response.redirect 303, '/game/'
 
 
 app.post '/action/attack',
 	mustBeAuthed,
 	(request, response) ->
 		lib.game.goAttack.sync null, dbConnection, request.uonline.user.character_id
-		response.redirect '/game/'
+		response.redirect 303, '/game/'
 
 
 app.post '/action/escape',
 	mustBeAuthed,
 	(request, response) ->
 		lib.game.goEscape.sync null, dbConnection, request.uonline.user.character_id
-		response.redirect '/game/'
+		response.redirect 303, '/game/'
 
 
 app.post '/action/hit/',
@@ -491,7 +491,7 @@ app.post '/action/hit/',
 			request.body.id,
 			request.body.with_item_id
 		)
-		response.redirect '/game/'
+		response.redirect 303, '/game/'
 
 
 app.get '/ajax/isNickBusy/:nick',
