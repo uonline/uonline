@@ -5,12 +5,11 @@ mixin monsters_list(mosters)
 		if index < mosters.length-1
 			| ,
 
-mixin post_button(action, params)
-	form.pjax(method='post', action=action, style='display: inline')
-		button.btn.btn-default&attributes(attributes)
-			block
+mixin post(action, params, do_replace)
+	form.inline&attributes({class: do_replace ? 'pjax-replace' : 'pjax'})(method='post', action=action)
 		each val, name in (params || {})
 			input(type='hidden', name=name, value=val)
+		block
 
 extends layout
 block title
@@ -40,7 +39,8 @@ block content
 		div.paragraph.button-row
 			each i in location.ways
 				//- TODO: typography
-				+post_button('/action/go/', {to: i.target}) #{i.text}
+				+post('/action/go/', {to: i.target})
+					button.btn.btn-default #{i.text}
 				| #{'\n'}
 	else
 		h4 Здоровье
@@ -105,12 +105,15 @@ block content
 							| противник
 							| #{' '}
 							if !equipment.right_hand
-								+post_button('/action/hit/', {id: p.character_id}).btn-sm Ударить
+								+post('/action/hit/', {id: p.character_id})
+									button.btn.btn-default.btn-sm Ударить
 							else
-								+post_button('/action/hit/', {id: p.character_id, with_item_id: equipment.right_hand.id}).btn-sm Ударить оружием
+								+post('/action/hit/', {id: p.character_id, with_item_id: equipment.right_hand.id})
+									button.btn.btn-default.btn-sm Ударить оружием
 							if equipment.shield && equipment.shield.damage > 0
 								| #{' '}
-								+post_button('/action/hit/', {id: p.character_id, with_item_id: equipment.shield.id}).btn-sm Щитом
+								+post('/action/hit/', {id: p.character_id, with_item_id: equipment.shield.id})
+									button.btn.btn-default.btn-sm Щитом
 		p
 			small
 				if character.autoinvolved_fm == true
@@ -126,8 +129,10 @@ block content
 					| #{' '}
 					a.btn.btn-default.disabled Магия
 					| #{' '}
-					+post_button('/action/escape') Сбежать
+					+post('/action/escape')
+						button.btn.btn-default Сбежать
 				else if monsters_list.not_in_fight.length > 0
-					+post_button('/action/attack') Атаковать
+					+post('/action/attack').pjax
+						button.btn.btn-default Атаковать
 	//- fit picture
 	div(style="clear: both;")
