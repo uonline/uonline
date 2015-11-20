@@ -20,17 +20,11 @@ console.timeEnd 'Loading gulp'
 
 console.time 'Loading deps'
 chalk = require 'chalk'
-coffee = require 'gulp-coffee'
 cleanDest = require 'gulp-clean-dest'
-uglify = require 'gulp-uglify'
-concat = require 'gulp-concat'
 merge = require 'gulp-merge'
-browserify = require 'browserify'
-coffeeify = require 'coffeeify'
 source = require 'vinyl-source-stream'
 buffer = require 'vinyl-buffer'
-require('gulp-grunt')(gulp)
-notify = require 'gulp-notify'
+debug = require 'gulp-debug'
 console.timeEnd 'Loading deps'
 
 
@@ -52,6 +46,11 @@ gulp.task 'default', ->
 
 
 gulp.task 'build', ->
+	coffee = require 'gulp-coffee'
+	uglify = require 'gulp-uglify'
+	concat = require 'gulp-concat'
+	browserify = require 'browserify'
+	coffeeify = require 'coffeeify'
 	return saneMerge(
 		gulp
 		.src './bower_components/jquery/dist/jquery.min.js'
@@ -80,10 +79,74 @@ gulp.task 'build', ->
 
 
 gulp.task 'build-and-notify', ['build'], ->
-	gulp
+	notify = require 'gulp-notify'
+	return gulp
 		.src ''
 		.pipe notify 'Assets were rebuilt.'
 
 
 gulp.task 'watch', ['build'], ->
-	gulp.watch ['./browser.coffee', './lib/validation.coffee'], ['build-and-notify']
+	return gulp.watch ['./browser.coffee', './lib/validation.coffee'], ['build-and-notify']
+
+
+# Experimental stuff
+
+gulp.task 'nodeunit', ->
+	nodeunit = require 'gulp-nodeunit-runner'
+	return gulp
+		.src [
+			'tests/health-check.js'
+			'tests/health-check.coffee'
+			'tests/*.js'
+			'tests/*.coffee'
+		]
+		.pipe nodeunit(reporter: 'minimal')
+
+gulp.task 'nodeunit-force-exit', ['nodeunit'], ->
+	process.exit 0
+
+gulp.task 'jshint', ->
+	jshint = require 'gulp-jshint'
+	return gulp
+		.src [
+			'*.js'
+			'lib/*.js'
+			'tests/*.js'
+			'grunt-custom-tasks/*.js'
+		]
+		.pipe jshint()
+		.pipe jshint.reporter 'non_error'
+
+# TODO: mustcontain
+
+gulp.task 'coffeelint', ->
+	coffeelint = require 'gulp-coffeelint'
+	return gulp
+		.src [
+			'*.coffee'
+			'lib/*.coffee'
+			'tests/*.coffee'
+			'grunt-custom-tasks/*.coffee'
+		]
+		.pipe coffeelint './.coffeelintrc'
+		.pipe coffeelint.reporter()
+
+# TODO: coffee-jshint
+
+# This shit doesn't work 'cause it wants global codo
+gulp.task 'codo', ->
+	codo = require 'gulp-codo'
+	return gulp
+		.src 'lib/*.coffee', read: false
+		.pipe codo {
+			name: 'uonline'
+			title: 'uonline documentation'
+			undocumented: true
+			stats: false
+		}
+
+# TODO: jscoverage report
+
+# TODO: jscoverage write lcov
+
+# TODO: coveralls
