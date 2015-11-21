@@ -175,4 +175,4 @@ gulp.task 'coveralls', ->
 		.pipe buffer()
 		.pipe coveralls()
 
-gulp.task 'travis', seq 'check', 'build', 'docs', 'nodeunit', 'jscoverage-report', 'coveralls'
+gulp.task 'travis', seq 'check', 'build', 'docs', 'nodeunit', 'jscoverage-report', 'coveralls', 'force-exit'
