@@ -90,18 +90,19 @@ gulp.task 'test', seq 'nodeunit', 'jscoverage-report', 'force-exit'
 gulp.task 'nodeunit', ->
 	nodeunit = require 'gulp-nodeunit-runner'
 	reporter = 'minimal'
-	source = [
+	sourcefiles = [
 		'tests/health-check.js'
 		'tests/health-check.coffee'
 		'tests/*.js'
 		'tests/*.coffee'
 	]
 	if args.single?
-		source = "tests/#{args.single}"
+		sourcefiles = "tests/#{args.single}"
 	if args.reporter?
 		reporter = args.reporter
+	imitate = require 'vinyl-imitate'
 	return gulp
-		.src source
+		.src sourcefiles
 		.pipe nodeunit(reporter: reporter)
 
 gulp.task 'force-exit', ->
@@ -164,6 +165,14 @@ gulp.task 'jscoverage-report', ->
 	jscr = require './gulp-tasks/jscoverage-report.coffee'
 	jscr()
 
-# TODO: jscoverage write lcov
+gulp.task 'coveralls', ->
+	jsc = require 'jscoverage'
+	lcov = jsc.getLCOV()
+	imitate = require 'vinyl-imitate'
+	coveralls = require 'gulp-coveralls'
+	return imitate('report.lcov', new Buffer(lcov))
+		.pipe source('report.lcov')
+		.pipe buffer()
+		.pipe coveralls()
 
-# TODO: coveralls
+gulp.task 'travis', seq 'check', 'build', 'docs', 'nodeunit', 'jscoverage-report', 'coveralls'

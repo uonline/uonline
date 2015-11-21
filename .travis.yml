@@ -24,8 +24,7 @@ before_script:
   - # Create test database
   - psql -c 'create database uonline_test;' -U postgres
 script:
-  - gulp build
-  - grunt travis
+  - gulp travis
 # New stack
 sudo: false
 cache:
