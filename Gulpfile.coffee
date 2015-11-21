@@ -32,8 +32,8 @@ console.timeEnd 'Loading deps'
 
 gulp.task 'default', ->
 	console.log ''
-	console.log chalk.green "Specify a task, like #{chalk.blue 'build'} or #{chalk.blue 'watch'}."
-	console.log chalk.green "Run #{chalk.blue 'gulp --tasks'} for some hints."
+	console.log chalk.green " Specify a task, like #{chalk.blue 'build'} or #{chalk.blue 'watch'}."
+	console.log chalk.green " Run #{chalk.blue 'gulp --tasks'} for some hints."
 	console.log ''
 
 
@@ -89,6 +89,7 @@ gulp.task 'test', seq 'nodeunit', 'jscoverage-report', 'force-exit'
 
 gulp.task 'nodeunit', ->
 	nodeunit = require 'gulp-nodeunit-runner'
+	reporter = 'minimal'
 	source = [
 		'tests/health-check.js'
 		'tests/health-check.coffee'
@@ -97,9 +98,11 @@ gulp.task 'nodeunit', ->
 	]
 	if args.single?
 		source = "tests/#{args.single}"
+	if args.reporter?
+		reporter = args.reporter
 	return gulp
 		.src source
-		.pipe nodeunit(reporter: 'minimal')
+		.pipe nodeunit(reporter: reporter)
 
 gulp.task 'force-exit', ->
 	process.exit 0
