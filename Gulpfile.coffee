@@ -26,6 +26,7 @@ source = require 'vinyl-source-stream'
 buffer = require 'vinyl-buffer'
 debug = require 'gulp-debug'
 seq = require 'gulp-sequence'
+args = require('get-gulp-args')()
 console.timeEnd 'Loading deps'
 
 
@@ -88,14 +89,16 @@ gulp.task 'test', seq 'nodeunit', 'jscoverage-report', 'force-exit'
 
 gulp.task 'nodeunit', ->
 	nodeunit = require 'gulp-nodeunit-runner'
+	source = [
+		'tests/health-check.js'
+		'tests/health-check.coffee'
+		'tests/*.js'
+		'tests/*.coffee'
+	]
+	if args.single?
+		source = "tests/#{args.single}"
 	return gulp
-		.src [
-			'tests/health-check.js'
-			'tests/health-check.coffee'
-			'tests/*.js'
-			#'tests/validation.coffee'
-			'tests/*.coffee'
-		]
+		.src source
 		.pipe nodeunit(reporter: 'minimal')
 
 gulp.task 'force-exit', ->
