@@ -21,28 +21,19 @@ console.timeEnd 'Loading gulp'
 console.time 'Loading deps'
 chalk = require 'chalk'
 cleanDest = require 'gulp-clean-dest'
-merge = require 'gulp-merge'
+merge = require('./gulp-tasks/multimerge.coffee')(require('gulp-merge'))
 source = require 'vinyl-source-stream'
 buffer = require 'vinyl-buffer'
 debug = require 'gulp-debug'
+seq = require 'gulp-sequence'
 console.timeEnd 'Loading deps'
 
 
-saneMerge = (streams...) ->
-	if streams.length is 1
-		return streams[0]
-	if streams.length is 2
-		return merge streams[0], streams[1]
-	if streams.length > 2
-		out = merge streams[0], streams[1]
-		for i in [2...streams.length]
-			#console.log "Merging in stream ##{i}"
-			out = merge out, streams[i]
-		return out
-
-
 gulp.task 'default', ->
-	console.log chalk.green "Specify a task, like 'build' or 'watch'."
+	console.log ''
+	console.log chalk.green "Specify a task, like #{chalk.blue 'build'} or #{chalk.blue 'watch'}."
+	console.log chalk.green "Run #{chalk.blue 'gulp --tasks'} for some hints."
+	console.log ''
 
 
 gulp.task 'build', ->
@@ -51,7 +42,7 @@ gulp.task 'build', ->
 	concat = require 'gulp-concat'
 	browserify = require 'browserify'
 	coffeeify = require 'coffeeify'
-	return saneMerge(
+	return merge(
 		gulp
 		.src './bower_components/jquery/dist/jquery.min.js'
 	,
@@ -91,6 +82,10 @@ gulp.task 'watch', ['build'], ->
 
 # Experimental stuff
 
+gulp.task 'check', ['jshint', 'coffee-jshint', 'coffeelint', 'mustcontain']
+
+gulp.task 'test', seq 'nodeunit', 'jscoverage-report', 'force-exit'
+
 gulp.task 'nodeunit', ->
 	nodeunit = require 'gulp-nodeunit-runner'
 	return gulp
@@ -98,12 +93,14 @@ gulp.task 'nodeunit', ->
 			'tests/health-check.js'
 			'tests/health-check.coffee'
 			'tests/*.js'
+			#'tests/validation.coffee'
 			'tests/*.coffee'
 		]
 		.pipe nodeunit(reporter: 'minimal')
 
-gulp.task 'nodeunit-force-exit', ['nodeunit'], ->
+gulp.task 'force-exit', ->
 	process.exit 0
+
 
 gulp.task 'jshint', ->
 	jshint = require 'gulp-jshint'
@@ -117,7 +114,11 @@ gulp.task 'jshint', ->
 		.pipe jshint()
 		.pipe jshint.reporter 'non_error'
 
-# TODO: mustcontain
+
+gulp.task 'mustcontain', ->
+	# TODO: mustcontain
+	console.log 'mustcontain: Not implemented.'
+
 
 gulp.task 'coffeelint', ->
 	coffeelint = require 'gulp-coffeelint'
@@ -131,10 +132,17 @@ gulp.task 'coffeelint', ->
 		.pipe coffeelint './.coffeelintrc'
 		.pipe coffeelint.reporter()
 
-# TODO: coffee-jshint
+
+gulp.task 'coffee-jshint', ->
+	# TODO: coffee-jshint
+	console.log 'coffee-jshint: Not implemented.'
+
 
 # This shit doesn't work 'cause it wants global codo
-gulp.task 'codo', ->
+gulp.task 'docs', ->
+	console.log chalk.red "Got a minute? Email the author of gulp-codo he's a faggot."
+	return
+	###
 	codo = require 'gulp-codo'
 	return gulp
 		.src 'lib/*.coffee', read: false
@@ -144,8 +152,11 @@ gulp.task 'codo', ->
 			undocumented: true
 			stats: false
 		}
+	###
 
-# TODO: jscoverage report
+gulp.task 'jscoverage-report', ->
+	jscr = require './gulp-tasks/jscoverage-report.coffee'
+	jscr()
 
 # TODO: jscoverage write lcov
 

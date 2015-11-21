@@ -50,6 +50,7 @@
     "gulp-merge": "^0.1.0",
     "gulp-nodeunit-runner": "^0.2.2",
     "gulp-notify": "^2.2.0",
+    "gulp-sequence": "^0.4.1",
     "gulp-uglify": "^1.2.0",
     "header-stack": ">= 0.0.2",
     "jade": "^1.7.0",
