@@ -67,6 +67,7 @@
     "stylus": "^0.52.4",
     "sugar": "^1.4.1",
     "sync": "~0.2.2",
+    "through2": "^2.0.0",
     "time-grunt": "^1.1.0",
     "vinyl-buffer": "^1.0.0",
     "vinyl-imitate": "^1.0.0",

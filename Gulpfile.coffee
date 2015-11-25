@@ -117,14 +117,39 @@ gulp.task 'jshint', ->
 			'lib/*.js'
 			'tests/*.js'
 			'grunt-custom-tasks/*.js'
+			'gulp-tasks/*.js'
 		]
 		.pipe jshint()
-		.pipe jshint.reporter 'non_error'
+		.pipe jshint.reporter 'default'
 
 
 gulp.task 'mustcontain', ->
-	# TODO: mustcontain
-	console.log 'mustcontain: Not implemented.'
+	mustcontain = require './gulp-tasks/mustcontain.coffee'
+	return gulp
+		.src [
+			'*.js'
+			'lib/*.js'
+			'tests/*.js'
+			'grunt-custom-tasks/*.js'
+			'gulp-tasks/*.js'
+			'*.coffee'
+			'lib/*.coffee'
+			'tests/*.coffee'
+			'grunt-custom-tasks/*.coffee'
+			'gulp-tasks/*.coffee'
+		]
+		.pipe mustcontain {
+			regex: /WARRANTY/
+			success: '{n} file{s} contain{!s} a license.'
+			fail: '{filename}: does not contain a license.'
+			fatal: false
+		}
+		.pipe mustcontain {
+			regex: /['"]use strict['"]\s*[;\n]/
+			success: '{n} file{s} {is/are} strict.'
+			fail: '{filename}: is not in strict mode.'
+			fatal: false
+		}
 
 
 gulp.task 'coffeelint', ->
@@ -135,6 +160,7 @@ gulp.task 'coffeelint', ->
 			'lib/*.coffee'
 			'tests/*.coffee'
 			'grunt-custom-tasks/*.coffee'
+			'gulp-tasks/*.coffee'
 		]
 		.pipe coffeelint './.coffeelintrc'
 		.pipe coffeelint.reporter()
