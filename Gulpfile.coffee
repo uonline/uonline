@@ -167,8 +167,20 @@ gulp.task 'coffeelint', ->
 
 
 gulp.task 'coffee-jshint', ->
-	# TODO: coffee-jshint
-	console.log 'coffee-jshint: Not implemented.'
+	linter = require './gulp-tasks/coffee-jshint.coffee'
+	return gulp
+		.src [
+			'*.coffee'
+			'lib/*.coffee'
+			'tests/*.coffee'
+			'grunt-custom-tasks/*.coffee'
+			'gulp-tasks/*.coffee'
+		], read: false
+		.pipe linter {
+			jshintOptions: ['node', 'browser', 'jquery']
+			withDefaults: true
+			globals: ['_$jscoverage']
+		}
 
 
 # This shit doesn't work 'cause it wants global codo
