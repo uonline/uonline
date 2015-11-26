@@ -30,11 +30,7 @@ args = require('get-gulp-args')()
 console.timeEnd 'Loading deps'
 
 
-gulp.task 'default', ->
-	console.log ''
-	console.log chalk.green " Specify a task, like #{chalk.blue 'build'} or #{chalk.blue 'watch'}."
-	console.log chalk.green " Run #{chalk.blue 'gulp --tasks'} for some hints."
-	console.log ''
+gulp.task 'default', seq 'check', 'build', 'test'
 
 
 gulp.task 'build', ->
@@ -80,8 +76,6 @@ gulp.task 'build-and-notify', ['build'], ->
 gulp.task 'watch', ['build'], ->
 	return gulp.watch ['./browser.coffee', './lib/validation.coffee'], ['build-and-notify']
 
-
-# Experimental stuff
 
 gulp.task 'check', ->
 	mustcontain = require './gulp-tasks/mustcontain.coffee'
