@@ -54,6 +54,12 @@ The following environment variables are recognized:
 * `NEW_RELIC_LICENSE_KEY` — you don't need this.
 
 
+Scripts
+-------
+
+This project uses [Scripts to Rule Them All](https://github.com/github/scripts-to-rule-them-all) for performing routine tasks. All scripts except `console` are supported.
+
+
 Gulp hints
 ----------
 
