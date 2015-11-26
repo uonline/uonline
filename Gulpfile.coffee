@@ -182,23 +182,6 @@ gulp.task 'coffee-jshint', ->
 			globals: ['_$jscoverage', 'confirm']
 		}
 
-
-# This shit doesn't work 'cause it wants global codo
-gulp.task 'docs', ->
-	console.log chalk.red "Got a minute? Email the author of gulp-codo he's a faggot."
-	return
-	###
-	codo = require 'gulp-codo'
-	return gulp
-		.src 'lib/*.coffee', read: false
-		.pipe codo {
-			name: 'uonline'
-			title: 'uonline documentation'
-			undocumented: true
-			stats: false
-		}
-	###
-
 gulp.task 'jscoverage-report', ->
 	jscr = require './gulp-tasks/jscoverage-report.coffee'
 	jscr()
