@@ -179,7 +179,7 @@ gulp.task 'coffee-jshint', ->
 		.pipe linter {
 			jshintOptions: ['node', 'browser', 'jquery']
 			withDefaults: true
-			globals: ['_$jscoverage']
+			globals: ['_$jscoverage', 'confirm']
 		}
 
 

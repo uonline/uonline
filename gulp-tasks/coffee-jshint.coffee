@@ -53,6 +53,11 @@ module.exports = (opts) ->
 			console.log "Strange coffee-jshint report for file #{file.relative}"
 		result = result[0]
 		for i in result
+			if i.code in ['W005', 'W047']
+				# W005 - "A dot following a number can be confused with a decimal point",
+				# W047 - "A trailing decimal point can be confused with a dot",
+				# not applicable to CS.
+				continue
 			console.log "#{chalk.red file.relative}, line #{chalk.blue i.line}: #{i.reason}"
 
 		@push file
