@@ -83,9 +83,62 @@ gulp.task 'watch', ['build'], ->
 
 # Experimental stuff
 
-gulp.task 'check', ['jshint', 'coffee-jshint', 'coffeelint', 'mustcontain']
+gulp.task 'check', ->
+	mustcontain = require './gulp-tasks/mustcontain.coffee'
+	jshint = require 'gulp-jshint'
+	coffeelint = require 'gulp-coffeelint'
+	cj = require './gulp-tasks/coffee-jshint.coffee'
+
+	gulpFilter = require 'gulp-filter'
+	__jsOnly = gulpFilter ['**/*.js'], restore: true
+	__coffeeOnly = gulpFilter ['**/*.coffee']#, restore: true
+
+	return gulp
+		.src [
+			'*.js'
+			'lib/*.js'
+			'tests/*.js'
+			'grunt-custom-tasks/*.js'
+			'gulp-tasks/*.js'
+			'*.coffee'
+			'lib/*.coffee'
+			'tests/*.coffee'
+			'grunt-custom-tasks/*.coffee'
+			'gulp-tasks/*.coffee'
+		]
+
+		.pipe mustcontain {
+			regex: /WARRANTY/
+			success: '{n} file{s} contain{!s} a license.'
+			fail: '{filename}: does not contain a license.'
+			fatal: false
+		}
+		.pipe mustcontain {
+			regex: /['"]use strict['"]\s*[;\n]/
+			success: '{n} file{s} {is/are} strict.'
+			fail: '{filename}: is not in strict mode.'
+			fatal: false
+		}
+
+		.pipe __jsOnly
+		.pipe jshint()
+		.pipe jshint.reporter 'default'
+		.pipe __jsOnly.restore
+
+		.pipe __coffeeOnly
+		.pipe coffeelint './.coffeelintrc'
+		.pipe coffeelint.reporter()
+
+		.pipe cj {
+			jshintOptions: ['node', 'browser', 'jquery']
+			withDefaults: true
+			globals: ['_$jscoverage', 'confirm']
+		}
+		#.pipe __coffeeOnly.restore
+
 
 gulp.task 'test', seq 'nodeunit', 'jscoverage-report', 'force-exit'
+
 
 gulp.task 'nodeunit', ->
 	nodeunit = require 'gulp-nodeunit-runner'
@@ -105,86 +158,15 @@ gulp.task 'nodeunit', ->
 		.src sourcefiles
 		.pipe nodeunit(reporter: reporter)
 
+
 gulp.task 'force-exit', ->
 	process.exit 0
 
 
-gulp.task 'jshint', ->
-	jshint = require 'gulp-jshint'
-	return gulp
-		.src [
-			'*.js'
-			'lib/*.js'
-			'tests/*.js'
-			'grunt-custom-tasks/*.js'
-			'gulp-tasks/*.js'
-		]
-		.pipe jshint()
-		.pipe jshint.reporter 'default'
-
-
-gulp.task 'mustcontain', ->
-	mustcontain = require './gulp-tasks/mustcontain.coffee'
-	return gulp
-		.src [
-			'*.js'
-			'lib/*.js'
-			'tests/*.js'
-			'grunt-custom-tasks/*.js'
-			'gulp-tasks/*.js'
-			'*.coffee'
-			'lib/*.coffee'
-			'tests/*.coffee'
-			'grunt-custom-tasks/*.coffee'
-			'gulp-tasks/*.coffee'
-		]
-		.pipe mustcontain {
-			regex: /WARRANTY/
-			success: '{n} file{s} contain{!s} a license.'
-			fail: '{filename}: does not contain a license.'
-			fatal: false
-		}
-		.pipe mustcontain {
-			regex: /['"]use strict['"]\s*[;\n]/
-			success: '{n} file{s} {is/are} strict.'
-			fail: '{filename}: is not in strict mode.'
-			fatal: false
-		}
-
-
-gulp.task 'coffeelint', ->
-	coffeelint = require 'gulp-coffeelint'
-	return gulp
-		.src [
-			'*.coffee'
-			'lib/*.coffee'
-			'tests/*.coffee'
-			'grunt-custom-tasks/*.coffee'
-			'gulp-tasks/*.coffee'
-		]
-		.pipe coffeelint './.coffeelintrc'
-		.pipe coffeelint.reporter()
-
-
-gulp.task 'coffee-jshint', ->
-	linter = require './gulp-tasks/coffee-jshint.coffee'
-	return gulp
-		.src [
-			'*.coffee'
-			'lib/*.coffee'
-			'tests/*.coffee'
-			'grunt-custom-tasks/*.coffee'
-			'gulp-tasks/*.coffee'
-		], read: false
-		.pipe linter {
-			jshintOptions: ['node', 'browser', 'jquery']
-			withDefaults: true
-			globals: ['_$jscoverage', 'confirm']
-		}
-
 gulp.task 'jscoverage-report', ->
 	jscr = require './gulp-tasks/jscoverage-report.coffee'
 	jscr()
+
 
 gulp.task 'coveralls', ->
 	jsc = require 'jscoverage'
@@ -195,5 +177,6 @@ gulp.task 'coveralls', ->
 		.pipe source('report.lcov')
 		.pipe buffer()
 		.pipe coveralls()
+
 
 gulp.task 'travis', seq 'check', 'build', 'nodeunit', 'jscoverage-report', 'coveralls', 'force-exit'
