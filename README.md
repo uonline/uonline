@@ -13,9 +13,9 @@ A browser-based MMORPG in a fantasy world.
 Requirements
 ------------
 
-* Node.js 0.10 with npm;
+* Node.js 0.10 or higher with npm;
 * CoffeeScript;
-* Grunt (you may use local one, but why?);
+* Gulp;
 * Bower;
 * PostgreSQL 9.1 or higher.
 
@@ -30,16 +30,20 @@ How to set up
 -------------
 
 * Clone the repo.
-* Install packages: `npm install`, `bower install`
-* Fetch submodules: `git submodule init`, `git submodule update`
-* Initialize database: `./init.coffee --migrate-tables --unify-export --monsters --optimize-tables`
-* If you need to add an admin: `./add-admin.coffee`
+* Run `script/setup`. Please note that it expects database credentials to be set. Also, it will try to create databases if they don't exist.
+
+By the way, running `script/update` will update the stuff like dependencies and DB revisions. You typically use it after every pull.
 
 
 How to run
 ----------
 
-If you have Heroku Toolbelt, run `foreman start` to get the server running. If not, try `./main.coffee`. If you need to restart server after every change in code — `make monitor`.
+Run `script/run`.
+
+There are also some alternatives:
+* `foreman start` if you want to simulate Heroku environment.
+* `./main.coffee` for plain run.
+* `make monitor` to automatically restart server on changes.
 
 The following environment variables are recognized:
 
@@ -50,23 +54,24 @@ The following environment variables are recognized:
 * `NEW_RELIC_LICENSE_KEY` — you don't need this.
 
 
-Grunt hints
------------
+Gulp hints
+----------
 
-Run `grunt` to check and test your code. It will lint your code, run tests, show coverage stats, generate docs and so on. Please run it before every commit.
+Run `gulp` to check and test your code. It will lint your code, run tests, show coverage stats and so on. Please run it before every commit.
 
 Useful subtasks:
 
-* `grunt test` — run unittests only;
-* `grunt docs` — rebuild docs;
-* `grunt build` — rebuild static files.
+* `gulp check` — only lint;
+* `gulp build` — build static assets;
+* `gulp watch` — same as `gulp build`, but works automagically.
+* `gulp test` — run unittests without additional checks.
 
 Useful options:
 
-* `grunt test --single health-check.coffee` — run only one testsuite;
-* `grunt --stack` — show stack trace on error.
+* `gulp test --single health-check.coffee` — run only one testsuite;
+* `gulp test --reporter verbose` — use other reporter.
 
-Also, there is experimental Gulp support. Try `gulp build` and `gulp watch`.
+Using Grunt is deprecated.
 
 
 Programmers' guidelines
