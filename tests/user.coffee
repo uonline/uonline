@@ -277,8 +277,8 @@ exports.registerUser = (test) ->
 	test.ok user.salt.length > 0, 'should generate salt'
 	test.ok user.hash.length > 0, 'should generate hash'
 	test.ok user.sessid.length > 0, 'should generate sessid'
-	test.ok user.reg_time <= new Date(), 'should not put registration time into future'
-	test.ok user.sess_time <= new Date(), 'should not put session timestamp into future'
+	test.ok Math.abs(user.reg_time - new Date()) < 1000, 'should set registration time to (almost) current time'
+	test.ok Math.abs(user.sess_time - new Date()) < 1000, 'should set session timestamp to (almost) current time'
 	test.strictEqual user.permissions, 'admin', 'should set specified permissions'
 	test.strictEqual user.character_id, null, 'should not assign character'
 
