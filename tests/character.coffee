@@ -135,30 +135,32 @@ exports.deleteCharacter = (test) ->
 	itemOwners = -> query.all("SELECT owner FROM items ORDER BY owner").map 'owner'
 
 	# deleting inactive character
-	ok = character.deleteCharacter conn, 1, 4
+	res = character.deleteCharacter conn, 1, 4
 	user = query.row "SELECT * FROM uniusers"
 	chars = query.all "SELECT id FROM characters WHERE player = 1 ORDER BY id"
 
-	test.strictEqual ok, true, 'should return true if deleted'
+	test.deepEqual res, {result: 'ok'}, 'should return "ok" if deleted'
 	test.deepEqual chars, [{id:2}, {id:3}], 'should delete inactive character'
 	test.strictEqual user.character_id, 2, 'should not switch character'
 	test.deepEqual itemOwners(), [1,2,2,3], "should delete character's items"
 
 	# deleting current character
-	ok = character.deleteCharacter conn, 1, 2
+	res = character.deleteCharacter conn, 1, 2
 	user = query.row "SELECT * FROM uniusers"
 	chars = query.all "SELECT id FROM characters WHERE player = 1 ORDER BY id"
 
-	test.strictEqual ok, true, 'should return true if deleted'
+	test.deepEqual res, {result: 'ok'}, 'should return "ok" if deleted'
 	test.deepEqual chars, [{id:3}], 'should delete active character'
 	test.strictEqual user.character_id, null, "should clear user's character if deleted was active"
 	test.deepEqual itemOwners(), [1,3], "should delete character's items"
 
 	# deleting character of other user
-	ok = character.deleteCharacter conn, 1, 5
+	res = character.deleteCharacter conn, 1, 5
 	count = +query.val "SELECT count(*) FROM characters"
 
-	test.strictEqual ok, false, "should refuse and return false if character belongs to other user"
+	test.strictEqual res.result, 'fail', "should fail if character belongs to other user"
+	test.strictEqual res.reason, 'character #5 of user #1 not found',
+		'should describe failure if trying to delete in-battle character'
 	test.strictEqual count, 3, "should refuse and not delete character if character belongs to other user"
 	test.deepEqual itemOwners(), [1,3], "should refuse and not delete items if character belongs to other user"
 
@@ -166,15 +168,25 @@ exports.deleteCharacter = (test) ->
 	clearTables 'uniusers', 'characters', 'battle_participants', 'items'
 	insert 'characters', id: 1, player: 2
 	insert 'uniusers', id: 2, character_id: 3
-	insert 'battle_participants', character_id: 1
+	insert 'battle_participants', character_id: 1, battle: 5
 	insert 'items', owner: 1
 
-	ok = character.deleteCharacter conn, 2, 1
+	res = character.deleteCharacter conn, 2, 1
 	count = +query.val "SELECT count(*) FROM characters"
 
-	test.strictEqual ok, false, 'should refuse and return false if trying to delete in-battle character'
+	test.strictEqual res.result, 'fail', 'should fail if trying to delete in-battle character'
+	test.strictEqual res.reason, 'character #1 is in battle #5',
+		'should describe failure if trying to delete in-battle character'
 	test.strictEqual count, 1, "should refuse and don't delete character if trying to delete in-battle character"
 	test.deepEqual itemOwners(), [1], "should refuse and don't delete items if trying to delete in-battle character"
+
+	# FORCE deleting character while in battle
+	res = character.deleteCharacter conn, 2, 1, true
+	count = +query.val "SELECT count(*) FROM characters"
+
+	test.deepEqual res, {result: 'ok'}, 'should return "ok" if force-deleting in-battle character'
+	test.strictEqual count, 0, "should delete character if force-deleting in-battle character"
+	test.deepEqual itemOwners(), [], "should  delete items if force-deleting in-battle character"
 	test.done()
 
 
