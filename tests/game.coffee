@@ -667,19 +667,28 @@ exports._hitAndGetHealth =
 exports._handleDeathInBattle = (test) ->
 	clearTables 'characters', 'locations'
 	insert 'locations', id: 5, initial: 1
-	insert 'characters', id: 1, health: 0, health_max: 1000, player: 1
+	insert 'characters', id: 1, health: 0, health_max: 1000, player: 1, exp: 900, level: 1
+	insert 'characters', id: 2, health: 0, health_max: 1000, player: 2, exp: 0, level: 1
+	insert 'characters', id: 11, player: null
 
 	tx = transaction(conn)
 
-	game._handleDeathInBattle tx, 1
-	test.strictEqual query.val('SELECT location from characters'), 5, 'should return user back to initial location'
-	test.strictEqual query.val('SELECT health from characters'), 1000, "should restore user's health"
+	game._handleDeathInBattle tx, 1, 2
+	test.strictEqual query.val('SELECT location FROM characters WHERE id=1'), 5,
+		'should return user back to initial location'
+	test.strictEqual query.val('SELECT health FROM characters WHERE id=1'), 1000,
+		"should restore user's health"
+	test.strictEqual query.val('SELECT exp FROM characters WHERE id=2'), 0,
+		"should not add experience for PK"
+	test.strictEqual query.val('SELECT level FROM characters WHERE id=2'), 1,
+		"should not add experience for PK"
 
-	clearTables 'characters'
-	insert 'characters', id: 11, player: null
-
-	game._handleDeathInBattle tx, 11
-	test.strictEqual +query.val('SELECT count(*) FROM characters'), 0, 'should remove monster'
+	game._handleDeathInBattle tx, 11, 1
+	test.strictEqual +query.val('SELECT count(*) FROM characters'), 2, 'should remove monster'
+	test.strictEqual query.val('SELECT exp FROM characters WHERE id=1'), 200,
+		"should add some experience to monster slayer"
+	test.strictEqual query.val('SELECT level FROM characters WHERE id=1'), 2,
+		"should account for level-ups"
 
 	tx.rollback.sync(tx)
 	test.done()
@@ -967,11 +976,7 @@ exports.getCharacter =
 		insert 'characters', data
 
 		expectedData = Object.clone(data)
-		expectedData.health_percent = 50
-		expectedData.mana_percent = 25
 		expectedData.exp_max = 3000
-		expectedData.exp_percent = 0
-		expectedData.energy_percent = 50
 		expectedData.fight_mode = false
 
 		user = game.getCharacter.sync null, conn, 1

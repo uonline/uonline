@@ -392,19 +392,33 @@ exports._hitAndGetHealth = (tx, victimId, hunterPower) ->
 		).rows[0].health
 
 
-exports._handleDeathInBattle = (tx, character_id) ->
-	isUser = !!tx.query.sync(tx, 'SELECT player FROM characters WHERE id = $1', [character_id]).rows[0].player
+exports._handleDeathInBattle = (tx, victim_cid, hunter_cid) ->
+	playerDied = !!tx.query.sync(tx, 'SELECT player FROM characters WHERE id = $1', [victim_cid]).rows[0].player
+	killerIsPlayer = !!tx.query.sync(tx, 'SELECT player FROM characters WHERE id = $1', [hunter_cid]).rows[0].player
 
-	if isUser
+	if playerDied
 		tx.query.sync(tx,
-			"UPDATE characters "+
-				"SET health = health_max, "+
-				"    location = (SELECT id FROM locations WHERE initial = 1) "+
-				"WHERE id = $1",
-			[character_id]
+			'UPDATE characters '+
+				'SET health = health_max, '+
+				'    location = (SELECT id FROM locations WHERE initial = 1) '+
+				'WHERE id = $1',
+			[victim_cid]
 		)
 	else
-		tx.query.sync tx, "DELETE FROM characters WHERE id = $1", [character_id]
+		tx.query.sync tx, 'DELETE FROM characters WHERE id = $1', [victim_cid]
+
+	if (killerIsPlayer) and (not playerDied)
+		char = tx.query.sync(tx, 'SELECT level, exp FROM characters WHERE id = $1', [hunter_cid]).rows[0]
+		char.exp += 300
+		while char.exp >= exports.expToLevelup(char.level)
+			char.exp -= exports.expToLevelup(char.level)
+			char.level++
+		tx.query.sync(tx,
+			'UPDATE characters '+
+				'SET exp = $2, level = $3 '+
+				'WHERE id = $1',
+			[hunter_cid, char.exp, char.level]
+		)
 
 
 exports._hit = (dbConnection, hunterId, victimId, withItemId) ->
@@ -449,7 +463,7 @@ exports._hit = (dbConnection, hunterId, victimId, withItemId) ->
 	battleEnded = false
 	if victimKilled
 		battleEnded = exports._leaveBattle(tx, hunter.battle, victimId).battleEnded
-		exports._handleDeathInBattle tx, victimId
+		exports._handleDeathInBattle tx, victimId, hunterId
 	tx.commit.sync(tx)
 
 	return {
@@ -534,6 +548,11 @@ exports.uninvolve = (dbConnection, character_id, callback) ->
 	dbConnection.query "UPDATE characters SET autoinvolved_fm = FALSE WHERE id = $1", [character_id], callback
 
 
+# Calculates how much experience is required to advance to next level.
+exports.expToLevelup = (level) ->
+	return math.ap(config.EXP_MAX_START, level, config.EXP_STEP)
+
+
 # Returns character's attributes.
 exports.getCharacter = ((dbConnection, character_id_or_name) ->
 	field = if typeof(character_id_or_name) == 'number' then 'id' else 'name'
@@ -545,12 +564,7 @@ exports.getCharacter = ((dbConnection, character_id_or_name) ->
 	unless c?
 		return null
 
-	c.health_percent = c.health * 100 / c.health_max
-	c.mana_percent = c.mana * 100 / c.mana_max
-	c.energy_percent = c.energy * 100 / c.energy_max
-	expPrevMax = math.ap(config.EXP_MAX_START, c.level - 1, config.EXP_STEP)
-	c.exp_max = math.ap(config.EXP_MAX_START, c.level, config.EXP_STEP)
-	c.exp_percent = (c.exp - expPrevMax) * 100 / (c.exp_max - expPrevMax)
+	c.exp_max = exports.expToLevelup c.level
 	return c
 ).async()
 
