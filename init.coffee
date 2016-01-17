@@ -346,16 +346,16 @@ insertItems = ->
 			"VALUES (#{attrs.map (_,i) -> '$'+(i+1)})", attrs.map (a) -> proto[a])
 	console.log chalk.green 'ok'
 
-	process.stdout.write '  '+'Fetching users'+'... '
-	users = query.all(
-		'SELECT username, characters.id AS character_id '+
+	process.stdout.write '  '+'Fetching characters'+'... '
+	characters = query.all(
+		'SELECT username, characters.id AS character_id, characters.name AS character_name '+
 		'FROM uniusers, characters WHERE uniusers.id = characters.player')
-	console.log chalk.green "found #{users.length}"
-	for user in users
-		process.stdout.write '  '+"Giving some items to #{user.username}"+'... '
+	console.log chalk.green "found #{characters.length}"
+	for char in characters
+		process.stdout.write '  '+"Giving some items to #{char.character_name}"+'... '
 		for item in prototypes
 			query 'INSERT INTO items (prototype, owner, strength, equipped) '+
-				'VALUES ($1, $2, $3, false)', [item.id, user.character_id, item.strength_max]
+				'VALUES ($1, $2, $3, false)', [item.id, char.character_id, item.strength_max]
 		console.log chalk.green 'ok'
 
 
