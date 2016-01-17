@@ -16,7 +16,7 @@
 
 sync = require 'sync'
 transaction = require 'any-db-transaction'
-game = require './lib/game'
+game = require '../lib/game.coffee'
 
 
 # Check if a character with the given name exists.
@@ -70,7 +70,7 @@ exports.createCharacter = ((dbConnection, user_id, name, race, gender) ->
 # Removes character
 exports.deleteCharacter = ((dbConnection, user_id, character_id, force=false) ->
 	tx = transaction dbConnection
-	
+
 	res = tx.query.sync(tx,
 		"DELETE FROM characters WHERE id = $1 AND player = $2",
 		[ character_id, user_id ])
@@ -81,7 +81,7 @@ exports.deleteCharacter = ((dbConnection, user_id, character_id, force=false) ->
 			result: 'fail'
 			reason: "character ##{character_id} of user ##{user_id} not found"
 		}
-	
+
 	unless force
 		res = tx.query.sync(tx,
 			"SELECT battle FROM battle_participants WHERE character_id = $1",
@@ -93,7 +93,7 @@ exports.deleteCharacter = ((dbConnection, user_id, character_id, force=false) ->
 				result: 'fail'
 				reason: "character ##{character_id} is in battle ##{res.rows[0].battle}"
 			}
-	
+
 	game.goEscape.sync(null, tx, character_id)
 
 	# if the character we delete is active, unselect it
@@ -104,7 +104,7 @@ exports.deleteCharacter = ((dbConnection, user_id, character_id, force=false) ->
 	tx.query.sync(tx,
 		"DELETE FROM items WHERE owner = $1",
 		[ character_id ])
-	
+
 	tx.commit.sync(tx)
 	return {
 		result: 'ok'
