@@ -20,18 +20,25 @@ queryUtils = requireCovered __dirname, '../lib/query_utils.coffee'
 config = require '../config'
 sync = require 'sync'
 anyDB = require 'any-db'
+transaction = require 'any-db-transaction'
+mg = require '../lib/migration'
+_conn = null
 conn = null
 query = null
 
 exports.setUp = (->
-	unless conn?
-		conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-		query = queryUtils.getFor conn
-		conn.query.sync conn, 'DROP TABLE IF EXISTS test_table'
-		conn.query.sync conn, 'CREATE TABLE test_table (id INT, data TEXT)'
-	conn.query.sync conn, "DELETE FROM test_table"
-	conn.query.sync conn, "INSERT INTO test_table (id, data) VALUES (1, 'first')"
-	conn.query.sync conn, "INSERT INTO test_table (id, data) VALUES (2, 'second')"
+	unless _conn?
+		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+		mg.migrate.sync mg, _conn
+		_conn.query.sync _conn, 'CREATE TABLE test_table (id INT, data TEXT)'
+		_conn.query.sync _conn, "INSERT INTO test_table (id, data) VALUES (1, 'first')"
+		_conn.query.sync _conn, "INSERT INTO test_table (id, data) VALUES (2, 'second')"
+	conn = transaction(_conn)
+	query = queryUtils.getFor conn
+).async()
+
+exports.tearDown = (->
+	conn.rollback.sync(conn)
 ).async()
 
 

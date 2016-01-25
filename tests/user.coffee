@@ -21,8 +21,10 @@ config = require '../config'
 mg = require '../lib/migration'
 sync = require 'sync'
 anyDB = require 'any-db'
+transaction = require 'any-db-transaction'
 queryUtils = require '../lib/query_utils'
 sugar = require 'sugar'
+_conn = null
 conn = null
 query = null
 
@@ -37,13 +39,16 @@ insert = (dbName, fields) ->
 
 
 exports.setUp = (->
-	unless conn?
-		conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-		query = queryUtils.getFor conn
-		mg.migrate.sync mg, conn
+	unless _conn?
+		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+		mg.migrate.sync mg, _conn
+	conn = transaction(_conn)
+	query = queryUtils.getFor conn
 ).async()
 
-# exports.tearDown = (->).async()
+exports.tearDown = (->
+	conn.rollback.sync(conn)
+).async()
 
 
 exports.userExists = (test) ->

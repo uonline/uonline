@@ -19,7 +19,10 @@ tables = requireCovered __dirname, '../lib/tables.coffee'
 config = require '../config'
 sync = require 'sync'
 anyDB = require 'any-db'
+transaction = require 'any-db-transaction'
+mg = require '../lib/migration'
 queryUtils = require '../lib/query_utils'
+_conn = null
 conn = null
 query = null
 
@@ -28,16 +31,17 @@ cleanup = ->
 	query 'DROP TABLE IF EXISTS test_table, akira'
 	query 'DROP TYPE IF EXISTS test_enum'
 
+
 exports.setUp = (->
-	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+	unless _conn?
+		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+		mg.migrate.sync mg, _conn
+	conn = transaction(_conn)
 	query = queryUtils.getFor conn
-	cleanup()
 ).async()
 
-
 exports.tearDown = (->
-	cleanup()
-	conn.end()
+	conn.rollback.sync(conn)
 ).async()
 
 
@@ -82,7 +86,8 @@ exports.renameCol =
 
 	testNoTable: (test) ->
 		test.throws(
-			-> tables.renameCol.sync null, conn, "test_table", "id", "col"
+			# uses _conn, I don't know why it doesn't work with transaction
+			-> tables.renameCol.sync null, _conn, "test_table", "id", "col"
 			Error
 			'should return error if tried to rename column from nonexistent table'
 		)
