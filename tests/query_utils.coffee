@@ -30,10 +30,10 @@ exports.setUp = (->
 	unless _conn?
 		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
 		mg.migrate.sync mg, _conn
-		_conn.query.sync _conn, 'CREATE TABLE test_table (id INT, data TEXT)'
-		_conn.query.sync _conn, "INSERT INTO test_table (id, data) VALUES (1, 'first')"
-		_conn.query.sync _conn, "INSERT INTO test_table (id, data) VALUES (2, 'second')"
 	conn = transaction(_conn)
+	conn.query.sync conn, 'CREATE TABLE test_table (id INT, data TEXT)'
+	conn.query.sync conn, "INSERT INTO test_table (id, data) VALUES (1, 'first')"
+	conn.query.sync conn, "INSERT INTO test_table (id, data) VALUES (2, 'second')"
 	query = queryUtils.getFor conn
 ).async()
 
