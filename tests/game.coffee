@@ -23,6 +23,7 @@ anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
 queryUtils = require '../lib/query_utils'
 sugar = require 'sugar'
+_conn = null
 conn = null
 query = null
 
@@ -36,27 +37,16 @@ insert = (dbName, fields) ->
 
 
 exports.setUp = (->
-	unless conn?
-		try
-			conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-			queryf = conn.query
-			conn.query = () ->
-				args = (i for i in arguments)
-				cb = args[args.length-1]
-				if cb instanceof Function
-					stack = new Error().stack
-					args[args.length-1] = (err,res) ->
-						if err instanceof Error
-							err.stack = stack
-						cb(err, res)
-				queryf.apply this, args
-			query = queryUtils.getFor conn
-			mg.migrate.sync mg, conn
-		catch e
-			console.error e
-).async() # the entrance to the Fieber land
+	unless _conn?
+		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+		mg.migrate.sync mg, _conn
+	conn = transaction(_conn)
+	query = queryUtils.getFor conn
+).async()
 
-#exports.tearDown = (->).async()
+exports.tearDown = (->
+	conn.rollback.sync(conn)
+).async()
 
 
 exports.getInitialLocation =
@@ -204,10 +194,9 @@ exports.isTherePathForCharacterToLocation = (test) ->
 exports.createBattleBetween = (test) ->
 	clearTables 'battles', 'battle_participants'
 
-	tx = transaction conn
 	locid = 123
 
-	game._createBattleBetween tx, locid, [
+	game._createBattleBetween conn, locid, [
 			{id: 1, initiative:  5}
 			{id: 2, initiative: 15}
 			{id: 5, initiative: 30}
@@ -230,7 +219,6 @@ exports.createBattleBetween = (test) ->
 		{id: 1, index: 4, side: 0}
 	], 'should involve all users and monsters of both sides in correct order'
 
-	tx.commit.sync tx
 	test.done()
 
 
@@ -241,9 +229,7 @@ exports._stopBattle = (test) ->
 	insert 'battle_participants', battle: 1, character_id: 1
 	insert 'battle_participants', battle: 1, character_id: 2
 
-	tx = transaction conn
-	game._stopBattle(tx, 1)
-	tx.commit.sync tx
+	game._stopBattle(conn, 1)
 
 	test.strictEqual +query.val("SELECT count(*) FROM battles"), 0, 'should remove battle'
 	test.strictEqual +query.val("SELECT count(*) FROM battle_participants"), 0, 'should remove participants'
@@ -265,9 +251,7 @@ exports._leaveBattle = (test) ->
 	insert 'battle_participants', battle: 2, character_id: 5, side: 1, index: 1
 
 
-	tx = transaction conn
-
-	res = game._leaveBattle(tx, 1, 1)
+	res = game._leaveBattle(conn, 1, 1)
 	test.strictEqual res.battleEnded, false, "should return false if wasn't ended"
 
 	test.strictEqual query.val("SELECT autoinvolved_fm FROM characters WHERE id=1"), false,
@@ -281,7 +265,7 @@ exports._leaveBattle = (test) ->
 		], "should update indexes if participant has gone"
 
 
-	res = game._leaveBattle(tx, 1, 3, 'user')
+	res = game._leaveBattle(conn, 1, 3, 'user')
 	test.strictEqual res.battleEnded, true, 'should return true if battle was ended'
 
 	test.strictEqual query.val("SELECT autoinvolved_fm FROM characters WHERE id=2"), false,
@@ -297,12 +281,11 @@ exports._leaveBattle = (test) ->
 		'should not affect other participants'
 
 	test.throws(
-		-> game._leaveBattle(tx, 1, 123)
+		-> game._leaveBattle(conn, 1, 123)
 		Error
 		'should throw error if unable to find anyone to leave'
 	)
 
-	tx.commit.sync tx
 	test.done()
 
 
@@ -499,16 +482,16 @@ exports._hitItem = (test) ->
 	item = query.row 'SELECT id, strength FROM items'
 	power = 80
 
-	queryUtils.doInTransaction conn, (tx) ->
-		delta = game._hitItem(tx, power, item)
-		item = query.row 'SELECT id, strength FROM items'
-		test.strictEqual delta, 80, "should reduce all attacker's power if item is strong"
-		test.strictEqual item.strength, 20, "should reduce item's strength"
+	delta = game._hitItem(conn, power, item)
+	item = query.row 'SELECT id, strength FROM items'
+	test.strictEqual delta, 80, "should reduce all attacker's power if item is strong"
+	test.strictEqual item.strength, 20, "should reduce item's strength"
 
-		delta = game._hitItem(tx, power, item)
-		item = query.row 'SELECT id, strength FROM items'
-		test.strictEqual delta, 20, "should reduce part of attacker's power if item was broken"
-		test.strictEqual item.strength, 0, "should reduce item's strength"
+	delta = game._hitItem(conn, power, item)
+	item = query.row 'SELECT id, strength FROM items'
+	test.strictEqual delta, 20, "should reduce part of attacker's power if item was broken"
+	test.strictEqual item.strength, 0, "should reduce item's strength"
+
 	test.done()
 
 
@@ -525,13 +508,11 @@ exports._hitAndGetHealth =
 		maxDmg = (power - 50) / 2 * 1.2
 		victim_id = 1
 
-		tx = transaction(conn)
-
 		damages = {}
 		prevHP = 1000
 
 		for i in [0..100]
-			hp = game._hitAndGetHealth tx, victim_id, power
+			hp = game._hitAndGetHealth conn, victim_id, power
 			hpActual = query.val "SELECT health FROM characters WHERE id=$1", [victim_id]
 			test.strictEqual hp, hpActual, "should return current characters's health"
 
@@ -548,11 +529,10 @@ exports._hitAndGetHealth =
 		query "UPDATE characters SET defense = 9001"
 
 		hpBefore = prevHP
-		hpAfter = game._hitAndGetHealth tx, victim_id, power
+		hpAfter = game._hitAndGetHealth conn, victim_id, power
 		test.strictEqual hpBefore, hpAfter,
 			"should not change health if defense is greater than damage"
 
-		tx.rollback.sync(tx)
 		test.done()
 
 	'with armor': (test) ->
@@ -560,21 +540,21 @@ exports._hitAndGetHealth =
 		damages = null
 
 		userHP = -> query.val 'SELECT health FROM characters WHERE id=1'
-		totalStringth = -> query.val 'SELECT SUM(strength) FROM items'
+		totalStr = -> query.val 'SELECT SUM(strength) FROM items'
 
 		performSomeAttacks = ->
 			damages = {}
 			tx = transaction(conn)
 			for i in [0..20]
 				prevHP = userHP()
-				prevSt = totalStringth()
+				prevSt = totalStr()
 
 				hp = game._hitAndGetHealth tx, 1, power
 				dmg = prevHP - hp
 				damages[dmg] = true
 
 				if dmg is 0
-					test.ok prevSt > totalStringth(), 'should reduce armor strength if damage was blocked'
+					test.ok prevSt > totalStr(), 'should reduce armor strength if damage was blocked'
 			tx.rollback.sync(tx)
 
 
