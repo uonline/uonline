@@ -53,6 +53,7 @@ exports.getFor = (dbConnection) ->
 # Rollbacks transaction if any error was thrown from passed function.
 exports.doInTransaction = (dbConnection, func) ->
 	tx = transaction(dbConnection)
+	tx.on('error', (e) -> console.error(e))
 	try
 		func(tx)
 	catch e
