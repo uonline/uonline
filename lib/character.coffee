@@ -31,24 +31,22 @@ exports.characterExists = (dbConnection, name, callback) ->
 # Creates new character for user.
 # Returns id of new character.
 exports.createCharacter = ((dbConnection, user_id, name, race, gender) ->
-	try
-		energies = {
-			'orc-male': 220
-			'orc-female': 200
-			'human-male': 170
-			'human-female': 160
-			'elf-male': 150
-			'elf-female': 140
-		}
-		energy = energies["#{race}-#{gender}"]
-		charid = dbConnection.query.sync(dbConnection,
-			"INSERT INTO characters (name, player, location, race, gender, energy, energy_max) "+
-			"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1), $3, $4, $5, $5) RETURNING id",
-			[ name, user_id, race, gender, energy ]).rows[0].id
-	catch ex
-		if ex.constraint is 'players_character_unique_name_index'
-			throw new Error('character already exists')
-		throw ex
+	if exports.characterExists.sync null, dbConnection, name
+		throw new Error('character already exists')
+
+	energies = {
+		'orc-male': 220
+		'orc-female': 200
+		'human-male': 170
+		'human-female': 160
+		'elf-male': 150
+		'elf-female': 140
+	}
+	energy = energies["#{race}-#{gender}"]
+	charid = dbConnection.query.sync(dbConnection,
+		"INSERT INTO characters (name, player, location, race, gender, energy, energy_max) "+
+		"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1), $3, $4, $5, $5) RETURNING id",
+		[ name, user_id, race, gender, energy ]).rows[0].id
 
 	dbConnection.query.sync(dbConnection,
 		"UPDATE uniusers SET character_id = $1 WHERE id = $2",
