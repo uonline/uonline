@@ -61,8 +61,6 @@ exports.setUp = (->
 	query = queryUtils.getFor conn
 	migrationDataBackup = mg.getMigrationsData()
 	query 'DROP TABLE IF EXISTS revision'
-	query 'DROP TABLE IF EXISTS test_table'
-	query 'DROP TABLE IF EXISTS other_table'
 	mg.setMigrationsData migrationData
 ).async()
 
