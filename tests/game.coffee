@@ -539,24 +539,23 @@ exports._hitAndGetHealth =
 		power = 70
 		damages = null
 
-		userHP = -> query.val 'SELECT health FROM characters WHERE id=1'
-		totalStr = -> query.val 'SELECT SUM(strength) FROM items'
+		userHP = (tx) -> queryUtils.getFor(tx).val 'SELECT health FROM characters WHERE id=1'
+		totalStr = (tx) -> queryUtils.getFor(tx).val 'SELECT SUM(strength) FROM items'
 
 		performSomeAttacks = ->
 			damages = {}
 			tx = transaction(conn)
 			for i in [0..20]
-				prevHP = userHP()
-				prevSt = totalStr()
+				prevHP = userHP(tx)
+				prevSt = totalStr(tx)
 
 				hp = game._hitAndGetHealth tx, 1, power
 				dmg = prevHP - hp
 				damages[dmg] = true
 
 				if dmg is 0
-					test.ok prevSt > totalStr(), 'should reduce armor strength if damage was blocked'
+					test.ok prevSt > totalStr(tx), 'should reduce armor strength if damage was blocked'
 			tx.rollback.sync(tx)
-
 
 		insert 'items_proto', id:1, name: 'breastplate', coverage:25
 		insert 'items_proto', id:2, name: 'greave', coverage:25
@@ -595,16 +594,16 @@ exports._hitAndGetHealth =
 		insert 'items', id:20, prototype:2, owner:1, strength:100, equipped: true
 
 		power = 120
-		shield = -> query.row('SELECT strength FROM items WHERE id=10')
-		greave = -> query.row('SELECT strength FROM items WHERE id=20')
+		shield = (tx) -> queryUtils.getFor(tx).row('SELECT strength FROM items WHERE id=10')
+		greave = (tx) -> queryUtils.getFor(tx).row('SELECT strength FROM items WHERE id=20')
 
 		# shield with 100% coverage
 		for i in [0...5]
 			tx = transaction(conn)
 			hp = game._hitAndGetHealth tx, 1, power
 			test.strictEqual hp, 1000, 'both shield and armor should block damage'
-			test.strictEqual shield().strength, 0, 'shield should block damage first'
-			test.strictEqual greave().strength, 80, 'armor should block damage not blocked by shield'
+			test.strictEqual shield(tx).strength, 0, 'shield should block damage first'
+			test.strictEqual greave(tx).strength, 80, 'armor should block damage not blocked by shield'
 			tx.rollback.sync(tx)
 
 		# shield with 50% coverage
@@ -614,8 +613,8 @@ exports._hitAndGetHealth =
 		for i in [0...40]
 			tx = transaction(conn)
 			hp = game._hitAndGetHealth tx, 1, power
-			if shield().strength < 1000 then hits.shield++
-			if greave().strength < 1000 then hits.notShield++
+			if shield(tx).strength < 1000 then hits.shield++
+			if greave(tx).strength < 1000 then hits.notShield++
 			if hp < 1000 then hits.notShield++
 			tx.rollback.sync(tx)
 		test.ok hits.shield > 0 and hits.notShield > 0,
@@ -627,7 +626,7 @@ exports._hitAndGetHealth =
 		for i in [0...40]
 			tx = transaction(conn)
 			hp = game._hitAndGetHealth tx, 1, power
-			test.strictEqual shield().strength, 1000, "shield should not block anything if it's coverage is 0%"
+			test.strictEqual shield(tx).strength, 1000, "shield should not block anything if it's coverage is 0%"
 			tx.rollback.sync(tx)
 
 		# shield is not equipped
@@ -637,8 +636,8 @@ exports._hitAndGetHealth =
 		for i in [0...5]
 			tx = transaction(conn)
 			hp = game._hitAndGetHealth tx, 1, power
-			test.strictEqual shield().strength, 100, 'shield should receive no damage if not equipped'
-			test.strictEqual greave().strength, 0, 'armor should receive all damage if shield is not equipped'
+			test.strictEqual shield(tx).strength, 100, 'shield should receive no damage if not equipped'
+			test.strictEqual greave(tx).strength, 0, 'armor should receive all damage if shield is not equipped'
 			tx.rollback.sync(tx)
 
 		test.done()
@@ -651,9 +650,7 @@ exports._handleDeathInBattle = (test) ->
 	insert 'characters', id: 2, health: 0, health_max: 1000, player: 2, exp: 0, level: 1
 	insert 'characters', id: 11, player: null
 
-	tx = transaction(conn)
-
-	game._handleDeathInBattle tx, 1, 2
+	game._handleDeathInBattle conn, 1, 2
 	test.strictEqual query.val('SELECT location FROM characters WHERE id=1'), 5,
 		'should return user back to initial location'
 	test.strictEqual query.val('SELECT health FROM characters WHERE id=1'), 1000,
@@ -663,14 +660,13 @@ exports._handleDeathInBattle = (test) ->
 	test.strictEqual query.val('SELECT level FROM characters WHERE id=2'), 1,
 		"should not add experience for PK"
 
-	game._handleDeathInBattle tx, 11, 1
+	game._handleDeathInBattle conn, 11, 1
 	test.strictEqual +query.val('SELECT count(*) FROM characters'), 2, 'should remove monster'
 	test.strictEqual query.val('SELECT exp FROM characters WHERE id=1'), 200,
 		"should add some experience to monster slayer"
 	test.strictEqual query.val('SELECT level FROM characters WHERE id=1'), 2,
 		"should account for level-ups"
 
-	tx.rollback.sync(tx)
 	test.done()
 
 
