@@ -68,20 +68,12 @@ exports.createCharacter = (test) ->
 	insert 'locations', id: 2, initial: 1
 	insert 'uniusers', id: 1
 
-	console.log '1111'
-
 	try
-		console.log '+1111'
 		charid = character.createCharacter(conn, 1, 'My First Character', 'elf', 'female')
-		console.log '+2222'
 		char = query.row "SELECT * FROM characters"
-		console.log '+3333'
 		user = query.row "SELECT * FROM uniusers"
-		console.log '+4444'
 	catch ex
 		console.log ex.stack
-
-	console.log '2222'
 
 	test.strictEqual user.character_id, charid, "should switch user's character to new character"
 	test.strictEqual charid, char.id, 'should return new character id'
@@ -89,8 +81,6 @@ exports.createCharacter = (test) ->
 	test.strictEqual char.location, 2, 'should create character in initial location'
 	test.strictEqual char.race, 'elf', 'should create character with specified race'
 	test.strictEqual char.gender, 'female', 'should create character with specified gender'
-
-	console.log '3333'
 
 	ex = null
 	try
@@ -100,8 +90,6 @@ exports.createCharacter = (test) ->
 	test.notStrictEqual ex, null, 'should throw exception if such name has been taken'
 	test.strictEqual ex.message, 'character already exists',
 		'should throw CORRECT exception if such name has been taken'
-
-	console.log '4444'
 
 	energies = [
 		['orc', 'male', 220 ]
@@ -117,15 +105,11 @@ exports.createCharacter = (test) ->
 		test.strictEqual char.energy_max, x[2], "should set correct energy_max value for #{x[1]} #{x[0]}"
 		test.strictEqual char.energy, x[2], "should set correct energy value for #{x[1]} #{x[0]}"
 
-	console.log '5555'
-
 	test.throws(
 		-> character.createCharacter(conn, 1, 'My First Character', 'murloc', 'female')
 		Error
 		'should not allow weird races'
 	)
-
-	console.log '6666'
 
 	test.throws(
 		-> character.createCharacter(conn, 1, 'My First Character', 'orc', 'it')
@@ -133,16 +117,12 @@ exports.createCharacter = (test) ->
 		'should not allow weird genders'
 	)
 
-	console.log '7777'
-
 	query "UPDATE locations SET initial = 1"
 	test.throws(
 		-> character.createCharacter(conn, null, null)
 		Error
 		'should throw if something bad happened'
 	)
-
-	console.log '8888'
 
 	test.done()
 
