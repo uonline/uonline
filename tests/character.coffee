@@ -68,12 +68,9 @@ exports.createCharacter = (test) ->
 	insert 'locations', id: 2, initial: 1
 	insert 'uniusers', id: 1
 
-	try
-		charid = character.createCharacter(conn, 1, 'My First Character', 'elf', 'female')
-		char = query.row "SELECT * FROM characters"
-		user = query.row "SELECT * FROM uniusers"
-	catch ex
-		console.log ex.stack
+	charid = character.createCharacter(conn, 1, 'My First Character', 'elf', 'female')
+	char = query.row "SELECT * FROM characters"
+	user = query.row "SELECT * FROM uniusers"
 
 	test.strictEqual user.character_id, charid, "should switch user's character to new character"
 	test.strictEqual charid, char.id, 'should return new character id'
