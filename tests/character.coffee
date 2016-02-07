@@ -50,31 +50,38 @@ exports.tearDown = (->
 ).async()
 
 
+# warmup: 60ms
 exports.characterExists = (test) ->
-	exists = (name) ->
-		character.characterExists.sync null, conn, name
+	exists = (name) -> character.characterExists.sync null, conn, name
 
-	clearTables 'characters'
+	test.strictEqual exists('Sauron'), false, 'should return false if character does not exist'
 	insert 'characters', name: 'Sauron'
-
 	test.strictEqual exists('Sauron'), true, 'should return true if character exists'
 	test.strictEqual exists('SAURON'), true, 'should ignore capitalization'
 	test.strictEqual exists('sauron'), true, 'should ignore capitalization'
 
-	query 'TRUNCATE characters'
-	test.strictEqual exists('Sauron'), false, 'should return false if character does not exist'
 	test.done()
 
 
 exports.createCharacter = (test) ->
-	clearTables 'uniusers', 'characters', 'locations'
 	insert 'locations', id: 1, initial: 0
 	insert 'locations', id: 2, initial: 1
 	insert 'uniusers', id: 1
 
-	charid = character.createCharacter(conn, 1, 'My First Character', 'elf', 'female')
-	char = query.row "SELECT * FROM characters"
-	user = query.row "SELECT * FROM uniusers"
+	console.log '1111'
+
+	try
+		console.log '+1111'
+		charid = character.createCharacter(conn, 1, 'My First Character', 'elf', 'female')
+		console.log '+2222'
+		char = query.row "SELECT * FROM characters"
+		console.log '+3333'
+		user = query.row "SELECT * FROM uniusers"
+		console.log '+4444'
+	catch ex
+		console.log ex.stack
+
+	console.log '2222'
 
 	test.strictEqual user.character_id, charid, "should switch user's character to new character"
 	test.strictEqual charid, char.id, 'should return new character id'
@@ -82,6 +89,8 @@ exports.createCharacter = (test) ->
 	test.strictEqual char.location, 2, 'should create character in initial location'
 	test.strictEqual char.race, 'elf', 'should create character with specified race'
 	test.strictEqual char.gender, 'female', 'should create character with specified gender'
+
+	console.log '3333'
 
 	ex = null
 	try
@@ -91,6 +100,8 @@ exports.createCharacter = (test) ->
 	test.notStrictEqual ex, null, 'should throw exception if such name has been taken'
 	test.strictEqual ex.message, 'character already exists',
 		'should throw CORRECT exception if such name has been taken'
+
+	console.log '4444'
 
 	energies = [
 		['orc', 'male', 220 ]
@@ -106,17 +117,23 @@ exports.createCharacter = (test) ->
 		test.strictEqual char.energy_max, x[2], "should set correct energy_max value for #{x[1]} #{x[0]}"
 		test.strictEqual char.energy, x[2], "should set correct energy value for #{x[1]} #{x[0]}"
 
+	console.log '5555'
+
 	test.throws(
 		-> character.createCharacter(conn, 1, 'My First Character', 'murloc', 'female')
 		Error
 		'should not allow weird races'
 	)
 
+	console.log '6666'
+
 	test.throws(
 		-> character.createCharacter(conn, 1, 'My First Character', 'orc', 'it')
 		Error
 		'should not allow weird genders'
 	)
+
+	console.log '7777'
 
 	query "UPDATE locations SET initial = 1"
 	test.throws(
@@ -125,80 +142,85 @@ exports.createCharacter = (test) ->
 		'should throw if something bad happened'
 	)
 
+	console.log '8888'
+
 	test.done()
 
 
-exports.deleteCharacter = (test) ->
-	clearTables 'uniusers', 'characters', 'items', 'items_proto', 'battle_participants', 'battles'
-	insert 'characters', id: 1, player: 2
-	insert 'characters', id: 2, player: 1
-	insert 'characters', id: 3, player: 1
-	insert 'characters', id: 4, player: 1
-	insert 'characters', id: 5, player: 3
-	insert 'uniusers', id: 1, character_id: 2
-	[1,2,2,3,4,4].forEach (c) -> insert 'items', owner: c
+exports.deleteCharacter =
+	first: (test) ->
+		insert 'characters', id: 1, player: 2
+		insert 'characters', id: 2, player: 1
+		insert 'characters', id: 3, player: 1
+		insert 'characters', id: 4, player: 1
+		insert 'characters', id: 5, player: 3
+		insert 'uniusers', id: 1, character_id: 2
+		[1,2,2,3,4,4].forEach (c) -> insert 'items', owner: c
 
-	itemOwners = -> query.all("SELECT owner FROM items ORDER BY owner").map 'owner'
+		itemOwners = -> query.all("SELECT owner FROM items ORDER BY owner").map 'owner'
 
-	# deleting inactive character
-	res = character.deleteCharacter conn, 1, 4
-	user = query.row "SELECT * FROM uniusers"
-	chars = query.all "SELECT id FROM characters WHERE player = 1 ORDER BY id"
+		# deleting inactive character
+		res = character.deleteCharacter conn, 1, 4
+		user = query.row "SELECT * FROM uniusers"
+		chars = query.all "SELECT id FROM characters WHERE player = 1 ORDER BY id"
 
-	test.deepEqual res, {result: 'ok'}, 'should return "ok" if deleted'
-	test.deepEqual chars, [{id:2}, {id:3}], 'should delete inactive character'
-	test.strictEqual user.character_id, 2, 'should not switch character'
-	test.deepEqual itemOwners(), [1,2,2,3], "should delete character's items"
+		test.deepEqual res, {result: 'ok'}, 'should return "ok" if deleted'
+		test.deepEqual chars, [{id:2}, {id:3}], 'should delete inactive character'
+		test.strictEqual user.character_id, 2, 'should not switch character'
+		test.deepEqual itemOwners(), [1,2,2,3], "should delete character's items"
 
-	# deleting current character
-	res = character.deleteCharacter conn, 1, 2
-	user = query.row "SELECT * FROM uniusers"
-	chars = query.all "SELECT id FROM characters WHERE player = 1 ORDER BY id"
+		# deleting current character
+		res = character.deleteCharacter conn, 1, 2
+		user = query.row "SELECT * FROM uniusers"
+		chars = query.all "SELECT id FROM characters WHERE player = 1 ORDER BY id"
 
-	test.deepEqual res, {result: 'ok'}, 'should return "ok" if deleted'
-	test.deepEqual chars, [{id:3}], 'should delete active character'
-	test.strictEqual user.character_id, null, "should clear user's character if deleted was active"
-	test.deepEqual itemOwners(), [1,3], "should delete character's items"
+		test.deepEqual res, {result: 'ok'}, 'should return "ok" if deleted'
+		test.deepEqual chars, [{id:3}], 'should delete active character'
+		test.strictEqual user.character_id, null, "should clear user's character if deleted was active"
+		test.deepEqual itemOwners(), [1,3], "should delete character's items"
 
-	# deleting character of other user
-	res = character.deleteCharacter conn, 1, 5
-	count = +query.val "SELECT count(*) FROM characters"
+		# deleting character of other user
+		res = character.deleteCharacter conn, 1, 5
+		count = +query.val "SELECT count(*) FROM characters"
 
-	test.strictEqual res.result, 'fail', "should fail if character belongs to other user"
-	test.strictEqual res.reason, 'character #5 of user #1 not found',
-		'should describe failure if trying to delete in-battle character'
-	test.strictEqual count, 3, "should refuse and not delete character if character belongs to other user"
-	test.deepEqual itemOwners(), [1,3], "should refuse and not delete items if character belongs to other user"
+		test.strictEqual res.result, 'fail', "should fail if character belongs to other user"
+		test.strictEqual res.reason, 'character #5 of user #1 not found',
+			'should describe failure if trying to delete in-battle character'
+		test.strictEqual count, 3, "should refuse and not delete character if character belongs to other user"
+		test.deepEqual itemOwners(), [1,3], "should refuse and not delete items if character belongs to other user"
+		test.done()
 
-	# deleting character while in battle
-	clearTables 'uniusers', 'characters', 'battle_participants', 'items'
-	insert 'characters', id: 1, player: 2
-	insert 'uniusers', id: 2, character_id: 3
-	insert 'battle_participants', character_id: 1, battle: 5
-	insert 'items', owner: 1
 
-	res = character.deleteCharacter conn, 2, 1
-	count = +query.val "SELECT count(*) FROM characters"
+	second: (test) ->
+		# deleting character while in battle
+		insert 'characters', id: 1, player: 2
+		insert 'uniusers', id: 2, character_id: 3
+		insert 'battle_participants', character_id: 1, battle: 5
+		insert 'items', owner: 1
 
-	test.strictEqual res.result, 'fail', 'should fail if trying to delete in-battle character'
-	test.strictEqual res.reason, 'character #1 is in battle #5',
-		'should describe failure if trying to delete in-battle character'
-	test.strictEqual count, 1, "should refuse and don't delete character if trying to delete in-battle character"
-	test.deepEqual itemOwners(), [1], "should refuse and don't delete items if trying to delete in-battle character"
+		itemOwners = -> query.all("SELECT owner FROM items ORDER BY owner").map 'owner'
 
-	# FORCE deleting character while in battle
-	res = character.deleteCharacter conn, 2, 1, true
-	count = +query.val "SELECT count(*) FROM characters"
+		res = character.deleteCharacter conn, 2, 1
+		count = +query.val "SELECT count(*) FROM characters"
 
-	test.deepEqual res, {result: 'ok'}, 'should return "ok" if force-deleting in-battle character'
-	test.strictEqual count, 0, "should delete character if force-deleting in-battle character"
-	test.deepEqual itemOwners(), [], "should  delete items if force-deleting in-battle character"
-	test.done()
+		test.strictEqual res.result, 'fail', 'should fail if trying to delete in-battle character'
+		test.strictEqual res.reason, 'character #1 is in battle #5',
+			'should describe failure if trying to delete in-battle character'
+		test.strictEqual count, 1, "should refuse and don't delete character if trying to delete in-battle character"
+		test.deepEqual itemOwners(), [1], "should refuse and don't delete items if trying to delete in-battle character"
+
+		# FORCE deleting character while in battle
+		res = character.deleteCharacter conn, 2, 1, true
+		count = +query.val "SELECT count(*) FROM characters"
+
+		test.deepEqual res, {result: 'ok'}, 'should return "ok" if force-deleting in-battle character'
+		test.strictEqual count, 0, "should delete character if force-deleting in-battle character"
+		test.deepEqual itemOwners(), [], "should  delete items if force-deleting in-battle character"
+		test.done()
 
 
 exports.switchCharacter =
 	testNoErrors: (test) ->
-		clearTables 'uniusers', 'characters'
 		insert 'uniusers', id: 1, character_id: 10
 		insert 'characters', id: 2, player: 1
 
@@ -208,7 +230,6 @@ exports.switchCharacter =
 		test.done()
 
 	testErrors: (test) ->
-		clearTables 'uniusers', 'characters'
 		test.throws(
 			-> character.switchCharacter(conn, 1, 2)
 			Error
