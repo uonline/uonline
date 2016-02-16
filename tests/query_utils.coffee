@@ -106,14 +106,21 @@ exports.doInTransaction = (test) ->
 	# error in query
 	test.throws(
 		-> queryUtils.doInTransaction conn, (tx) ->
-			# uncomment this line and it will break all DB connection
-			#tx.query.sync tx, "SELECT first transaction query with error"
 			tx.query.sync tx, "INSERT INTO test_table VALUES (3, 'something')"
 			tx.query.sync tx, "INSERT INTO no_such_table VALUES ('nothing')"
 		Error
 		'should throw exception from inner function'
 	)
 	test.strictEqual count(), 4, 'should rollback transaction'
+
+	# error in first transaction query
+	test.throws(
+		-> queryUtils.doInTransaction conn, (tx) ->
+			tx.query.sync tx, "SELECT first transaction query with error"
+		Error
+		'should throw exception from inner function'
+	)
+	test.strictEqual count(), 4, 'should rollback transaction and make connection usable immediately'
 
 	# non-query error
 	test.throws(
