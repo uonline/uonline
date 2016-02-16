@@ -28,9 +28,6 @@ conn = null
 query = null
 
 
-clearTables = ->
-	query 'TRUNCATE ' + [].join.call(arguments, ', ')
-
 insert = (dbName, fields) ->
 	values = (v for _,v of fields)
 	query "INSERT INTO #{dbName} (#{k for k of fields}) VALUES (#{values.map (_,i) -> '$'+(i+1)})", values
@@ -51,7 +48,6 @@ exports.tearDown = (->
 
 exports.getInitialLocation =
 	'good test': (test) ->
-		clearTables 'locations'
 		insert 'locations', id: 1
 		insert 'locations', id: 2, initial: 1
 		insert 'locations', id: 3
@@ -62,7 +58,6 @@ exports.getInitialLocation =
 		test.done()
 
 	'bad test': (test) ->
-		clearTables 'locations'
 		insert 'locations', id: 1
 		insert 'locations', id: 2
 		insert 'locations', id: 3
@@ -75,7 +70,6 @@ exports.getInitialLocation =
 		test.done()
 
 	'ambiguous test': (test) ->
-		clearTables 'locations'
 		insert 'locations', id: 1
 		insert 'locations', id: 2, initial: 1
 		insert 'locations', id: 3, initial: 1
@@ -91,7 +85,6 @@ exports.getInitialLocation =
 
 exports.getCharacterLocationId =
 	testValidData: (test) ->
-		clearTables 'characters'
 		insert 'characters', id: 1, 'location': 3
 
 		insert 'characters', id: 2, 'location': 1
@@ -103,7 +96,6 @@ exports.getCharacterLocationId =
 		test.done()
 
 	testWrongCharacterId: (test) ->
-		clearTables 'characters'
 		test.throws(
 			-> game.getCharacterLocationId.sync(null, conn, -1)
 			Error
@@ -114,7 +106,6 @@ exports.getCharacterLocationId =
 
 exports.getCharacterLocation =
 	setUp: (done) ->
-		clearTables 'characters', 'locations'
 		insert 'characters', id: 1, location: 3
 		done()
 
@@ -151,7 +142,6 @@ exports.getCharacterLocation =
 
 exports.getCharacterArea =
 	setUp: (done) ->
-		clearTables 'characters', 'locations', 'areas'
 		insert 'characters', id: 1, location: 3
 		done()
 
@@ -174,7 +164,6 @@ exports.getCharacterArea =
 
 
 exports.isTherePathForCharacterToLocation = (test) ->
-	clearTables 'characters', 'locations', 'battle_participants'
 	insert 'characters', id: 1, location: 1
 	insert 'locations', id: 1, ways: 'Left=2'
 	insert 'locations', id: 2
@@ -192,8 +181,6 @@ exports.isTherePathForCharacterToLocation = (test) ->
 
 
 exports.createBattleBetween = (test) ->
-	clearTables 'battles', 'battle_participants'
-
 	locid = 123
 
 	game._createBattleBetween conn, locid, [
@@ -223,7 +210,6 @@ exports.createBattleBetween = (test) ->
 
 
 exports._stopBattle = (test) ->
-	clearTables 'characters', 'battles', 'battle_participants'
 	insert 'characters', id: 1, autoinvolved_fm: true
 	insert 'battles', id: 1
 	insert 'battle_participants', battle: 1, character_id: 1
@@ -238,7 +224,6 @@ exports._stopBattle = (test) ->
 
 
 exports._leaveBattle = (test) ->
-	clearTables 'characters', 'battles', 'battle_participants'
 	insert 'characters', id: 1, autoinvolved_fm: 1
 	insert 'characters', id: 2, autoinvolved_fm: 1
 	insert 'battles', id: 1
@@ -291,7 +276,6 @@ exports._leaveBattle = (test) ->
 
 exports.changeLocation =
 	setUp: (done) ->
-		clearTables 'characters', 'locations', 'battles', 'battle_participants', 'monsters'
 		insert 'characters', id: 1, location: 1, initiative: 50
 		insert 'locations', id: 1, ways: 'Left=2'
 		insert 'locations', id: 2
@@ -365,7 +349,6 @@ exports.changeLocation =
 
 exports.goAttack =
 	setUp: (done) ->
-		clearTables 'characters', 'battles', 'battle_participants'
 		insert 'characters', id: 1, location: 1, initiative: 10, player: 1
 		done()
 
@@ -414,7 +397,6 @@ exports.goAttack =
 
 exports.goEscape =
 	setUp: (done) ->
-		clearTables 'characters', 'battles', 'battle_participants'
 		insert 'characters', id: 1, autoinvolved_fm: 1
 		insert 'battles', id: 3
 		insert 'battle_participants', battle: 3, character_id: 1
@@ -434,7 +416,6 @@ exports.goEscape =
 
 exports.getBattleParticipants =
 	setUp: (done) ->
-		clearTables 'characters', 'battle_participants'
 		insert 'characters', id: 1,  name: 'SomeUser', player: 2
 		insert 'characters', id: 11, name: 'SomeMonster 1'
 		insert 'characters', id: 12, name: 'SomeMonster 2'
@@ -454,7 +435,6 @@ exports.getBattleParticipants =
 
 
 exports._lockAndGetStatsForBattle = (test) ->
-	clearTables 'characters', 'battles', 'battle_participants'
 	insert 'characters', id: 1,  power: 100
 	insert 'characters', id: 11, power: 200
 	insert 'battles', id: 3
@@ -476,7 +456,6 @@ exports._lockAndGetStatsForBattle = (test) ->
 
 
 exports._hitItem = (test) ->
-	clearTables 'items'
 	insert 'items', id: 1, strength: 100
 
 	item = query.row 'SELECT id, strength FROM items'
@@ -497,7 +476,6 @@ exports._hitItem = (test) ->
 
 exports._hitAndGetHealth =
 	setUp: (done) ->
-		clearTables 'characters', 'items', 'items_proto'
 		insert 'characters', id: 1,  health: 1000, defense: 50
 		insert 'characters', id: 11, health: 1000, defense: 50
 		done()
@@ -644,7 +622,6 @@ exports._hitAndGetHealth =
 
 
 exports._handleDeathInBattle = (test) ->
-	clearTables 'characters', 'locations'
 	insert 'locations', id: 5, initial: 1
 	insert 'characters', id: 1, health: 0, health_max: 1000, player: 1, exp: 900, level: 1
 	insert 'characters', id: 2, health: 0, health_max: 1000, player: 2, exp: 0, level: 1
@@ -672,8 +649,6 @@ exports._handleDeathInBattle = (test) ->
 
 exports._hit =
 	setUp: (done) ->
-		clearTables 'characters', 'battles', 'battle_participants', 'items', 'items_proto'
-
 		insert 'characters', id: 1, name: 'SomeUser',    defense: 1, power: 40, health: 5
 		insert 'characters', id: 2, name: 'AnotherUser', defense: 1, power: 50, health: 1000
 		insert 'characters', id: 5, name: 'SomeMonster', defense: 5, power: 20, health: 500
@@ -764,7 +739,8 @@ exports._hit =
 
 	'weapnons': (test) ->
 		['shield', 'weapon-one-handed', 'no-such-item-but-why-not'].forEach (type) ->
-			clearTables 'items', 'items_proto'
+			query 'DELETE FROM items_proto'
+			query 'DELETE FROM items'
 			insert 'items_proto', id:1, name: 'Ogrebator 4000', coverage:100, type: type, damage: 100
 			insert 'items', id:10, prototype:1, owner:1, strength:100, equipped:true
 
@@ -794,7 +770,6 @@ exports._hit =
 
 exports.hitOpponent =
 	setUp: (done) ->
-		clearTables 'characters', 'battles', 'battle_participants', 'items', 'items_proto', 'monsters'
 		insert 'characters', id: 1, name: 'SomeUser', power: 20, defense: 10, health: 1000, player: 1
 		insert 'characters', id: 4, name: 'SomeMonster 1', power: 20, defense: 10, health: 1000
 		insert 'characters', id: 5, name: 'SomeMonster 2', power: 20, defense: 10, health: 1000
@@ -841,7 +816,6 @@ exports.getNearbyUsers =
 	setUp: (done) ->
 		d = new Date()
 		now = (d.getFullYear() + 1) + '-' + (d.getMonth() + 1) + '-' + d.getDate()
-		clearTables 'characters', 'uniusers', 'locations'
 		insert 'uniusers', id: 1, sess_time: now
 		insert 'uniusers', id: 2, sess_time: now
 		insert 'uniusers', id: 3, sess_time: now
@@ -868,7 +842,6 @@ exports.getNearbyUsers =
 
 
 exports.getNearbyMonsters = (test) ->
-	clearTables 'characters'
 	insert 'characters', id: 1, location: 1, player: 1
 	insert 'characters', id: 2, location: 2, player: 2
 	insert 'characters', id: 11, location: 1, attack_chance: 42, name: 'The Creature of Unimaginable Horror'
@@ -883,7 +856,6 @@ exports.getNearbyMonsters = (test) ->
 
 
 exports.isInFight = (test) ->
-	clearTables 'characters', 'battle_participants'
 	insert 'characters', id: 2
 	insert 'characters', id: 4
 	insert 'battle_participants', character_id: 4
@@ -897,7 +869,6 @@ exports.isInFight = (test) ->
 
 
 exports.isAutoinvolved = (test) ->
-	clearTables 'characters'
 	insert 'characters', id: 2, autoinvolved_fm: false
 	insert 'characters', id: 4, autoinvolved_fm: true
 
@@ -909,7 +880,6 @@ exports.isAutoinvolved = (test) ->
 	test.done()
 
 exports.uninvolve = (test) ->
-	clearTables 'characters', 'battle_participants'
 	insert 'characters', id: 1, autoinvolved_fm: true
 	insert 'battle_participants', character_id: 1
 	game.uninvolve.sync null, conn, 1
@@ -948,7 +918,6 @@ exports.getCharacter =
 			race: 'elf'
 			gender: 'female'
 
-		clearTables 'characters', 'battle_participants'
 		insert 'characters', data
 
 		expectedData = Object.clone(data)
@@ -982,7 +951,6 @@ exports.getCharacter =
 
 
 exports.getCharacters = (test) ->
-	clearTables 'characters'
 	chars = game.getCharacters(conn, 1)
 	test.deepEqual chars, [], 'should return no characters if user does not have any'
 
@@ -998,7 +966,6 @@ exports.getCharacters = (test) ->
 
 
 exports.getCharacterItems = (test) ->
-	clearTables 'items', 'items_proto'
 	insert 'items_proto',
 		id:1, name:'Magic helmet', type:'helmet', armor_class: 'plate', coverage:50, strength_max:120, damage: 0
 	insert 'items_proto',

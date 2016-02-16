@@ -27,11 +27,6 @@ conn = null
 query = null
 
 
-cleanup = ->
-	query 'DROP TABLE IF EXISTS test_table, akira'
-	query 'DROP TYPE IF EXISTS test_enum'
-
-
 exports.setUp = (->
 	unless _conn?
 		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)

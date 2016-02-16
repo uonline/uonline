@@ -29,9 +29,6 @@ conn = null
 query = null
 
 
-clearTables = ->
-	query 'TRUNCATE ' + [].join.call(arguments, ', ')
-
 insert = (dbName, fields) ->
 	values = (v for _,v of fields)
 	query "INSERT INTO #{dbName} (#{k for k of fields}) VALUES (#{values.map (_,i) -> '$'+(i+1)})", values
