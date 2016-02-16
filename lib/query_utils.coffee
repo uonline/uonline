@@ -52,13 +52,13 @@ exports.getFor = (dbConnection) ->
 # Executes function passing a transaction as a first argument.
 # Rollbacks transaction if any error was thrown from passed function.
 exports.doInTransaction = (dbConnection, func) ->
-	tx = transaction(dbConnection)
+	tx = transaction(dbConnection, {autoRollback: false})
 	try
 		func(tx)
 	catch e
 		if tx.state() isnt 'closed'
-			tx.rollback()
+			tx.rollback.sync(tx)
 		throw e
 	if tx.state() isnt 'closed'
-		tx.commit()
+		tx.commit.sync(tx)
 
