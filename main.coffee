@@ -56,19 +56,20 @@ dbConnection.query 'SELECT version()', [], (error, result) ->
 # Attach profiler?
 if process.env.SQLPROF is 'true'
 	dbConnection.on 'query', (query) ->
-		start = Date.now()
+		start = process.hrtime()
 		query.on 'close', ->
 			logged = query.text
 			for value, index in query.values
 				index++
 				while logged.indexOf("$#{index}") isnt -1
 					logged = logged.replace "$#{index}", chalk.blue(JSON.stringify(value))
-			time = Date.now() - start
+			timetuple = process.hrtime(start)
+			time = Math.round(timetuple[0]*1000 + timetuple[1]/1000000)
 			time = switch
 				when time < 10 then chalk.green("#{time} ms")
 				when time < 20 then chalk.yellow("#{time} ms")
 				else chalk.red("#{time} ms")
-			console.log "\n#{time}: #{logged}\n"
+			console.log "#{time}: #{logged}"
 
 
 # Set up Express
@@ -174,23 +175,10 @@ app.use ((request, response) ->
 
 openTransaction = ((request, response) ->
 	request.uonline.tx = transaction(dbConnection)
-	request.uonline.tx_id = Math.random()*1000|0
-	# Attach profiler?
-	log = ->
-	if process.env.SQLPROF is 'true'
-		log = (x) -> console.log x
+).asyncMiddleware()
 
-	log "opened tx ##{request.uonline.tx_id}"
-	endTransaction = ->
-		log "ending tx ##{request.uonline.tx_id}, state is: #{request.uonline.tx.state()}"
-		if request.uonline.tx.state() isnt 'closed'
-			log 'closing tx'
-			request.uonline.tx.commit.sync(request.uonline.tx)
-			log 'closed tx, state:', request.uonline.tx.state()
-		else
-			log 'not closing'
-	response.on 'finish', endTransaction
-	response.on 'close', endTransaction
+commit = ((request, response) ->
+	request.uonline.tx.commit.sync(request.uonline.tx)
 ).asyncMiddleware()
 
 
@@ -344,8 +332,9 @@ app.get '/node/', (request, response) ->
 app.get '/explode/', (request, response) ->
 	throw new Error 'Emulated error.'
 
-app.get '/explode_db/', (request, response) ->
-	dbConnection.query.sync dbConnection, 'SELECT * FROM "Emulated DB error."'
+app.get '/explode_db/', openTransaction, (request, response) ->
+	request.uonline.tx.query.sync request.uonline.tx, 'SELECT * FROM "Emulated DB error."'
+, commit
 
 
 app.get '/', (request, response) ->
@@ -387,20 +376,22 @@ app.get '/register/',
 app.post '/action/register',
 	mustNotBeAuthed,
 	setInstance('register'),
-	(request, response) ->
+	openTransaction,
+	(request, response, next) ->
 		usernameIsValid = lib.validation.usernameIsValid(request.body.username)
 		passwordIsValid = lib.validation.passwordIsValid(request.body.password)
-		userExists = lib.user.userExists.sync(null, dbConnection, request.body.username)
-		if (usernameIsValid is true) and (passwordIsValid is true) and (userExists is false)
+		userExists = lib.user.userExists.sync(null, request.uonline.tx, request.body.username)
+
+		if usernameIsValid and passwordIsValid and !userExists
 			result = lib.user.registerUser.sync(
 				null
-				dbConnection
+				request.uonline.tx
 				request.body.username
 				request.body.password
 				'user'
 			)
+			request.uonline.userCreated = true
 			response.cookie 'sessid', result.sessid
-			response.redirect 303, '/'
 		else
 			options = request.uonline
 			options.error = true
@@ -409,7 +400,16 @@ app.post '/action/register',
 			options.loginIsBusy = userExists
 			options.user.username = request.body.username
 			options.user.password = request.body.password
-			response.render 'register', options
+			request.uonline.options = options
+			request.uonline.userCreated = false
+		next()
+	,
+	commit,
+	(request, response) ->
+		if request.uonline.userCreated
+			response.redirect 303, '/'
+		else
+			response.render 'register', request.uonline.options
 
 
 app.get '/character/',
@@ -460,27 +460,37 @@ app.get '/newCharacter/',
 app.post '/action/newCharacter',
 	mustBeAuthed,
 	setInstance('new_character'),
-	(request, response) ->
+	openTransaction,
+	(request, response, next) ->
 		nameIsValid = lib.validation.characterNameIsValid(request.body.character_name)
-		alreadyExists = lib.character.characterExists.sync(null, dbConnection, request.body.character_name)
+		alreadyExists = lib.character.characterExists.sync(null, request.uonline.tx, request.body.character_name)
 
 		if nameIsValid and not alreadyExists
 			charid = lib.character.createCharacter.sync(
 				null
-				dbConnection
+				request.uonline.tx
 				request.uonline.user.id
 				request.body.character_name
 				request.body.character_race
 				request.body.character_gender
 			)
-			response.redirect 303, '/character/'
+			request.uonline.characterCreated = true
 		else
 			options = request.uonline
 			options.error = true
 			options.invalidName = !nameIsValid
 			options.nameIsBusy = alreadyExists
 			options.character_name = request.body.character_name
-			response.render 'new_character', options
+			request.uonline.options = options
+			request.uonline.characterCreated = false
+		next()
+	,
+	commit,
+	(request, response) ->
+		if request.uonline.characterCreated
+			response.redirect 303, '/character/'
+		else
+			response.render 'new_character', request.uonline.options
 
 
 app.get '/game/',
@@ -498,42 +508,52 @@ app.get '/inventory/',
 
 app.post '/action/go',
 	mustBeAuthed,
-	(request, response) ->
-		result = lib.game.changeLocation.sync null, dbConnection, request.uonline.user.character_id, request.body.to
+	openTransaction,
+	(request, response, next) ->
+		result = lib.game.changeLocation.sync null, request.uonline.tx, request.uonline.user.character_id, request.body.to
 		if result.result != 'ok'
 			console.error "Location change failed: #{result.reason}"
-		response.redirect 303, '/game/'
+		next()
+	,
+	commit,
+	redirect(303, '/game/')
 
 
 app.post '/action/attack',
 	mustBeAuthed,
+	openTransaction,
 	(request, response, next) ->
-		lib.game.goAttack.sync null, dbConnection, request.uonline.user.character_id
+		lib.game.goAttack.sync null, request.uonline.tx, request.uonline.user.character_id
 		next()
 	,
+	commit,
 	redirect(303, '/game/')
 
 
 app.post '/action/escape',
 	mustBeAuthed,
+	openTransaction,
 	(request, response, next) ->
-		lib.game.goEscape.sync null, dbConnection, request.uonline.user.character_id
+		lib.game.goEscape.sync null, request.uonline.tx, request.uonline.user.character_id
 		next()
 	,
+	commit,
 	redirect(303, '/game/')
 
 
 app.post '/action/hit',
 	mustBeAuthed,
+	openTransaction,
 	(request, response, next) ->
 		lib.game.hitOpponent.sync(
-			null, dbConnection,
+			null, request.uonline.tx,
 			request.uonline.user.character_id,
 			request.body.id,
 			request.body.with_item_id
 		)
 		next()
 	,
+	commit,
 	redirect(303, '/game/')
 
 
@@ -626,6 +646,8 @@ app.get '*', (request, response) ->
 
 # Exception handling
 app.use (error, request, response, next) ->
+	#if request.uonline.tx?.state() isnt 'closed'
+	request.uonline.tx?.rollback()
 	code = 500
 	if error.message is '404'
 		code = 404
