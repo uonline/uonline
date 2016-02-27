@@ -1,13 +1,16 @@
 uonline
 =======
 
+A browser-based MMORPG in a fantasy world.
+
 [![Build Status](https://travis-ci.org/uonline/uonline.svg?branch=master)](https://travis-ci.org/uonline/uonline)
 [![Coverage Status](https://img.shields.io/coveralls/uonline/uonline.svg)](https://coveralls.io/r/uonline/uonline?branch=master)
 [![Dependency Status](https://img.shields.io/david/uonline/uonline.svg)](https://david-dm.org/uonline/uonline)
 [![devDependency Status](https://img.shields.io/david/dev/uonline/uonline.svg)](https://david-dm.org/uonline/uonline#info=devDependencies)
 [![Planned tasks](https://badge.waffle.io/uonline/uonline.svg?label=on%20fire&title=Tasks)](http://waffle.io/uonline/uonline)
 
-A browser-based MMORPG in a fantasy world.
+[![Issue Stats](http://issuestats.com/github/uonline/uonline/badge/issue?style=flat)](http://issuestats.com/github/uonline/uonline)
+[![PR Stats](http://issuestats.com/github/uonline/uonline/badge/pr?style=flat)](http://issuestats.com/github/uonline/uonline)
 
 
 Requirements
