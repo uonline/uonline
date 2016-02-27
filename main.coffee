@@ -475,7 +475,7 @@ app.post '/action/newCharacter',
 				request.body.character_race
 				request.body.character_gender
 			)
-			request.uonline.characterCreated = true
+			request.uonline._characterCreated = true
 		else
 			options = request.uonline
 			options.error = true
@@ -483,12 +483,12 @@ app.post '/action/newCharacter',
 			options.nameIsBusy = alreadyExists
 			options.character_name = request.body.character_name
 			request.uonline.options = options
-			request.uonline.characterCreated = false
+			request.uonline._characterCreated = false
 		next()
 	,
 	commit,
 	(request, response) ->
-		if request.uonline.characterCreated
+		if request.uonline._characterCreated
 			response.redirect 303, '/character/'
 		else
 			response.render 'new_character', request.uonline.options
@@ -629,15 +629,6 @@ app.get '/state/',
 		next()
 	,
 	setInstance('state'), render('state')
-
-
-app.get '/test/', (req, res, next) ->
-	console.log('test route. it exists, but 404 will appear')
-	next()
-
-app.use (request, response, next) ->
-	console.log('after route')
-	next()
 
 
 # 404 handling
