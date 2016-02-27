@@ -58,18 +58,18 @@ if process.env.SQLPROF is 'true'
 	dbConnection.on 'query', (query) ->
 		start = process.hrtime()
 		query.on 'close', ->
-			logged = query.text
-			for value, index in query.values
-				index++
-				while logged.indexOf("$#{index}") isnt -1
-					logged = logged.replace "$#{index}", chalk.blue(JSON.stringify(value))
 			timetuple = process.hrtime(start)
 			time = Math.round(timetuple[0]*1000 + timetuple[1]/1000000)
 			time = switch
 				when time < 10 then chalk.green("#{time} ms")
 				when time < 20 then chalk.yellow("#{time} ms")
 				else chalk.red("#{time} ms")
-			console.log "#{time}: #{logged}"
+			logged = query.text
+			for value, index in query.values
+				index++
+				while logged.indexOf("$#{index}") isnt -1
+					logged = logged.replace "$#{index}", chalk.blue(JSON.stringify(value))
+			console.log " #{time}: #{logged}"
 
 
 # Set up Express
