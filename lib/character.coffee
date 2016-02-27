@@ -31,81 +31,72 @@ exports.characterExists = (dbConnection, name, callback) ->
 # Creates new character for user.
 # Returns id of new character.
 exports.createCharacter = ((dbConnection, user_id, name, race, gender) ->
-	# да что за фигня опять тут происходит?!
-	# https://github.com/grncdr/node-any-db-transaction
-	# > by default any queries that error during a transaction will cause an automatic rollback
-	# я уж не знаю, что и куда оно там АВТОМАТИЧЕСКИ откатывает, но
-	# без второго параметра в transaction() 'tx.rollback.sync tx' дальше ВИСНЕТ
-	# если и rollback убрать, в следующий раз из transaction() вывалится
-	#   Fatal error: current transaction is aborted, commands ignored until end of transaction block
-	tx = transaction dbConnection, autoRollback: false
-	try
-		energies = {
-			'orc-male': 220
-			'orc-female': 200
-			'human-male': 170
-			'human-female': 160
-			'elf-male': 150
-			'elf-female': 140
-		}
-		energy = energies["#{race}-#{gender}"]
-		charid = tx.query.sync(tx,
-			"INSERT INTO characters (name, player, location, race, gender, energy, energy_max) "+
-			"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1), $3, $4, $5, $5) RETURNING id",
-			[ name, user_id, race, gender, energy ]).rows[0].id
-	catch ex
-		tx.rollback.sync tx
-		if (ex.constraint is 'players_character_unique_name_index')
-			throw new Error('character already exists')
-		throw ex
+	if exports.characterExists.sync null, dbConnection, name
+		throw new Error('character already exists')
 
-	tx.query.sync(tx,
+	energies = {
+		'orc-male': 220
+		'orc-female': 200
+		'human-male': 170
+		'human-female': 160
+		'elf-male': 150
+		'elf-female': 140
+	}
+	energy = energies["#{race}-#{gender}"]
+	charid = dbConnection.query.sync(dbConnection,
+		"INSERT INTO characters (name, player, location, race, gender, energy, energy_max) "+
+		"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1), $3, $4, $5, $5) RETURNING id",
+		[ name, user_id, race, gender, energy ]).rows[0].id
+
+	dbConnection.query.sync(dbConnection,
 		"UPDATE uniusers SET character_id = $1 WHERE id = $2",
 		[ charid, user_id ])
-	tx.commit.sync(tx)
 	return charid
 ).async()
 
 
 # Removes character
 exports.deleteCharacter = ((dbConnection, user_id, character_id, force=false) ->
-	tx = transaction dbConnection
+	# do checks first
 
-	res = tx.query.sync(tx,
-		"DELETE FROM characters WHERE id = $1 AND player = $2",
+	res = dbConnection.query.sync(dbConnection,
+		"SELECT id FROM characters WHERE id = $1 AND player = $2",
 		[ character_id, user_id ])
 
 	if res.rowCount == 0
-		tx.rollback.sync(tx)
 		return {
 			result: 'fail'
 			reason: "character ##{character_id} of user ##{user_id} not found"
 		}
 
 	unless force
-		res = tx.query.sync(tx,
+		res = dbConnection.query.sync(dbConnection,
 			"SELECT battle FROM battle_participants WHERE character_id = $1",
 			[ character_id ])
 
 		if res.rowCount > 0
-			tx.rollback.sync(tx)
 			return {
 				result: 'fail'
 				reason: "character ##{character_id} is in battle ##{res.rows[0].battle}"
 			}
 
-	game.goEscape.sync(null, tx, character_id)
+	# start deleting
+
+	game.goEscape.sync(null, dbConnection, character_id)
 
 	# if the character we delete is active, unselect it
-	tx.query.sync(tx,
+	dbConnection.query.sync(dbConnection,
 		"UPDATE uniusers SET character_id = NULL WHERE id = $1 AND character_id = $2",
 		[ user_id, character_id ])
 
-	tx.query.sync(tx,
+	dbConnection.query.sync(dbConnection,
 		"DELETE FROM items WHERE owner = $1",
 		[ character_id ])
 
-	tx.commit.sync(tx)
+	dbConnection.query.sync(dbConnection,
+		"DELETE FROM characters WHERE id = $1 AND player = $2",
+		[ character_id, user_id ])
+
 	return {
 		result: 'ok'
 	}

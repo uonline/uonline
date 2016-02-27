@@ -21,14 +21,13 @@ config = require '../config'
 mg = require '../lib/migration'
 sync = require 'sync'
 anyDB = require 'any-db'
+transaction = require 'any-db-transaction'
 queryUtils = require '../lib/query_utils'
 sugar = require 'sugar'
+_conn = null
 conn = null
 query = null
 
-
-clearTables = ->
-	query 'TRUNCATE ' + [].join.call(arguments, ', ')
 
 #TODO: to utils
 insert = (dbName, fields) ->
@@ -37,13 +36,16 @@ insert = (dbName, fields) ->
 
 
 exports.setUp = (->
-	unless conn?
-		conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-		query = queryUtils.getFor conn
-		mg.migrate.sync mg, conn
+	unless _conn?
+		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+		mg.migrate.sync mg, _conn
+	conn = transaction(_conn)
+	query = queryUtils.getFor conn
 ).async()
 
-# exports.tearDown = (->).async()
+exports.tearDown = (->
+	conn.rollback.sync(conn)
+).async()
 
 
 exports.userExists = (test) ->
@@ -56,7 +58,6 @@ exports.userExists = (test) ->
 #		'should fail on nonexistent table'
 #	)
 
-	clearTables 'uniusers'
 	query 'INSERT INTO uniusers (username) VALUES ( $1 )', ['Sauron']
 
 	test.strictEqual userExists('Sauron'), true, 'should return true if user exists'
@@ -69,7 +70,6 @@ exports.userExists = (test) ->
 
 
 exports.idExists = (test) ->
-	clearTables 'uniusers'
 	query 'INSERT INTO uniusers (id) VALUES ( $1 )', [114]
 
 	test.strictEqual users.idExists.sync(null, conn, 114), true, 'should return true when user exists'
@@ -78,7 +78,6 @@ exports.idExists = (test) ->
 
 
 exports.sessionExists = (test) ->
-	clearTables 'uniusers'
 	query "INSERT INTO uniusers (sessid) VALUES ('someid')"
 
 	exists = users.sessionExists.sync(null, conn, 'someid')
@@ -91,7 +90,6 @@ exports.sessionExists = (test) ->
 
 exports.sessionInfoRefreshing =
 	'usual': (test) ->
-		clearTables 'characters', 'uniusers'
 		insert 'characters', id: 5, player: 8
 		insert 'uniusers',
 			id: 8, username: 'user0', character_id: 5,
@@ -190,7 +188,6 @@ exports.getUser = (test) ->
 		hash: 'hash'
 		character_id: 4
 
-	clearTables 'characters', 'uniusers'
 	insert 'uniusers', props
 	insert 'characters', id: 4, player: 8
 
@@ -214,7 +211,6 @@ exports.generateSessId = (test) ->
 	users.createSalt = (len) ->
 		'someid' + (++i)
 
-	clearTables 'uniusers'
 	query "INSERT INTO uniusers (sessid) VALUES ('someid1')"
 	query "INSERT INTO uniusers (sessid) VALUES ('someid2')"
 	sessid = users.generateSessId.sync users, conn, 16
@@ -226,14 +222,12 @@ exports.generateSessId = (test) ->
 
 exports.idBySession =
 	testNoErrors: (test) ->
-		clearTables 'uniusers'
 		query "INSERT INTO uniusers ( id, sessid ) VALUES ( 3, 'someid' )"
 		userid = users.idBySession.sync null, conn, "someid"
 		test.strictEqual userid, 3, 'should return correct user id'
 		test.done()
 
 	testWrongSessid: (test) ->
-		clearTables 'uniusers'
 		test.throws(
 			-> users.idBySession.sync null, conn, 'someid'
 			Error
@@ -243,7 +237,6 @@ exports.idBySession =
 
 
 exports.closeSession = (test) ->
-	clearTables 'uniusers'
 	query "INSERT INTO uniusers ( sessid, sess_time ) VALUES ( 'someid', NOW() )"
 	users.closeSession.sync null, conn, 'someid'
 	refr = users.sessionInfoRefreshing.sync null, conn, 'someid', 3600
@@ -267,7 +260,6 @@ exports.createSalt = (test) ->
 
 
 exports.registerUser = (test) ->
-	clearTables 'uniusers', 'locations', 'monsters', 'monster_prototypes', 'characters'
 	query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
 
 	#TODO: check return value
@@ -294,7 +286,6 @@ exports.registerUser = (test) ->
 
 
 exports.accessGranted = (test) ->
-	clearTables 'uniusers', 'characters', 'locations'
 	query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
 	users.registerUser.sync null, conn, 'TheUser', 'password', 'user'
 
@@ -311,7 +302,6 @@ exports.accessGranted = (test) ->
 
 
 exports.createSession = (test) ->
-	clearTables 'uniusers', 'locations', 'characters'
 	query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
 	users.registerUser.sync null, conn, 'Мохнатый Ангел', 'password', 'user'
 	user0 = query.row 'SELECT sessid FROM uniusers'

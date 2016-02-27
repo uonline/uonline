@@ -19,6 +19,7 @@ parser = requireCovered __dirname, '../lib/locparse.coffee'
 fs = require 'fs'
 config = require '../config'
 anyDB = require 'any-db'
+transaction = require 'any-db-transaction'
 mg = require '../lib/migration'
 rmrf = require 'rmrf'
 copy = require('ncp').ncp
@@ -290,16 +291,19 @@ exports.error_E15_test = (test) ->
 
 exports.save = ((test) ->
 	try
+		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+		mg.migrate.sync mg, _conn
+		conn = transaction(_conn)
+
 		parseResult = parser.processDir "#{TMP_DIR}/Кронт - kront"
-		conn = anyDB.createConnection config.DATABASE_URL_TEST
-		conn.query.sync conn, "DELETE FROM areas"
-		conn.query.sync conn, "DELETE FROM locations"
 		parseResult.save(conn)
 
 		result = conn.query.sync conn, 'SELECT count(*) AS cnt FROM areas'
 		test.equal result.rows[0].cnt, parseResult.areas.length, 'should save all areas'
 		result = conn.query.sync conn, 'SELECT count(*) AS cnt FROM locations'
 		test.equal result.rows[0].cnt, parseResult.locations.length, 'should save all locations'
+
+		conn.rollback.sync(conn)
 	catch e
 		test.ifError e
 	test.done()

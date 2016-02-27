@@ -370,14 +370,11 @@ exports.getNewestRevision = ->
 	exports.getMigrationsData().length - 1
 
 exports.getCurrentRevision = ((dbConnection) ->
-	try
+	if tables.tableExists.sync(null, dbConnection, 'revision')
 		result = dbConnection.query.sync(dbConnection, 'SELECT revision FROM revision', [])
 		return result.rows[0].revision
-	catch error
-		if error.code == 'ER_NO_SUCH_TABLE' or error.code == '42P01'
-			return -1
-		else
-			throw error
+	else
+		return -1
 ).async()
 
 exports.setRevision = ((dbConnection, revision) ->

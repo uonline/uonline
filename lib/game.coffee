@@ -17,7 +17,6 @@
 sync = require 'sync'
 config = require '../config'
 math = require '../lib/math.coffee'
-transaction = require 'any-db-transaction'
 sugar = require 'sugar'
 
 
@@ -193,8 +192,7 @@ exports._leaveBattle = (tx, battleId, leaverId) ->
 
 # Changes character location and starts (maybe) battle with some monsters.
 exports.changeLocation = ((dbConnection, character_id, locid, throughSpaceAndTime) ->
-	tx = transaction(dbConnection)
-	battle = tx.query.sync(tx,
+	battle = dbConnection.query.sync(dbConnection,
 		"SELECT battle AS id FROM battle_participants WHERE character_id = $1 FOR UPDATE",
 		[ character_id ]
 	).rows[0]
@@ -202,29 +200,26 @@ exports.changeLocation = ((dbConnection, character_id, locid, throughSpaceAndTim
 
 	if throughSpaceAndTime
 		if isInFight
-			exports._leaveBattle tx, battle.id, character_id
-		tx.query.sync tx, "UPDATE characters SET location = $1 WHERE id = $2", [locid, character_id]
-		tx.commit()
+			exports._leaveBattle dbConnection, battle.id, character_id
+		dbConnection.query.sync dbConnection, "UPDATE characters SET location = $1 WHERE id = $2", [locid, character_id]
 		return {
 			result: 'ok'
 		}
 
 	canGo = exports.isTherePathForCharacterToLocation.sync(null, dbConnection, character_id, locid)
 	if isInFight
-		tx.rollback()
 		return {
 			result: 'fail'
 			reason: "Character ##{character_id} is in fight"
 		}
 	unless canGo
-		tx.rollback()
 		return {
 			result: 'fail'
 			reason: "No path to location ##{locid} for character ##{character_id}"
 		}
 
-	tx.query.sync(tx, 'SELECT id FROM characters WHERE id = $1 FOR UPDATE', [character_id])
-	monsters = tx.query.sync(tx,
+	dbConnection.query.sync(dbConnection, 'SELECT id FROM characters WHERE id = $1 FOR UPDATE', [character_id])
+	monsters = dbConnection.query.sync(dbConnection,
 		"SELECT id, initiative, attack_chance "+
 			"FROM characters "+
 			"WHERE characters.location = $1 "+
@@ -236,19 +231,17 @@ exports.changeLocation = ((dbConnection, character_id, locid, throughSpaceAndTim
 		[ locid ]
 	).rows
 
-	tx.query.sync(tx, 'UPDATE characters SET location = $1 WHERE id = $2', [locid, character_id])
+	dbConnection.query.sync(dbConnection, 'UPDATE characters SET location = $1 WHERE id = $2', [locid, character_id])
 
 	pouncedMonsters = (if monsters.some((m) -> Math.random() * 100 <= m.attack_chance) then monsters else [])
 	if pouncedMonsters.length > 0
 		user =
 			id: character_id
-			initiative: tx.query.sync(tx,
+			initiative: dbConnection.query.sync(dbConnection,
 					'SELECT initiative FROM characters WHERE id = $1',
 					[ character_id ]
 				).rows[0].initiative
-		exports._createBattleBetween tx, locid, pouncedMonsters, [user]
-
-	tx.commit.sync(tx)
+		exports._createBattleBetween dbConnection, locid, pouncedMonsters, [user]
 
 	return {
 		result: 'ok'
@@ -259,10 +252,9 @@ exports.changeLocation = ((dbConnection, character_id, locid, throughSpaceAndTim
 # Starts battle with monsters on current location.
 # prevents starting battle with busy monster
 # prevents starting second battle
+# Returns true on success and false otherwise.
 exports.goAttack = ((dbConnection, character_id) ->
-	tx = transaction(dbConnection)
-
-	user = tx.query.sync(tx,
+	user = dbConnection.query.sync(dbConnection,
 		'SELECT id, initiative, location '+
 		'FROM characters '+
 		'WHERE id = $1 '+
@@ -274,10 +266,9 @@ exports.goAttack = ((dbConnection, character_id) ->
 	).rows[0]
 
 	unless user?
-		tx.rollback.sync tx
-		return
+		return false
 
-	monsters = tx.query.sync(tx,
+	monsters = dbConnection.query.sync(dbConnection,
 		"SELECT id, initiative "+
 			"FROM characters "+
 			"WHERE location = $1 "+
@@ -290,24 +281,22 @@ exports.goAttack = ((dbConnection, character_id) ->
 	).rows
 
 	if monsters.length is 0
-		tx.rollback.sync tx
-		return
+		return false
 
-	exports._createBattleBetween tx, user.location, monsters, [user]
-	tx.commit.sync tx
+	exports._createBattleBetween dbConnection, user.location, monsters, [user]
+	return true
 ).async()
 
 
 # Escapes user from battle.
 exports.goEscape = ((dbConnection, character_id) ->
-	tx = transaction(dbConnection)
-	battle = tx.query.sync(tx,
+	battle = dbConnection.query.sync(dbConnection,
 		"SELECT battle AS id FROM battle_participants WHERE character_id = $1 FOR UPDATE",
 		[character_id]
 	).rows[0]
 	if battle?
-		exports._leaveBattle tx, battle.id, character_id, "user"
-	tx.commit.sync(tx)
+		exports._leaveBattle dbConnection, battle.id, character_id, "user"
+	return
 ).async()
 
 
@@ -422,25 +411,22 @@ exports._handleDeathInBattle = (tx, victim_cid, hunter_cid) ->
 
 
 exports._hit = (dbConnection, hunterId, victimId, withItemId) ->
-	tx = transaction(dbConnection)
-
 	cancel = (message) ->
-		tx.rollback.sync(tx)
 		return {
 			state: "cancelled"
 			reason: message
 		}
 
-	hunter = exports._lockAndGetStatsForBattle(tx, hunterId)
+	hunter = exports._lockAndGetStatsForBattle(dbConnection, hunterId)
 	unless hunter?
 		return cancel "hunter not found"
 
-	victim = exports._lockAndGetStatsForBattle(tx, victimId)
+	victim = exports._lockAndGetStatsForBattle(dbConnection, victimId)
 	unless victim?
 		return cancel "victim not found"
 
 	if withItemId?
-		withItem = tx.query.sync(tx, "SELECT damage, type FROM items, items_proto "+
+		withItem = dbConnection.query.sync(dbConnection, "SELECT damage, type FROM items, items_proto "+
 			"WHERE owner = $1 AND items.id = $2 AND equipped AND items.prototype = items_proto.id",
 			[ hunterId, withItemId ]).rows[0]
 		unless withItem?
@@ -458,13 +444,12 @@ exports._hit = (dbConnection, hunterId, victimId, withItemId) ->
 	if withItem?
 		power += withItem.damage
 
-	health = exports._hitAndGetHealth(tx, victimId, power)
+	health = exports._hitAndGetHealth(dbConnection, victimId, power)
 	victimKilled = (health <= 0)
 	battleEnded = false
 	if victimKilled
-		battleEnded = exports._leaveBattle(tx, hunter.battle, victimId).battleEnded
-		exports._handleDeathInBattle tx, victimId, hunterId
-	tx.commit.sync(tx)
+		battleEnded = exports._leaveBattle(dbConnection, hunter.battle, victimId).battleEnded
+		exports._handleDeathInBattle dbConnection, victimId, hunterId
 
 	return {
 		state: "ok"

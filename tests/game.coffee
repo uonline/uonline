@@ -23,12 +23,10 @@ anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
 queryUtils = require '../lib/query_utils'
 sugar = require 'sugar'
+_conn = null
 conn = null
 query = null
 
-
-clearTables = ->
-	query 'TRUNCATE ' + [].join.call(arguments, ', ')
 
 insert = (dbName, fields) ->
 	values = (v for _,v of fields)
@@ -36,32 +34,20 @@ insert = (dbName, fields) ->
 
 
 exports.setUp = (->
-	unless conn?
-		try
-			conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-			queryf = conn.query
-			conn.query = () ->
-				args = (i for i in arguments)
-				cb = args[args.length-1]
-				if cb instanceof Function
-					stack = new Error().stack
-					args[args.length-1] = (err,res) ->
-						if err instanceof Error
-							err.stack = stack
-						cb(err, res)
-				queryf.apply this, args
-			query = queryUtils.getFor conn
-			mg.migrate.sync mg, conn
-		catch e
-			console.error e
-).async() # the entrance to the Fieber land
+	unless _conn?
+		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+		mg.migrate.sync mg, _conn
+	conn = transaction(_conn)
+	query = queryUtils.getFor conn
+).async()
 
-#exports.tearDown = (->).async()
+exports.tearDown = (->
+	conn.rollback.sync(conn)
+).async()
 
 
 exports.getInitialLocation =
 	'good test': (test) ->
-		clearTables 'locations'
 		insert 'locations', id: 1
 		insert 'locations', id: 2, initial: 1
 		insert 'locations', id: 3
@@ -72,7 +58,6 @@ exports.getInitialLocation =
 		test.done()
 
 	'bad test': (test) ->
-		clearTables 'locations'
 		insert 'locations', id: 1
 		insert 'locations', id: 2
 		insert 'locations', id: 3
@@ -85,7 +70,6 @@ exports.getInitialLocation =
 		test.done()
 
 	'ambiguous test': (test) ->
-		clearTables 'locations'
 		insert 'locations', id: 1
 		insert 'locations', id: 2, initial: 1
 		insert 'locations', id: 3, initial: 1
@@ -101,7 +85,6 @@ exports.getInitialLocation =
 
 exports.getCharacterLocationId =
 	testValidData: (test) ->
-		clearTables 'characters'
 		insert 'characters', id: 1, 'location': 3
 
 		insert 'characters', id: 2, 'location': 1
@@ -113,7 +96,6 @@ exports.getCharacterLocationId =
 		test.done()
 
 	testWrongCharacterId: (test) ->
-		clearTables 'characters'
 		test.throws(
 			-> game.getCharacterLocationId.sync(null, conn, -1)
 			Error
@@ -124,7 +106,6 @@ exports.getCharacterLocationId =
 
 exports.getCharacterLocation =
 	setUp: (done) ->
-		clearTables 'characters', 'locations'
 		insert 'characters', id: 1, location: 3
 		done()
 
@@ -161,7 +142,6 @@ exports.getCharacterLocation =
 
 exports.getCharacterArea =
 	setUp: (done) ->
-		clearTables 'characters', 'locations', 'areas'
 		insert 'characters', id: 1, location: 3
 		done()
 
@@ -184,7 +164,6 @@ exports.getCharacterArea =
 
 
 exports.isTherePathForCharacterToLocation = (test) ->
-	clearTables 'characters', 'locations', 'battle_participants'
 	insert 'characters', id: 1, location: 1
 	insert 'locations', id: 1, ways: 'Left=2'
 	insert 'locations', id: 2
@@ -202,12 +181,9 @@ exports.isTherePathForCharacterToLocation = (test) ->
 
 
 exports.createBattleBetween = (test) ->
-	clearTables 'battles', 'battle_participants'
-
-	tx = transaction conn
 	locid = 123
 
-	game._createBattleBetween tx, locid, [
+	game._createBattleBetween conn, locid, [
 			{id: 1, initiative:  5}
 			{id: 2, initiative: 15}
 			{id: 5, initiative: 30}
@@ -230,20 +206,16 @@ exports.createBattleBetween = (test) ->
 		{id: 1, index: 4, side: 0}
 	], 'should involve all users and monsters of both sides in correct order'
 
-	tx.commit.sync tx
 	test.done()
 
 
 exports._stopBattle = (test) ->
-	clearTables 'characters', 'battles', 'battle_participants'
 	insert 'characters', id: 1, autoinvolved_fm: true
 	insert 'battles', id: 1
 	insert 'battle_participants', battle: 1, character_id: 1
 	insert 'battle_participants', battle: 1, character_id: 2
 
-	tx = transaction conn
-	game._stopBattle(tx, 1)
-	tx.commit.sync tx
+	game._stopBattle(conn, 1)
 
 	test.strictEqual +query.val("SELECT count(*) FROM battles"), 0, 'should remove battle'
 	test.strictEqual +query.val("SELECT count(*) FROM battle_participants"), 0, 'should remove participants'
@@ -252,7 +224,6 @@ exports._stopBattle = (test) ->
 
 
 exports._leaveBattle = (test) ->
-	clearTables 'characters', 'battles', 'battle_participants'
 	insert 'characters', id: 1, autoinvolved_fm: 1
 	insert 'characters', id: 2, autoinvolved_fm: 1
 	insert 'battles', id: 1
@@ -265,9 +236,7 @@ exports._leaveBattle = (test) ->
 	insert 'battle_participants', battle: 2, character_id: 5, side: 1, index: 1
 
 
-	tx = transaction conn
-
-	res = game._leaveBattle(tx, 1, 1)
+	res = game._leaveBattle(conn, 1, 1)
 	test.strictEqual res.battleEnded, false, "should return false if wasn't ended"
 
 	test.strictEqual query.val("SELECT autoinvolved_fm FROM characters WHERE id=1"), false,
@@ -281,7 +250,7 @@ exports._leaveBattle = (test) ->
 		], "should update indexes if participant has gone"
 
 
-	res = game._leaveBattle(tx, 1, 3, 'user')
+	res = game._leaveBattle(conn, 1, 3, 'user')
 	test.strictEqual res.battleEnded, true, 'should return true if battle was ended'
 
 	test.strictEqual query.val("SELECT autoinvolved_fm FROM characters WHERE id=2"), false,
@@ -297,18 +266,16 @@ exports._leaveBattle = (test) ->
 		'should not affect other participants'
 
 	test.throws(
-		-> game._leaveBattle(tx, 1, 123)
+		-> game._leaveBattle(conn, 1, 123)
 		Error
 		'should throw error if unable to find anyone to leave'
 	)
 
-	tx.commit.sync tx
 	test.done()
 
 
 exports.changeLocation =
 	setUp: (done) ->
-		clearTables 'characters', 'locations', 'battles', 'battle_participants', 'monsters'
 		insert 'characters', id: 1, location: 1, initiative: 50
 		insert 'locations', id: 1, ways: 'Left=2'
 		insert 'locations', id: 2
@@ -382,7 +349,6 @@ exports.changeLocation =
 
 exports.goAttack =
 	setUp: (done) ->
-		clearTables 'characters', 'battles', 'battle_participants'
 		insert 'characters', id: 1, location: 1, initiative: 10, player: 1
 		done()
 
@@ -431,7 +397,6 @@ exports.goAttack =
 
 exports.goEscape =
 	setUp: (done) ->
-		clearTables 'characters', 'battles', 'battle_participants'
 		insert 'characters', id: 1, autoinvolved_fm: 1
 		insert 'battles', id: 3
 		insert 'battle_participants', battle: 3, character_id: 1
@@ -451,7 +416,6 @@ exports.goEscape =
 
 exports.getBattleParticipants =
 	setUp: (done) ->
-		clearTables 'characters', 'battle_participants'
 		insert 'characters', id: 1,  name: 'SomeUser', player: 2
 		insert 'characters', id: 11, name: 'SomeMonster 1'
 		insert 'characters', id: 12, name: 'SomeMonster 2'
@@ -471,7 +435,6 @@ exports.getBattleParticipants =
 
 
 exports._lockAndGetStatsForBattle = (test) ->
-	clearTables 'characters', 'battles', 'battle_participants'
 	insert 'characters', id: 1,  power: 100
 	insert 'characters', id: 11, power: 200
 	insert 'battles', id: 3
@@ -493,28 +456,26 @@ exports._lockAndGetStatsForBattle = (test) ->
 
 
 exports._hitItem = (test) ->
-	clearTables 'items'
 	insert 'items', id: 1, strength: 100
 
 	item = query.row 'SELECT id, strength FROM items'
 	power = 80
 
-	queryUtils.doInTransaction conn, (tx) ->
-		delta = game._hitItem(tx, power, item)
-		item = query.row 'SELECT id, strength FROM items'
-		test.strictEqual delta, 80, "should reduce all attacker's power if item is strong"
-		test.strictEqual item.strength, 20, "should reduce item's strength"
+	delta = game._hitItem(conn, power, item)
+	item = query.row 'SELECT id, strength FROM items'
+	test.strictEqual delta, 80, "should reduce all attacker's power if item is strong"
+	test.strictEqual item.strength, 20, "should reduce item's strength"
 
-		delta = game._hitItem(tx, power, item)
-		item = query.row 'SELECT id, strength FROM items'
-		test.strictEqual delta, 20, "should reduce part of attacker's power if item was broken"
-		test.strictEqual item.strength, 0, "should reduce item's strength"
+	delta = game._hitItem(conn, power, item)
+	item = query.row 'SELECT id, strength FROM items'
+	test.strictEqual delta, 20, "should reduce part of attacker's power if item was broken"
+	test.strictEqual item.strength, 0, "should reduce item's strength"
+
 	test.done()
 
 
 exports._hitAndGetHealth =
 	setUp: (done) ->
-		clearTables 'characters', 'items', 'items_proto'
 		insert 'characters', id: 1,  health: 1000, defense: 50
 		insert 'characters', id: 11, health: 1000, defense: 50
 		done()
@@ -525,13 +486,11 @@ exports._hitAndGetHealth =
 		maxDmg = (power - 50) / 2 * 1.2
 		victim_id = 1
 
-		tx = transaction(conn)
-
 		damages = {}
 		prevHP = 1000
 
 		for i in [0..100]
-			hp = game._hitAndGetHealth tx, victim_id, power
+			hp = game._hitAndGetHealth conn, victim_id, power
 			hpActual = query.val "SELECT health FROM characters WHERE id=$1", [victim_id]
 			test.strictEqual hp, hpActual, "should return current characters's health"
 
@@ -548,35 +507,33 @@ exports._hitAndGetHealth =
 		query "UPDATE characters SET defense = 9001"
 
 		hpBefore = prevHP
-		hpAfter = game._hitAndGetHealth tx, victim_id, power
+		hpAfter = game._hitAndGetHealth conn, victim_id, power
 		test.strictEqual hpBefore, hpAfter,
 			"should not change health if defense is greater than damage"
 
-		tx.rollback.sync(tx)
 		test.done()
 
 	'with armor': (test) ->
 		power = 70
 		damages = null
 
-		userHP = -> query.val 'SELECT health FROM characters WHERE id=1'
-		totalStringth = -> query.val 'SELECT SUM(strength) FROM items'
+		userHP = (tx) -> queryUtils.getFor(tx).val 'SELECT health FROM characters WHERE id=1'
+		totalStr = (tx) -> queryUtils.getFor(tx).val 'SELECT SUM(strength) FROM items'
 
 		performSomeAttacks = ->
 			damages = {}
 			tx = transaction(conn)
 			for i in [0..20]
-				prevHP = userHP()
-				prevSt = totalStringth()
+				prevHP = userHP(tx)
+				prevSt = totalStr(tx)
 
 				hp = game._hitAndGetHealth tx, 1, power
 				dmg = prevHP - hp
 				damages[dmg] = true
 
 				if dmg is 0
-					test.ok prevSt > totalStringth(), 'should reduce armor strength if damage was blocked'
+					test.ok prevSt > totalStr(tx), 'should reduce armor strength if damage was blocked'
 			tx.rollback.sync(tx)
-
 
 		insert 'items_proto', id:1, name: 'breastplate', coverage:25
 		insert 'items_proto', id:2, name: 'greave', coverage:25
@@ -615,16 +572,16 @@ exports._hitAndGetHealth =
 		insert 'items', id:20, prototype:2, owner:1, strength:100, equipped: true
 
 		power = 120
-		shield = -> query.row('SELECT strength FROM items WHERE id=10')
-		greave = -> query.row('SELECT strength FROM items WHERE id=20')
+		shield = (tx) -> queryUtils.getFor(tx).row('SELECT strength FROM items WHERE id=10')
+		greave = (tx) -> queryUtils.getFor(tx).row('SELECT strength FROM items WHERE id=20')
 
 		# shield with 100% coverage
 		for i in [0...5]
 			tx = transaction(conn)
 			hp = game._hitAndGetHealth tx, 1, power
 			test.strictEqual hp, 1000, 'both shield and armor should block damage'
-			test.strictEqual shield().strength, 0, 'shield should block damage first'
-			test.strictEqual greave().strength, 80, 'armor should block damage not blocked by shield'
+			test.strictEqual shield(tx).strength, 0, 'shield should block damage first'
+			test.strictEqual greave(tx).strength, 80, 'armor should block damage not blocked by shield'
 			tx.rollback.sync(tx)
 
 		# shield with 50% coverage
@@ -634,8 +591,8 @@ exports._hitAndGetHealth =
 		for i in [0...40]
 			tx = transaction(conn)
 			hp = game._hitAndGetHealth tx, 1, power
-			if shield().strength < 1000 then hits.shield++
-			if greave().strength < 1000 then hits.notShield++
+			if shield(tx).strength < 1000 then hits.shield++
+			if greave(tx).strength < 1000 then hits.notShield++
 			if hp < 1000 then hits.notShield++
 			tx.rollback.sync(tx)
 		test.ok hits.shield > 0 and hits.notShield > 0,
@@ -647,7 +604,7 @@ exports._hitAndGetHealth =
 		for i in [0...40]
 			tx = transaction(conn)
 			hp = game._hitAndGetHealth tx, 1, power
-			test.strictEqual shield().strength, 1000, "shield should not block anything if it's coverage is 0%"
+			test.strictEqual shield(tx).strength, 1000, "shield should not block anything if it's coverage is 0%"
 			tx.rollback.sync(tx)
 
 		# shield is not equipped
@@ -657,23 +614,20 @@ exports._hitAndGetHealth =
 		for i in [0...5]
 			tx = transaction(conn)
 			hp = game._hitAndGetHealth tx, 1, power
-			test.strictEqual shield().strength, 100, 'shield should receive no damage if not equipped'
-			test.strictEqual greave().strength, 0, 'armor should receive all damage if shield is not equipped'
+			test.strictEqual shield(tx).strength, 100, 'shield should receive no damage if not equipped'
+			test.strictEqual greave(tx).strength, 0, 'armor should receive all damage if shield is not equipped'
 			tx.rollback.sync(tx)
 
 		test.done()
 
 
 exports._handleDeathInBattle = (test) ->
-	clearTables 'characters', 'locations'
 	insert 'locations', id: 5, initial: 1
 	insert 'characters', id: 1, health: 0, health_max: 1000, player: 1, exp: 900, level: 1
 	insert 'characters', id: 2, health: 0, health_max: 1000, player: 2, exp: 0, level: 1
 	insert 'characters', id: 11, player: null
 
-	tx = transaction(conn)
-
-	game._handleDeathInBattle tx, 1, 2
+	game._handleDeathInBattle conn, 1, 2
 	test.strictEqual query.val('SELECT location FROM characters WHERE id=1'), 5,
 		'should return user back to initial location'
 	test.strictEqual query.val('SELECT health FROM characters WHERE id=1'), 1000,
@@ -683,21 +637,18 @@ exports._handleDeathInBattle = (test) ->
 	test.strictEqual query.val('SELECT level FROM characters WHERE id=2'), 1,
 		"should not add experience for PK"
 
-	game._handleDeathInBattle tx, 11, 1
+	game._handleDeathInBattle conn, 11, 1
 	test.strictEqual +query.val('SELECT count(*) FROM characters'), 2, 'should remove monster'
 	test.strictEqual query.val('SELECT exp FROM characters WHERE id=1'), 200,
 		"should add some experience to monster slayer"
 	test.strictEqual query.val('SELECT level FROM characters WHERE id=1'), 2,
 		"should account for level-ups"
 
-	tx.rollback.sync(tx)
 	test.done()
 
 
 exports._hit =
 	setUp: (done) ->
-		clearTables 'characters', 'battles', 'battle_participants', 'items', 'items_proto'
-
 		insert 'characters', id: 1, name: 'SomeUser',    defense: 1, power: 40, health: 5
 		insert 'characters', id: 2, name: 'AnotherUser', defense: 1, power: 50, health: 1000
 		insert 'characters', id: 5, name: 'SomeMonster', defense: 5, power: 20, health: 500
@@ -788,7 +739,8 @@ exports._hit =
 
 	'weapnons': (test) ->
 		['shield', 'weapon-one-handed', 'no-such-item-but-why-not'].forEach (type) ->
-			clearTables 'items', 'items_proto'
+			query 'DELETE FROM items_proto'
+			query 'DELETE FROM items'
 			insert 'items_proto', id:1, name: 'Ogrebator 4000', coverage:100, type: type, damage: 100
 			insert 'items', id:10, prototype:1, owner:1, strength:100, equipped:true
 
@@ -818,7 +770,6 @@ exports._hit =
 
 exports.hitOpponent =
 	setUp: (done) ->
-		clearTables 'characters', 'battles', 'battle_participants', 'items', 'items_proto', 'monsters'
 		insert 'characters', id: 1, name: 'SomeUser', power: 20, defense: 10, health: 1000, player: 1
 		insert 'characters', id: 4, name: 'SomeMonster 1', power: 20, defense: 10, health: 1000
 		insert 'characters', id: 5, name: 'SomeMonster 2', power: 20, defense: 10, health: 1000
@@ -865,7 +816,6 @@ exports.getNearbyUsers =
 	setUp: (done) ->
 		d = new Date()
 		now = (d.getFullYear() + 1) + '-' + (d.getMonth() + 1) + '-' + d.getDate()
-		clearTables 'characters', 'uniusers', 'locations'
 		insert 'uniusers', id: 1, sess_time: now
 		insert 'uniusers', id: 2, sess_time: now
 		insert 'uniusers', id: 3, sess_time: now
@@ -892,7 +842,6 @@ exports.getNearbyUsers =
 
 
 exports.getNearbyMonsters = (test) ->
-	clearTables 'characters'
 	insert 'characters', id: 1, location: 1, player: 1
 	insert 'characters', id: 2, location: 2, player: 2
 	insert 'characters', id: 11, location: 1, attack_chance: 42, name: 'The Creature of Unimaginable Horror'
@@ -907,7 +856,6 @@ exports.getNearbyMonsters = (test) ->
 
 
 exports.isInFight = (test) ->
-	clearTables 'characters', 'battle_participants'
 	insert 'characters', id: 2
 	insert 'characters', id: 4
 	insert 'battle_participants', character_id: 4
@@ -921,7 +869,6 @@ exports.isInFight = (test) ->
 
 
 exports.isAutoinvolved = (test) ->
-	clearTables 'characters'
 	insert 'characters', id: 2, autoinvolved_fm: false
 	insert 'characters', id: 4, autoinvolved_fm: true
 
@@ -933,7 +880,6 @@ exports.isAutoinvolved = (test) ->
 	test.done()
 
 exports.uninvolve = (test) ->
-	clearTables 'characters', 'battle_participants'
 	insert 'characters', id: 1, autoinvolved_fm: true
 	insert 'battle_participants', character_id: 1
 	game.uninvolve.sync null, conn, 1
@@ -972,7 +918,6 @@ exports.getCharacter =
 			race: 'elf'
 			gender: 'female'
 
-		clearTables 'characters', 'battle_participants'
 		insert 'characters', data
 
 		expectedData = Object.clone(data)
@@ -1006,7 +951,6 @@ exports.getCharacter =
 
 
 exports.getCharacters = (test) ->
-	clearTables 'characters'
 	chars = game.getCharacters(conn, 1)
 	test.deepEqual chars, [], 'should return no characters if user does not have any'
 
@@ -1022,7 +966,6 @@ exports.getCharacters = (test) ->
 
 
 exports.getCharacterItems = (test) ->
-	clearTables 'items', 'items_proto'
 	insert 'items_proto',
 		id:1, name:'Magic helmet', type:'helmet', armor_class: 'plate', coverage:50, strength_max:120, damage: 0
 	insert 'items_proto',

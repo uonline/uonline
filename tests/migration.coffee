@@ -21,7 +21,9 @@ tables = require '../lib/tables'
 queryUtils = require '../lib/query_utils'
 sync = require 'sync'
 anyDB = require 'any-db'
+transaction = require 'any-db-transaction'
 
+_conn = null
 conn = null
 query = null
 
@@ -49,35 +51,32 @@ migrationData = [
 
 
 # if this won't crash, everything should be OK
-revisionBackup = null
 migrationDataBackup = []
 
+
 exports.setUp = (->
-	conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+	unless _conn?
+		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+	conn = transaction(_conn, autoRollback: false)
 	query = queryUtils.getFor conn
-	try
-		revisionBackup = query.val 'SELECT revision FROM revision'
-	catch e
-		revisionBackup = null
 	migrationDataBackup = mg.getMigrationsData()
-	query 'DROP TABLE IF EXISTS test_table, other_table, revision'
+	query 'DROP TABLE IF EXISTS revision'
 	mg.setMigrationsData migrationData
 ).async()
 
-exports.tearDown = ( ->
-	query 'DROP TABLE IF EXISTS test_table, other_table, revision'
+exports.tearDown = (->
 	mg.setMigrationsData migrationDataBackup
-	if revisionBackup != null
-		mg.setRevision.sync null, conn, revisionBackup
-	conn.end()
+	conn.rollback.sync(conn)
 ).async()
 
 
 exports.getCurrentRevision =
-	'usual': (test) ->
+	'no table yet': (test) ->
 		rev = mg.getCurrentRevision.sync null, conn
 		test.strictEqual rev, -1, 'should return -1 if revision table is not created'
+		test.done()
 
+	'usual': (test) ->
 		query 'CREATE TABLE revision (revision INT)'
 		query 'INSERT INTO revision VALUES (945)'
 		rev = mg.getCurrentRevision.sync null, conn
