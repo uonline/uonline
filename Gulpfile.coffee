@@ -120,7 +120,7 @@ gulp.task 'check', ->
 		.pipe __jsOnly.restore
 
 		.pipe __coffeeOnly
-		.pipe coffeelint './.coffeelintrc'
+		.pipe coffeelint './coffeelint.json'
 		.pipe coffeelint.reporter()
 
 		.pipe cj {

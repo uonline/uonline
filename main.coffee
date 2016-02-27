@@ -98,7 +98,7 @@ app.use(require('body-parser').urlencoded(extended: false))
 app.use(require('multer')().fields([]))
 app.use(require('compression')())
 
-# Hashing
+# Hashing static files
 as = autostatic(dir: __dirname)
 app.use(as.middleware())
 app.locals.as = as.helper()
@@ -511,7 +511,8 @@ app.post '/action/go',
 	mustBeAuthed,
 	openTransaction,
 	(request, response, next) ->
-		result = lib.game.changeLocation.sync null, request.uonline.db, request.uonline.user.character_id, request.body.to
+		result = lib.game.changeLocation.sync null,
+			request.uonline.db, request.uonline.user.character_id, request.body.to
 		if result.result != 'ok'
 			console.error "Location change failed: #{result.reason}"
 		next()
