@@ -80,8 +80,6 @@ Useful options:
 * `gulp test --single health-check.coffee` — run only one testsuite;
 * `gulp test --reporter verbose` — use other reporter.
 
-Using Grunt is deprecated.
-
 
 Programmers' guidelines
 -----------------------
