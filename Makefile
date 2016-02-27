@@ -5,8 +5,9 @@ all:
 monitor:
 	./node_modules/nodemon/bin/nodemon.js ./main.coffee -V
 
-grunt:
-	./node_modules/grunt-cli/bin/grunt
+codo:
+	./node_modules/codo/bin/codo --output ./docs --name 'uonline' --title 'uonline documentation' ./lib
+	./node_modules/codo/bin/codo --output ./docs --name 'uonline' --title 'uonline documentation' --undocumented ./lib
 
 david:
 	./node_modules/david/bin/david.js
