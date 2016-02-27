@@ -52,7 +52,7 @@ The following environment variables are recognized:
 
 * `IP`, `PORT` — IP and port to listen;
 * `DATABASE_URL`, `DATABASE_URL_TEST` — database credentials;
-* `SQLPROF`=`true` — show SQL timings in console (doesn't work with transactions);
+* `SQLPROF`=`true` — show SQL timings in console;
 * `NOCSP` — don't output CSP header;
 * `NEW_RELIC_LICENSE_KEY` — you don't need this.
 
