@@ -358,6 +358,8 @@ migrationData = [
 		['items_proto', 'addCol', 'armor_class uonline_armor_class']
 	]
 	[
+		# Converts old ways format 'Somewhere=123|Elsewhere=234'
+		# to JSON array '[{"target":123, "text":"Somewhere"}, {"target":234, "text":"Elsewhere"}]'
 		['locations', 'changeCol', 'ways',
 		"""json USING (
 			'[' ||
