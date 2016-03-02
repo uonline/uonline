@@ -39,11 +39,11 @@ block content
 	else
 		h4 Здоровье
 		.progress
-			.progress-bar.progress-bar-success(style='width: '+character.health_percent+'%;')
+			.progress-bar.progress-bar-success(style='width: '+Math.round(character.health / character.health_max * 100)+'%;')
 				| #{ character.health }/#{ character.health_max }
 		h4 Мана
 		.progress
-			.progress-bar(style='width: '+character.mana_percent+'%;')
+			.progress-bar(style='width: '+Math.round(character.mana / character.mana_max * 100)+'%;')
 				| #{ character.mana }/#{ character.mana_max }
 	div
 		p
