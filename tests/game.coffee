@@ -623,9 +623,9 @@ exports._hitAndGetHealth =
 
 exports._handleDeathInBattle = (test) ->
 	insert 'locations', id: 5, initial: 1
-	insert 'characters', id: 1, health: 0, health_max: 1000, player: 1, exp: 900, level: 1
-	insert 'characters', id: 2, health: 0, health_max: 1000, player: 2, exp: 0, level: 1
-	insert 'characters', id: 11, player: null
+	insert 'characters', id: 1, health: 0, health_max: 1000, player: 1, exp: 990, level: 1
+	insert 'characters', id: 2, health: 0, health_max: 1000, player: 2, exp: 0, level: 2
+	insert 'characters', id: 11, player: null, level: 3
 
 	game._handleDeathInBattle conn, 1, 2
 	test.strictEqual query.val('SELECT location FROM characters WHERE id=1'), 5,
@@ -634,12 +634,12 @@ exports._handleDeathInBattle = (test) ->
 		"should restore user's health"
 	test.strictEqual query.val('SELECT exp FROM characters WHERE id=2'), 0,
 		"should not add experience for PK"
-	test.strictEqual query.val('SELECT level FROM characters WHERE id=2'), 1,
+	test.strictEqual query.val('SELECT level FROM characters WHERE id=2'), 2,
 		"should not add experience for PK"
 
 	game._handleDeathInBattle conn, 11, 1
 	test.strictEqual +query.val('SELECT count(*) FROM characters'), 2, 'should remove monster'
-	test.strictEqual query.val('SELECT exp FROM characters WHERE id=1'), 200,
+	test.strictEqual query.val('SELECT exp FROM characters WHERE id=1'), (990 + 50+10) - 1000,
 		"should add some experience to monster slayer"
 	test.strictEqual query.val('SELECT level FROM characters WHERE id=1'), 2,
 		"should account for level-ups"
@@ -737,7 +737,7 @@ exports._hit =
 		test.done()
 
 
-	'weapnons': (test) ->
+	'weapons': (test) ->
 		['shield', 'weapon-one-handed', 'no-such-item-but-why-not'].forEach (type) ->
 			query 'DELETE FROM items_proto'
 			query 'DELETE FROM items'
@@ -889,6 +889,14 @@ exports.uninvolve = (test) ->
 
 	autoinvolved = query.val 'SELECT autoinvolved_fm FROM characters WHERE id=1'
 	test.strictEqual autoinvolved, false, 'user should not be autoinvolved'
+	test.done()
+
+
+exports.expForKill = (test) ->
+	test.strictEqual game.expForKill(10, 10), 50, 'should give regular expa for killing same level'
+	test.strictEqual game.expForKill(10, 12), 50+10, 'should give more expa for stronger opponenet'
+	test.strictEqual game.expForKill(10, 7), 50-15, 'should give less expa for weaker opponenet'
+	test.strictEqual game.expForKill(100, 0), 0, 'should not take expa for killing newbies'
 	test.done()
 
 

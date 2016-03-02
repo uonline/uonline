@@ -353,10 +353,12 @@ exports._hitAndGetHealth = (tx, victimId, hunterPower) ->
 		[victimId]
 	).rows
 
+	# damage reduction by shield
 	shield = items.find (i) -> i.type == 'shield'
 	if shield? and Math.random() * 100 <= shield.coverage
 		hunterPower -= exports._hitItem(tx, hunterPower, shield)
 
+	# damage reduction by armor
 	if hunterPower > 0
 		armor = items.exclude (i) -> i.type == 'shield'
 		percent = 100
@@ -366,6 +368,7 @@ exports._hitAndGetHealth = (tx, victimId, hunterPower) ->
 				break
 			percent -= item.coverage
 
+	# hit itsef
 	if hunterPower > 0
 		tx.query.sync(tx,
 			'UPDATE characters '+
@@ -382,8 +385,10 @@ exports._hitAndGetHealth = (tx, victimId, hunterPower) ->
 
 
 exports._handleDeathInBattle = (tx, victim_cid, hunter_cid) ->
-	playerDied = !!tx.query.sync(tx, 'SELECT player FROM characters WHERE id = $1', [victim_cid]).rows[0].player
-	killerIsPlayer = !!tx.query.sync(tx, 'SELECT player FROM characters WHERE id = $1', [hunter_cid]).rows[0].player
+	victim = tx.query.sync(tx, 'SELECT level, player FROM characters WHERE id = $1', [victim_cid]).rows[0]
+	hunter = tx.query.sync(tx, 'SELECT level, exp, player FROM characters WHERE id = $1', [hunter_cid]).rows[0]
+	playerDied = !!victim.player
+	killerIsPlayer = !!hunter.player
 
 	if playerDied
 		tx.query.sync(tx,
@@ -397,16 +402,15 @@ exports._handleDeathInBattle = (tx, victim_cid, hunter_cid) ->
 		tx.query.sync tx, 'DELETE FROM characters WHERE id = $1', [victim_cid]
 
 	if (killerIsPlayer) and (not playerDied)
-		char = tx.query.sync(tx, 'SELECT level, exp FROM characters WHERE id = $1', [hunter_cid]).rows[0]
-		char.exp += 300
-		while char.exp >= exports.expToLevelup(char.level)
-			char.exp -= exports.expToLevelup(char.level)
-			char.level++
+		hunter.exp += exports.expForKill(hunter.level, victim.level)
+		while hunter.exp >= exports.expToLevelup(hunter.level)
+			hunter.exp -= exports.expToLevelup(hunter.level)
+			hunter.level++
 		tx.query.sync(tx,
 			'UPDATE characters '+
 				'SET exp = $2, level = $3 '+
 				'WHERE id = $1',
-			[hunter_cid, char.exp, char.level]
+			[hunter_cid, hunter.exp, hunter.level]
 		)
 
 
@@ -536,6 +540,11 @@ exports.uninvolve = (dbConnection, character_id, callback) ->
 # Calculates how much experience is required to advance to next level.
 exports.expToLevelup = (level) ->
 	return math.ap(config.EXP_MAX_START, level, config.EXP_STEP)
+
+
+# Calculates how much experience gains character for killing someone.
+exports.expForKill = (hunter_level, victim_level) ->
+	return Math.max(0, 50 + 5 * (victim_level - hunter_level))
 
 
 # Returns character's attributes.
