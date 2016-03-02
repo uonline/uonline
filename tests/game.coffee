@@ -30,7 +30,9 @@ query = null
 
 insert = (dbName, fields) ->
 	values = (v for _,v of fields)
-	query "INSERT INTO #{dbName} (#{k for k of fields}) VALUES (#{values.map (_,i) -> '$'+(i+1)})", values
+	query "INSERT INTO #{dbName} (#{k for k of fields}) "+
+	      "VALUES (#{values.map (v,i) -> '$'+(i+1)+(if v? and typeof v is 'object' then '::json' else '')})",
+		values.map((v) -> if v? and typeof v is 'object' then JSON.stringify(v) else v)
 
 
 exports.setUp = (->
@@ -110,9 +112,10 @@ exports.getCharacterLocation =
 		done()
 
 	testValidData: (test) ->
-		insert 'locations', id: 3, area: 5, title: 'The Location', ways: 'Left=7|Forward=8|Right=9'
-		loc = game.getCharacterLocation.sync(null, conn, 1)
+		insert 'locations', id: 3, area: 5, title: 'The Location', ways:
+			[{target:7, text:'Left'}, {target:8, text:'Forward'}, {target:9, text:'Right'}]
 
+		loc = game.getCharacterLocation.sync(null, conn, 1)
 		test.strictEqual loc.id, 3, "should return user's location id"
 		test.deepEqual loc.ways, [
 				{ target: 7, text: 'Left' }
@@ -146,7 +149,7 @@ exports.getCharacterArea =
 		done()
 
 	'usual test': (test) ->
-		insert 'locations', id: 3, area: 5, title: 'The Location', ways: 'Left=7|Forward=8|Right=9'
+		insert 'locations', id: 3, area: 5, title: 'The Location'
 		insert 'areas', id: 5, title: 'London'
 		area = game.getCharacterArea.sync null, conn, 1
 
@@ -165,7 +168,7 @@ exports.getCharacterArea =
 
 exports.isTherePathForCharacterToLocation = (test) ->
 	insert 'characters', id: 1, location: 1
-	insert 'locations', id: 1, ways: 'Left=2'
+	insert 'locations', id: 1, ways: [{target:2, text:'Left'}]
 	insert 'locations', id: 2
 
 	can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 2
@@ -277,7 +280,7 @@ exports._leaveBattle = (test) ->
 exports.changeLocation =
 	setUp: (done) ->
 		insert 'characters', id: 1, location: 1, initiative: 50
-		insert 'locations', id: 1, ways: 'Left=2'
+		insert 'locations', id: 1, ways: [{target:2, text:'Left'}]
 		insert 'locations', id: 2
 		done()
 

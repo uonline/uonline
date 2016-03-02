@@ -357,6 +357,24 @@ migrationData = [
 			"'mail', 'lamellar', 'light plate', 'plate', 'heavy plate'"]
 		['items_proto', 'addCol', 'armor_class uonline_armor_class']
 	]
+	[
+		['locations', 'changeCol', 'ways',
+		"""json USING (
+			'[' ||
+			replace(
+				regexp_replace(
+					replace(ways, '"', '\\"'),
+					'([^|=]+)=(\\d+)',
+					'{"target":\\2, "text":"\\1"}',
+					'g'
+				),
+				'|',
+				', '
+			) ||
+			']')::json"""]
+		['locations', 'changeDefault', 'ways', "'[]'::json"]
+		['locations', 'rawsql', 'ALTER TABLE locations ALTER COLUMN ways SET NOT NULL']
+	]
 ]
 
 exports.getMigrationsData = ->

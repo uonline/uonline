@@ -21,25 +21,6 @@ sugar = require 'sugar'
 
 
 
-# Converts location ways from string representation to array.
-# For example:
-# "Left=1|Middle=2|Right=42"
-#   to
-# [{target:1, text:"Left"}, {target:2, text:"Middle"}, {target:42, text:"Right"}]
-parseLocationWays = (str) ->
-	return [] if str is null
-
-	ways = str.split '|'
-	for i of ways
-		s = ways[i].split '='
-		ways[i] = {
-			target: parseInt(s[1], 10)
-			text: s[0]
-		}
-
-	return ways
-
-
 # Returns id of location where users must be sent by default
 # (after creation, in case of some errors, ...).
 exports.getInitialLocation = ((dbConnection) ->
@@ -48,9 +29,7 @@ exports.getInitialLocation = ((dbConnection) ->
 		throw new Error 'initial location is not defined'
 	if result.rows.length > 1
 		throw new Error 'there is more than one initial location'
-	res = result.rows[0]
-	res.ways = parseLocationWays(res.ways)
-	return res
+	return result.rows[0]
 ).async()
 
 
@@ -68,9 +47,7 @@ exports.getCharacterLocation = ((dbConnection, character_id) ->
 		"WHERE characters.id=$1 AND locations.id = characters.location", [character_id])
 	if result.rows.length is 0
 		throw new Error "Wrong character's id or location"
-	res = result.rows[0]
-	res.ways = parseLocationWays(res.ways)
-	return res
+	return result.rows[0]
 ).async()
 
 
@@ -81,7 +58,7 @@ exports.getCharacterArea = ((dbConnection, character_id) ->
 		[ character_id ])
 	if result.rows.length is 0
 		throw new Error "Wrong character's id"
-	result.rows[0]
+	return result.rows[0]
 ).async()
 
 
