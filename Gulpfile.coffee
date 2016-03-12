@@ -131,7 +131,15 @@ gulp.task 'check', ->
 		#.pipe __coffeeOnly.restore
 
 
-gulp.task 'test', seq 'nodeunit', 'jscoverage-report', 'force-exit'
+gulp.task 'test', seq 'mocha', 'nodeunit', 'jscoverage-report', 'force-exit'
+
+
+gulp.task 'mocha', ->
+	# require 'coffee-script/register'
+	mocha = require 'gulp-mocha'
+	return gulp
+		.src ['test/*.coffee']
+		.pipe mocha(ui: 'exports')
 
 
 gulp.task 'nodeunit', ->
