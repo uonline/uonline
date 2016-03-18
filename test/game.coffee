@@ -168,18 +168,21 @@ exports.game.isTherePathForCharacterToLocation =
 		insert 'locations', id: 1, ways: [{target:2, text:'Left'}]
 		insert 'locations', id: 2
 
-	'path exists': mocha ->
-		can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 2
-		test.strictEqual can, true, "should return true"
+	'when path exists':
+		'should return true': mocha ->
+			can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 2
+			test.isTrue can
 
-	'already on this location': mocha ->
-		can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 1
-		test.strictEqual can, false, "should return false"
+	'when already on this location':
+		'should return false': mocha ->
+			can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 1
+			test.isFalse can
 
-	"path doesn't exist": mocha ->
-		game.changeLocation.sync null, conn, 1, 2
-		can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 1
-		test.strictEqual can, false, "should return false"
+	"when path doesn't exist":
+		'should return false': mocha ->
+			game.changeLocation.sync null, conn, 1, 2
+			can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 1
+			test.isFalse can
 
 
 exports.game._createBattleBetween = mocha ->
