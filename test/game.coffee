@@ -167,29 +167,26 @@ exports.game.isTherePathForCharacterToLocation =
 
 
 exports.game._createBattleBetween =
-	beforeEach: mocha ->
-		this.locid = 123
-
-		game._createBattleBetween conn, this.locid, [
+	'should create battle with correct location, turn and sides': mocha ->
+		locid = 123
+		firstSide = [
 			{id: 1, initiative:  5}
 			{id: 2, initiative: 15}
 			{id: 5, initiative: 30}
-			], [
+		]
+		secondSide = [
 			{id: 6, initiative: 20}
 			{id: 7, initiative: 10}
 		]
 
-		this.battle = query.row 'SELECT id, location, turn_number FROM battles'
-		this.participants = query.all 'SELECT character_id AS id, index, side FROM battle_participants WHERE battle = $1', [this.battle.id]
+		game._createBattleBetween conn, locid, firstSide, secondSide
 
-	'should create battle on specified location': ->
-		test.strictEqual this.battle.location, this.locid
+		battle = query.row 'SELECT id, location, turn_number FROM battles'
+		participants = query.all 'SELECT character_id AS id, index, side FROM battle_participants WHERE battle = $1', [battle.id]
 
-	'should create battle that is on first turn': ->
-		test.strictEqual this.battle.turn_number, 0
-
-	'should involve all users and monsters of both sides in correct order': ->
-		test.deepEqual this.participants, [
+		test.strictEqual battle.location, locid
+		test.strictEqual battle.turn_number, 0
+		test.deepEqual participants, [
 			{id: 5, index: 0, side: 0}
 			{id: 6, index: 1, side: 1}
 			{id: 2, index: 2, side: 0}
