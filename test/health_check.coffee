@@ -18,8 +18,8 @@ assert = require('chai').assert
 
 module.exports =
 	'health-check':
-		'sync': ->
-			assert.strictEqual 2 + 2, 4, '2+2 should be 4'
-		# 'async': (done) ->
-		# 	assert.strictEqual 2 + 2, 4, '2+2 should be 4'
-		# 	process.nextTick done
+		'2+2 should be 4': ->
+			assert.strictEqual 2 + 2, 4
+		'2+2 should be 4 even asynchronously': (done) ->
+			assert.strictEqual 2 + 2, 4
+			process.nextTick done

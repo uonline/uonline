@@ -19,6 +19,7 @@ requireCovered = require '../require-covered.coffee'
 math = requireCovered __dirname, '../lib/math.coffee'
 
 exports.math =
-	'ap': ->
-		assert.strictEqual math.ap(1,2,3), 5, 'should return n-th number in arithmetical progression'
-		assert.strictEqual math.ap(3,6,9), 153, 'should return n-th number in arithmetical progression'
+	'ap':
+		'should return n-th number in arithmetical progression': ->
+			assert.strictEqual math.ap(1,2,3), 5
+			assert.strictEqual math.ap(3,6,9), 153

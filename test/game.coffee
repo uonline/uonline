@@ -58,54 +58,42 @@ exports.game = {}
 
 
 exports.game.getInitialLocation =
-	'good test': mocha ->
+	beforeEach: mocha ->
 		insert 'locations', id: 1
 		insert 'locations', id: 2, initial: 1
 		insert 'locations', id: 3
 
+	'should return id and parsed ways': mocha ->
 		loc = game.getInitialLocation conn
 		test.strictEqual loc.id, 2, 'should return id of initial location'
 		test.instanceOf loc.ways, Array, 'should return parsed ways from location'
 
-	'bad test': mocha ->
-		insert 'locations', id: 1
-		insert 'locations', id: 2
-		insert 'locations', id: 3
-
+	'should return error if initial location is not defined': mocha ->
+		query 'UPDATE locations SET initial = 0'
 		test.throws(
 			-> game.getInitialLocation conn
-			Error, null,
-			'should return error if initial location is not defined'
+			Error, null
 		)
 
-	'ambiguous test': mocha ->
-		insert 'locations', id: 1
-		insert 'locations', id: 2, initial: 1
-		insert 'locations', id: 3, initial: 1
-		insert 'locations', id: 4
-
+	'should return error if there is more than one initial location': mocha ->
+		query 'UPDATE locations SET initial = 1 WHERE id = 3'
 		test.throws(
 			-> game.getInitialLocation conn
-			Error, null,
-			'should return error if there is more than one initial location'
+			Error, null
 		)
 
 
 exports.game.getCharacterLocationId =
-	'valid data': mocha ->
+	"should return user's location id": mocha ->
 		insert 'characters', id: 1, 'location': 3
 		insert 'characters', id: 2, 'location': 1
+		test.strictEqual game.getCharacterLocationId.sync(null, conn, 1), 3
+		test.strictEqual game.getCharacterLocationId.sync(null, conn, 2), 1
 
-		id1 = game.getCharacterLocationId.sync(null, conn, 1)
-		id2 = game.getCharacterLocationId.sync(null, conn, 2)
-		test.strictEqual id1, 3, "should return user's location id"
-		test.strictEqual id2, 1, "should return user's location id"
-
-	'wrong character id': mocha ->
+	'should fail if character id is wrong': mocha ->
 		test.throws(
 			-> game.getCharacterLocationId.sync(null, conn, -1)
 			Error, null,
-			'should fail on wrong id'
 		)
 
 
@@ -113,32 +101,29 @@ exports.game.getCharacterLocation =
 	beforeEach: mocha ->
 		insert 'characters', id: 1, location: 3
 
-	'valid data': mocha ->
-		insert 'locations', id: 3, area: 5, title: 'The Location', ways:
-			[{target:7, text:'Left'}, {target:8, text:'Forward'}, {target:9, text:'Right'}]
+	'should return location id and ways': mocha ->
+		ways = [
+			{target:7, text:'Left'}
+			{target:8, text:'Forward'}
+			{target:9, text:'Right'}
+		]
+		insert 'locations', id: 3, area: 5, title: 'The Location', ways: ways
 
 		loc = game.getCharacterLocation.sync(null, conn, 1)
-		test.strictEqual loc.id, 3, "should return user's location id"
-		test.deepEqual loc.ways, [
-				{ target: 7, text: 'Left' }
-				{ target: 8, text: 'Forward' }
-				{ target: 9, text: 'Right' }
-			], 'should return ways from location'
+		test.strictEqual loc.id, 3
+		test.deepEqual loc.ways, ways
 
-	'wrong character id': mocha ->
+	'should fail on wrong character id': mocha ->
 		test.throws(
 			-> game.getCharacterLocation.sync null, conn, -1
 			Error, null,
-			'should fail on wrong id'
 		)
 
-	'wrong locid': mocha ->
+	"should fail if user's location is wrong": mocha ->
 		insert 'locations', id: 1, area: 5
-
 		test.throws(
 			-> game.getCharacterLocation.sync null, conn, 1
 			Error, null,
-			'should fail if user.location is wrong'
 		)
 
 
@@ -146,19 +131,18 @@ exports.game.getCharacterArea =
 	beforeEach: mocha ->
 		insert 'characters', id: 1, location: 3
 
-	'usual test': mocha ->
+	"should return user's area id and name": mocha ->
 		insert 'locations', id: 3, area: 5, title: 'The Location'
 		insert 'areas', id: 5, title: 'London'
 		area = game.getCharacterArea.sync null, conn, 1
 
-		test.strictEqual area.id, 5, "should return user's area id"
-		test.strictEqual area.title, 'London', "should return user's area name"
+		test.strictEqual area.id, 5
+		test.strictEqual area.title, 'London'
 
-	'wrong user id': mocha ->
+	'should fail on wrong user id': mocha ->
 		test.throws(
 			-> game.getCharacterArea.sync null, conn, -1
 			Error, null,
-			'should fail on wrong id'
 		)
 
 
@@ -168,21 +152,18 @@ exports.game.isTherePathForCharacterToLocation =
 		insert 'locations', id: 1, ways: [{target:2, text:'Left'}]
 		insert 'locations', id: 2
 
-	'when path exists':
-		'should return true': mocha ->
-			can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 2
-			test.isTrue can
+	'should return true if path exists': mocha ->
+		can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 2
+		test.isTrue can
 
-	'when already on this location':
-		'should return false': mocha ->
-			can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 1
-			test.isFalse can
+	'should return false if already on this location': mocha ->
+		can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 1
+		test.isFalse can
 
-	"when path doesn't exist":
-		'should return false': mocha ->
-			game.changeLocation.sync null, conn, 1, 2
-			can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 1
-			test.isFalse can
+	"should return false if path doesn't exist": mocha ->
+		game.changeLocation.sync null, conn, 1, 2
+		can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 1
+		test.isFalse can
 
 
 exports.game._createBattleBetween =
