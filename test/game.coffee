@@ -31,7 +31,7 @@ query = null
 
 mocha = (func) ->
 	return (done) ->
-		sync func, (error, result) ->
+		sync func.bind(this), (error, result) ->
 			done(error)
 
 
@@ -185,28 +185,33 @@ exports.game.isTherePathForCharacterToLocation =
 			test.isFalse can
 
 
-exports.game._createBattleBetween = mocha ->
-	locid = 123
+exports.game._createBattleBetween =
+	beforeEach: mocha ->
+		this.locid = 123
 
-	game._createBattleBetween conn, locid, [
+		game._createBattleBetween conn, this.locid, [
 			{id: 1, initiative:  5}
 			{id: 2, initiative: 15}
 			{id: 5, initiative: 30}
-		], [
+			], [
 			{id: 6, initiative: 20}
 			{id: 7, initiative: 10}
 		]
 
-	battle = query.row 'SELECT id, location, turn_number FROM battles'
-	test.strictEqual battle.location, locid, 'should create battle on specified location'
-	test.strictEqual battle.turn_number, 0, 'should create battle that is on first turn'
+		this.battle = query.row 'SELECT id, location, turn_number FROM battles'
+		this.participants = query.all 'SELECT character_id AS id, index, side FROM battle_participants WHERE battle = $1', [this.battle.id]
 
-	participants = query.all 'SELECT character_id AS id, index, side FROM battle_participants WHERE battle = $1',
-		[battle.id]
-	test.deepEqual participants, [
-		{id: 5, index: 0, side: 0}
-		{id: 6, index: 1, side: 1}
-		{id: 2, index: 2, side: 0}
-		{id: 7, index: 3, side: 1}
-		{id: 1, index: 4, side: 0}
-	], 'should involve all users and monsters of both sides in correct order'
+	'should create battle on specified location': ->
+		test.strictEqual this.battle.location, this.locid
+
+	'should create battle that is on first turn': ->
+		test.strictEqual this.battle.turn_number, 0
+
+	'should involve all users and monsters of both sides in correct order': ->
+		test.deepEqual this.participants, [
+			{id: 5, index: 0, side: 0}
+			{id: 6, index: 1, side: 1}
+			{id: 2, index: 2, side: 0}
+			{id: 7, index: 3, side: 1}
+			{id: 1, index: 4, side: 0}
+		]
