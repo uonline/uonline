@@ -43,7 +43,7 @@ exports[NS].before = t ->
 	mg.migrate.sync mg, _conn
 
 exports[NS].beforeEach = t ->
-	conn = transaction(_conn)
+	conn = transaction(_conn, autoRollback: false)
 	query = queryUtils.getFor conn
 
 exports[NS].afterEach = t ->

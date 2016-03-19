@@ -137,7 +137,12 @@ gulp.task 'test', seq 'nodeunit', 'mocha', 'jscoverage-report', 'force-exit'
 gulp.task 'mocha', ->
 	mocha = require 'gulp-mocha'
 	return gulp
-		.src ['test/*.coffee']
+		.src [
+			'test/health-check.js'
+			'test/health-check.coffee'
+			'test/*.js'
+			'test/*.coffee'
+		]
 		.pipe mocha {
 			ui: 'exports'
 			reporter: 'spec'

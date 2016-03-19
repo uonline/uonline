@@ -14,16 +14,19 @@
 
 'use strict'
 
-requireCovered = require '../require-covered.coffee'
-character = requireCovered __dirname, '../lib/character.coffee'
-config = require '../config'
-mg = require '../lib/migration'
-sync = require 'sync'
+NS = 'character'; exports[NS] = {}  # namespace
+{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
-mg = require '../lib/migration'
-queryUtils = require '../lib/query_utils'
+sync = require 'sync'
 sugar = require 'sugar'
+
+mg = require '../lib/migration.coffee'
+queryUtils = require '../lib/query_utils.coffee'
+
+character = requireCovered __dirname, '../lib/character.coffee'
+
 _conn = null
 conn = null
 query = null
@@ -34,95 +37,86 @@ insert = (dbName, fields) ->
 	query "INSERT INTO #{dbName} (#{k for k of fields}) VALUES (#{values.map (_,i) -> '$'+(i+1)})", values
 
 
-exports.setUp = (->
-	unless _conn?
-		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-		mg.migrate.sync mg, _conn
-	conn = transaction(_conn)
+exports[NS].before = t ->
+	_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+	mg.migrate.sync mg, _conn
+
+exports[NS].beforeEach = t ->
+	conn = transaction(_conn, autoRollback: false)
 	query = queryUtils.getFor conn
-).async()
 
-exports.tearDown = (->
+exports[NS].afterEach = t ->
 	conn.rollback.sync(conn)
-).async()
 
 
-# warmup: 60ms
-exports.characterExists = (test) ->
-	exists = (name) -> character.characterExists.sync null, conn, name
+exports[NS].characterExists =
+	'should check if a character with the given name exists': t ->
+		exists = (name) -> character.characterExists.sync null, conn, name
 
-	test.strictEqual exists('Sauron'), false, 'should return false if character does not exist'
-	insert 'characters', name: 'Sauron'
-	test.strictEqual exists('Sauron'), true, 'should return true if character exists'
-	test.strictEqual exists('SAURON'), true, 'should ignore capitalization'
-	test.strictEqual exists('sauron'), true, 'should ignore capitalization'
-
-	test.done()
+		test.strictEqual exists('Sauron'), false, 'should return false if character does not exist'
+		insert 'characters', name: 'Sauron'
+		test.strictEqual exists('Sauron'), true, 'should return true if character exists'
+		test.strictEqual exists('SAURON'), true, 'should ignore capitalization'
+		test.strictEqual exists('sauron'), true, 'should ignore capitalization'
 
 
-exports.createCharacter = (test) ->
-	insert 'locations', id: 1, initial: 0
-	insert 'locations', id: 2, initial: 1
-	insert 'uniusers', id: 1
+exports[NS].createCharacter =
+	'should create characters': t ->
+		insert 'locations', id: 1, initial: 0
+		insert 'locations', id: 2, initial: 1
+		insert 'uniusers', id: 1
 
-	charid = character.createCharacter(conn, 1, 'My First Character', 'elf', 'female')
-	char = query.row "SELECT * FROM characters"
-	user = query.row "SELECT * FROM uniusers"
+		charid = character.createCharacter(conn, 1, 'My First Character', 'elf', 'female')
+		char = query.row "SELECT * FROM characters"
+		user = query.row "SELECT * FROM uniusers"
 
-	test.strictEqual user.character_id, charid, "should switch user's character to new character"
-	test.strictEqual charid, char.id, 'should return new character id'
-	test.strictEqual char.name, 'My First Character', 'should create character with specified name'
-	test.strictEqual char.location, 2, 'should create character in initial location'
-	test.strictEqual char.race, 'elf', 'should create character with specified race'
-	test.strictEqual char.gender, 'female', 'should create character with specified gender'
+		test.strictEqual user.character_id, charid, "should switch user's character to new character"
+		test.strictEqual charid, char.id, 'should return new character id'
+		test.strictEqual char.name, 'My First Character', 'should create character with specified name'
+		test.strictEqual char.location, 2, 'should create character in initial location'
+		test.strictEqual char.race, 'elf', 'should create character with specified race'
+		test.strictEqual char.gender, 'female', 'should create character with specified gender'
 
-	ex = null
-	try
-		character.createCharacter(conn, 1, 'My First Character')
-	catch _ex
-		ex = _ex
-	test.notStrictEqual ex, null, 'should throw exception if such name has been taken'
-	test.strictEqual ex.message, 'character already exists',
-		'should throw CORRECT exception if such name has been taken'
+		ex = null
+		try
+			character.createCharacter(conn, 1, 'My First Character')
+		catch _ex
+			ex = _ex
+		test.notStrictEqual ex, null, 'should throw exception if such name has been taken'
+		test.strictEqual ex.message, 'character already exists',
+			'should throw CORRECT exception if such name has been taken'
 
-	energies = [
-		['orc', 'male', 220 ]
-		['orc', 'female', 200 ]
-		['human', 'male', 170 ]
-		['human', 'female', 160 ]
-		['elf', 'male', 150 ]
-		['elf', 'female', 140 ]
-	]
-	for x in energies
-		character.createCharacter(conn, 1, "#{x[0]}-#{x[1]}", x[0], x[1])
-		char = query.row 'SELECT * FROM characters WHERE name = $1', [ "#{x[0]}-#{x[1]}" ]
-		test.strictEqual char.energy_max, x[2], "should set correct energy_max value for #{x[1]} #{x[0]}"
-		test.strictEqual char.energy, x[2], "should set correct energy value for #{x[1]} #{x[0]}"
+		energies = [
+			['orc', 'male', 220 ]
+			['orc', 'female', 200 ]
+			['human', 'male', 170 ]
+			['human', 'female', 160 ]
+			['elf', 'male', 150 ]
+			['elf', 'female', 140 ]
+		]
+		for x in energies
+			character.createCharacter(conn, 1, "#{x[0]}-#{x[1]}", x[0], x[1])
+			char = query.row 'SELECT * FROM characters WHERE name = $1', [ "#{x[0]}-#{x[1]}" ]
+			test.strictEqual char.energy_max, x[2], "should set correct energy_max value for #{x[1]} #{x[0]}"
+			test.strictEqual char.energy, x[2], "should set correct energy value for #{x[1]} #{x[0]}"
 
-	test.throws(
-		-> character.createCharacter(conn, 1, 'My First Character', 'murloc', 'female')
-		Error
-		'should not allow weird races'
-	)
+	'should not allow weird races': t ->
+		test.throws ->
+			character.createCharacter(conn, 1, 'My First Character', 'murloc', 'female')
 
-	test.throws(
-		-> character.createCharacter(conn, 1, 'My First Character', 'orc', 'it')
-		Error
-		'should not allow weird genders'
-	)
+	'should not allow weird genders': t ->
+		test.throws ->
+			character.createCharacter(conn, 1, 'My First Character', 'orc', 'it')
 
-	query "UPDATE locations SET initial = 1"
-	test.throws(
-		-> character.createCharacter(conn, null, null)
-		Error
-		'should throw if something bad happened'
-	)
-
-	test.done()
+	'should throw if something bad happened': t ->
+		insert 'locations', id: 1, initial: 1
+		insert 'locations', id: 2, initial: 1
+		test.throws ->
+			character.createCharacter(conn, null, null)
 
 
-exports.deleteCharacter =
-	first: (test) ->
+exports[NS].deleteCharacter =
+	'should delete characters': t ->
 		insert 'characters', id: 1, player: 2
 		insert 'characters', id: 2, player: 1
 		insert 'characters', id: 3, player: 1
@@ -162,10 +156,9 @@ exports.deleteCharacter =
 			'should describe failure if trying to delete in-battle character'
 		test.strictEqual count, 3, "should refuse and not delete character if character belongs to other user"
 		test.deepEqual itemOwners(), [1,3], "should refuse and not delete items if character belongs to other user"
-		test.done()
 
 
-	second: (test) ->
+	'should correctly process battle states': t ->
 		# deleting character while in battle
 		insert 'characters', id: 1, player: 2
 		insert 'uniusers', id: 2, character_id: 3
@@ -190,31 +183,23 @@ exports.deleteCharacter =
 		test.deepEqual res, {result: 'ok'}, 'should return "ok" if force-deleting in-battle character'
 		test.strictEqual count, 0, "should delete character if force-deleting in-battle character"
 		test.deepEqual itemOwners(), [], "should  delete items if force-deleting in-battle character"
-		test.done()
 
 
-exports.switchCharacter =
-	testNoErrors: (test) ->
+exports[NS].switchCharacter =
+	'should switch active character': t ->
 		insert 'uniusers', id: 1, character_id: 10
 		insert 'characters', id: 2, player: 1
 
 		character.switchCharacter(conn, 1, 2)
 		charid = query.val "SELECT character_id FROM uniusers"
 		test.strictEqual charid, 2, 'should change character_id'
-		test.done()
 
-	testErrors: (test) ->
-		test.throws(
-			-> character.switchCharacter(conn, 1, 2)
-			Error
-			'should throw if user does not exist'
-		)
+	'should throw if user does not exist': t ->
+		test.throws ->
+			character.switchCharacter(conn, 1, 2)
 
+	'should throw if user does not have such character': t ->
 		insert 'uniusers', id: 1
 		insert 'characters', id: 1, player: 1
-		test.throws(
-			-> character.switchCharacter(conn, 1, 2)
-			Error
-			'should throw if user does not have such character'
-		)
-		test.done()
+		test.throws ->
+			character.switchCharacter(conn, 1, 2)
