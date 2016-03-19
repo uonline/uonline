@@ -14,12 +14,11 @@
 
 'use strict'
 
-assert = require('chai').assert
-requireCovered = require '../require-covered.coffee'
+NS = 'math'; exports[NS] = {}  # namespace
+{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
 math = requireCovered __dirname, '../lib/math.coffee'
 
-exports.math =
-	'ap':
-		'should return n-th number in arithmetical progression': ->
-			assert.strictEqual math.ap(1,2,3), 5
-			assert.strictEqual math.ap(3,6,9), 153
+exports[NS].ap =
+	'should return n-th number in arithmetical progression': ->
+		test.strictEqual math.ap(1,2,3), 5
+		test.strictEqual math.ap(3,6,9), 153

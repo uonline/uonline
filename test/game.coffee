@@ -14,25 +14,21 @@
 
 'use strict'
 
-test = require('chai').assert
-requireCovered = require '../require-covered.coffee'
-game = requireCovered __dirname, '../lib/game.coffee'
-config = require '../config'
-mg = require '../lib/migration'
-sync = require 'sync'
+NS = 'game'; exports[NS] = {}  # namespace
+{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
-queryUtils = require '../lib/query_utils'
+sync = require 'sync'
 sugar = require 'sugar'
+mg = require '../lib/migration'
+queryUtils = require '../lib/query_utils'
+
+game = requireCovered __dirname, '../lib/game.coffee'
+
 _conn = null
 conn = null
 query = null
-
-
-mocha = (func) ->
-	return (done) ->
-		sync func.bind(this), (error, result) ->
-			done(error)
 
 
 insert = (dbName, fields) ->
@@ -42,40 +38,37 @@ insert = (dbName, fields) ->
 		values.map((v) -> if v? and typeof v is 'object' then JSON.stringify(v) else v)
 
 
-exports.before = mocha ->
+exports.before = t ->
 	_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
 	mg.migrate.sync mg, _conn
 
-exports.beforeEach = mocha ->
+exports.beforeEach = t ->
 	conn = transaction(_conn)
 	query = queryUtils.getFor conn
 
-exports.afterEach = mocha ->
+exports.afterEach = t ->
 	conn.rollback.sync(conn)
 
 
-exports.game = {}
-
-
-exports.game.getInitialLocation =
-	beforeEach: mocha ->
+exports[NS].getInitialLocation =
+	beforeEach: t ->
 		insert 'locations', id: 1
 		insert 'locations', id: 2, initial: 1
 		insert 'locations', id: 3
 
-	'should return id and parsed ways': mocha ->
+	'should return id and parsed ways': t ->
 		loc = game.getInitialLocation conn
 		test.strictEqual loc.id, 2, 'should return id of initial location'
 		test.instanceOf loc.ways, Array, 'should return parsed ways from location'
 
-	'should return error if initial location is not defined': mocha ->
+	'should return error if initial location is not defined': t ->
 		query 'UPDATE locations SET initial = 0'
 		test.throws(
 			-> game.getInitialLocation conn
 			Error, null
 		)
 
-	'should return error if there is more than one initial location': mocha ->
+	'should return error if there is more than one initial location': t ->
 		query 'UPDATE locations SET initial = 1 WHERE id = 3'
 		test.throws(
 			-> game.getInitialLocation conn
@@ -83,25 +76,25 @@ exports.game.getInitialLocation =
 		)
 
 
-exports.game.getCharacterLocationId =
-	"should return user's location id": mocha ->
+exports[NS].getCharacterLocationId =
+	"should return user's location id": t ->
 		insert 'characters', id: 1, 'location': 3
 		insert 'characters', id: 2, 'location': 1
 		test.strictEqual game.getCharacterLocationId.sync(null, conn, 1), 3
 		test.strictEqual game.getCharacterLocationId.sync(null, conn, 2), 1
 
-	'should fail if character id is wrong': mocha ->
+	'should fail if character id is wrong': t ->
 		test.throws(
 			-> game.getCharacterLocationId.sync(null, conn, -1)
 			Error, null,
 		)
 
 
-exports.game.getCharacterLocation =
-	beforeEach: mocha ->
+exports[NS].getCharacterLocation =
+	beforeEach: t ->
 		insert 'characters', id: 1, location: 3
 
-	'should return location id and ways': mocha ->
+	'should return location id and ways': t ->
 		ways = [
 			{target:7, text:'Left'}
 			{target:8, text:'Forward'}
@@ -113,13 +106,13 @@ exports.game.getCharacterLocation =
 		test.strictEqual loc.id, 3
 		test.deepEqual loc.ways, ways
 
-	'should fail on wrong character id': mocha ->
+	'should fail on wrong character id': t ->
 		test.throws(
 			-> game.getCharacterLocation.sync null, conn, -1
 			Error, null,
 		)
 
-	"should fail if user's location is wrong": mocha ->
+	"should fail if user's location is wrong": t ->
 		insert 'locations', id: 1, area: 5
 		test.throws(
 			-> game.getCharacterLocation.sync null, conn, 1
@@ -127,11 +120,11 @@ exports.game.getCharacterLocation =
 		)
 
 
-exports.game.getCharacterArea =
-	beforeEach: mocha ->
+exports[NS].getCharacterArea =
+	beforeEach: t ->
 		insert 'characters', id: 1, location: 3
 
-	"should return user's area id and name": mocha ->
+	"should return user's area id and name": t ->
 		insert 'locations', id: 3, area: 5, title: 'The Location'
 		insert 'areas', id: 5, title: 'London'
 		area = game.getCharacterArea.sync null, conn, 1
@@ -139,35 +132,35 @@ exports.game.getCharacterArea =
 		test.strictEqual area.id, 5
 		test.strictEqual area.title, 'London'
 
-	'should fail on wrong user id': mocha ->
+	'should fail on wrong user id': t ->
 		test.throws(
 			-> game.getCharacterArea.sync null, conn, -1
 			Error, null,
 		)
 
 
-exports.game.isTherePathForCharacterToLocation =
-	beforeEach: mocha ->
+exports[NS].isTherePathForCharacterToLocation =
+	beforeEach: t ->
 		insert 'characters', id: 1, location: 1
 		insert 'locations', id: 1, ways: [{target:2, text:'Left'}]
 		insert 'locations', id: 2
 
-	'should return true if path exists': mocha ->
+	'should return true if path exists': t ->
 		can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 2
 		test.isTrue can
 
-	'should return false if already on this location': mocha ->
+	'should return false if already on this location': t ->
 		can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 1
 		test.isFalse can
 
-	"should return false if path doesn't exist": mocha ->
+	"should return false if path doesn't exist": t ->
 		game.changeLocation.sync null, conn, 1, 2
 		can = game.isTherePathForCharacterToLocation.sync null, conn, 1, 1
 		test.isFalse can
 
 
-exports.game._createBattleBetween =
-	'should create battle with correct location, turn and sides': mocha ->
+exports[NS]._createBattleBetween =
+	'should create battle with correct location, turn and sides': t ->
 		locid = 123
 		firstSide = [
 			{id: 1, initiative:  5}

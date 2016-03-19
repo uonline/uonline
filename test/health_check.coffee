@@ -14,12 +14,14 @@
 
 'use strict'
 
-assert = require('chai').assert
+NS = 'health-check'; exports[NS] = {}  # namespace
+{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
 
-module.exports =
-	'health-check':
-		'2+2 should be 4': ->
-			assert.strictEqual 2 + 2, 4
-		'2+2 should be 4 even asynchronously': (done) ->
-			assert.strictEqual 2 + 2, 4
-			process.nextTick done
+exports[NS] =
+	'2+2 should be 4': ->
+		test.strictEqual 2 + 2, 4
+	'2+2 should be 4 in asynchronous manner': (done) ->
+		test.strictEqual 2 + 2, 4
+		process.nextTick done
+	'2+2 should be 4 with sync wrapper': t ->
+		test.strictEqual 2 + 2, 4

@@ -141,6 +141,7 @@ gulp.task 'mocha', ->
 		.pipe mocha(ui: 'exports')
 	# TODO later: reporter dot
 	# TODO later: use --reporter
+	# TODO: --single
 
 
 gulp.task 'nodeunit', ->

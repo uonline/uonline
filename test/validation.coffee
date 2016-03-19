@@ -15,14 +15,12 @@
 'use strict'
 
 NS = 'validation'; exports[NS] = {}  # namespace
-requireCovered = require '../require-covered.coffee'
-test = require('chai').assert
-sync = require 'sync'
-exec = (func) -> return (done) -> sync func.bind(this), (error, result) -> done(error)
+{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+
 validation = requireCovered __dirname, '../lib/validation.coffee'
 
 
-exports[NS].usernameIsValid = exec ->
+exports[NS].usernameIsValid = t ->
 	test.strictEqual validation.usernameIsValid('m1kc'), true, 'should pass good names'
 	test.strictEqual validation.usernameIsValid('Волшебник'), true, 'should pass good names'
 	test.strictEqual validation.usernameIsValid('Михаил Кутузов'), true, 'should pass good names'
@@ -39,14 +37,14 @@ exports[NS].usernameIsValid = exec ->
 	test.strictEqual validation.usernameIsValid('-Max-'), false, 'should not pass shit'
 
 
-exports[NS].emailIsValid = exec ->
+exports[NS].emailIsValid = t ->
 	test.strictEqual validation.emailIsValid('security@mail.ru'), true, 'should pass good emails'
 	test.strictEqual validation.emailIsValid('wtf'), false, 'should not pass the shit'
 	test.strictEqual validation.emailIsValid(undefined), false, 'empty mail - invalid mail'
 	test.strictEqual validation.emailIsValid(null), false, 'empty mail - invalid mail'
 
 
-exports[NS].passwordIsValid = exec ->
+exports[NS].passwordIsValid = t ->
 	test.strictEqual validation.passwordIsValid('make install clean'), true, 'should pass good passwords'
 	test.strictEqual validation.passwordIsValid('вобла'), false, 'should not pass Russian'
 	test.strictEqual validation.passwordIsValid('b'), false, 'not too short'
@@ -55,7 +53,7 @@ exports[NS].passwordIsValid = exec ->
 	test.strictEqual validation.passwordIsValid(null), false, 'not passed - not valid'
 
 
-exports[NS].characterNameIsValid = exec ->
+exports[NS].characterNameIsValid = t ->
 	for x in [
 		['Sashok',         true,  'good name is ok']
 		['Нагибатор',      true,  'good name in russion is ok too']
