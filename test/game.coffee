@@ -38,15 +38,15 @@ insert = (dbName, fields) ->
 		values.map((v) -> if v? and typeof v is 'object' then JSON.stringify(v) else v)
 
 
-exports.before = t ->
+exports[NS].before = t ->
 	_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
 	mg.migrate.sync mg, _conn
 
-exports.beforeEach = t ->
+exports[NS].beforeEach = t ->
 	conn = transaction(_conn)
 	query = queryUtils.getFor conn
 
-exports.afterEach = t ->
+exports[NS].afterEach = t ->
 	conn.rollback.sync(conn)
 
 

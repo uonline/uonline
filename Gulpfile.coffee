@@ -138,10 +138,17 @@ gulp.task 'mocha', ->
 	mocha = require 'gulp-mocha'
 	return gulp
 		.src ['test/*.coffee']
-		.pipe mocha(ui: 'exports')
+		.pipe mocha {
+			ui: 'exports'
+			reporter: 'spec'
+			slow: 50
+			#grep: 'valid'
+		}
 	# TODO later: reporter dot
-	# TODO later: use --reporter
-	# TODO: --single
+	# TODO: --reporter=value
+	# TODO: --single=value
+	# TODO: --slow=value
+	# TODO: --grep=value
 
 
 gulp.task 'nodeunit', ->
