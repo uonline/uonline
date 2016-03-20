@@ -65,14 +65,14 @@ exports[NS].getInitialLocation =
 		query 'UPDATE locations SET initial = 0'
 		test.throws(
 			-> game.getInitialLocation conn
-			Error, null
+			Error, 'initial location is not defined'
 		)
 
 	'should return error if there is more than one initial location': t ->
 		query 'UPDATE locations SET initial = 1 WHERE id = 3'
 		test.throws(
 			-> game.getInitialLocation conn
-			Error, null
+			Error, 'there is more than one initial location'
 		)
 
 
@@ -86,7 +86,7 @@ exports[NS].getCharacterLocationId =
 	'should fail if character id is wrong': t ->
 		test.throws(
 			-> game.getCharacterLocationId.sync(null, conn, -1)
-			Error, null,
+			Error, "wrong character's id",
 		)
 
 
@@ -109,14 +109,14 @@ exports[NS].getCharacterLocation =
 	'should fail on wrong character id': t ->
 		test.throws(
 			-> game.getCharacterLocation.sync null, conn, -1
-			Error, null,
+			Error, "wrong character's id",
 		)
 
 	"should fail if user's location is wrong": t ->
 		insert 'locations', id: 1, area: 5
 		test.throws(
 			-> game.getCharacterLocation.sync null, conn, 1
-			Error, null,
+			Error, "wrong character's id or location",
 		)
 
 
@@ -135,7 +135,7 @@ exports[NS].getCharacterArea =
 	'should fail on wrong user id': t ->
 		test.throws(
 			-> game.getCharacterArea.sync null, conn, -1
-			Error, null,
+			Error, "wrong character's id",
 		)
 
 

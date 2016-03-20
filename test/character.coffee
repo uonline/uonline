@@ -53,11 +53,11 @@ exports[NS].characterExists =
 	'should check if a character with the given name exists': t ->
 		exists = (name) -> character.characterExists.sync null, conn, name
 
-		test.strictEqual exists('Sauron'), false, 'should return false if character does not exist'
+		test.isFalse exists('Sauron'), 'should return false if character does not exist'
 		insert 'characters', name: 'Sauron'
-		test.strictEqual exists('Sauron'), true, 'should return true if character exists'
-		test.strictEqual exists('SAURON'), true, 'should ignore capitalization'
-		test.strictEqual exists('sauron'), true, 'should ignore capitalization'
+		test.isTrue exists('Sauron'), 'should return true if character exists'
+		test.isTrue exists('SAURON'), 'should ignore capitalization'
+		test.isTrue exists('sauron'), 'should ignore capitalization'
 
 
 exports[NS].createCharacter =
@@ -77,28 +77,24 @@ exports[NS].createCharacter =
 		test.strictEqual char.race, 'elf', 'should create character with specified race'
 		test.strictEqual char.gender, 'female', 'should create character with specified gender'
 
-		ex = null
-		try
-			character.createCharacter(conn, 1, 'My First Character')
-		catch _ex
-			ex = _ex
-		test.notStrictEqual ex, null, 'should throw exception if such name has been taken'
-		test.strictEqual ex.message, 'character already exists',
-			'should throw CORRECT exception if such name has been taken'
+		test.throws(
+			-> character.createCharacter(conn, 1, 'My First Character')
+			Error, 'character already exists'
+			'should throw correct exception if such name has been taken'
+		)
 
-		energies = [
+		[
 			['orc', 'male', 220 ]
 			['orc', 'female', 200 ]
 			['human', 'male', 170 ]
 			['human', 'female', 160 ]
 			['elf', 'male', 150 ]
 			['elf', 'female', 140 ]
-		]
-		for x in energies
-			character.createCharacter(conn, 1, "#{x[0]}-#{x[1]}", x[0], x[1])
-			char = query.row 'SELECT * FROM characters WHERE name = $1', [ "#{x[0]}-#{x[1]}" ]
-			test.strictEqual char.energy_max, x[2], "should set correct energy_max value for #{x[1]} #{x[0]}"
-			test.strictEqual char.energy, x[2], "should set correct energy value for #{x[1]} #{x[0]}"
+		].forEach ([race, gender, energy]) ->
+			character.createCharacter(conn, 1, "#{race}-#{gender}", race, gender)
+			char = query.row 'SELECT * FROM characters WHERE name = $1', [ "#{race}-#{gender}" ]
+			test.strictEqual char.energy_max, energy, "should set correct energy_max value for #{gender} #{race}"
+			test.strictEqual char.energy, energy, "should set correct energy value for #{gender} #{race}"
 
 	'should not allow weird races': t ->
 		test.throws ->
@@ -144,7 +140,7 @@ exports[NS].deleteCharacter =
 
 		test.deepEqual res, {result: 'ok'}, 'should return "ok" if deleted'
 		test.deepEqual chars, [{id:3}], 'should delete active character'
-		test.strictEqual user.character_id, null, "should clear user's character if deleted was active"
+		test.isNull user.character_id, "should clear user's character if deleted was active"
 		test.deepEqual itemOwners(), [1,3], "should delete character's items"
 
 		# deleting character of other user

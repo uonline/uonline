@@ -54,7 +54,7 @@ exports[NS].passwordIsValid = t ->
 
 
 exports[NS].characterNameIsValid = t ->
-	for x in [
+	for [name, result, message] in [
 		['Sashok',         true,  'good name is ok']
 		['Нагибатор',      true,  'good name in russion is ok too']
 		['rm-rf',          true,  'dashes are allowed']
@@ -75,4 +75,4 @@ exports[NS].characterNameIsValid = t ->
 		[undefined,        false, 'empty name - invalid name']
 		[null,             false, 'empty name - invalid name']
 	]
-		test.strictEqual validation.characterNameIsValid(x[0]), x[1], x[2]
+		test.strictEqual validation.characterNameIsValid(name), result, message
