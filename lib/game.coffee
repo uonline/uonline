@@ -143,7 +143,7 @@ exports._leaveBattle = (tx, battleId, leaverId) ->
 	).rows[0]
 
 	unless leaver?
-		throw new Error "Can't find participant character_id=#{leaverId} in battle ##{battleId}"
+		throw new Error "can't find participant character_id=#{leaverId} in battle ##{battleId}"
 
 	# shifting other participant's indexes
 	tx.query.sync(tx,
@@ -272,7 +272,7 @@ exports.goEscape = ((dbConnection, character_id) ->
 		[character_id]
 	).rows[0]
 	if battle?
-		exports._leaveBattle dbConnection, battle.id, character_id, "user"
+		exports._leaveBattle dbConnection, battle.id, character_id
 	return
 ).async()
 
