@@ -14,48 +14,50 @@
 
 'use strict'
 
-requireCovered = require '../require-covered.coffee'
+NS = 'prettyprint'; exports[NS] = {}  # namespace
+{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+
 prettyprint = requireCovered __dirname, '../lib/prettyprint.coffee'
 
 
-exports.spaces = (test) ->
+exports[NS].spaces = ->
 	test.strictEqual prettyprint.spaces(0), '', 'should return empty string when I ask for 0 spaces'
 	test.strictEqual prettyprint.spaces(1), ' ', 'should return given number of spaces'
 	test.strictEqual prettyprint.spaces(4), '    ', 'should return given number of spaces'
-	test.done()
 
 
-exports.writeln = (test) ->
-	test.expect 1
+exports[NS].writeln = ->
+	count = 0
 	targetFunction = (text) ->
+		count += 1
 		test.strictEqual text, "Nikolai Baskov is up and running.", "should print text"
 	prettyprint.writeln "Nikolai Baskov is up and running.", targetFunction
-	test.done()
+	test.strictEqual count, 1
 
 
-exports.section = (test) ->
-	test.expect 4
-
+exports[NS].section = ->
 	targetFunction = undefined
 	result = undefined
+	count = 0
 
 	targetFunction = (text) ->
+		count += 1
 		test.strictEqual text, "Killing...", "should print text without offset at first call"
 	result = prettyprint.section("Killing", targetFunction)
 	test.strictEqual result, 2, "should increase offset by 2 every time"
 
 	targetFunction = (text) ->
+		count += 1
 		test.strictEqual text, "  Killing...", "should print text with offset"
 	result = prettyprint.section("Killing", targetFunction)
 	test.strictEqual result, 4, "should increase offset by 2 every time"
 
 	prettyprint.endSection()
 	prettyprint.endSection()
+	test.strictEqual count, 2
 
-	test.done()
 
-
-exports.endSection = (test) ->
+exports[NS].endSection = ->
 	targetFunction = undefined
 	result = undefined
 	targetFunction = (text) -> # do nothing
@@ -66,38 +68,42 @@ exports.endSection = (test) ->
 	test.strictEqual result, 2, "should decrease offset by 2"
 	result = prettyprint.endSection()
 	test.strictEqual result, 0, "should decrease offset by 2"
-	test.done()
 
 
-exports.action = (test) ->
-	test.expect 3
+exports[NS].action = ->
 	targetFunction = undefined
 	result = undefined
+	count = 0
 
 	targetFunction = (text) ->
+		count += 1
 		test.strictEqual text, "Killing...", "should print text with section offset"
 	prettyprint.action "Killing", targetFunction
 
 	targetFunction = (text) -> # do nothing
 	prettyprint.section "some section", targetFunction
 	targetFunction = (text) ->
+		count += 1
 		test.strictEqual text, "  Killing...", "should print text with section offset"
 	prettyprint.action "Killing", targetFunction
 	prettyprint.endSection()
 
 	targetFunction = (text) ->
+		count += 1
 		test.strictEqual text, "Killing...", "should print text with section offset"
 	prettyprint.action "Killing", targetFunction
 
-	test.done()
+	test.strictEqual count, 3
 
 
-exports.result = (test) ->
-	test.expect 1
+exports[NS].result = ->
 	targetFunction = undefined
 	result = undefined
+	count = 0
 
 	targetFunction = (text) ->
+		count += 1
 		test.strictEqual text, " done", "should print text with one-space offset"
 	prettyprint.result "done", targetFunction
-	test.done()
+
+	test.strictEqual count, 1

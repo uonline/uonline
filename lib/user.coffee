@@ -125,7 +125,7 @@ exports.generateSessId = ((dbConnection, sess_length) ->
 exports.idBySession = (dbConnection, sess, callback) ->
 	dbConnection.query 'SELECT id FROM uniusers WHERE sessid = $1', [sess], (error, result) ->
 		if result? and result.rows.length is 0
-			error = new Error "Wrong user's id"
+			error = new Error "wrong user's id"
 		callback error, error or result.rows[0].id
 
 
