@@ -14,14 +14,17 @@
 
 'use strict'
 
-requireCovered = require '../require-covered.coffee'
-mg = requireCovered __dirname, '../lib/migration.coffee'
-config = require '../config'
-tables = require '../lib/tables'
-queryUtils = require '../lib/query_utils'
-sync = require 'sync'
+NS = 'migration'; exports[NS] = {}  # namespace
+{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
+sync = require 'sync'
+mg = require '../lib/migration'
+queryUtils = require '../lib/query_utils'
+tables = require '../lib/tables'
+
+game = requireCovered __dirname, '../lib/migration.coffee'
 
 _conn = null
 conn = null
@@ -54,71 +57,65 @@ migrationData = [
 migrationDataBackup = []
 
 
-exports.setUp = (->
-	unless _conn?
-		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+exports[NS].before = t ->
+	_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+	mg.migrate.sync mg, _conn
+
+exports[NS].beforeEach = t ->
 	conn = transaction(_conn, autoRollback: false)
 	query = queryUtils.getFor conn
 	migrationDataBackup = mg.getMigrationsData()
 	query 'DROP TABLE IF EXISTS revision'
 	mg.setMigrationsData migrationData
-).async()
 
-exports.tearDown = (->
+exports[NS].afterEach = t ->
 	mg.setMigrationsData migrationDataBackup
 	conn.rollback.sync(conn)
-).async()
 
 
-exports.getCurrentRevision =
-	'no table yet': (test) ->
-		rev = mg.getCurrentRevision.sync null, conn
-		test.strictEqual rev, -1, 'should return -1 if revision table is not created'
-		test.done()
 
-	'usual': (test) ->
+exports[NS].getCurrentRevision =
+	'should return current revision number': t ->
 		query 'CREATE TABLE revision (revision INT)'
 		query 'INSERT INTO revision VALUES (945)'
 		rev = mg.getCurrentRevision.sync null, conn
-		test.strictEqual rev, 945, 'should return current revision number'
-		test.done()
+		test.strictEqual rev, 945
 
-	'exceptions': (test) ->
+	'should return -1 if revision table is not created': t ->
+		rev = mg.getCurrentRevision.sync null, conn
+		test.strictEqual rev, -1
+
+	'should fail on exceptions': t ->
 		test.throws(
 			-> mg.getCurrentRevision.sync null, 'nonsense'
-			Error
-			'should fail on exceptions'
+			Error, 'dbConnection.query is not a function'
 		)
-		test.done()
 
-	'connection errors': (test) ->
+	'should fail on connection errors': t ->
 		fakeConn =
 			query: (text, args, callback) ->
 				callback new Error('THE_VERY_STRANGE_ERROR')
 		test.throws(
 			-> mg.getCurrentRevision.sync null, fakeConn
-			Error
-			'should fail on connection errors'
+			Error, 'THE_VERY_STRANGE_ERROR'
 		)
-		test.done()
 
 
-exports.setRevision = (test) ->
-	mg.setRevision.sync null, conn, 1
-	exists = tables.tableExists.sync null, conn, 'revision'
-	test.ok exists, 'table should have been created'
+exports[NS].setRevision =
+	'should crete revision table if it does not exist': t ->
+		mg.setRevision.sync null, conn, 1
+		test.isTrue tables.tableExists.sync(null, conn, 'revision')
 
-	rev = mg.getCurrentRevision.sync null, conn
-	test.strictEqual rev, 1, 'revision should have been set'
+	'should set correct revision number': t ->
+		mg.setRevision.sync null, conn, 1
+		test.strictEqual mg.getCurrentRevision.sync(null, conn), 1
 
-	mg.setRevision.sync null, conn, 2
-	rev = mg.getCurrentRevision.sync null, conn
-	test.strictEqual rev, 2, 'revision should have been updated'
-	test.done()
+		mg.setRevision.sync null, conn, 2
+		test.strictEqual mg.getCurrentRevision.sync(null, conn), 2
 
 
-exports._justMigrate =
-	'usual': (test) ->
+exports[NS]._justMigrate =
+	'should correctly perform specified migration': t ->
 		mg._justMigrate conn, 0
 		tt = query.all 'SELECT column_name FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
@@ -140,9 +137,8 @@ exports._justMigrate =
 				[{column_name: 'col0'}, {column_name: 'col1'}, {column_name: 'id'}]
 				[{column_name: 'id'}]
 			], 'should correctly add second migration'
-		test.done()
 
-	'rawsql': (test) ->
+	'should perform raw SQL commands': t ->
 		mg.setMigrationsData [[
 			[ 'test_table', 'create', 'id INT' ]
 			[ 'test_table', 'rawsql', 'INSERT INTO test_table (id) VALUES (1), (2), (5)' ]
@@ -152,23 +148,20 @@ exports._justMigrate =
 		rows = query.all 'SELECT * FROM test_table'
 		test.deepEqual rows, [
 			{id: 1}, {id: 2}, {id: 5}
-		], 'should perform raw SQL commands'
-		test.done()
+		]
 
-	'errors': (test) ->
+	'should return error if failed to migrate': t ->
 		query 'DROP TABLE IF EXISTS test_table'
 		mg.setRevision.sync null, conn, 0
 
 		test.throws(
 			-> mg._justMigrate conn, 1
-			Error
-			'should return error if failed to migrate'
+			Error, /.*relation "test_table" does not exist.*/
 		)
-		test.done()
 
 
-exports.migrate =
-	'usual': (test) ->
+exports[NS].migrate =
+	'should perform some or all migratons': t ->
 		mg.migrate.sync null, conn, {dest_revision: 1}
 
 		rows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
@@ -215,9 +208,8 @@ exports.migrate =
 
 		revision = mg.getCurrentRevision.sync null, conn
 		test.strictEqual revision, 3, 'should set correct revision'
-		test.done()
 
-	'for one table': (test) ->
+	'should be able to migrate just one table': t ->
 		rev0 = mg.getCurrentRevision.sync null, conn
 		mg.migrate.sync null, conn, {dest_revision: 0, table: 'test_table'}
 		rev1 = mg.getCurrentRevision.sync null, conn
@@ -232,9 +224,8 @@ exports.migrate =
 			data_type: 'integer'
 		}, 'should correctly perform migration for specified table'
 		test.ok not exists, 'migration for other tables should not have been performed'
-		test.done()
 
-	'for multiple tables': (test) ->
+	'should be able to migrate several tables': t ->
 		rev0 = mg.getCurrentRevision.sync null, conn
 		mg.migrate.sync null, conn, {dest_revision: 0, tables: ['no_such_table', 'test_table', 'other_table']}
 		rev1 = mg.getCurrentRevision.sync null, conn
@@ -253,9 +244,8 @@ exports.migrate =
 			column_name: 'id'
 			data_type: 'integer'
 		}, 'should correctly perform migration for specified tables'
-		test.done()
 
-	'verbose': (test) ->
+	'should migrate verbosely if flag is set': t ->
 		testLog = (message, func) ->
 			_log = console.log
 			_write = process.stdout.write
@@ -272,5 +262,3 @@ exports.migrate =
 
 		testLog 'should say something (when all migrations already completed)',
 			-> mg.migrate.sync null, conn, {verbose: true}
-
-		test.done()

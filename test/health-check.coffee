@@ -25,3 +25,13 @@ exports[NS] =
 		process.nextTick done
 	'2+2 should be 4 with sync wrapper': t ->
 		test.strictEqual 2 + 2, 4
+
+
+# describe = require('mocha').describe
+# it = require('mocha').it
+
+# describe 'BDD via require UI', ->
+# 	it 'should just work', ->
+# 		test.isTrue true
+# 	it '2+2 should also be 4', ->
+# 		test.strictEqual 2+2, 4

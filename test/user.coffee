@@ -116,7 +116,7 @@ exports[NS].sessionInfoRefreshing =
 		}
 
 		timeAfter = this.sessTime()
-		test.ok timeBefore < timeAfter, 'should update session timestamp'
+		test.isBelow timeBefore, timeAfter, 'should update session timestamp'
 
 	'should not fail on empty sessid': t ->
 		res = users.sessionInfoRefreshing.sync null, conn, undefined, 7200, false
