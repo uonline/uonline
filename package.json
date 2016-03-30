@@ -49,6 +49,7 @@
     "header-stack": ">= 0.0.2",
     "jade": "^1.7.0",
     "jstransformer-stylus": "^1.0.0",
+    "mocha-fivemat-reporter": "0.0.6",
     "moment": "^2.10.6",
     "morgan": "^1.5.0",
     "multer": "^1.1.0",
