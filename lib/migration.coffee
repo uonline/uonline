@@ -48,7 +48,9 @@ exports._justMigrate = (dbConnection, revision, for_tables, verbose) ->
 				params.unshift null
 				func.sync.apply func, params
 		catch ex
-			throw new Error("While performing #{funcName} \n[#{params}]\n#{ex.toString()}\n#{ex.stack}")
+			ex.message = "While performing #{funcName}: #{ex.message}"
+			Error.captureStackTrace(ex)
+			throw ex
 		if verbose
 			console.log " #{chalk.green 'ok'}"
 	return
