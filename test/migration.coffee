@@ -162,23 +162,21 @@ exports[NS]._justMigrate =
 
 exports[NS].migrate =
 	'should perform some or all migratons': t ->
-		migration.migrate.sync null, conn, {dest_revision: 1}
+		migration.migrate.sync null, conn, { dest_revision: 1 }
 
 		rows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
+		test.deepEqual rows, [
+			{ column_name: 'col0', data_type: 'box' }
+			{ column_name: 'col1', data_type: 'macaddr' }
+			{ column_name: 'id', data_type: 'integer' }
+		], 'should correctly perform part of migrations'
+
 		orows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
-		test.ok rows.length is 3 and
-			rows[0].column_name is 'col0' and
-			rows[1].column_name is 'col1' and
-			rows[2].column_name is 'id' and
-			rows[0].data_type is 'box' and
-			rows[1].data_type is 'macaddr' and
-			rows[2].data_type is 'integer' and
-			orows.length is 1 and
-			orows[0].column_name is 'id' and
-			orows[0].data_type is 'integer',
-			'should correctly perform part of migrations'
+		test.deepEqual orows, [
+			{ column_name: 'id', data_type: 'integer' }
+		], 'should correctly perform part of migrations'
 
 		revision = migration.getCurrentRevision.sync null, conn
 		test.strictEqual revision, 1, 'should set correct revision'
@@ -188,23 +186,19 @@ exports[NS].migrate =
 
 		rows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
+		test.deepEqual rows, [
+			{ column_name: 'col0', data_type: 'box' }
+			{ column_name: 'col1', data_type: 'macaddr' }
+			{ column_name: 'col2', data_type: 'bigint' }
+			{ column_name: 'id', data_type: 'integer' }
+		], 'should correctly perform all remaining migrations'
+
 		orows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
-		test.ok rows.length is 4 and
-			rows[0].column_name is 'col0' and
-			rows[1].column_name is 'col1' and
-			rows[2].column_name is 'col2' and
-			rows[3].column_name is 'id' and
-			rows[0].data_type is 'box' and
-			rows[1].data_type is 'macaddr' and
-			rows[2].data_type is 'bigint' and
-			rows[3].data_type is 'integer' and
-			orows.length is 2 and
-			orows[0].column_name is 'col0' and
-			orows[1].column_name is 'id' and
-			orows[0].data_type is 'lseg' and
-			orows[1].data_type is 'integer',
-			'should correctly perform all remaining migrations'
+		test.deepEqual orows, [
+			{ column_name: 'col0', data_type: 'lseg' }
+			{ column_name: 'id', data_type: 'integer' }
+		], 'should correctly perform all remaining migrations'
 
 		revision = migration.getCurrentRevision.sync null, conn
 		test.strictEqual revision, 3, 'should set correct revision'
