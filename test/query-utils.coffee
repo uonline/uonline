@@ -21,10 +21,9 @@ anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
 sync = require 'sync'
 mg = require '../lib/migration'
-queryUtils = require '../lib/query_utils'
 tables = require '../lib/tables'
 
-game = requireCovered __dirname, '../lib/query_utils.coffee'
+queryUtils = requireCovered __dirname, '../lib/query_utils.coffee'
 
 _conn = null
 conn = null
@@ -124,19 +123,19 @@ exports[NS].doInTransaction =
 		test.strictEqual this.count(), 4
 
 	'should rollback transaction and throw on query error': t ->
-		test.throws(
+		test.throwsPgError(
 			-> queryUtils.doInTransaction conn, (tx) ->
 				tx.query.sync tx, "INSERT INTO test_table VALUES (3, 'something')"
 				tx.query.sync tx, "INSERT INTO no_such_table VALUES ('nothing')"
-			Error, 'relation "no_such_table" does not exist'
+			'42P01'  # relation "no_such_table" does not exist
 		)
 		test.strictEqual this.count(), 2
 
 	'should rollback transaction (and make connection usable immediately) on first query error': t ->
-		test.throws(
+		test.throwsPgError(
 			-> queryUtils.doInTransaction conn, (tx) ->
 				tx.query.sync tx, "SELECT first transaction query with error"
-			Error, 'syntax error at or near "transaction"'
+			'42601'  # syntax error at or near "transaction"
 		)
 		test.strictEqual this.count(), 2
 

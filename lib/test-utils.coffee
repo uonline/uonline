@@ -19,6 +19,15 @@ sync = require 'sync'
 
 exports.test = require('chai').assert
 
+exports.test.throwsPgError = (fn, code) ->
+	try
+		fn()
+	catch ex
+		exports.test.strictEqual ex.code, code
+		return
+	throw new Error "Expected block to throw PG error with code #{code}"
+
+
 exports.requireCovered = require '../require-covered.coffee'
 
 # Wrapper. For the given function f, returns a function F which takes exactly

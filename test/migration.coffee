@@ -24,7 +24,7 @@ mg = require '../lib/migration'
 queryUtils = require '../lib/query_utils'
 tables = require '../lib/tables'
 
-game = requireCovered __dirname, '../lib/migration.coffee'
+migration = requireCovered __dirname, '../lib/migration.coffee'
 
 _conn = null
 conn = null
@@ -64,12 +64,12 @@ exports[NS].before = t ->
 exports[NS].beforeEach = t ->
 	conn = transaction(_conn, autoRollback: false)
 	query = queryUtils.getFor conn
-	migrationDataBackup = mg.getMigrationsData()
+	migrationDataBackup = migration.getMigrationsData()
 	query 'DROP TABLE IF EXISTS revision'
-	mg.setMigrationsData migrationData
+	migration.setMigrationsData migrationData
 
 exports[NS].afterEach = t ->
-	mg.setMigrationsData migrationDataBackup
+	migration.setMigrationsData migrationDataBackup
 	conn.rollback.sync(conn)
 
 
@@ -78,16 +78,16 @@ exports[NS].getCurrentRevision =
 	'should return current revision number': t ->
 		query 'CREATE TABLE revision (revision INT)'
 		query 'INSERT INTO revision VALUES (945)'
-		rev = mg.getCurrentRevision.sync null, conn
+		rev = migration.getCurrentRevision.sync null, conn
 		test.strictEqual rev, 945
 
 	'should return -1 if revision table is not created': t ->
-		rev = mg.getCurrentRevision.sync null, conn
+		rev = migration.getCurrentRevision.sync null, conn
 		test.strictEqual rev, -1
 
 	'should fail on exceptions': t ->
 		test.throws(
-			-> mg.getCurrentRevision.sync null, 'nonsense'
+			-> migration.getCurrentRevision.sync null, 'nonsense'
 			Error, 'dbConnection.query is not a function'
 		)
 
@@ -96,27 +96,27 @@ exports[NS].getCurrentRevision =
 			query: (text, args, callback) ->
 				callback new Error('THE_VERY_STRANGE_ERROR')
 		test.throws(
-			-> mg.getCurrentRevision.sync null, fakeConn
+			-> migration.getCurrentRevision.sync null, fakeConn
 			Error, 'THE_VERY_STRANGE_ERROR'
 		)
 
 
 exports[NS].setRevision =
-	'should crete revision table if it does not exist': t ->
-		mg.setRevision.sync null, conn, 1
+	'should create revision table if it does not exist': t ->
+		migration.setRevision.sync null, conn, 1
 		test.isTrue tables.tableExists.sync(null, conn, 'revision')
 
 	'should set correct revision number': t ->
-		mg.setRevision.sync null, conn, 1
-		test.strictEqual mg.getCurrentRevision.sync(null, conn), 1
+		migration.setRevision.sync null, conn, 1
+		test.strictEqual migration.getCurrentRevision.sync(null, conn), 1
 
-		mg.setRevision.sync null, conn, 2
-		test.strictEqual mg.getCurrentRevision.sync(null, conn), 2
+		migration.setRevision.sync null, conn, 2
+		test.strictEqual migration.getCurrentRevision.sync(null, conn), 2
 
 
 exports[NS]._justMigrate =
 	'should correctly perform specified migration': t ->
-		mg._justMigrate conn, 0
+		migration._justMigrate conn, 0
 		tt = query.all 'SELECT column_name FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		ot = query.all 'SELECT column_name FROM information_schema.columns ' +
@@ -127,7 +127,7 @@ exports[NS]._justMigrate =
 				[{column_name: 'id'}]
 			], 'should correctly perform first migration'
 
-		mg._justMigrate conn, 1
+		migration._justMigrate conn, 1
 		tt = query.all 'SELECT column_name FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		ot = query.all 'SELECT column_name FROM information_schema.columns ' +
@@ -139,11 +139,11 @@ exports[NS]._justMigrate =
 			], 'should correctly add second migration'
 
 	'should perform raw SQL commands': t ->
-		mg.setMigrationsData [[
+		migration.setMigrationsData [[
 			[ 'test_table', 'create', 'id INT' ]
 			[ 'test_table', 'rawsql', 'INSERT INTO test_table (id) VALUES (1), (2), (5)' ]
 		]]
-		mg._justMigrate conn, 0
+		migration._justMigrate conn, 0
 
 		rows = query.all 'SELECT * FROM test_table'
 		test.deepEqual rows, [
@@ -152,17 +152,17 @@ exports[NS]._justMigrate =
 
 	'should return error if failed to migrate': t ->
 		query 'DROP TABLE IF EXISTS test_table'
-		mg.setRevision.sync null, conn, 0
+		migration.setRevision.sync null, conn, 0
 
-		test.throws(
-			-> mg._justMigrate conn, 1
-			Error, /.*relation "test_table" does not exist.*/
+		test.throwsPgError(
+			-> migration._justMigrate conn, 1
+			'42P01'  # relation "test_table" does not exist
 		)
 
 
 exports[NS].migrate =
 	'should perform some or all migratons': t ->
-		mg.migrate.sync null, conn, {dest_revision: 1}
+		migration.migrate.sync null, conn, {dest_revision: 1}
 
 		rows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
@@ -180,11 +180,11 @@ exports[NS].migrate =
 			orows[0].data_type is 'integer',
 			'should correctly perform part of migrations'
 
-		revision = mg.getCurrentRevision.sync null, conn
+		revision = migration.getCurrentRevision.sync null, conn
 		test.strictEqual revision, 1, 'should set correct revision'
 
 
-		mg.migrate.sync null, conn
+		migration.migrate.sync null, conn
 
 		rows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
@@ -206,13 +206,13 @@ exports[NS].migrate =
 			orows[1].data_type is 'integer',
 			'should correctly perform all remaining migrations'
 
-		revision = mg.getCurrentRevision.sync null, conn
+		revision = migration.getCurrentRevision.sync null, conn
 		test.strictEqual revision, 3, 'should set correct revision'
 
 	'should be able to migrate just one table': t ->
-		rev0 = mg.getCurrentRevision.sync null, conn
-		mg.migrate.sync null, conn, {dest_revision: 0, table: 'test_table'}
-		rev1 = mg.getCurrentRevision.sync null, conn
+		rev0 = migration.getCurrentRevision.sync null, conn
+		migration.migrate.sync null, conn, {dest_revision: 0, table: 'test_table'}
+		rev1 = migration.getCurrentRevision.sync null, conn
 		test.strictEqual rev0, rev1, 'should not change version for one table'
 
 		row = query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
@@ -226,9 +226,10 @@ exports[NS].migrate =
 		test.ok not exists, 'migration for other tables should not have been performed'
 
 	'should be able to migrate several tables': t ->
-		rev0 = mg.getCurrentRevision.sync null, conn
-		mg.migrate.sync null, conn, {dest_revision: 0, tables: ['no_such_table', 'test_table', 'other_table']}
-		rev1 = mg.getCurrentRevision.sync null, conn
+		rev0 = migration.getCurrentRevision.sync null, conn
+		migration.migrate.sync null, conn,
+			{ dest_revision: 0, tables: ['no_such_table', 'test_table', 'other_table'] }
+		rev1 = migration.getCurrentRevision.sync null, conn
 		test.strictEqual rev0, rev1, 'should not change version'
 
 		row = query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
@@ -258,7 +259,7 @@ exports[NS].migrate =
 			test.ok log_times>0, message
 
 		testLog 'should say something',
-			-> mg.migrate.sync null, conn, {verbose: true}
+			-> migration.migrate.sync null, conn, {verbose: true}
 
 		testLog 'should say something (when all migrations already completed)',
-			-> mg.migrate.sync null, conn, {verbose: true}
+			-> migration.migrate.sync null, conn, {verbose: true}
