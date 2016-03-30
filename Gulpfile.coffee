@@ -136,6 +136,7 @@ gulp.task 'test', seq 'nodeunit', 'mocha', 'jscoverage-report', 'force-exit'
 
 gulp.task 'mocha', ->
 	mocha = require 'gulp-mocha'
+
 	return gulp
 		.src [
 			'test/health-check.js'
@@ -145,20 +146,16 @@ gulp.task 'mocha', ->
 		]
 		.pipe mocha {
 			ui: 'exports'
-			reporter: 'spec'
+			reporter: args.reporter || 'spec'
 			slow: 50
-			#grep: 'valid'
+			grep: args.grep || undefined
 		}
-	# TODO later: reporter dot
-	# TODO: --reporter=value
-	# TODO: --single=value
+	# TODO later: mocha-fivemat-reporter
 	# TODO: --slow=value
-	# TODO: --grep=value
 
 
 gulp.task 'nodeunit', ->
 	nodeunit = require 'gulp-nodeunit-runner'
-	reporter = 'minimal'
 	sourcefiles = [
 		'tests/health-check.js'
 		'tests/health-check.coffee'
@@ -167,12 +164,9 @@ gulp.task 'nodeunit', ->
 	]
 	if args.single?
 		sourcefiles = "tests/#{args.single}"
-	if args.reporter?
-		reporter = args.reporter
-	imitate = require 'vinyl-imitate'
 	return gulp
 		.src sourcefiles
-		.pipe nodeunit(reporter: reporter)
+		.pipe nodeunit(reporter: 'minimal')
 
 
 gulp.task 'force-exit', ->
