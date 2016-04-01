@@ -90,7 +90,12 @@ exports.tearDown = (done) ->
 	done()
 
 
-commonTest = (test, result) ->
+exports.correct_test = (test) ->
+	result = parser.processDir 'tests/loctests/Кронт - kront' #'unify/Кронт - kront'
+
+	test.deepEqual result.warnings, [], 'should receive no warnings'
+	test.deepEqual result.errors, [], 'should receive no errors'
+
 	test.strictEqual result.areas.length, 2, 'all areas should have been parsed'
 	test.strictEqual result.locations.length, 3, 'all locations should have been parsed'
 
@@ -107,14 +112,6 @@ commonTest = (test, result) ->
 
 	test.deepEqual krontShouldBeLike, first, 'area should have been parsed correctly (1)'
 	test.deepEqual outerShouldBeLike, second, 'area should have been parsed correctly (2)'
-
-
-exports.correct_test = (test) ->
-	result = parser.processDir 'tests/loctests/Кронт - kront' #'unify/Кронт - kront'
-
-	test.deepEqual result.warnings, [], 'should receive no warnings'
-	test.deepEqual result.errors, [], 'should receive no errors'
-	commonTest test, result
 
 	test.done()
 
