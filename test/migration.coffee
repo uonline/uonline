@@ -20,7 +20,6 @@ NS = 'migration'; exports[NS] = {}  # namespace
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
 sync = require 'sync'
-mg = require '../lib/migration'
 queryUtils = require '../lib/query_utils'
 tables = require '../lib/tables'
 
@@ -59,7 +58,6 @@ migrationDataBackup = []
 
 exports[NS].before = t ->
 	_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-	mg.migrate.sync mg, _conn
 
 exports[NS].beforeEach = t ->
 	conn = transaction(_conn, autoRollback: false)
