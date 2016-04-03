@@ -14,17 +14,20 @@
 
 'use strict'
 
-requireCovered = require '../require-covered.coffee'
-parser = requireCovered __dirname, '../lib/locparse.coffee'
-fs = require 'fs'
-config = require '../config'
+NS = 'locparse'; exports[NS] = {}  # namespace
+{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
 mg = require '../lib/migration'
+fs = require 'fs'
 rmrf = require 'rmrf'
 copy = require('ncp').ncp
 copy.limit = 16 #concurrency limit
-TMP_DIR = 'tests/loctests_tmp'
+TMP_DIR = 'test/loctests_tmp'
+
+parser = requireCovered __dirname, '../lib/locparse.coffee'
+
 
 krontShouldBeLike =
 	id: 0
@@ -72,52 +75,47 @@ outerShouldBeLike =
 
 sed = (pairs, file) ->
 	data = fs.readFileSync(file, 'utf-8')
-	for pair in pairs
-		[oldStr, newStr] = pair
+	for [oldStr, newStr] in pairs
 		data = data.replace(oldStr, newStr)
 	fs.writeFileSync file, data, 'utf-8'
 
 
-exports.setUp = (done) ->
+exports[NS].beforeEach = (done) ->
 	rmrf TMP_DIR if fs.existsSync TMP_DIR
-	copy 'tests/loctests', TMP_DIR, (error) ->
-		throw error if error?
-		done()
+	copy 'test/loctests', TMP_DIR, done
 
 
-exports.tearDown = (done) ->
+exports[NS].afterEach = ->
 	rmrf TMP_DIR if fs.existsSync TMP_DIR
-	done()
 
 
-exports.correct_test = (test) ->
-	result = parser.processDir 'tests/loctests/Кронт - kront' #'unify/Кронт - kront'
+exports[NS].correct =
+	'should parse all correctly and without errors and warnings': ->
+		result = parser.processDir 'test/loctests/Кронт - kront'
 
-	test.deepEqual result.warnings, [], 'should receive no warnings'
-	test.deepEqual result.errors, [], 'should receive no errors'
+		test.deepEqual result.warnings, [], 'should receive no warnings'
+		test.deepEqual result.errors, [], 'should receive no errors'
 
-	test.strictEqual result.areas.length, 2, 'all areas should have been parsed'
-	test.strictEqual result.locations.length, 3, 'all locations should have been parsed'
+		test.strictEqual result.areas.length, 2, 'all areas should have been parsed'
+		test.strictEqual result.locations.length, 3, 'all locations should have been parsed'
 
-	[first, second] = result.areas
+		[first, second] = result.areas
 
-	for obj in result.areas.concat result.locations
-		test.ok(obj.id >= 0 and obj.id < 0x80000000, 'id should fit DB int key')
-		obj.id = 0
+		for obj in result.areas.concat result.locations
+			test.ok(obj.id >= 0 and obj.id < 0x80000000, 'id should fit DB int key')
+			obj.id = 0
 
-	for area in result.areas
-		for loc in area.locations
-			test.strictEqual area, loc.area, 'locations should have references to their areas'
-			loc.area = null
+		for area in result.areas
+			for loc in area.locations
+				test.strictEqual area, loc.area, 'locations should have references to their areas'
+				loc.area = null
 
-	test.deepEqual krontShouldBeLike, first, 'area should have been parsed correctly (1)'
-	test.deepEqual outerShouldBeLike, second, 'area should have been parsed correctly (2)'
-
-	test.done()
+		test.deepEqual krontShouldBeLike, first, 'area should have been parsed correctly (1)'
+		test.deepEqual outerShouldBeLike, second, 'area should have been parsed correctly (2)'
 
 
-exports.warnings_test =
-	'W1-W9': (test) ->
+exports[NS].warnings =
+	'W1-W9': ->
 		sed([
 				["Здесь убивают слоников", "#Здесь warning"] #1
 				["Здесь стоят гомосеки", "###Здесь стоит warning\n\n*А тут - ещё один"] #2 3
@@ -128,14 +126,13 @@ exports.warnings_test =
 				["`kront-outer/bluestreet`", "`kront-outer/greenstreet`"] #9
 			], "#{TMP_DIR}/Кронт - kront/map.ht.md"
 		)
-		result = parser.processDir "#{TMP_DIR}/Кронт - kront" #'unify/Кронт - kront'
+		result = parser.processDir "#{TMP_DIR}/Кронт - kront"
 
 		test.ok(result.warnings.some((w) -> w.id == "W#{i}"), "should generate warning number#{i}") for i in [1..9]
 		test.strictEqual result.warnings.length, 9, 'should generate all warnings'
 		test.deepEqual result.errors, [], 'should receive no errors'
 
-		test.done()
-	'W10': (test) ->
+	'W10': ->
 		sed([
 				["`kront-outer/greenstreet`", "`kront-outer/greenstreet` text"] #10
 				["### Другая голубая улица `bluestreet`", "### Другая голубая улица `bluestreet` text"] #10
@@ -148,8 +145,6 @@ exports.warnings_test =
 		test.strictEqual result.warnings.length, 2, 'should generate warnings for both cases'
 		test.deepEqual result.errors, [], 'should receive no errors'
 
-		test.done()
-
 
 testOneError = (test, errId, sedWhat, sedByWhat, sedWhere="#{TMP_DIR}/Кронт - kront/map.ht.md") ->
 	sed [[sedWhat, sedByWhat]], sedWhere
@@ -159,135 +154,119 @@ testOneError = (test, errId, sedWhat, sedByWhat, sedWhere="#{TMP_DIR}/Кронт
 	#test.strictEqual result.errors.length, 1, 'should not generate extra errors'
 	test.deepEqual result.warnings, [], 'should receive no warnings'
 
-	test.done()
+
+exports[NS].errors =
+	'E1': ->
+		testOneError(
+			test, 'E1'
+			"`kront-outer/bluestreet`"
+			"`kront-outer/no-such-street`"
+		)
+
+	'E2': ->
+		testOneError(
+			test, 'E2'
+			"* Пойти на Зелёную улицу `kront-outer/greenstreet`"
+			"* Пойти на Зелёную улицу без метки"
+		)
+
+	'E3': ->
+		testOneError(
+			test, 'E3'
+			"### Другая голубая улица `bluestreet`"
+			"### Другая голубая улица и тоже без метки"
+		)
+
+	'E4': ->
+		fs.renameSync "#{TMP_DIR}/Кронт - kront", "#{TMP_DIR}/Кронт"
+		result = parser.processDir "#{TMP_DIR}/Кронт"
+
+		test.ok result.errors.some((e) -> e.id == 'E4'), 'should return specific error'
+		test.deepEqual result.warnings, [], 'should receive no warnings'
+
+	'E5': ->
+		testOneError(
+			test, 'E5'
+			"# Кронт"
+			"# Тнорк"
+		)
+
+	'E6': ->
+		testOneError(
+			test, 'E6'
+			"### Зелёная улица `greenstreet` (initial)"
+			"### Зелёная улица `greenstreet`"
+			"#{TMP_DIR}/Кронт - kront/Окрестности Кронта - outer/map.ht.md"
+		)
+
+	'E7': ->
+		testOneError(
+			test, 'E7'
+			"### Голубая улица `bluestreet`"
+			"### Голубая улица `greenstreet`"
+			"#{TMP_DIR}/Кронт - kront/Окрестности Кронта - outer/map.ht.md"
+		)
+
+	'E8': (done) ->
+		done() #the hardest one
+
+	'E9': ->
+		testOneError(
+			test, 'E9'
+			"### Другая голубая улица `bluestreet`"
+			"### Другая голубая улица `bluestreet`\n![img](img)\n![moar](moat)"
+		)
+
+	'E10': ->
+		testOneError(
+			test, 'E10'
+			"### Другая голубая улица `bluestreet`"
+			"### Другая голубая улица `bluestreet`\n![paths_are](different.png)"
+		)
+
+	'E11': ->
+		testOneError(
+			test, 'E11'
+			"### Другая голубая улица `bluestreet`"
+			"### Другая голубая улица `bluestreet` (initial)"
+		)
+
+	'E12': ->
+		testOneError(
+			test, 'E12'
+			"# Кронт"
+			"# Кронт\n# Кронта много не бывает"
+		)
+
+	'E13': ->
+		testOneError(
+			test, 'E13'
+			"# Кронт"
+			"# Кронт\n* какой-то переход `куда-то`"
+		)
+
+	'E14': ->
+		testOneError(
+			test, 'E14'
+			"Большой и ленивый город."
+			"Большой и ленивый город.\n![image](image)"
+		)
+
+	'E15': t ->
+		copy.sync(copy,
+			"#{TMP_DIR}/Кронт - kront/Окрестности Кронта - outer"
+			"#{TMP_DIR}/Кронт - kront/Окрестности Кронта2 - outer"
+		)
+		testOneError(
+			test, 'E15'
+			"# Окрестности Кронта"
+			"# Окрестности Кронта2"
+			"#{TMP_DIR}/Кронт - kront/Окрестности Кронта2 - outer/map.ht.md"
+		)
 
 
-exports.error_E1_test = (test) ->
-	testOneError(
-		test, 'E1'
-		"`kront-outer/bluestreet`"
-		"`kront-outer/no-such-street`"
-	)
-
-
-exports.error_E2_test = (test) ->
-	testOneError(
-		test, 'E2'
-		"* Пойти на Зелёную улицу `kront-outer/greenstreet`"
-		"* Пойти на Зелёную улицу без метки"
-	)
-
-
-exports.error_E3_test = (test) ->
-	testOneError(
-		test, 'E3'
-		"### Другая голубая улица `bluestreet`"
-		"### Другая голубая улица и тоже без метки"
-	)
-
-
-exports.error_E4_test = (test) ->
-	fs.renameSync "#{TMP_DIR}/Кронт - kront", "#{TMP_DIR}/Кронт"
-	result = parser.processDir "#{TMP_DIR}/Кронт"
-
-	test.ok result.errors.some((e) -> e.id == 'E4'), 'should return specific error'
-	test.deepEqual result.warnings, [], 'should receive no warnings'
-
-	test.done()
-
-
-exports.error_E5_test = (test) ->
-	testOneError(
-		test, 'E5'
-		"# Кронт"
-		"# Тнорк"
-	)
-
-
-exports.error_E6_test = (test) ->
-	testOneError(
-		test, 'E6'
-		"### Зелёная улица `greenstreet` (initial)"
-		"### Зелёная улица `greenstreet`"
-		"#{TMP_DIR}/Кронт - kront/Окрестности Кронта - outer/map.ht.md"
-	)
-
-
-exports.error_E7_test = (test) ->
-	testOneError(
-		test, 'E7'
-		"### Голубая улица `bluestreet`"
-		"### Голубая улица `greenstreet`"
-		"#{TMP_DIR}/Кронт - kront/Окрестности Кронта - outer/map.ht.md"
-	)
-
-
-exports.error_E8_test = (test) ->
-	test.done() #the hardest one
-
-
-exports.error_E9_test = (test) ->
-	testOneError(
-		test, 'E9'
-		"### Другая голубая улица `bluestreet`"
-		"### Другая голубая улица `bluestreet`\n![img](img)\n![moar](moat)"
-	)
-
-
-exports.error_E10_test = (test) ->
-	testOneError(
-		test, 'E10'
-		"### Другая голубая улица `bluestreet`"
-		"### Другая голубая улица `bluestreet`\n![paths_are](different.png)"
-	)
-
-
-exports.error_E11_test = (test) ->
-	testOneError(
-		test, 'E11'
-		"### Другая голубая улица `bluestreet`"
-		"### Другая голубая улица `bluestreet` (initial)"
-	)
-
-exports.error_E12_test = (test) ->
-	testOneError(
-		test, 'E12'
-		"# Кронт"
-		"# Кронт\n# Кронта много не бывает"
-	)
-
-exports.error_E13_test = (test) ->
-	testOneError(
-		test, 'E13'
-		"# Кронт"
-		"# Кронт\n* какой-то переход `куда-то`"
-	)
-
-exports.error_E14_test = (test) ->
-	testOneError(
-		test, 'E14'
-		"Большой и ленивый город."
-		"Большой и ленивый город.\n![image](image)"
-	)
-
-exports.error_E15_test = (test) ->
-	copy(
-		"#{TMP_DIR}/Кронт - kront/Окрестности Кронта - outer"
-		"#{TMP_DIR}/Кронт - kront/Окрестности Кронта2 - outer"
-		(error) ->
-			throw error if error
-
-			testOneError(
-				test, 'E15'
-				"# Окрестности Кронта"
-				"# Окрестности Кронта2"
-				"#{TMP_DIR}/Кронт - kront/Окрестности Кронта2 - outer/map.ht.md"
-			)
-	)
-
-
-exports.save = ((test) ->
-	try
+exports[NS].save =
+	'should save all areas and locations': t ->
 		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
 		mg.migrate.sync mg, _conn
 		conn = transaction(_conn)
@@ -296,13 +275,8 @@ exports.save = ((test) ->
 		parseResult.save(conn)
 
 		result = conn.query.sync conn, 'SELECT count(*) AS cnt FROM areas'
-		test.equal result.rows[0].cnt, parseResult.areas.length, 'should save all areas'
+		test.equal result.rows[0].cnt, parseResult.areas.length
 		result = conn.query.sync conn, 'SELECT count(*) AS cnt FROM locations'
-		test.equal result.rows[0].cnt, parseResult.locations.length, 'should save all locations'
+		test.equal result.rows[0].cnt, parseResult.locations.length
 
 		conn.rollback.sync(conn)
-	catch e
-		test.ifError e
-	test.done()
-).async()
-
