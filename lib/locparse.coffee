@@ -200,7 +200,7 @@ class Result
 	save: (dbConnection) ->
 		throw new Error("Can't save with errors.") if @errors.length > 0
 
-		dbConnection.query.sync(dbConnection, "TRUNCATE areas", [])
+		dbConnection.query.sync(dbConnection, "DELETE FROM areas", [])
 		for area in @areas
 			dbConnection.query.sync(
 				dbConnection
@@ -211,7 +211,7 @@ class Result
 		locByLabel = {}
 		locByLabel[loc.label] = loc for loc in @locations
 
-		dbConnection.query.sync(dbConnection, "TRUNCATE locations", [])
+		dbConnection.query.sync(dbConnection, "DELETE FROM locations", [])
 		for loc in @locations
 			ways = ({target: locByLabel[k].id, text: v} for k,v of loc.actions)
 			dbConnection.query.sync(
