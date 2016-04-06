@@ -31,11 +31,8 @@ conn = null
 query = null
 
 
-insert = (dbName, fields) ->
-	values = (v for _,v of fields)
-	query "INSERT INTO #{dbName} (#{k for k of fields}) "+
-	      "VALUES (#{values.map (v,i) -> '$'+(i+1)+(if v? and typeof v is 'object' then '::json' else '')})",
-		values.map((v) -> if v? and typeof v is 'object' then JSON.stringify(v) else v)
+insert = (table, fields) ->
+	queryUtils.unsafeInsert conn, table, fields
 
 
 exports[NS].before = t ->

@@ -32,9 +32,8 @@ conn = null
 query = null
 
 
-insert = (dbName, fields) ->
-	values = (v for _,v of fields)
-	query "INSERT INTO #{dbName} (#{k for k of fields}) VALUES (#{values.map (_,i) -> '$'+(i+1)})", values
+insert = (table, fields) ->
+	queryUtils.unsafeInsert conn, table, fields
 
 
 exports[NS].before = t ->

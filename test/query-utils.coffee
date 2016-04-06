@@ -159,3 +159,44 @@ exports[NS].doInTransaction =
 			tx.query.sync tx, "INSERT INTO test_table VALUES (5, 'one more thing')"
 		test.strictEqual this.count(), 3
 
+
+exports[NS].unsafeInsert =
+	'should insert passed args': t ->
+		queryUtils.unsafeInsert conn, 'test_table', {id: 3, data: 'smth'}
+		queryUtils.unsafeInsert conn, 'test_table', {id: 4, data: 'other'}
+
+		rows = query.all "SELECT * FROM test_table"
+		test.deepEqual rows, [
+			{ id: 1, data: 'first' },
+			{ id: 2, data: 'second' },
+			{ id: 3, data: 'smth' },
+			{ id: 4, data: 'other' },
+		]
+
+	'should insert objects as json': t ->
+		query "ALTER TABLE test_table ADD COLUMN params json"
+		queryUtils.unsafeInsert conn, 'test_table', {id: 3, data: 'smth', params: [1,2]}
+		queryUtils.unsafeInsert conn, 'test_table', {id: 4, data: 'other', params: {'works': true}}
+
+		rows = query.all "SELECT * FROM test_table"
+		test.deepEqual rows, [
+			{ id: 1, data: 'first', params: null },
+			{ id: 2, data: 'second', params: null },
+			{ id: 3, data: 'smth', params: [1, 2] },
+			{ id: 4, data: 'other', params: {'works': true} },
+		]
+
+	'should insert dates as timestamps': t ->
+		now = new Date()
+		longTimeAgo = new Date(2015, 0, 1, 12, 23)
+		query "ALTER TABLE test_table ADD COLUMN created_at TIMESTAMPTZ"
+		queryUtils.unsafeInsert conn, 'test_table', {id: 3, created_at: now}
+		queryUtils.unsafeInsert conn, 'test_table', {id: 4, created_at: longTimeAgo}
+
+		rows = query.all "SELECT * FROM test_table"
+		test.deepEqual rows, [
+			{ id: 1, data: 'first', created_at: null },
+			{ id: 2, data: 'second', created_at: null },
+			{ id: 3, data: null, created_at: now },
+			{ id: 4, data: null, created_at: longTimeAgo },
+		]

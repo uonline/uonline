@@ -62,3 +62,19 @@ exports.doInTransaction = (dbConnection, func) ->
 	if tx.state() isnt 'closed'
 		tx.commit.sync(tx)
 
+
+exports.unsafeInsert = (dbConnection, table, fields) ->
+	names = []
+	formats = []
+	values = []
+
+	for name, value of fields
+		format = '$' + (names.length+1)
+		if value? and typeof value is 'object' and !(value instanceof Date)
+			format += '::json'
+			value = JSON.stringify(value)
+		names.push name
+		formats.push format
+		values.push value
+
+	dbConnection.query.sync dbConnection, "INSERT INTO #{table} (#{names}) VALUES (#{formats})", values
