@@ -14,11 +14,13 @@
 
 'use strict'
 
-requireCovered = require '../require-covered.coffee'
+NS = 'validation'; exports[NS] = {}  # namespace
+{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+
 validation = requireCovered __dirname, '../lib/validation.coffee'
 
 
-exports.usernameIsValid = (test) ->
+exports[NS].usernameIsValid = t ->
 	test.strictEqual validation.usernameIsValid('m1kc'), true, 'should pass good names'
 	test.strictEqual validation.usernameIsValid('Волшебник'), true, 'should pass good names'
 	test.strictEqual validation.usernameIsValid('Михаил Кутузов'), true, 'should pass good names'
@@ -33,33 +35,30 @@ exports.usernameIsValid = (test) ->
 	test.strictEqual validation.usernameIsValid('---'), false, 'should not pass shit'
 	test.strictEqual validation.usernameIsValid(' Max '), false, 'should not pass shit'
 	test.strictEqual validation.usernameIsValid('-Max-'), false, 'should not pass shit'
-	test.done()
 
 
-exports.emailIsValid = (test) ->
+exports[NS].emailIsValid = t ->
 	test.strictEqual validation.emailIsValid('security@mail.ru'), true, 'should pass good emails'
 	test.strictEqual validation.emailIsValid('wtf'), false, 'should not pass the shit'
 	test.strictEqual validation.emailIsValid(undefined), false, 'empty mail - invalid mail'
 	test.strictEqual validation.emailIsValid(null), false, 'empty mail - invalid mail'
-	test.done()
 
 
-exports.passwordIsValid = (test) ->
+exports[NS].passwordIsValid = t ->
 	test.strictEqual validation.passwordIsValid('make install clean'), true, 'should pass good passwords'
 	test.strictEqual validation.passwordIsValid('вобла'), false, 'should not pass Russian'
 	test.strictEqual validation.passwordIsValid('b'), false, 'not too short'
 	test.strictEqual validation.passwordIsValid('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'), false, 'not too long'
 	test.strictEqual validation.passwordIsValid(undefined), false, 'not passed - not valid'
 	test.strictEqual validation.passwordIsValid(null), false, 'not passed - not valid'
-	test.done()
 
 
-exports.characterNameIsValid = (test) ->
-	[
-		['Sashok',        true, 'good name is ok']
-		['Нагибатор',     true, 'good name in russion is ok too']
-		['rm-rf',         true, 'dashes are allowed']
-		['ДитЯ СолныФкА', true, 'spaces are allowed']
+exports[NS].characterNameIsValid = t ->
+	for [name, result, message] in [
+		['Sashok',         true,  'good name is ok']
+		['Нагибатор',      true,  'good name in russion is ok too']
+		['rm-rf',          true,  'dashes are allowed']
+		['ДитЯ СолныФкА',  true,  'spaces are allowed']
 		['InfernaL_DeviL', false, 'no underscores']
 		['Qwerty Йцукен',  false, 'no latin and russian mix']
 		['rm -rf',         false, 'no multiple spaces/dashes in a row']
@@ -69,11 +68,11 @@ exports.characterNameIsValid = (test) ->
 		['-Infinity',      false, 'no front dashes']
 		['Rainbow-',       false, 'no trailing dashes']
 		['Ты блондинко йа одмин Тибя много йа адин'+
-		' Ты на капсе йа пацтулом Щолкну мышкой плюсадин', false, 'not too long']
-		['q',       false, 'not too short']
-		['',        false, 'empty name - invalid name']
-		[undefined, false, 'empty name - invalid name']
-		[null,      false, 'empty name - invalid name']
-	].forEach (x) ->
-		test.strictEqual validation.characterNameIsValid(x[0]), x[1], x[2]
-	test.done()
+			' Ты на капсе йа пацтулом Щолкну мышкой плюсадин',
+			false, 'not too long']
+		['q',              false, 'not too short']
+		['',               false, 'empty name - invalid name']
+		[undefined,        false, 'empty name - invalid name']
+		[null,             false, 'empty name - invalid name']
+	]
+		test.strictEqual validation.characterNameIsValid(name), result, message

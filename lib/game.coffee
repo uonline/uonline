@@ -37,7 +37,7 @@ exports.getInitialLocation = ((dbConnection) ->
 exports.getCharacterLocationId = (dbConnection, character_id, callback) ->
 	dbConnection.query 'SELECT location FROM characters WHERE id = $1', [character_id], (error, result) ->
 		if !!result and result.rows.length is 0
-			error = new Error "Wrong character's id"
+			error = new Error "wrong character's id"
 		callback(error, error || result.rows[0].location)
 
 
@@ -46,7 +46,7 @@ exports.getCharacterLocation = ((dbConnection, character_id) ->
 	result = dbConnection.query.sync(dbConnection, "SELECT locations.* FROM locations, characters "+
 		"WHERE characters.id=$1 AND locations.id = characters.location", [character_id])
 	if result.rows.length is 0
-		throw new Error "Wrong character's id or location"
+		throw new Error "wrong character's id or location"
 	return result.rows[0]
 ).async()
 
@@ -57,7 +57,7 @@ exports.getCharacterArea = ((dbConnection, character_id) ->
 		"WHERE characters.id=$1 AND locations.id = characters.location AND areas.id = locations.area",
 		[ character_id ])
 	if result.rows.length is 0
-		throw new Error "Wrong character's id"
+		throw new Error "wrong character's id"
 	return result.rows[0]
 ).async()
 
@@ -143,7 +143,7 @@ exports._leaveBattle = (tx, battleId, leaverId) ->
 	).rows[0]
 
 	unless leaver?
-		throw new Error "Can't find participant character_id=#{leaverId} in battle ##{battleId}"
+		throw new Error "can't find participant character_id=#{leaverId} in battle ##{battleId}"
 
 	# shifting other participant's indexes
 	tx.query.sync(tx,
@@ -272,7 +272,7 @@ exports.goEscape = ((dbConnection, character_id) ->
 		[character_id]
 	).rows[0]
 	if battle?
-		exports._leaveBattle dbConnection, battle.id, character_id, "user"
+		exports._leaveBattle dbConnection, battle.id, character_id
 	return
 ).async()
 

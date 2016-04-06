@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 set -x
 
 if [ "$1" "==" "--fast" ]; then
-	grunt --stack test
+	gulp test
 else
-	grunt --stack
+	gulp
 fi

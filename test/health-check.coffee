@@ -14,10 +14,24 @@
 
 'use strict'
 
-requireCovered = require '../require-covered.coffee'
-math = requireCovered __dirname, '../lib/math.coffee'
+NS = 'health-check'; exports[NS] = {}  # namespace
+{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
 
-exports.ap = (test) ->
-	test.strictEqual math.ap(1,2,3), 5, 'should return n-th number in arithmetical progression'
-	test.strictEqual math.ap(3,6,9), 153, 'should return n-th number in arithmetical progression'
-	test.done()
+exports[NS] =
+	'2+2 should be 4': ->
+		test.strictEqual 2 + 2, 4
+	'2+2 should be 4 in asynchronous manner': (done) ->
+		test.strictEqual 2 + 2, 4
+		process.nextTick done
+	'2+2 should be 4 with sync wrapper': t ->
+		test.strictEqual 2 + 2, 4
+
+
+# describe = require('mocha').describe
+# it = require('mocha').it
+
+# describe 'BDD via require UI', ->
+# 	it 'should just work', ->
+# 		test.isTrue true
+# 	it '2+2 should also be 4', ->
+# 		test.strictEqual 2+2, 4

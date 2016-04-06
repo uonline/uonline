@@ -131,12 +131,31 @@ gulp.task 'check', ->
 		#.pipe __coffeeOnly.restore
 
 
-gulp.task 'test', seq 'nodeunit', 'jscoverage-report', 'force-exit'
+gulp.task 'test', seq 'nodeunit', 'mocha', 'jscoverage-report', 'force-exit'
+
+
+gulp.task 'mocha', ->
+	mocha = require 'gulp-mocha'
+
+	return gulp
+		.src [
+			'test/health-check.js'
+			'test/health-check.coffee'
+			'test/*.js'
+			'test/*.coffee'
+		]
+		.pipe mocha {
+			ui: 'exports'
+			reporter: args.reporter || 'spec'
+			slow: 50
+			grep: args.grep || undefined
+		}
+	# TODO later: mocha-fivemat-reporter
+	# TODO: --slow=value
 
 
 gulp.task 'nodeunit', ->
 	nodeunit = require 'gulp-nodeunit-runner'
-	reporter = 'minimal'
 	sourcefiles = [
 		'tests/health-check.js'
 		'tests/health-check.coffee'
@@ -145,12 +164,9 @@ gulp.task 'nodeunit', ->
 	]
 	if args.single?
 		sourcefiles = "tests/#{args.single}"
-	if args.reporter?
-		reporter = args.reporter
-	imitate = require 'vinyl-imitate'
 	return gulp
 		.src sourcefiles
-		.pipe nodeunit(reporter: reporter)
+		.pipe nodeunit(reporter: 'minimal')
 
 
 gulp.task 'force-exit', ->
@@ -173,4 +189,4 @@ gulp.task 'coveralls', ->
 		.pipe coveralls()
 
 
-gulp.task 'travis', seq 'check', 'build', 'nodeunit', 'jscoverage-report', 'coveralls', 'force-exit'
+gulp.task 'travis', seq 'check', 'build', 'nodeunit', 'mocha', 'jscoverage-report', 'coveralls', 'force-exit'

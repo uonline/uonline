@@ -14,9 +14,11 @@
 
 'use strict'
 
-# This test must always pass.
-# If it doesn't, something is *really* bad.
+NS = 'math'; exports[NS] = {}  # namespace
+{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+math = requireCovered __dirname, '../lib/math.coffee'
 
-exports.test = (test) ->
-	test.strictEqual 4, 2+2, '2+2 should be 4'
-	test.done()
+exports[NS].ap =
+	'should return n-th number in arithmetical progression': ->
+		test.strictEqual math.ap(1,2,3), 5
+		test.strictEqual math.ap(3,6,9), 153

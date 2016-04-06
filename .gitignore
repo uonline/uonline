@@ -2,8 +2,6 @@
 docs/
 
 # Used by tests
-test/
-lib-cov/
 report.lcov
 jsc_dump.json
 
