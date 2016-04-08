@@ -19,8 +19,10 @@ NS = 'user'; exports[NS] = {}  # namespace
 
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
-sync = require 'sync'
 sugar = require 'sugar'
+async = require 'asyncawait/async'
+await = require 'asyncawait/await'
+{promisifyAll, delay} = require("bluebird")
 
 mg = require '../lib/migration.coffee'
 queryUtils = require '../lib/query_utils.coffee'
@@ -30,6 +32,7 @@ users = requireCovered __dirname, '../lib/user.coffee'
 _conn = null
 conn = null
 query = null
+t = async.cps
 
 
 insert = (table, fields) ->
@@ -42,6 +45,7 @@ exports[NS].before = t ->
 
 exports[NS].beforeEach = t ->
 	conn = transaction(_conn, autoRollback: false)
+	promisifyAll(conn)
 	query = queryUtils.getFor conn
 
 exports[NS].afterEach = t ->
@@ -51,8 +55,7 @@ exports[NS].afterEach = t ->
 exports[NS].userExists =
 	beforeEach: t ->
 		query 'INSERT INTO uniusers (username) VALUES ( $1 )', ['Sauron']
-		this.exists = (name) ->
-			users.userExists.sync null, conn, name
+		this.exists = (name) -> await users.userExists(conn, name)
 
 	'should return true if user exists': t ->
 		test.isTrue this.exists('Sauron')
@@ -68,8 +71,8 @@ exports[NS].idExists =
 		query 'INSERT INTO uniusers (id) VALUES ( $1 )', [114]
 
 	'should return if user exists': t ->
-		test.isTrue users.idExists.sync(null, conn, 114)
-		test.isFalse users.idExists.sync(null, conn, 9000)
+		test.isTrue await users.idExists(conn, 114)
+		test.isFalse await users.idExists(conn, 9000)
 
 
 exports[NS].sessionExists =
@@ -77,8 +80,8 @@ exports[NS].sessionExists =
 		query "INSERT INTO uniusers (sessid) VALUES ('someid')"
 
 	'should return if sessid exists': t ->
-		test.isTrue users.sessionExists.sync(null, conn, 'someid')
-		test.isFalse users.sessionExists.sync(null, conn, 'wrongid')
+		test.isTrue await users.sessionExists(conn, 'someid')
+		test.isFalse await users.sessionExists(conn, 'wrongid')
 
 
 exports[NS].sessionInfoRefreshing =
@@ -92,12 +95,12 @@ exports[NS].sessionInfoRefreshing =
 		this.sessTime = (id=8) -> new Date(query.val('SELECT sess_time FROM uniusers WHERE id = $1', [id]))
 
 	'session should not be active if expired': t ->
-		res = users.sessionInfoRefreshing.sync null, conn, 'someid', 7200, false
+		res = await users.sessionInfoRefreshing conn, 'someid', 7200, false
 		test.deepEqual res, { loggedIn: false }
 
 	'session expire time should not be updated if expired': t ->
 		timeBefore = this.sessTime()
-		res = users.sessionInfoRefreshing.sync null, conn, 'someid', 7200, false
+		res = await users.sessionInfoRefreshing conn, 'someid', 7200, false
 		test.deepEqual res, { loggedIn: false }
 		test.strictEqual this.sessTime().valueOf(), timeBefore.valueOf()
 
@@ -105,7 +108,7 @@ exports[NS].sessionInfoRefreshing =
 		query "UPDATE uniusers SET sessid = 'someid'"
 		timeBefore = this.sessTime()
 
-		res = users.sessionInfoRefreshing.sync null, conn, 'someid', 7200, false
+		res = await users.sessionInfoRefreshing conn, 'someid', 7200, false
 		test.deepEqual Object.select(res, this.testingProps), {
 			id: 8
 			loggedIn: true
@@ -118,7 +121,7 @@ exports[NS].sessionInfoRefreshing =
 		test.isBelow timeBefore, timeAfter, 'should update session timestamp'
 
 	'should not fail on empty sessid': t ->
-		res = users.sessionInfoRefreshing.sync null, conn, undefined, 7200, false
+		res = await users.sessionInfoRefreshing conn, undefined, 7200, false
 		test.deepEqual res, { loggedIn: false }
 
 	'should return admin: false if user is not admin': t ->
@@ -127,7 +130,7 @@ exports[NS].sessionInfoRefreshing =
 			id: 99, username: 'user1', character_id: 6,
 			permissions: 'user', sessid: 'otherid', sess_time: 1.hourAgo()
 
-		res = users.sessionInfoRefreshing.sync null, conn, 'otherid', 7200, false
+		res = await users.sessionInfoRefreshing conn, 'otherid', 7200, false
 		test.deepEqual Object.select(res, this.testingProps), {
 			id: 99
 			loggedIn: true
@@ -144,11 +147,11 @@ exports[NS].sessionInfoRefreshing =
 
 		'should update session timestamp': t ->
 			timeBefore = this.sessTime(112)
-			users.sessionInfoRefreshing.sync null, conn, '123456', 7200, true
-			sync.sleep 100
+			await users.sessionInfoRefreshing conn, '123456', 7200, true
+			await delay 50
 			timeAfter = this.sessTime(112)
 
-			test.ok timeBefore < timeAfter
+			test.isBelow timeBefore, timeAfter
 
 		'should tell about errors via console.error': t ->
 			q = conn.query
@@ -162,8 +165,8 @@ exports[NS].sessionInfoRefreshing =
 			errlog = console.error
 			console.error = -> errCalled = true
 
-			users.sessionInfoRefreshing.sync null, conn, '123456', 7200, true
-			sync.sleep 100
+			await users.sessionInfoRefreshing conn, '123456', 7200, true
+			await delay 50
 			test.ok errCalled, 'should tell about error'
 
 			conn.query = q
@@ -195,7 +198,7 @@ exports[NS].getUser = new ->
 		{val: 'user1', res: null,  msg: 'null if name is wrong'}
 	].forEach (param) =>
 		@["should return #{param.msg}"] = t ->
-			user = users.getUser.sync null, conn, param.val
+			user = await users.getUser conn, param.val
 			test.deepEqual user, param.res
 
 
@@ -208,7 +211,7 @@ exports[NS].generateSessId =
 
 		query "INSERT INTO uniusers (sessid) VALUES ('someid1')"
 		query "INSERT INTO uniusers (sessid) VALUES ('someid2')"
-		sessid = users.generateSessId.sync users, conn, 16
+		sessid = await users.generateSessId conn, 16
 
 		users.createSalt = _createSalt
 		test.strictEqual sessid, 'someid3', 'sessid should be unique'
@@ -217,12 +220,12 @@ exports[NS].generateSessId =
 exports[NS].idBySession =
 	'should return correct user id': t ->
 		query "INSERT INTO uniusers ( id, sessid ) VALUES ( 3, 'someid' )"
-		userid = users.idBySession.sync null, conn, "someid"
+		userid = await users.idBySession conn, "someid"
 		test.strictEqual userid, 3
 
 	'should return error on wrong sessid': t ->
 		test.throws(
-			-> users.idBySession.sync null, conn, 'someid'
+			-> await users.idBySession conn, 'someid'
 			Error, "wrong user's id"
 		)
 
@@ -230,14 +233,14 @@ exports[NS].idBySession =
 exports[NS].closeSession =
 	beforeEach: t ->
 		query "INSERT INTO uniusers ( sessid, sess_time ) VALUES ( 'someid', NOW() )"
-		users.closeSession.sync null, conn, 'someid'
+		await users.closeSession conn, 'someid'
 
 	'should expire session': t ->
-		refr = users.sessionInfoRefreshing.sync null, conn, 'someid', 3600
+		refr = await users.sessionInfoRefreshing conn, 'someid', 3600 # WHAT?!
 		test.isFalse refr.loggedIn
 
 	'should not fail with empty sessid': t ->
-		warn1 = users.closeSession.sync null, conn, undefined
+		warn1 = await users.closeSession conn, undefined
 		test.strictEqual warn1, 'Not closing: empty sessid'
 
 
@@ -256,7 +259,7 @@ exports[NS].registerUser =
 		query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
 
 		#TODO: check return value
-		users.registerUser.sync null, conn, 'TheUser', 'password', 'admin'
+		await users.registerUser conn, 'TheUser', 'password', 'admin'
 		user = query.row 'SELECT * FROM uniusers'
 
 		test.isAbove user.salt.length, 0, 'should generate salt'
@@ -265,7 +268,7 @@ exports[NS].registerUser =
 		test.closeTo +user.reg_time, Date.now(), 1000, 'should set registration time to (almost) current time'
 		test.closeTo +user.sess_time, Date.now(), 1000, 'should set session timestamp to (almost) current time'
 		test.strictEqual user.permissions, 'admin', 'should set specified permissions'
-		test.isNull user.character_id, null, 'should not assign character'
+		test.isNull user.character_id, 'should not assign character'
 
 		count = +query.val 'SELECT count(*) FROM characters WHERE player = $1', [user.id]
 		test.strictEqual count, 0, 'should not create character now'
@@ -273,7 +276,7 @@ exports[NS].registerUser =
 	'should fail if user exists': t ->
 		insert 'uniusers', username: 'TheUser'
 		test.throws(
-			-> users.registerUser.sync null, conn, 'TheUser', 'password', 1
+			-> await users.registerUser conn, 'TheUser', 'password', 1
 			Error, 'user already exists'
 		)
 
@@ -281,7 +284,7 @@ exports[NS].registerUser =
 exports[NS].accessGranted = new ->
 	@beforeEach = t ->
 		query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
-		users.registerUser.sync null, conn, 'TheUser', 'password', 'user'
+		await users.registerUser conn, 'TheUser', 'password', 'user'
 
 	[
 		{name:'TheUser',   pass:'password',  ok:true,  msg:'should return true for valid data'}
@@ -291,18 +294,18 @@ exports[NS].accessGranted = new ->
 		{name:'theuser',   pass:'password',  ok:true,  msg:'should ignore capitalization (2)'}
 	].forEach ({name, pass, ok, msg}) =>
 		@[msg] = t ->
-			granted = users.accessGranted.sync null, conn, name, pass
+			granted = await users.accessGranted conn, name, pass
 			test.strictEqual granted, ok
 
 
 exports[NS].createSession =
 	beforeEach: t ->
 		insert 'locations', id: 2, initial: 1
-		users.registerUser.sync null, conn, 'Мохнатый Ангел', 'password', 'user'
+		await users.registerUser conn, 'Мохнатый Ангел', 'password', 'user'
 
 	'should change sessid and update session timestamp': ->
 		user0 = query.row 'SELECT sessid FROM uniusers'
-		users.createSession.sync null, conn, 'МОХНАТЫЙ ангел'
+		await users.createSession conn, 'МОХНАТЫЙ ангел'
 		user1 = query.row 'SELECT sessid, sess_time FROM uniusers'
 
 		test.ok user0.sessid isnt user1.sessid, 'should change sessid'
