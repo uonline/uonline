@@ -19,7 +19,9 @@ NS = 'migration'; exports[NS] = {}  # namespace
 
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
-sync = require 'sync'
+async = require 'asyncawait/async'
+await = require 'asyncawait/await'
+promisifyAll = require("bluebird").promisifyAll
 queryUtils = require '../lib/query_utils'
 tables = require '../lib/tables'
 
@@ -56,68 +58,62 @@ migrationData = [
 migrationDataBackup = []
 
 
-exports[NS].before = t ->
-	_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
+exports[NS].before = ->
+	_conn = promisifyAll anyDB.createConnection(config.DATABASE_URL_TEST)
 
-exports[NS].beforeEach = t ->
-	conn = transaction(_conn, autoRollback: false)
+exports[NS].beforeEach = async ->
+	conn = promisifyAll transaction(_conn, autoRollback: false)
 	query = queryUtils.getFor conn
 	migrationDataBackup = migration.getMigrationsData()
-	query 'DROP TABLE IF EXISTS revision'
+	await query 'DROP TABLE IF EXISTS revision'
 	migration.setMigrationsData migrationData
 
-exports[NS].afterEach = t ->
+exports[NS].afterEach = ->
 	migration.setMigrationsData migrationDataBackup
-	conn.rollback.sync(conn)
+	conn.rollbackAsync()
 
 
 
 exports[NS].getCurrentRevision =
-	'should return current revision number': t ->
-		query 'CREATE TABLE revision (revision INT)'
-		query 'INSERT INTO revision VALUES (945)'
-		rev = migration.getCurrentRevision.sync null, conn
+	'should return current revision number': async ->
+		await query 'CREATE TABLE revision (revision INT)'
+		await query 'INSERT INTO revision VALUES (945)'
+		rev = await migration.getCurrentRevision conn
 		test.strictEqual rev, 945
 
-	'should return -1 if revision table is not created': t ->
-		rev = migration.getCurrentRevision.sync null, conn
+	'should return -1 if revision table is not created': async ->
+		rev = await migration.getCurrentRevision conn
 		test.strictEqual rev, -1
 
-	'should fail on exceptions': t ->
-		test.throws(
-			-> migration.getCurrentRevision.sync null, 'nonsense'
-			Error, 'dbConnection.query is not a function'
-		)
-
-	'should fail on connection errors': t ->
+	'should fail on connection errors': async ->
 		fakeConn =
-			query: (text, args, callback) ->
-				callback new Error('THE_VERY_STRANGE_ERROR')
+			queryAsync: async (text, args) ->
+				throw new Error('THE_VERY_STRANGE_ERROR')
 		test.throws(
-			-> migration.getCurrentRevision.sync null, fakeConn
+			-> await migration.getCurrentRevision fakeConn
 			Error, 'THE_VERY_STRANGE_ERROR'
 		)
 
 
 exports[NS].setRevision =
-	'should create revision table if it does not exist': t ->
-		migration.setRevision.sync null, conn, 1
-		test.isTrue tables.tableExists.sync(null, conn, 'revision')
+	'should create revision table if it does not exist': async ->
+		await migration.setRevision conn, 1
+		test.isTrue await tables.tableExists conn, 'revision'
 
-	'should set correct revision number': t ->
-		migration.setRevision.sync null, conn, 1
-		test.strictEqual migration.getCurrentRevision.sync(null, conn), 1
+	'should set correct revision number': async ->
+		await migration.setRevision conn, 1
+		test.strictEqual await(migration.getCurrentRevision conn), 1
 
-		migration.setRevision.sync null, conn, 2
-		test.strictEqual migration.getCurrentRevision.sync(null, conn), 2
+		await migration.setRevision conn, 2
+		test.strictEqual await(migration.getCurrentRevision conn), 2
 
 
 exports[NS]._justMigrate =
-	'should correctly perform specified migration': t ->
-		migration._justMigrate conn, 0
-		tt = query.all 'SELECT column_name FROM information_schema.columns ' +
+	'should correctly perform specified migration': async ->
+		await migration._justMigrate conn, 0
+		tt = await query.all 'SELECT column_name FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
-		ot = query.all 'SELECT column_name FROM information_schema.columns ' +
+		ot = await query.all 'SELECT column_name FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
 
 		test.deepEqual [tt, ot], [
@@ -125,10 +121,10 @@ exports[NS]._justMigrate =
 				[{column_name: 'id'}]
 			], 'should correctly perform first migration'
 
-		migration._justMigrate conn, 1
-		tt = query.all 'SELECT column_name FROM information_schema.columns ' +
+		await migration._justMigrate conn, 1
+		tt = await query.all 'SELECT column_name FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
-		ot = query.all 'SELECT column_name FROM information_schema.columns ' +
+		ot = await query.all 'SELECT column_name FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
 
 		test.deepEqual [tt, ot], [
@@ -136,33 +132,33 @@ exports[NS]._justMigrate =
 				[{column_name: 'id'}]
 			], 'should correctly add second migration'
 
-	'should perform raw SQL commands': t ->
+	'should perform raw SQL commands': async ->
 		migration.setMigrationsData [[
 			[ 'test_table', 'create', 'id INT' ]
 			[ 'test_table', 'rawsql', 'INSERT INTO test_table (id) VALUES (1), (2), (5)' ]
 		]]
-		migration._justMigrate conn, 0
+		await migration._justMigrate conn, 0
 
-		rows = query.all 'SELECT * FROM test_table'
+		rows = await query.all 'SELECT * FROM test_table'
 		test.deepEqual rows, [
 			{id: 1}, {id: 2}, {id: 5}
 		]
 
-	'should return error if failed to migrate': t ->
-		query 'DROP TABLE IF EXISTS test_table'
-		migration.setRevision.sync null, conn, 0
+	'should return error if failed to migrate': async ->
+		await query 'DROP TABLE IF EXISTS test_table'
+		await migration.setRevision conn, 0
 
 		test.throwsPgError(
-			-> migration._justMigrate conn, 1
+			-> await migration._justMigrate conn, 1
 			'42P01'  # relation "test_table" does not exist
 		)
 
 
 exports[NS].migrate =
-	'should perform some or all migratons': t ->
-		migration.migrate.sync null, conn, { dest_revision: 1 }
+	'should perform some or all migratons': async ->
+		await migration.migrate conn, { dest_revision: 1 }
 
-		rows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
+		rows = await query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		test.deepEqual rows, [
 			{ column_name: 'col0', data_type: 'box' }
@@ -170,19 +166,19 @@ exports[NS].migrate =
 			{ column_name: 'id', data_type: 'integer' }
 		], 'should correctly perform part of migrations'
 
-		orows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
+		orows = await query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
 		test.deepEqual orows, [
 			{ column_name: 'id', data_type: 'integer' }
 		], 'should correctly perform part of migrations'
 
-		revision = migration.getCurrentRevision.sync null, conn
+		revision = await migration.getCurrentRevision conn
 		test.strictEqual revision, 1, 'should set correct revision'
 
 
-		migration.migrate.sync null, conn
+		await migration.migrate conn
 
-		rows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
+		rows = await query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		test.deepEqual rows, [
 			{ column_name: 'col0', data_type: 'box' }
@@ -191,25 +187,25 @@ exports[NS].migrate =
 			{ column_name: 'id', data_type: 'integer' }
 		], 'should correctly perform all remaining migrations'
 
-		orows = query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
+		orows = await query.all 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
 		test.deepEqual orows, [
 			{ column_name: 'col0', data_type: 'lseg' }
 			{ column_name: 'id', data_type: 'integer' }
 		], 'should correctly perform all remaining migrations'
 
-		revision = migration.getCurrentRevision.sync null, conn
+		revision = await migration.getCurrentRevision conn
 		test.strictEqual revision, 3, 'should set correct revision'
 
-	'should be able to migrate just one table': t ->
-		rev0 = migration.getCurrentRevision.sync null, conn
-		migration.migrate.sync null, conn, {dest_revision: 0, table: 'test_table'}
-		rev1 = migration.getCurrentRevision.sync null, conn
+	'should be able to migrate just one table': async ->
+		rev0 = await migration.getCurrentRevision conn
+		await migration.migrate conn, {dest_revision: 0, table: 'test_table'}
+		rev1 = await migration.getCurrentRevision conn
 		test.strictEqual rev0, rev1, 'should not change version for one table'
 
-		row = query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
+		row = await query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
-		exists = tables.tableExists.sync null, conn, 'other_table'
+		exists = await tables.tableExists conn, 'other_table'
 
 		test.deepEqual row, {
 			column_name: 'id'
@@ -217,28 +213,28 @@ exports[NS].migrate =
 		}, 'should correctly perform migration for specified table'
 		test.ok not exists, 'migration for other tables should not have been performed'
 
-	'should be able to migrate several tables': t ->
-		rev0 = migration.getCurrentRevision.sync null, conn
-		migration.migrate.sync null, conn,
+	'should be able to migrate several tables': async ->
+		rev0 = await migration.getCurrentRevision conn
+		await migration.migrate conn,
 			{ dest_revision: 0, tables: ['no_such_table', 'test_table', 'other_table'] }
-		rev1 = migration.getCurrentRevision.sync null, conn
+		rev1 = await migration.getCurrentRevision conn
 		test.strictEqual rev0, rev1, 'should not change version'
 
-		row = query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
+		row = await query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'test_table' ORDER BY column_name"
 		test.deepEqual row, {
 			column_name: 'id'
 			data_type: 'integer'
 		}, 'should correctly perform migration for specified tables'
 
-		row = query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
+		row = await query.row 'SELECT column_name, data_type FROM information_schema.columns ' +
 			"WHERE table_name = 'other_table' ORDER BY column_name"
 		test.ok row, {
 			column_name: 'id'
 			data_type: 'integer'
 		}, 'should correctly perform migration for specified tables'
 
-	'should migrate verbosely if flag is set': t ->
+	'should migrate verbosely if flag is set': async ->
 		testLog = (message, func) ->
 			_log = console.log
 			_write = process.stdout.write
@@ -251,7 +247,7 @@ exports[NS].migrate =
 			test.ok log_times>0, message
 
 		testLog 'should say something',
-			-> migration.migrate.sync null, conn, {verbose: true}
+			-> await migration.migrate conn, {verbose: true}
 
 		testLog 'should say something (when all migrations already completed)',
-			-> migration.migrate.sync null, conn, {verbose: true}
+			-> await migration.migrate conn, {verbose: true}

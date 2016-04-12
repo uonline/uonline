@@ -14,50 +14,46 @@
 
 'use strict'
 
+async = require 'asyncawait/async'
+await = require 'asyncawait/await'
 
-exports.tableExists = (dbConnection, name, callback) ->
-	dbConnection.query 'SELECT count(*) AS result FROM information_schema.tables WHERE table_name = $1',
-		[ name ], (error, result) ->
-			callback error, error or result.rows[0].result > 0
-	return
 
-exports.create = (dbConnection, table, data, callback) ->
-	dbConnection.query "CREATE TABLE #{table} (#{data})", (error, result) ->
-		callback error, error or true
-	return
+exports.tableExists = async (db, name) ->
+	result = await db.queryAsync(
+		'SELECT count(*) AS result FROM information_schema.tables WHERE table_name = $1', [ name ])
+	return result.rows[0].result > 0
 
-exports.addCol = (dbConnection, table, column, callback) ->
-	dbConnection.query "ALTER TABLE #{table} ADD COLUMN #{column}", (error, result) ->
-		callback error, error or true
-	return
+exports.create = async (db, table, data) ->
+	await db.queryAsync "CREATE TABLE #{table} (#{data})"
+	return true
 
-exports.renameCol = (dbConnection, table, colOld, colNew, callback) ->
+exports.addCol = async (db, table, column) ->
+	await db.queryAsync "ALTER TABLE #{table} ADD COLUMN #{column}"
+	return true
+
+exports.renameCol = async (db, table, colOld, colNew) ->
 	#ALTER TABLE employee RENAME COLUMN start_date TO hire_date;
-	dbConnection.query "ALTER TABLE #{table} RENAME COLUMN #{colOld} TO #{colNew}", (error, results) ->
-		callback error, error or true
-	return
+	await db.queryAsync "ALTER TABLE #{table} RENAME COLUMN #{colOld} TO #{colNew}"
+	return true
 
-exports.changeCol = (dbConnection, table, colName, colAttrs, callback) ->
-	dbConnection.query "ALTER TABLE #{table} ALTER COLUMN #{colName} TYPE #{colAttrs}", callback
-	return
+exports.changeCol = async (db, table, colName, colAttrs) ->
+	await db.queryAsync "ALTER TABLE #{table} ALTER COLUMN #{colName} TYPE #{colAttrs}"
+	return true
 
-exports.changeDefault = (dbConnection, table, colName, value, callback) ->
-	dbConnection.query "ALTER TABLE #{table} ALTER COLUMN #{colName} SET DEFAULT #{value}", callback
-	return
+exports.changeDefault = async (db, table, colName, value) ->
+	await db.queryAsync "ALTER TABLE #{table} ALTER COLUMN #{colName} SET DEFAULT #{value}"
+	return true
 
-exports.dropCol = (dbConnection, table, columns..., callback) ->
+exports.dropCol = async (db, table, columns...) ->
 	drop = columns.map((col) -> "DROP COLUMN #{col}").join(', ')
-	dbConnection.query "ALTER TABLE #{table} #{drop}", (error, result) ->
-		callback error, error or true
-	return
+	await db.queryAsync "ALTER TABLE #{table} #{drop}"
+	return true
 
-exports.createIndex = (dbConnection, table, column, callback) ->
-	dbConnection.query "CREATE INDEX #{table}_#{column} ON #{table} (#{column})", (error, result) ->
-		callback error, error or true
-	return
+exports.createIndex = async (db, table, column) ->
+	await db.queryAsync "CREATE INDEX #{table}_#{column} ON #{table} (#{column})"
+	return true
 
-exports.createEnum = (dbConnection, enumName, values, callback) ->
-	dbConnection.query "CREATE TYPE #{enumName} AS ENUM (#{values})", (error, result) ->
-		callback error, error or true
-	return
+exports.createEnum = async (db, enumName, values) ->
+	await db.queryAsync "CREATE TYPE #{enumName} AS ENUM (#{values})"
+	return true
 

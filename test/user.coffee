@@ -39,12 +39,11 @@ insert = (table, fields) ->
 
 
 exports[NS].before = async ->
-	_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-	await mg.migrate.bind(mg, _conn)
+	_conn = promisifyAll anyDB.createConnection(config.DATABASE_URL_TEST)
+	await mg.migrate(_conn)
 
 exports[NS].beforeEach = async ->
-	conn = transaction(_conn, autoRollback: false)
-	promisifyAll(conn)
+	conn = promisifyAll transaction(_conn, autoRollback: false)
 	query = queryUtils.getFor conn
 
 exports[NS].afterEach = async ->
@@ -53,7 +52,7 @@ exports[NS].afterEach = async ->
 
 exports[NS].userExists =
 	beforeEach: async ->
-		query 'INSERT INTO uniusers (username) VALUES ( $1 )', ['Sauron']
+		await query 'INSERT INTO uniusers (username) VALUES ( $1 )', ['Sauron']
 		this.exists = (name) -> await users.userExists(conn, name)
 
 	'should return true if user exists': async ->
@@ -67,7 +66,7 @@ exports[NS].userExists =
 
 exports[NS].idExists =
 	beforeEach: async ->
-		query 'INSERT INTO uniusers (id) VALUES ( $1 )', [114]
+		await query 'INSERT INTO uniusers (id) VALUES ( $1 )', [114]
 
 	'should return if user exists': async ->
 		test.isTrue await users.idExists(conn, 114)
@@ -76,7 +75,7 @@ exports[NS].idExists =
 
 exports[NS].sessionExists =
 	beforeEach: async ->
-		query "INSERT INTO uniusers (sessid) VALUES ('someid')"
+		await query "INSERT INTO uniusers (sessid) VALUES ('someid')"
 
 	'should return if sessid exists': async ->
 		test.isTrue await users.sessionExists(conn, 'someid')
@@ -85,27 +84,27 @@ exports[NS].sessionExists =
 
 exports[NS].sessionInfoRefreshing =
 	beforeEach: async ->
-		insert 'characters', id: 5, player: 8
-		insert 'uniusers',
+		await insert 'characters', id: 5, player: 8
+		await insert 'uniusers',
 			id: 8, username: 'user0', character_id: 5,
 			permissions: 'admin', sessid: 'expiredid', sess_time: 1.hourAgo()
 
 		this.testingProps = 'id loggedIn username isAdmin character_id'.split(' ')
-		this.sessTime = (id=8) -> new Date(query.val('SELECT sess_time FROM uniusers WHERE id = $1', [id]))
+		this.sessTime = async (id=8) -> new Date(await query.val('SELECT sess_time FROM uniusers WHERE id = $1', [id]))
 
 	'session should not be active if expired': async ->
 		res = await users.sessionInfoRefreshing conn, 'someid', 7200, false
 		test.deepEqual res, { loggedIn: false }
 
 	'session expire time should not be updated if expired': async ->
-		timeBefore = this.sessTime()
+		timeBefore = await this.sessTime()
 		res = await users.sessionInfoRefreshing conn, 'someid', 7200, false
 		test.deepEqual res, { loggedIn: false }
-		test.strictEqual this.sessTime().valueOf(), timeBefore.valueOf()
+		test.strictEqual await(this.sessTime()).valueOf(), timeBefore.valueOf()
 
 	'session should be active if not expired and user data should be returned': async ->
 		query "UPDATE uniusers SET sessid = 'someid'"
-		timeBefore = this.sessTime()
+		timeBefore = await this.sessTime()
 
 		res = await users.sessionInfoRefreshing conn, 'someid', 7200, false
 		test.deepEqual Object.select(res, this.testingProps), {
@@ -116,7 +115,7 @@ exports[NS].sessionInfoRefreshing =
 			character_id: 5
 		}
 
-		timeAfter = this.sessTime()
+		timeAfter = await this.sessTime()
 		test.isBelow timeBefore, timeAfter, 'should update session timestamp'
 
 	'should not fail on empty sessid': async ->
@@ -124,8 +123,8 @@ exports[NS].sessionInfoRefreshing =
 		test.deepEqual res, { loggedIn: false }
 
 	'should return admin: false if user is not admin': async ->
-		insert 'characters', id: 6, player: 99
-		insert 'uniusers',
+		await insert 'characters', id: 6, player: 99
+		await insert 'uniusers',
 			id: 99, username: 'user1', character_id: 6,
 			permissions: 'user', sessid: 'otherid', sess_time: 1.hourAgo()
 
@@ -140,15 +139,15 @@ exports[NS].sessionInfoRefreshing =
 
 	'when async flag is set':
 		beforeEach: async ->
-			insert 'uniusers',
+			await insert 'uniusers',
 				id: 112, username: '112', character_id: 6,
 				permissions: 'admin', sessid: '123456', sess_time: 1.hourAgo()
 
 		'should update session timestamp': async ->
-			timeBefore = this.sessTime(112)
+			timeBefore = await this.sessTime(112)
 			await users.sessionInfoRefreshing conn, '123456', 7200, true
 			await delay 50
-			timeAfter = this.sessTime(112)
+			timeAfter = await this.sessTime(112)
 
 			test.isBelow timeBefore, timeAfter
 
@@ -187,8 +186,8 @@ exports[NS].getUser = new ->
 		isAdmin: true
 
 	@beforeEach = async ->
-		insert 'uniusers', Object.reject(props, 'isAdmin')
-		insert 'characters', id: 4, player: 8
+		await insert 'uniusers', Object.reject(props, 'isAdmin')
+		await insert 'characters', id: 4, player: 8
 
 	[
 		{val: 8,       res: props, msg: 'user attributes by id'}
@@ -208,8 +207,8 @@ exports[NS].generateSessId =
 		users.createSalt = (len) ->
 			'someid' + (++i)
 
-		query "INSERT INTO uniusers (sessid) VALUES ('someid1')"
-		query "INSERT INTO uniusers (sessid) VALUES ('someid2')"
+		await query "INSERT INTO uniusers (sessid) VALUES ('someid1')"
+		await query "INSERT INTO uniusers (sessid) VALUES ('someid2')"
 		sessid = await users.generateSessId conn, 16
 
 		users.createSalt = _createSalt
@@ -218,7 +217,7 @@ exports[NS].generateSessId =
 
 exports[NS].idBySession =
 	'should return correct user id': async ->
-		query "INSERT INTO uniusers ( id, sessid ) VALUES ( 3, 'someid' )"
+		await query "INSERT INTO uniusers ( id, sessid ) VALUES ( 3, 'someid' )"
 		userid = await users.idBySession conn, "someid"
 		test.strictEqual userid, 3
 
@@ -231,7 +230,7 @@ exports[NS].idBySession =
 
 exports[NS].closeSession =
 	beforeEach: async ->
-		query "INSERT INTO uniusers ( sessid, sess_time ) VALUES ( 'someid', NOW() )"
+		await query "INSERT INTO uniusers ( sessid, sess_time ) VALUES ( 'someid', NOW() )"
 		await users.closeSession conn, 'someid'
 
 	'should expire session': async ->
@@ -255,11 +254,11 @@ exports[NS].createSalt =
 
 exports[NS].registerUser =
 	'should register correct user': async ->
-		query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
+		await query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
 
 		#TODO: check return value
 		await users.registerUser conn, 'TheUser', 'password', 'admin'
-		user = query.row 'SELECT * FROM uniusers'
+		user = await query.row 'SELECT * FROM uniusers'
 
 		test.isAbove user.salt.length, 0, 'should generate salt'
 		test.isAbove user.hash.length, 0, 'should generate hash'
@@ -269,11 +268,11 @@ exports[NS].registerUser =
 		test.strictEqual user.permissions, 'admin', 'should set specified permissions'
 		test.isNull user.character_id, 'should not assign character'
 
-		count = +query.val 'SELECT count(*) FROM characters WHERE player = $1', [user.id]
+		count = + await query.val 'SELECT count(*) FROM characters WHERE player = $1', [user.id]
 		test.strictEqual count, 0, 'should not create character now'
 
 	'should fail if user exists': async ->
-		insert 'uniusers', username: 'TheUser'
+		await insert 'uniusers', username: 'TheUser'
 		test.throws(
 			-> await users.registerUser conn, 'TheUser', 'password', 1
 			Error, 'user already exists'
@@ -282,7 +281,7 @@ exports[NS].registerUser =
 
 exports[NS].accessGranted = new ->
 	@beforeEach = async ->
-		query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
+		await query 'INSERT INTO locations (id, initial) VALUES (2, 1)'
 		await users.registerUser conn, 'TheUser', 'password', 'user'
 
 	[
@@ -299,13 +298,13 @@ exports[NS].accessGranted = new ->
 
 exports[NS].createSession =
 	beforeEach: async ->
-		insert 'locations', id: 2, initial: 1
+		await insert 'locations', id: 2, initial: 1
 		await users.registerUser conn, 'Мохнатый Ангел', 'password', 'user'
 
 	'should change sessid and update session timestamp': async ->
-		user0 = query.row 'SELECT sessid FROM uniusers'
+		user0 = await query.row 'SELECT sessid FROM uniusers'
 		await users.createSession conn, 'МОХНАТЫЙ ангел'
-		user1 = query.row 'SELECT sessid, sess_time FROM uniusers'
+		user1 = await query.row 'SELECT sessid, sess_time FROM uniusers'
 
 		test.ok user0.sessid isnt user1.sessid, 'should change sessid'
 		test.ok user1.sess_time.getTime() > Date.now() - 60000, 'should update session timestamp'
