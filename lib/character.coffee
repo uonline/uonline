@@ -14,24 +14,23 @@
 
 'use strict'
 
-sync = require 'sync'
+async = require 'asyncawait/async'
+await = require 'asyncawait/await'
 transaction = require 'any-db-transaction'
 game = require '../lib/game.coffee'
 
 
 # Check if a character with the given name exists.
 # Returns true or false, or an error.
-exports.characterExists = (dbConnection, name, callback) ->
-	dbConnection.query 'SELECT count(*) AS result FROM characters WHERE lower(name) = lower($1)',
-		[ name ],
-		(error, result) ->
-			callback error, error or (result.rows[0].result > 0)
+exports.characterExists = async (db, name, callback) ->
+	result = await db.queryAsync 'SELECT count(*) AS result FROM characters WHERE lower(name) = lower($1)', [name]
+	return result.rows[0].result > 0
 
 
 # Creates new character for user.
 # Returns id of new character.
-exports.createCharacter = ((dbConnection, user_id, name, race, gender) ->
-	if exports.characterExists.sync null, dbConnection, name
+exports.createCharacter = async (db, user_id, name, race, gender) ->
+	if await exports.characterExists db, name
 		throw new Error('character already exists')
 
 	energies = {
@@ -43,25 +42,23 @@ exports.createCharacter = ((dbConnection, user_id, name, race, gender) ->
 		'elf-female': 140
 	}
 	energy = energies["#{race}-#{gender}"]
-	charid = dbConnection.query.sync(dbConnection,
+	charid = await(db.queryAsync(
 		"INSERT INTO characters (name, player, location, race, gender, energy, energy_max) "+
 		"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1), $3, $4, $5, $5) RETURNING id",
-		[ name, user_id, race, gender, energy ]).rows[0].id
+		[ name, user_id, race, gender, energy ])).rows[0].id
 
-	dbConnection.query.sync(dbConnection,
+	await db.queryAsync(
 		"UPDATE uniusers SET character_id = $1 WHERE id = $2",
 		[ charid, user_id ])
 	return charid
-).async()
+
 
 
 # Removes character
-exports.deleteCharacter = ((dbConnection, user_id, character_id, force=false) ->
+exports.deleteCharacter = async (db, user_id, character_id, force=false) ->
 	# do checks first
 
-	res = dbConnection.query.sync(dbConnection,
-		"SELECT id FROM characters WHERE id = $1 AND player = $2",
-		[ character_id, user_id ])
+	res = await db.queryAsync "SELECT id FROM characters WHERE id = $1 AND player = $2", [character_id, user_id]
 
 	if res.rowCount == 0
 		return {
@@ -70,9 +67,7 @@ exports.deleteCharacter = ((dbConnection, user_id, character_id, force=false) ->
 		}
 
 	unless force
-		res = dbConnection.query.sync(dbConnection,
-			"SELECT battle FROM battle_participants WHERE character_id = $1",
-			[ character_id ])
+		res = await db.queryAsync "SELECT battle FROM battle_participants WHERE character_id = $1", [character_id]
 
 		if res.rowCount > 0
 			return {
@@ -82,37 +77,28 @@ exports.deleteCharacter = ((dbConnection, user_id, character_id, force=false) ->
 
 	# start deleting
 
-	game.goEscape.sync(null, dbConnection, character_id)
+	await game.goEscape(db, character_id)
 
 	# if the character we delete is active, unselect it
-	dbConnection.query.sync(dbConnection,
-		"UPDATE uniusers SET character_id = NULL WHERE id = $1 AND character_id = $2",
-		[ user_id, character_id ])
+	await db.queryAsync(
+		"UPDATE uniusers SET character_id = NULL WHERE id = $1 AND character_id = $2", [ user_id, character_id ])
 
-	dbConnection.query.sync(dbConnection,
-		"DELETE FROM items WHERE owner = $1",
-		[ character_id ])
+	await db.queryAsync "DELETE FROM items WHERE owner = $1", [ character_id ]
 
-	dbConnection.query.sync(dbConnection,
-		"DELETE FROM characters WHERE id = $1 AND player = $2",
-		[ character_id, user_id ])
+	await db.queryAsync "DELETE FROM characters WHERE id = $1 AND player = $2", [ character_id, user_id ]
 
-	return {
-		result: 'ok'
-	}
-).async()
+	return { result: 'ok' }
+
 
 
 # Switches user's character.
-exports.switchCharacter = ((dbConnection, user_id, new_character_id) ->
-	res = dbConnection.query.sync(dbConnection,
+exports.switchCharacter = async (db, user_id, new_character_id) ->
+	res = await db.queryAsync(
 		"UPDATE uniusers SET character_id = $1 "+
 		"WHERE id = $2 AND "+
 			"EXISTS(SELECT * FROM characters WHERE id = $1 AND player = $2)",
 		[ new_character_id, user_id ])
 
 	if res.rowCount == 0
-		throw new Error("User ##{user_id} doesn't have character ##{new_character_id}")
-
-	return
-).async()
+		throw new Error("user ##{user_id} doesn't have character ##{new_character_id}")
+	return true
