@@ -101,7 +101,7 @@ exports.isTherePathForCharacterToLocation = async (db, character_id, locid) ->
 # }
 # @param [Array] secondSide same as firstSide
 exports._createBattleBetween = (tx, locid, firstSide, secondSide) ->
-	newBattleId = await(tx.queryAsync(
+	newBattleId = (await tx.queryAsync(
 		'INSERT INTO battles (location) VALUES ($1) RETURNING id',
 		[locid])).rows[0].id
 
@@ -164,7 +164,7 @@ exports._leaveBattle = async (tx, battleId, leaverId) ->
 
 # Changes character location and starts (maybe) battle with some monsters.
 exports.changeLocation = async (db, character_id, locid, throughSpaceAndTime) ->
-	battle = await(db.queryAsync(
+	battle = (await db.queryAsync(
 		"SELECT battle AS id FROM battle_participants WHERE character_id = $1 FOR UPDATE",
 		[ character_id ]
 	)).rows[0]
@@ -191,7 +191,7 @@ exports.changeLocation = async (db, character_id, locid, throughSpaceAndTime) ->
 		}
 
 	await db.queryAsync 'SELECT id FROM characters WHERE id = $1 FOR UPDATE', [character_id]
-	monsters = await(db.queryAsync(
+	monsters = (await db.queryAsync(
 		"SELECT id, initiative, attack_chance "+
 			"FROM characters "+
 			"WHERE characters.location = $1 "+
@@ -209,7 +209,7 @@ exports.changeLocation = async (db, character_id, locid, throughSpaceAndTime) ->
 	if pouncedMonsters.length > 0
 		user =
 			id: character_id
-			initiative: await(db.queryAsync(
+			initiative: (await db.queryAsync(
 					'SELECT initiative FROM characters WHERE id = $1',
 					[ character_id ]
 				)).rows[0].initiative
@@ -225,7 +225,7 @@ exports.changeLocation = async (db, character_id, locid, throughSpaceAndTime) ->
 # prevents starting second battle
 # Returns true on success and false otherwise.
 exports.goAttack = async (db, character_id) ->
-	user = await(db.queryAsync(
+	user = (await db.queryAsync(
 		'SELECT id, initiative, location '+
 		'FROM characters '+
 		'WHERE id = $1 '+
@@ -239,7 +239,7 @@ exports.goAttack = async (db, character_id) ->
 	unless user?
 		return false
 
-	monsters = await(db.queryAsync(
+	monsters = (await db.queryAsync(
 		"SELECT id, initiative "+
 			"FROM characters "+
 			"WHERE location = $1 "+
@@ -260,7 +260,7 @@ exports.goAttack = async (db, character_id) ->
 
 # Escapes user from battle.
 exports.goEscape = async (db, character_id) ->
-	battle = await(db.queryAsync(
+	battle = (await db.queryAsync(
 		"SELECT battle AS id FROM battle_participants WHERE character_id = $1 FOR UPDATE",
 		[character_id]
 	)).rows[0]
@@ -278,7 +278,7 @@ exports.goEscape = async (db, character_id) ->
 #    player: 1 // id of character's player (null for monters)
 # }
 exports.getBattleParticipants = async (db, character_id) ->
-	return await(db.queryAsync(
+	return (await db.queryAsync(
 		"SELECT character_id, index, side, name, player "+
 		"FROM battle_participants, characters "+
 		"WHERE battle = ("+
@@ -292,7 +292,7 @@ exports.getBattleParticipants = async (db, character_id) ->
 
 
 exports._lockAndGetStatsForBattle = async (tx, character_id) ->
-	return await(tx.queryAsync(
+	return (await tx.queryAsync(
 		'SELECT battle, side, power '+
 			'FROM characters, battles, battle_participants AS bp '+
 			'WHERE characters.id = $1 '+
@@ -313,7 +313,7 @@ exports._hitItem = async (tx, attackerPower, item) ->
 
 
 exports._hitAndGetHealth = async (tx, victimId, hunterPower) ->
-	items = await(tx.queryAsync(
+	items = (await tx.queryAsync(
 		'SELECT items.id, strength, coverage, type '+
 			'FROM items, items_proto '+
 			'WHERE items.owner = $1 '+
@@ -339,7 +339,7 @@ exports._hitAndGetHealth = async (tx, victimId, hunterPower) ->
 
 	# hit itsef
 	if hunterPower > 0
-		return await(tx.queryAsync(
+		return (await tx.queryAsync(
 			'UPDATE characters '+
 				'SET health = health - GREATEST(0, $1-defense)/2 * (0.8+RANDOM()*0.4) '+
 				'WHERE id = $2 '+
@@ -347,15 +347,15 @@ exports._hitAndGetHealth = async (tx, victimId, hunterPower) ->
 			[ hunterPower, victimId ]
 		)).rows[0].health
 	else
-		return await(tx.queryAsync(
+		return (await tx.queryAsync(
 			'SELECT health FROM characters WHERE id = $1',
 			[ victimId ]
 		)).rows[0].health
 
 
 exports._handleDeathInBattle = async (tx, victim_cid, hunter_cid) ->
-	victim = await(tx.queryAsync 'SELECT level, player FROM characters WHERE id = $1', [victim_cid]).rows[0]
-	hunter = await(tx.queryAsync 'SELECT level, exp, player FROM characters WHERE id = $1', [hunter_cid]).rows[0]
+	victim = (await tx.queryAsync 'SELECT level, player FROM characters WHERE id = $1', [victim_cid]).rows[0]
+	hunter = (await tx.queryAsync 'SELECT level, exp, player FROM characters WHERE id = $1', [hunter_cid]).rows[0]
 	playerDied = !!victim.player
 	killerIsPlayer = !!hunter.player
 

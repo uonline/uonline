@@ -79,8 +79,8 @@ exports[NS].getCharacterLocationId =
 	"should return user's location id": async ->
 		await insert 'characters', id: 1, 'location': 3
 		await insert 'characters', id: 2, 'location': 1
-		test.strictEqual await(game.getCharacterLocationId(conn, 1)), 3
-		test.strictEqual await(game.getCharacterLocationId(conn, 2)), 1
+		test.strictEqual (await game.getCharacterLocationId conn, 1), 3
+		test.strictEqual (await game.getCharacterLocationId conn, 2), 1
 
 	'should fail if character id is wrong': async ->
 		test.throws(
@@ -304,7 +304,7 @@ exports[NS].changeLocation =
 		'should leave battle and change location if force flag is set': async ->
 			await game.changeLocation conn, 1, 2, true
 			test.isFalse await game.isInFight conn, 1
-			test.strictEqual await(game.getCharacterLocationId(conn, 1)), 2
+			test.strictEqual (await game.getCharacterLocationId conn, 1), 2
 
 	'when no way to location':
 		beforeEach: async ->
@@ -312,11 +312,11 @@ exports[NS].changeLocation =
 
 		'should not go anywhere': async ->
 			await game.changeLocation conn, 1, 3
-			test.strictEqual await(game.getCharacterLocationId conn, 1), 1
+			test.strictEqual (await game.getCharacterLocationId conn, 1), 1
 
 		'should change location despite all roads if force flag is set': async ->
 			await game.changeLocation conn, 1, 3, true
-			test.strictEqual await(game.getCharacterLocationId conn, 1), 3
+			test.strictEqual (await game.getCharacterLocationId conn, 1), 3
 
 
 exports[NS].goAttack =
@@ -331,7 +331,7 @@ exports[NS].goAttack =
 		envolvedMonstersCount = + await query.val "SELECT count(*) FROM battle_participants WHERE character_id!=1"
 		test.strictEqual envolvedMonstersCount, 2, 'all monsters should have been envolved'
 
-		test.isTrue await(game.isInFight conn, 1), 'user should be attacking'
+		test.isTrue (await game.isInFight conn, 1), 'user should be attacking'
 
 	'should not start second battle if user is already in filght': async ->
 		await game.goAttack conn, 1
@@ -373,7 +373,7 @@ exports[NS].goEscape =
 		await game.goEscape conn, 1
 		autoinvolved = await query.val 'SELECT autoinvolved_fm FROM characters WHERE id=1'
 
-		test.isFalse await(game.isInFight conn, 1), 'user should not be attacking'
+		test.isFalse (await game.isInFight conn, 1), 'user should not be attacking'
 		test.isFalse autoinvolved, 'user should not be autoinvolved'
 
 
@@ -834,7 +834,7 @@ exports[NS].uninvolve =
 	'should uninvole user': async ->
 		await game.uninvolve conn, 1
 		test.isFalse await query.val 'SELECT autoinvolved_fm FROM characters WHERE id=1'
-		test.isTrue await(game.isInFight conn, 1), 'should not disable fight mode'
+		test.isTrue (await game.isInFight conn, 1), 'should not disable fight mode'
 
 
 exports[NS].expForKill =

@@ -26,7 +26,7 @@ exports.getFor = (db) ->
 		db.queryAsync sql, params
 	
 	query.all = async (sql, params) ->
-		await(db.queryAsync(sql, params)).rows
+		(await db.queryAsync sql, params).rows
 	
 	query.row = async (sql, params) ->
 		rows = await @all sql, params

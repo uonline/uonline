@@ -102,10 +102,10 @@ exports[NS].setRevision =
 
 	'should set correct revision number': async ->
 		await migration.setRevision conn, 1
-		test.strictEqual await(migration.getCurrentRevision conn), 1
+		test.strictEqual (await migration.getCurrentRevision conn), 1
 
 		await migration.setRevision conn, 2
-		test.strictEqual await(migration.getCurrentRevision conn), 2
+		test.strictEqual (await migration.getCurrentRevision conn), 2
 
 
 exports[NS]._justMigrate =

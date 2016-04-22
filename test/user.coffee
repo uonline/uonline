@@ -100,7 +100,7 @@ exports[NS].sessionInfoRefreshing =
 		timeBefore = await this.sessTime()
 		res = await users.sessionInfoRefreshing conn, 'someid', 7200, false
 		test.deepEqual res, { loggedIn: false }
-		test.strictEqual await(this.sessTime()).valueOf(), timeBefore.valueOf()
+		test.strictEqual (await this.sessTime()).valueOf(), timeBefore.valueOf()
 
 	'session should be active if not expired and user data should be returned': async ->
 		query "UPDATE uniusers SET sessid = 'someid'"

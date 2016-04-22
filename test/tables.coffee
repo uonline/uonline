@@ -125,14 +125,14 @@ exports[NS].dropCol =
 
 	"should remove specified column": async ->
 		await tables.dropCol conn, "test_table", "col"
-		test.deepEqual await(this.cols()), [
+		test.deepEqual (await this.cols()), [
 			{column_name: 'id', data_type: 'integer'}
 			{column_name: 'col2', data_type: 'text'}
 		]
 
 	"should remove multiple columns": async ->
 		await tables.dropCol conn, "test_table", "id", "col2"
-		test.deepEqual await(this.cols()), [
+		test.deepEqual (await this.cols()), [
 			{column_name: 'col', data_type: 'integer'}
 		]
 

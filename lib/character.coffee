@@ -42,7 +42,7 @@ exports.createCharacter = async (db, user_id, name, race, gender) ->
 		'elf-female': 140
 	}
 	energy = energies["#{race}-#{gender}"]
-	charid = await(db.queryAsync(
+	charid = (await db.queryAsync(
 		"INSERT INTO characters (name, player, location, race, gender, energy, energy_max) "+
 		"VALUES ($1, $2, (SELECT id FROM locations WHERE initial = 1), $3, $4, $5, $5) RETURNING id",
 		[ name, user_id, race, gender, energy ])).rows[0].id

@@ -54,11 +54,11 @@ exports[NS].characterExists =
 	'should check if a character with the given name exists': async ->
 		exists = (name) -> character.characterExists conn, name
 
-		test.isFalse await(exists 'Sauron'), 'should return false if character does not exist'
+		test.isFalse (await exists 'Sauron'), 'should return false if character does not exist'
 		await insert 'characters', name: 'Sauron'
-		test.isTrue await(exists 'Sauron'), 'should return true if character exists'
-		test.isTrue await(exists 'SAURON'), 'should ignore capitalization'
-		test.isTrue await(exists 'sauron'), 'should ignore capitalization'
+		test.isTrue (await exists 'Sauron'), 'should return true if character exists'
+		test.isTrue (await exists 'SAURON'), 'should ignore capitalization'
+		test.isTrue (await exists 'sauron'), 'should ignore capitalization'
 
 
 exports[NS].createCharacter =
@@ -129,7 +129,7 @@ exports[NS].deleteCharacter =
 		for cid in [1,2,2,3,4,4]
 			await insert 'items', owner: cid
 
-		itemOwners = async -> await(query.all("SELECT owner FROM items ORDER BY owner")).map 'owner'
+		itemOwners = async -> (await query.all "SELECT owner FROM items ORDER BY owner").map 'owner'
 
 		# deleting inactive character
 		res = await character.deleteCharacter conn, 1, 4
@@ -139,7 +139,7 @@ exports[NS].deleteCharacter =
 		test.deepEqual res, {result: 'ok'}, 'should return "ok" if deleted'
 		test.deepEqual chars, [{id:2}, {id:3}], 'should delete inactive character'
 		test.strictEqual user.character_id, 2, 'should not switch character'
-		test.deepEqual await(itemOwners()), [1,2,2,3], "should delete character's items"
+		test.deepEqual (await itemOwners()), [1,2,2,3], "should delete character's items"
 
 		# deleting current character
 		res = await character.deleteCharacter conn, 1, 2
@@ -149,7 +149,7 @@ exports[NS].deleteCharacter =
 		test.deepEqual res, {result: 'ok'}, 'should return "ok" if deleted'
 		test.deepEqual chars, [{id:3}], 'should delete active character'
 		test.isNull user.character_id, "should clear user's character if deleted was active"
-		test.deepEqual await(itemOwners()), [1,3], "should delete character's items"
+		test.deepEqual (await itemOwners()), [1,3], "should delete character's items"
 
 		# deleting character of other user
 		res = await character.deleteCharacter conn, 1, 5
@@ -159,7 +159,7 @@ exports[NS].deleteCharacter =
 		test.strictEqual res.reason, 'character #5 of user #1 not found',
 			'should describe failure if trying to delete in-battle character'
 		test.strictEqual count, 3, "should refuse and not delete character if character belongs to other user"
-		test.deepEqual await(itemOwners()), [1,3], "should refuse and not delete items if character belongs to other user"
+		test.deepEqual (await itemOwners()), [1,3], "should refuse and not delete items if character belongs to other user"
 
 
 	'should correctly process battle states': async ->
@@ -169,7 +169,7 @@ exports[NS].deleteCharacter =
 		await insert 'battle_participants', character_id: 1, battle: 5
 		await insert 'items', owner: 1
 
-		itemOwners = async -> await(query.all("SELECT owner FROM items ORDER BY owner")).map 'owner'
+		itemOwners = async -> (await query.all "SELECT owner FROM items ORDER BY owner").map 'owner'
 
 		res = await character.deleteCharacter conn, 2, 1
 		count = + await query.val "SELECT count(*) FROM characters"
@@ -178,7 +178,7 @@ exports[NS].deleteCharacter =
 		test.strictEqual res.reason, 'character #1 is in battle #5',
 			'should describe failure if trying to delete in-battle character'
 		test.strictEqual count, 1, "should refuse and don't delete character if trying to delete in-battle character"
-		test.deepEqual await(itemOwners()), [1], "should refuse and don't delete items if trying to delete in-battle character"
+		test.deepEqual (await itemOwners()), [1], "should refuse and don't delete items if trying to delete in-battle character"
 
 		# FORCE deleting character while in battle
 		res = await character.deleteCharacter conn, 2, 1, true
@@ -186,7 +186,7 @@ exports[NS].deleteCharacter =
 
 		test.deepEqual res, {result: 'ok'}, 'should return "ok" if force-deleting in-battle character'
 		test.strictEqual count, 0, "should delete character if force-deleting in-battle character"
-		test.deepEqual await(itemOwners()), [], "should  delete items if force-deleting in-battle character"
+		test.deepEqual (await itemOwners()), [], "should  delete items if force-deleting in-battle character"
 
 
 exports[NS].switchCharacter =

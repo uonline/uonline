@@ -59,7 +59,7 @@ exports.sessionInfoRefreshing = async (db, sessid, sess_timeexpire, asyncUpdate)
 	unless sessid?
 		return loggedIn: false
 
-	user = await(db.queryAsync(
+	user = (await db.queryAsync(
 		"SELECT uniusers.* "+
 		"FROM uniusers "+
 		"WHERE sessid = $1 "+
@@ -92,7 +92,7 @@ exports.sessionInfoRefreshing = async (db, sessid, sess_timeexpire, asyncUpdate)
 exports.getUser = async (db, id_or_name) ->
 	field = if typeof id_or_name is 'number' then 'uniusers.id' else 'username'
 
-	user = await(db.queryAsync "SELECT uniusers.* FROM uniusers WHERE #{field} = $1", [id_or_name]).rows[0]
+	user = (await db.queryAsync "SELECT uniusers.* FROM uniusers WHERE #{field} = $1", [id_or_name]).rows[0]
 	unless user?
 		return null
 
@@ -147,7 +147,7 @@ exports.registerUser = async (db, username, password, permissions) ->
 	hash = await crypto.pbkdf2Async password, salt, 4096, 256
 	sessid = await exports.generateSessId db, config.sessionLength
 
-	user_id = await(db.queryAsync(
+	user_id = (await db.queryAsync(
 		'INSERT INTO uniusers ('+
 			'username, salt, hash, sessid, reg_time, sess_time, permissions, character_id'+
 			') VALUES ('+

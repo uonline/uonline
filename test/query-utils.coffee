@@ -121,7 +121,7 @@ exports[NS].doInTransaction =
 		await queryUtils.doInTransaction conn, (tx) ->
 			tx.queryAsync "INSERT INTO test_table VALUES (3, 'something')"
 			await tx.queryAsync "INSERT INTO test_table VALUES (4, 'very something')"
-		test.strictEqual await(this.count()), 4
+		test.strictEqual (await this.count()), 4
 
 	'should rollback transaction and throw on query error': async ->
 		test.throwsPgError(
@@ -130,7 +130,7 @@ exports[NS].doInTransaction =
 				await tx.queryAsync "INSERT INTO no_such_table VALUES ('nothing')"
 			'42P01'  # relation "no_such_table" does not exist
 		)
-		test.strictEqual await(this.count()), 2
+		test.strictEqual (await this.count()), 2
 
 	'should rollback transaction (and make connection usable immediately) on first query error': async ->
 		test.throwsPgError(
@@ -138,7 +138,7 @@ exports[NS].doInTransaction =
 				await tx.queryAsync "SELECT first transaction query with error"
 			'42601'  # syntax error at or near "transaction"
 		)
-		test.strictEqual await(this.count()), 2
+		test.strictEqual (await this.count()), 2
 
 	'should rollback transaction and throw on non-query error': async ->
 		test.throws(
@@ -147,7 +147,7 @@ exports[NS].doInTransaction =
 				throw new Error 'something fell up and broke down'
 			Error, 'something fell up and broke down'
 		)
-		test.strictEqual await(this.count()), 2
+		test.strictEqual (await this.count()), 2
 
 	'should correctly perform after some errors': async ->
 		try await queryUtils.doInTransaction conn, (tx) -> throw new Error 'oups'
@@ -158,7 +158,7 @@ exports[NS].doInTransaction =
 
 		await queryUtils.doInTransaction conn, (tx) ->
 			await tx.queryAsync "INSERT INTO test_table VALUES (5, 'one more thing')"
-		test.strictEqual await(this.count()), 3
+		test.strictEqual (await this.count()), 3
 
 
 exports[NS].unsafeInsert =
