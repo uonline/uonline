@@ -15,7 +15,7 @@
 'use strict'
 
 NS = 'game'; exports[NS] = {}  # namespace
-{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+{test, requireCovered, config} = require '../lib/test-utils.coffee'
 
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
@@ -552,7 +552,7 @@ exports[NS]._hitAndGetHealth =
 		await query 'UPDATE items SET strength = 1000'
 		hits = shield:0, notShield:0
 		for i in [0...40]
-			tx = promisifyAll transaction(conn)
+			tx = promisifyAll transaction(conn)#, filter: (name) -> name in ['query', 'rollback']
 			hp = await game._hitAndGetHealth tx, 1, power
 			if (await shield tx).strength < 1000 then hits.shield++
 			if (await greave tx).strength < 1000 then hits.notShield++
@@ -565,7 +565,7 @@ exports[NS]._hitAndGetHealth =
 		# shield with 0% coverage
 		await query 'UPDATE items_proto SET coverage = 0 WHERE id = 1'
 		for i in [0...40]
-			tx = promisifyAll transaction(conn)
+			tx = promisifyAll transaction(conn)#, filter: (name) -> name in ['query', 'rollback']
 			hp = await game._hitAndGetHealth tx, 1, power
 			test.strictEqual (await shield tx).strength, 1000, "shield should not block anything if it's coverage is 0%"
 			await tx.rollbackAsync()

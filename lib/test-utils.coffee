@@ -14,10 +14,9 @@
 
 'use strict'
 
-sync = require 'sync'
-
 
 exports.test = require('chai').assert
+
 
 exports.test.throwsPgError = (fn, code) ->
 	try
@@ -30,18 +29,5 @@ exports.test.throwsPgError = (fn, code) ->
 
 exports.requireCovered = require '../require-covered.coffee'
 
-# Wrapper. For the given function f, returns a function F which takes exactly
-# one argument (callback), executes the original function f inside a sync fiber,
-# and passes any exceptions or errors to the given callback of F.
-#
-# This wrapper is primarily used because the Function.async() function of sync
-# library returns a function which is declared to take 0 arguments and tries
-# to determine real arguments number in runtime. This creates a conflict with
-# Mocha which relies on declared argument count to determine whether a function
-# is synchronous or asynchronous.
-exports.t = (func) ->
-	return (done) ->
-		sync func.bind(this), (error, result) ->
-			done(error)
 
 exports.config = require '../config.coffee'

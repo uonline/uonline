@@ -15,7 +15,7 @@
 'use strict'
 
 NS = 'query-utils'; exports[NS] = {}  # namespace
-{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+{test, requireCovered, config} = require '../lib/test-utils.coffee'
 
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'

@@ -15,7 +15,7 @@
 'use strict'
 
 NS = 'math'; exports[NS] = {}  # namespace
-{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+{test, requireCovered, config} = require '../lib/test-utils.coffee'
 math = requireCovered __dirname, '../lib/math.coffee'
 
 exports[NS].ap =
