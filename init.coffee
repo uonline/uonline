@@ -16,19 +16,21 @@
 
 'use strict'
 
-config = require './config'
-lib = require './lib.coffee'
-sync = require 'sync'
+{async, await} = require 'asyncawait'
+Promise = require 'bluebird'
+fs = require 'fs'
 dashdash = require 'dashdash'
 chalk = require 'chalk'
 sugar = require 'sugar'
-fs = require 'fs'
+lib = require './lib.coffee'
+config = require './config'
 
 
 anyDB = null
 createAnyDBConnection = (url) ->
-	anyDB = require 'any-db' unless anyDB?
-	anyDB.createConnection(url)
+	unless anyDB?
+		anyDB = require 'any-db'
+	return Promise.promisifyAll(anyDB.createConnection(url))
 
 createQueryUtils = (url) ->
 	lib.query_utils.getFor createAnyDBConnection url
@@ -84,7 +86,7 @@ options = [
 	help: 'Migrate to the latest revision.'
 ,
 	names: [
-		'optimize-tables'
+		'optimize'
 		'o'
 	]
 	type: 'bool'
@@ -159,13 +161,13 @@ if opts._order.length is 0
 #  'drop', 'd', 'Drop all tables and set revision to -1'
 # [--database] [--tables] [--unify-validate] [--unify-export] [--optimize] [--test-monsters] [--drop]
 
-help = ->
+help = async ->
 	console.log "\nUsage: coffee init.coffee <commands>\n\n#{parser.help(includeEnv: true).trimRight()}"
 
 
-info = ->
+info = async ->
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
-	current = lib.migration.getCurrentRevision.sync(null, dbConnection)
+	current = await lib.migration.getCurrentRevision(dbConnection)
 	newest = lib.migration.getNewestRevision()
 
 	status = 'up to date'
@@ -181,18 +183,18 @@ info = ->
 	console.log "Latest revision is #{chalk.magenta(newest)}, current is #{color(current)} (#{color(status)})."
 
 
-createDatabase = (arg) ->
+createDatabase = async (arg) ->
 	checkArgs arg, ['main', 'test', 'both']
 
 	console.log chalk.magenta 'Creating databases...'
 
-	create = (db_url) ->
+	create = async (db_url) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
 		process.stdout.write " `#{db_name}`... "
 		db_path += '/postgres'  # PostgreSQL requires database to be specified.
 		conn = createAnyDBConnection(db_path)
 		try
-			conn.query.sync(conn, "CREATE DATABASE #{db_name}", [])
+			await conn.queryAsync("CREATE DATABASE #{db_name}", [])
 			console.log chalk.green 'ok'
 		catch error
 			if error.code is 'ER_DB_CREATE_EXISTS' or error.code is '42P04'  # MySQL, PostgreSQL
@@ -200,22 +202,22 @@ createDatabase = (arg) ->
 			else
 				throw error
 
-	create config.DATABASE_URL if arg in ['main', 'both']
-	create config.DATABASE_URL_TEST if arg in ['test', 'both']
+	await create config.DATABASE_URL if arg in ['main', 'both']
+	await create config.DATABASE_URL_TEST if arg in ['test', 'both']
 
 
-dropDatabase = (arg) ->
+dropDatabase = async (arg) ->
 	checkArgs opts.drop_database, ['main', 'test', 'both']
 
 	console.log chalk.magenta 'Dropping databases...'
 
-	drop = (db_url, callback) ->
+	drop = async (db_url, callback) ->
 		[_, db_path, db_name] = db_url.match(/(.+)\/(.+)/)
 		process.stdout.write " `#{db_name}`... "
 		db_path += '/postgres'  # PostgreSQL requires database to be specified.
 		conn = createAnyDBConnection(db_path)
 		try
-			conn.query.sync(conn, "DROP DATABASE #{db_name}", [])
+			await conn.queryAsync("DROP DATABASE #{db_name}", [])
 			console.log chalk.green 'ok'
 		catch error
 			if error.code is 'ER_DB_DROP_EXISTS' or error.code is '3D000'  # MySQL, PostgreSQL
@@ -223,24 +225,23 @@ dropDatabase = (arg) ->
 			else
 				throw error
 
-	drop config.DATABASE_URL if arg in ['main', 'both']
-	drop config.DATABASE_URL_TEST if arg in ['test', 'both']
+	await drop config.DATABASE_URL if arg in ['main', 'both']
+	await drop config.DATABASE_URL_TEST if arg in ['test', 'both']
 
 
-migrateTables = ->
+migrateTables = async ->
 	console.log chalk.magenta 'Performing migrations...'
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
-	lib.migration.migrate.sync null, dbConnection, {verbose: true}
+	await lib.migration.migrate dbConnection, {verbose: true}
 
 
-optimize = ->
+optimize = async ->
 	console.log chalk.magenta 'Optimizing tables...'
 
 	conn = createAnyDBConnection(config.DATABASE_URL)
 	db_name = config.DATABASE_URL.match(/[^\/]+$/)[0]
 
-	result = conn.query.sync conn,
-		"SELECT table_name "+
+	result = await conn.queryAsync "SELECT table_name "+
 		"FROM information_schema.tables "+
 		"WHERE table_schema = 'public'"  # move to subquery, maybe?
 
@@ -248,15 +249,15 @@ optimize = ->
 		#lib.prettyprint.action "Optimizing table `#{row.table_name}`"
 		process.stdout.write " `#{row.table_name}`... "
 		try
-			optRes = conn.query.sync conn, "VACUUM FULL ANALYZE #{row.table_name}"
+			optRes = await conn.queryAsync "VACUUM FULL ANALYZE #{row.table_name}"
 			console.log chalk.green "ok"
 		catch ex
 			console.log chalk.red.bold "fail"
 			console.trace ex
 
 
-unifyValidate = ->
-	console.log chalk.magenta 'Validating unify...'
+unifyValidate = async ->
+	console.log chalk.magenta 'Parsing unify...'
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 	locparse = require './lib/locparse'
 	result = locparse.processDir('./unify/Кронт - kront', true)
@@ -265,15 +266,22 @@ unifyValidate = ->
 	#require('fs').writeFileSync('./unify.json', JSON.stringify(result))
 
 
-unifyExport = ->
-	console.log chalk.magenta 'Inserting unify data...'
+unifyExport = async ->
+	console.log chalk.magenta 'Parsing unify...'
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 	locparse = require './lib/locparse'
 	result = locparse.processDir('./unify/Кронт - kront', true)
-	result.save(dbConnection)
+	try
+		process.stdout.write chalk.magenta '  Saving parsed data... '
+		await result.save(dbConnection)
+		console.log chalk.green 'ok'
+	catch ex
+		console.log chalk.red.bold "fail"
+		console.trace ex
 
 
-insertMonsters = ->
+
+insertMonsters = async ->
 	console.log chalk.magenta 'Inserting monsters...'
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
 
@@ -300,17 +308,16 @@ insertMonsters = ->
 
 	console.log chalk.green 'ok'
 
-	locs = dbConnection.query.sync(dbConnection, "SELECT id FROM locations").rows
+	locs = (await dbConnection.queryAsync("SELECT id FROM locations")).rows
 	if (locs.length == 0)
 		throw new Error("No locations found. Forgot unify data?")
 
 	process.stdout.write '  '+'Inserting monsters'+'... '
 
-	dbConnection.query.sync(dbConnection, "DELETE FROM characters WHERE player IS NULL", [])
+	await dbConnection.queryAsync("DELETE FROM characters WHERE player IS NULL", [])
 	for i in prototypes
 		for j in [1..5]
-			dbConnection.query.sync(
-				dbConnection
+			await dbConnection.queryAsync(
 				"INSERT INTO characters "+
 					"(name, level, power, agility, defense, intelligence, accuracy, "+
 					"health_max, mana_max, energy, "+
@@ -326,7 +333,7 @@ insertMonsters = ->
 	console.log chalk.green 'ok'
 
 
-insertItems = ->
+insertItems = async ->
 	console.log chalk.magenta 'Inserting test items'+'... '
 
 	query = createQueryUtils(config.DATABASE_URL)
@@ -341,88 +348,49 @@ insertItems = ->
 	process.stdout.write '  '+'Inserting item prototypes'+'... '
 	for proto in prototypes
 		attrs = 'id name type class kind armor_class strength_max coverage damage'.split(' ')
-		query(
+		await query(
 			"INSERT INTO items_proto (#{attrs}) "+
 			"VALUES (#{attrs.map (_,i) -> '$'+(i+1)})", attrs.map (a) -> proto[a])
 	console.log chalk.green 'ok'
 
 	process.stdout.write '  '+'Fetching characters'+'... '
-	characters = query.all(
+	characters = await query.all(
 		'SELECT username, characters.id AS character_id, characters.name AS character_name '+
 		'FROM uniusers, characters WHERE uniusers.id = characters.player')
 	console.log chalk.green "found #{characters.length}"
 	for char in characters
 		process.stdout.write '  '+"Giving some items to #{char.character_name}"+'... '
 		for item in prototypes
-			query 'INSERT INTO items (prototype, owner, strength, equipped) '+
+			await query 'INSERT INTO items (prototype, owner, strength, equipped) '+
 				'VALUES ($1, $2, $3, false)', [item.id, char.character_id, item.strength_max]
 		console.log chalk.green 'ok'
 
 
-fixAttrs = ->
-	# ['uniusers', 'changeDefault', 'health',       1000],
-	# ['uniusers', 'changeDefault', 'health_max',   1000],
-	# ['uniusers', 'changeDefault', 'mana',         500],
-	# ['uniusers', 'changeDefault', 'mana_max',     500],
-	# ['uniusers', 'changeDefault', 'energy',       100],
-	# ['uniusers', 'changeDefault', 'power',        50],
-	# ['uniusers', 'changeDefault', 'defense',      50],
-	# ['uniusers', 'changeDefault', 'agility',      50],
-	# ['uniusers', 'changeDefault', 'accuracy',     50],
-	# ['uniusers', 'changeDefault', 'intelligence', 50],
-	# ['uniusers', 'changeDefault', 'initiative',   50],
-	process.stdout.write chalk.magenta 'Setting predefined attributes'+'... '
-	dbConnection = createAnyDBConnection(config.DATABASE_URL)
-	dbConnection.query.sync(
-		dbConnection
-		'UPDATE uniusers SET '+
-			'health = 1000, '+
-			'health_max = 1000, '+
-			'mana = 500, '+
-			'mana_max = 500, '+
-			'energy = 100, '+
-			'power = 50, '+
-			'defense = 50, '+
-			'agility = 50, '+
-			'accuracy = 50, '+
-			'intelligence = 50, '+
-			'initiative = 50'
-	)
-	console.log chalk.green 'ok'
-
-
-fixEnergy = ->
+fixEnergy = async ->
 	process.stdout.write chalk.magenta 'Setting predefined energy'+'... '
 	dbConnection = createAnyDBConnection(config.DATABASE_URL)
-	dbConnection.query.sync(
-		dbConnection
-		'UPDATE characters SET energy = 220, energy_max = 220'
-	)
+	await dbConnection.queryAsync 'UPDATE characters SET energy = 220, energy_max = 220'
 	console.log chalk.green 'ok'
 
 
+### main ###
+(async ->
+	if opts.help
+		await help()
+		process.exit 2
 
-sync(
-	->
-		if opts.help
-			help()
-			process.exit 2
-
-		if opts.info
-			info()
-			process.exit 0
-
-		dropDatabase(opts.drop_database) if opts.drop_database
-		createDatabase(opts.create_database) if opts.create_database
-		migrateTables() if opts.migrate_tables
-		unifyValidate() if opts.unify_validate
-		unifyExport() if opts.unify_export
-		insertMonsters() if opts.monsters
-		fixAttrs() if opts.fix_attributes
-		fixEnergy() if opts.fix_energy
-		insertItems() if opts.items
-		optimize() if opts.optimize_tables # must always be the last
+	if opts.info
+		await info()
 		process.exit 0
-	(ex) ->
-		if ex? then throw ex
-)
+
+	await dropDatabase(opts.drop_database) if opts.drop_database
+	await createDatabase(opts.create_database) if opts.create_database
+	await migrateTables() if opts.migrate_tables
+	await unifyValidate() if opts.unify_validate
+	await unifyExport() if opts.unify_export
+	await insertMonsters() if opts.monsters
+	await fixEnergy() if opts.fix_energy
+	await insertItems() if opts.items
+	await optimize() if opts.optimize_tables # must always be the last
+	process.exit 0
+)()
