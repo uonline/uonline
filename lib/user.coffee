@@ -144,7 +144,7 @@ exports.registerUser = async (db, username, password, permissions) ->
 		throw new Error 'user already exists'
 
 	salt = exports.createSalt(16)
-	hash = await crypto.pbkdf2Async password, salt, 4096, 256
+	hash = await crypto.pbkdf2Async password, salt, 4096, 256, 'sha512'
 	sessid = await exports.generateSessId db, config.sessionLength
 
 	user_id = (await db.queryAsync(
@@ -165,7 +165,7 @@ exports.accessGranted = async (db, username, password) ->
 	if userdata.rows.length is 0
 		return false  # Wrong username
 	userdata = userdata.rows[0]
-	hash = await crypto.pbkdf2Async password, userdata.salt, 4096, 256
+	hash = await crypto.pbkdf2Async password, userdata.salt, 4096, 256, 'sha512'
 	return (hash.toString('hex') is userdata.hash)
 
 
