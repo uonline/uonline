@@ -81,17 +81,15 @@ exports[NS].renameCol =
 		test.strictEqual col.data_type, "integer"
 
 	'should return error if tried to rename column from nonexistent table': async ->
-		test.throwsPgError(
-			# uses _conn, I don't know why it doesn't work with transaction
-			# renamed _conn to conn, seems working now
-			-> await tables.renameCol conn, "test_table", "id", "col"
+		await test.isRejectedWithPgError(
+			tables.renameCol conn, "test_table", "id", "col"
 			'42P01'  # relation "test_table" does not exist
 		)
 
 	'should return error if tried to rename nonexistent column': async ->
 		await tables.create conn, "test_table", "id INT"
-		test.throwsPgError(
-			-> await tables.renameCol conn, "test_table", "noSuchCol", "col"
+		await test.isRejectedWithPgError(
+			tables.renameCol conn, "test_table", "noSuchCol", "col"
 			'42703'  # column "nosuchcol" does not exist
 		)
 

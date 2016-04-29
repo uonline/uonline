@@ -68,15 +68,15 @@ exports[NS].row =
 		test.deepEqual row, {id: 1, data: 'first'}
 
 	'should throw error if more than one row returned': async ->
-		test.throws(
-			-> await query.row 'SELECT * FROM test_table'
-			Error, 'In query:\nSELECT * FROM test_table\nExpected one row, but got 2'
+		await test.isRejected(
+			query.row('SELECT * FROM test_table')
+			/In query:\nSELECT \* FROM test_table\nExpected one row, but got 2/
 		)
 
 	'should throw error if no rows returned': async ->
-		test.throws(
-			-> await query.row 'SELECT * FROM test_table WHERE id = 3'
-			Error, 'In query:\nSELECT * FROM test_table WHERE id = 3\nExpected one row, but got 0'
+		await test.isRejected(
+			query.row('SELECT * FROM test_table WHERE id = 3')
+			/In query:\nSELECT \* FROM test_table WHERE id = 3\nExpected one row, but got 0/
 		)
 
 
@@ -86,21 +86,21 @@ exports[NS].val =
 		test.deepEqual data, 'second'
 
 	'should throw error if more than one value returned': async ->
-		test.throws(
-			-> await query.val 'SELECT id, data FROM test_table WHERE id = 2'
-			Error, 'In query:\nSELECT id, data FROM test_table WHERE id = 2\nExpected one value, but got 2 (id, data)'
+		await test.isRejected(
+			query.val('SELECT id, data FROM test_table WHERE id = 2')
+			/In query:\nSELECT id, data FROM test_table WHERE id = 2\nExpected one value, but got 2 \(id, data\)/
 		)
 
 	'should throw error if more than one row returned': async ->
-		test.throws(
-			-> await query.val 'SELECT * FROM test_table'
-			Error, 'In query:\nSELECT * FROM test_table\nExpected one row, but got 2'
+		await test.isRejected(
+			query.val('SELECT * FROM test_table')
+			/In query:\nSELECT \* FROM test_table\nExpected one row, but got 2/
 		)
 
 	'should throw error if no rows returned': async ->
-		test.throws(
-			-> await query.val 'SELECT * FROM test_table WHERE id = 3'
-			Error, 'In query:\nSELECT * FROM test_table WHERE id = 3\nExpected one row, but got 0'
+		await test.isRejected(
+			query.val('SELECT * FROM test_table WHERE id = 3')
+			/In query:\nSELECT \* FROM test_table WHERE id = 3\nExpected one row, but got 0/
 		)
 
 
@@ -118,14 +118,14 @@ exports[NS].doInTransaction =
 		this.count = async -> + await query.val 'SELECT count(*) FROM test_table'
 
 	'should execute function and commit transaction': async ->
-		await queryUtils.doInTransaction conn, (tx) ->
+		await queryUtils.doInTransaction conn, async (tx) ->
 			tx.queryAsync "INSERT INTO test_table VALUES (3, 'something')"
 			await tx.queryAsync "INSERT INTO test_table VALUES (4, 'very something')"
 		test.strictEqual (await this.count()), 4
 
 	'should rollback transaction and throw on query error': async ->
-		test.throwsPgError(
-			-> await queryUtils.doInTransaction conn, (tx) ->
+		test.isRejectedWithPgError(
+			queryUtils.doInTransaction conn, async (tx) ->
 				await tx.queryAsync "INSERT INTO test_table VALUES (3, 'something')"
 				await tx.queryAsync "INSERT INTO no_such_table VALUES ('nothing')"
 			'42P01'  # relation "no_such_table" does not exist
@@ -133,30 +133,30 @@ exports[NS].doInTransaction =
 		test.strictEqual (await this.count()), 2
 
 	'should rollback transaction (and make connection usable immediately) on first query error': async ->
-		test.throwsPgError(
-			-> await queryUtils.doInTransaction conn, (tx) ->
+		test.isRejectedWithPgError(
+			queryUtils.doInTransaction conn, async (tx) ->
 				await tx.queryAsync "SELECT first transaction query with error"
 			'42601'  # syntax error at or near "transaction"
 		)
 		test.strictEqual (await this.count()), 2
 
 	'should rollback transaction and throw on non-query error': async ->
-		test.throws(
-			-> await queryUtils.doInTransaction conn, (tx) ->
+		await test.isRejected(
+			queryUtils.doInTransaction conn, async (tx) ->
 				await tx.queryAsync "INSERT INTO test_table VALUES (3, 'something')"
 				throw new Error 'something fell up and broke down'
-			Error, 'something fell up and broke down'
+			/something fell up and broke down/
 		)
 		test.strictEqual (await this.count()), 2
 
 	'should correctly perform after some errors': async ->
-		try await queryUtils.doInTransaction conn, (tx) -> throw new Error 'oups'
-		try await queryUtils.doInTransaction conn, (tx) -> await tx.queryAsync "SELECT fail"
-		try await queryUtils.doInTransaction conn, (tx) ->
+		try await queryUtils.doInTransaction conn, async (tx) -> throw new Error 'oups'
+		try await queryUtils.doInTransaction conn, async (tx) -> await tx.queryAsync "SELECT fail"
+		try await queryUtils.doInTransaction conn, async (tx) ->
 			await tx.queryAsync "INSERT INTO test_table VALUES (-1, 'should rollback')"
 			await tx.queryAsync "SELECT fail"
 
-		await queryUtils.doInTransaction conn, (tx) ->
+		await queryUtils.doInTransaction conn, async (tx) ->
 			await tx.queryAsync "INSERT INTO test_table VALUES (5, 'one more thing')"
 		test.strictEqual (await this.count()), 3
 

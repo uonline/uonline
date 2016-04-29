@@ -89,10 +89,7 @@ exports[NS].getCurrentRevision =
 		fakeConn =
 			queryAsync: async (text, args) ->
 				throw new Error('THE_VERY_STRANGE_ERROR')
-		test.throws(
-			-> await migration.getCurrentRevision fakeConn
-			Error, 'THE_VERY_STRANGE_ERROR'
-		)
+		await test.isRejected migration.getCurrentRevision(fakeConn), /THE_VERY_STRANGE_ERROR/
 
 
 exports[NS].setRevision =
@@ -148,8 +145,8 @@ exports[NS]._justMigrate =
 		await query 'DROP TABLE IF EXISTS test_table'
 		await migration.setRevision conn, 0
 
-		test.throwsPgError(
-			-> await migration._justMigrate conn, 1
+		await test.isRejectedWithPgError(
+			migration._justMigrate conn, 1
 			'42P01'  # relation "test_table" does not exist
 		)
 
@@ -235,19 +232,19 @@ exports[NS].migrate =
 		}, 'should correctly perform migration for specified tables'
 
 	'should migrate verbosely if flag is set': async ->
-		testLog = (message, func) ->
+		testLog = async (message, promise) ->
 			_log = console.log
 			_write = process.stdout.write
 			log_times = 0
 			console.log = (x) -> log_times++
 			process.stdout.write = (x) -> log_times++
-			func()
+			await promise
 			console.log = _log
 			process.stdout.write = _write
-			test.ok log_times>0, message
+			test.isAbove log_times, 0, message
 
-		testLog 'should say something',
-			-> await migration.migrate conn, {verbose: true}
+		await testLog 'should say something',
+			migration.migrate conn, {verbose: true}
 
-		testLog 'should say something (when all migrations already completed)',
-			-> await migration.migrate conn, {verbose: true}
+		await testLog 'should say something (when all migrations already completed)',
+			migration.migrate conn, {verbose: true}

@@ -62,17 +62,11 @@ exports[NS].getInitialLocation =
 
 	'should return error if initial location is not defined': async ->
 		await query 'UPDATE locations SET initial = 0'
-		test.throws(
-			-> await game.getInitialLocation conn
-			Error, 'initial location is not defined'
-		)
+		await test.isRejected game.getInitialLocation(conn), /initial location is not defined/
 
 	'should return error if there is more than one initial location': async ->
 		await query 'UPDATE locations SET initial = 1 WHERE id = 3'
-		test.throws(
-			-> await game.getInitialLocation conn
-			Error, 'there is more than one initial location'
-		)
+		await test.isRejected game.getInitialLocation(conn), /there is more than one initial location/
 
 
 exports[NS].getCharacterLocationId =
@@ -83,10 +77,7 @@ exports[NS].getCharacterLocationId =
 		test.strictEqual (await game.getCharacterLocationId conn, 2), 1
 
 	'should fail if character id is wrong': async ->
-		test.throws(
-			-> await game.getCharacterLocationId conn, -1
-			Error, "wrong character's id",
-		)
+		await test.isRejected game.getCharacterLocationId(conn, -1), /wrong character's id/
 
 
 exports[NS].getCharacterLocation =
@@ -106,17 +97,11 @@ exports[NS].getCharacterLocation =
 		test.deepEqual loc.ways, ways
 
 	'should fail on wrong character id': async ->
-		test.throws(
-			-> await game.getCharacterLocation conn, -1
-			Error, "wrong character's id",
-		)
+		await test.isRejected game.getCharacterLocation(conn, -1), /wrong character's id/
 
 	"should fail if user's location is wrong": async ->
 		await insert 'locations', id: 1, area: 5
-		test.throws(
-			-> await game.getCharacterLocation conn, 1
-			Error, "wrong character's id or location",
-		)
+		await test.isRejected game.getCharacterLocation(conn, 1), /wrong character's id or location/
 
 
 exports[NS].getCharacterArea =
@@ -132,10 +117,7 @@ exports[NS].getCharacterArea =
 		test.strictEqual area.title, 'London'
 
 	'should fail on wrong user id': async ->
-		test.throws(
-			-> await game.getCharacterArea conn, -1
-			Error, "wrong character's id",
-		)
+		await test.isRejected game.getCharacterArea(conn, -1), /wrong character's id/
 
 
 exports[NS].isTherePathForCharacterToLocation =
@@ -243,10 +225,7 @@ exports[NS]._leaveBattle =
 			'should not affect other participants'
 
 	'should throw error if unable to find anyone to leave': async ->
-		test.throws(
-			-> await game._leaveBattle(conn, 1, 123)
-			Error, "can't find participant character_id=123 in battle #1"
-		)
+		await test.isRejected game._leaveBattle(conn, 1, 123), /can't find participant character_id=123 in battle #1/
 
 
 exports[NS].changeLocation =
@@ -695,7 +674,7 @@ exports[NS]._hit =
 			'should describe what had happened'
 
 	'hitting with different weapons': async ->
-		['shield', 'weapon-one-handed', 'no-such-item-but-why-not'].forEach (type) ->
+		for type in ['shield', 'weapon-one-handed', 'no-such-item-but-why-not']
 			await query 'DELETE FROM items_proto'
 			await query 'DELETE FROM items'
 			await insert 'items_proto', id:1, name: 'Ogrebator 4000', coverage:100, type: type, damage: 100

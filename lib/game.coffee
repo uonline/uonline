@@ -210,9 +210,9 @@ exports.changeLocation = async (db, character_id, locid, throughSpaceAndTime) ->
 		user =
 			id: character_id
 			initiative: (await db.queryAsync(
-					'SELECT initiative FROM characters WHERE id = $1',
-					[ character_id ]
-				)).rows[0].initiative
+				'SELECT initiative FROM characters WHERE id = $1',
+				[ character_id ]
+			)).rows[0].initiative
 		await exports._createBattleBetween db, locid, pouncedMonsters, [user]
 
 	return {

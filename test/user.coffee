@@ -53,15 +53,15 @@ exports[NS].afterEach = async ->
 exports[NS].userExists =
 	beforeEach: async ->
 		await query 'INSERT INTO uniusers (username) VALUES ( $1 )', ['Sauron']
-		this.exists = (name) -> await users.userExists(conn, name)
+		this.exists = (name) -> users.userExists(conn, name)
 
 	'should return true if user exists': async ->
-		test.isTrue this.exists('Sauron')
-		test.isFalse this.exists('Sauron2')
+		test.isTrue (await this.exists 'Sauron')
+		test.isFalse (await this.exists 'Sauron2')
 
 	'should ignore capitalization': async ->
-		test.isTrue this.exists('SAURON')
-		test.isTrue this.exists('sauron')
+		test.isTrue (await this.exists 'SAURON')
+		test.isTrue (await this.exists 'sauron')
 
 
 exports[NS].idExists =
@@ -222,10 +222,7 @@ exports[NS].idBySession =
 		test.strictEqual userid, 3
 
 	'should return error on wrong sessid': async ->
-		test.throws(
-			-> await users.idBySession conn, 'someid'
-			Error, "wrong user's id"
-		)
+		await test.isRejected users.idBySession(conn, 'someid'), /wrong user's id/
 
 
 exports[NS].closeSession =
@@ -273,10 +270,7 @@ exports[NS].registerUser =
 
 	'should fail if user exists': async ->
 		await insert 'uniusers', username: 'TheUser'
-		test.throws(
-			-> await users.registerUser conn, 'TheUser', 'password', 1
-			Error, 'user already exists'
-		)
+		await test.isRejected users.registerUser(conn, 'TheUser', 'password', 1), /user already exists/
 
 
 exports[NS].accessGranted = new ->

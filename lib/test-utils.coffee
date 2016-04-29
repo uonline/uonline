@@ -14,8 +14,11 @@
 
 'use strict'
 
+chai = require 'chai'
+chai.use require 'chai-as-promised'
 
-exports.test = require('chai').assert
+
+exports.test = chai.assert
 
 
 exports.test.throwsPgError = (fn, code) ->
@@ -25,6 +28,13 @@ exports.test.throwsPgError = (fn, code) ->
 		exports.test.strictEqual ex.code, code
 		return
 	throw new Error "Expected block to throw PG error with code #{code}"
+
+
+exports.test.isRejectedWithPgError = (promise, code) ->
+	return promise.then(
+		(ok) -> throw new Error "Expected block to throw PG error with code #{code}"
+		(ex) -> exports.test.strictEqual ex.code, code
+	)
 
 
 exports.requireCovered = require '../require-covered.coffee'

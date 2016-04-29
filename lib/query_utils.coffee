@@ -23,7 +23,7 @@ promisifyAll = require("bluebird").promisifyAll
 
 exports.getFor = (db) ->
 	query = (sql, params) ->
-		db.queryAsync sql, params
+		return db.queryAsync sql, params
 	
 	query.all = async (sql, params) ->
 		(await db.queryAsync sql, params).rows
@@ -57,7 +57,7 @@ exports.getFor = (db) ->
 exports.doInTransaction = async (db, func) ->
 	tx = promisifyAll transaction(db, {autoRollback: false})
 	try
-		func(tx)
+		await func(tx)
 	catch ex
 		if tx.state() isnt 'closed'
 			await tx.rollbackAsync()

@@ -422,7 +422,7 @@ exports.migrate = async (db, opts = {}) ->
 			if opts.verbose
 				console.log chalk.magenta '  Migrating ' +
 					(if for_tables then "<#{for_tables}> " else '') + 'to revision ' + i + '...'
-			await qu.doInTransaction db, (tx) ->
+			await qu.doInTransaction db, async (tx) ->
 				await exports._justMigrate tx, i, for_tables, !!opts.verbose
 				unless for_tables
 					await exports.setRevision tx, i

@@ -78,42 +78,38 @@ exports[NS].createCharacter =
 		test.strictEqual char.race, 'elf', 'should create character with specified race'
 		test.strictEqual char.gender, 'female', 'should create character with specified gender'
 
-		test.throws(
-			-> await character.createCharacter(conn, 1, 'My First Character')
-			Error, 'character already exists'
-			'should throw correct exception if such name has been taken'
-		)
+		await test.isRejected character.createCharacter(conn, 1, 'My First Character'), /character already exists/
 
-		[
+		for [race, gender, energy] in [
 			['orc', 'male', 220 ]
 			['orc', 'female', 200 ]
 			['human', 'male', 170 ]
 			['human', 'female', 160 ]
 			['elf', 'male', 150 ]
 			['elf', 'female', 140 ]
-		].forEach ([race, gender, energy]) ->
+		]
 			await character.createCharacter(conn, 1, "#{race}-#{gender}", race, gender)
 			char = await query.row 'SELECT * FROM characters WHERE name = $1', [ "#{race}-#{gender}" ]
 			test.strictEqual char.energy_max, energy, "should set correct energy_max value for #{gender} #{race}"
 			test.strictEqual char.energy, energy, "should set correct energy value for #{gender} #{race}"
 
 	'should not allow weird races': async ->
-		test.throwsPgError(
-			-> await character.createCharacter(conn, 1, 'My First Character', 'murloc', 'female')
+		await test.isRejectedWithPgError(
+			character.createCharacter(conn, 1, 'My First Character', 'murloc', 'female')
 			'22P02'  # invalid input value for enum uonline_race: "murloc"
 		)
 
 	'should not allow weird genders': async ->
-		test.throwsPgError(
-			-> await character.createCharacter(conn, 1, 'My First Character', 'orc', 'it')
+		await test.isRejectedWithPgError(
+			character.createCharacter(conn, 1, 'My First Character', 'orc', 'it')
 			'22P02'  # invalid input value for enum uonline_gender: "it"
 		)
 
 	'should throw if something bad happened': async ->
 		await insert 'locations', id: 1, initial: 1
 		await insert 'locations', id: 2, initial: 1
-		test.throwsPgError(
-			-> await character.createCharacter(conn, null, null)
+		await test.isRejectedWithPgError(
+			character.createCharacter(conn, null, null)
 			'21000'  # more than one row returned by a subquery used as an expression
 		)
 
@@ -199,15 +195,9 @@ exports[NS].switchCharacter =
 		test.strictEqual charid, 2, 'should change character_id'
 
 	'should throw if user does not exist': async ->
-		test.throws(
-			-> await character.switchCharacter(conn, 1, 2)
-			Error, "user #1 doesn't have character #2"
-		)
+		await test.isRejected character.switchCharacter(conn, 1, 2), /user #1 doesn't have character #2/
 
 	'should throw if user does not have such character': async ->
 		await insert 'uniusers', id: 1
 		await insert 'characters', id: 1, player: 1
-		test.throws(
-			-> await character.switchCharacter(conn, 1, 2)
-			Error, "user #1 doesn't have character #2"
-		)
+		await test.isRejected character.switchCharacter(conn, 1, 2), /user #1 doesn't have character #2/
