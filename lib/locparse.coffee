@@ -16,7 +16,8 @@
 
 crypto = require 'crypto'
 fs = require 'fs'
-sync = require 'sync'
+async = require 'asyncawait/async'
+await = require 'asyncawait/await'
 
 
 # Create area's and location's numeric id from its label. Based on SHA-1.
@@ -197,13 +198,12 @@ class Result
 		@files = {}
 
 	# Save all the data to database using specified connection.
-	save: (dbConnection) ->
+	save: async (db) ->
 		throw new Error("Can't save with errors.") if @errors.length > 0
 
-		dbConnection.query.sync(dbConnection, "DELETE FROM areas", [])
+		await db.queryAsync "DELETE FROM areas"
 		for area in @areas
-			dbConnection.query.sync(
-				dbConnection
+			await db.queryAsync(
 				"INSERT INTO areas (id, title, description) VALUES ($1, $2, $3)"
 				[area.id, area.name, area.description]
 			)
@@ -211,11 +211,10 @@ class Result
 		locByLabel = {}
 		locByLabel[loc.label] = loc for loc in @locations
 
-		dbConnection.query.sync(dbConnection, "DELETE FROM locations", [])
+		await db.queryAsync "DELETE FROM locations"
 		for loc in @locations
 			ways = ({target: locByLabel[k].id, text: v} for k,v of loc.actions)
-			dbConnection.query.sync(
-				dbConnection
+			await db.queryAsync(
 				'INSERT INTO locations (id, title, description, area, initial, ways, picture) VALUES($1,$2,$3,$4,$5,$6,$7)'
 				[loc.id, loc.name, loc.description, loc.area.id, (if loc is @initialLocation then 1 else 0),
 					JSON.stringify(ways), loc.picture]

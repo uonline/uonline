@@ -15,7 +15,7 @@
 'use strict'
 
 NS = 'prettyprint'; exports[NS] = {}  # namespace
-{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+{test, requireCovered, config} = require '../lib/test-utils.coffee'
 
 prettyprint = requireCovered __dirname, '../lib/prettyprint.coffee'
 

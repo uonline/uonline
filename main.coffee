@@ -29,8 +29,9 @@ anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
 express = require 'express'
 autostatic = require 'autostatic'
-sync = require 'sync'
 sugar = require 'sugar'
+{async, await} = require 'asyncawait'
+promisifyAll = require("bluebird").promisifyAll
 moment = require 'moment'
 moment.locale 'ru'
 plural = (n, f) ->
@@ -45,7 +46,7 @@ inspect = (x) ->
 
 
 # Connect to database
-dbConnection = anyDB.createPool config.DATABASE_URL, min: 2, max: 20
+dbConnection = promisifyAll anyDB.createPool config.DATABASE_URL, min: 2, max: 20
 dbConnection.query 'SELECT version()', [], (error, result) ->
 	if error?
 		console.log "Problem with database: #{error.stack}"
@@ -117,8 +118,18 @@ if newrelic?
 	app.locals.newrelic = newrelic
 
 
+asyncMiddleware = (func) ->
+	return (req, res, next) ->
+		func(req, res).then((-> next()), next)
+
+
+wrap = (func) ->
+	return (req, res, next) ->
+		func(req, res, next).catch(next)
+
+
 # Hallway middleware
-app.use ((request, response) ->
+app.use asyncMiddleware async (request, response) ->
 	# Basic stuff
 	request.uonline =
 		now: new Date()
@@ -128,7 +139,7 @@ app.use ((request, response) ->
 		db: dbConnection
 
 	# Read session data
-	user = lib.user.sessionInfoRefreshing.sync(null,
+	user = await lib.user.sessionInfoRefreshing(
 		request.uonline.db, request.cookies.sessid, config.sessionExpireTime, true)
 	request.uonline.user = user
 
@@ -146,13 +157,13 @@ app.use ((request, response) ->
 		x.displayRace = tmp[key]
 
 	# Read character data
-	character = lib.game.getCharacter.sync null, request.uonline.db, request.uonline.user.character_id
+	character = await lib.game.getCharacter request.uonline.db, request.uonline.user.character_id
 	if character?
 		writeDisplayRace(character)
 	request.uonline.character = character
 
 	# Read all user's characters data
-	characters = lib.game.getCharacters.sync null, request.uonline.db, request.uonline.user.id
+	characters = await lib.game.getCharacters request.uonline.db, request.uonline.user.id
 	if characters?
 		characters.forEach writeDisplayRace
 	request.uonline.characters = characters
@@ -169,18 +180,16 @@ app.use ((request, response) ->
 
 	# Necessary, or it will pass shit to callback
 	return
-).asyncMiddleware()
 
 
 # Middlewares
 
-openTransaction = ((request, response) ->
-	request.uonline.db = transaction(request.uonline.db)
-).asyncMiddleware()
+openTransaction = (request, response, next) ->
+	request.uonline.db = promisifyAll transaction(request.uonline.db)
+	next()
 
-commit = ((request, response) ->
-	request.uonline.db.commit.sync(request.uonline.db)
-).asyncMiddleware()
+commit = asyncMiddleware async (request, response) ->
+	await request.uonline.db.commitAsync()
 
 
 mustBeAuthed = (request, response, next) ->
@@ -205,10 +214,9 @@ mustHaveCharacter = (request, response, next) ->
 
 
 setInstance = (x) ->
-	((request, response) ->
+	(request, response, next) ->
 		request.uonline.instance = x
-		return
-	).asyncMiddleware()
+		next()
 
 
 render = (template) ->
@@ -221,98 +229,88 @@ redirect = (code, url) ->
 		response.redirect(code, url)
 
 
-fetchCharacter = ((request, response) ->
-	character = lib.game.getCharacter.sync null, request.uonline.db, request.uonline.user.character_id
+fetchCharacter = asyncMiddleware async (request, response) ->
+	character = await lib.game.getCharacter request.uonline.db, request.uonline.user.character_id
 	request.uonline.character = character
-).asyncMiddleware()
 
 
-fetchCharacterFromURL = ((request, response) ->
-	request.uonline.fetched_character = lib.game.getCharacter.sync null, request.uonline.db, request.params.name
-).asyncMiddleware()
+fetchCharacterFromURL = asyncMiddleware async (request, response) ->
+	request.uonline.fetched_character = await lib.game.getCharacter request.uonline.db, request.params.name
 
 
-fetchMonsterFromURL = ((request, response) ->
+fetchMonsterFromURL = asyncMiddleware async (request, response) ->
 	id = parseInt(request.params.id, 10)
 	if isNaN(id)
 		throw new Error '404'
-	chars = lib.game.getCharacter.sync null, request.uonline.db, id
+	chars = await lib.game.getCharacter request.uonline.db, id
 	if not chars?
 		throw new Error '404'
 	for i of chars
 		request.uonline.fetched_monster = chars
 	return
-).asyncMiddleware()
 
 
-fetchItems = ((request, response) ->
-	items = lib.game.getCharacterItems.sync null, request.uonline.db, request.uonline.user.character_id
+fetchItems = asyncMiddleware async (request, response) ->
+	items = await lib.game.getCharacterItems request.uonline.db, request.uonline.user.character_id
 	request.uonline.equipment = items.filter (x) -> x.equipped
 	request.uonline.equipment.shield = request.uonline.equipment.find (x) -> x.type == 'shield'
 	request.uonline.equipment.right_hand = request.uonline.equipment.find (x) -> x.type.startsWith 'weapon'
 	request.uonline.backpack = items.filter (x) -> !x.equipped
 	return
-).asyncMiddleware()
 
 
-fetchLocation = ((request, response) ->
+fetchLocation = asyncMiddleware async (request, response) ->
 	try
-		location = lib.game.getCharacterLocation.sync null, request.uonline.db, request.uonline.user.character_id
+		location = await lib.game.getCharacterLocation request.uonline.db, request.uonline.user.character_id
 		#request.uonline.pic = request.uonline.picture  if request.uonline.picture?  # TODO: LOLWHAT
 	catch e
 		console.error e.stack
-		location = lib.game.getInitialLocation.sync null, request.uonline.db
-		lib.game.changeLocation.sync null, request.uonline.db, request.uonline.user.character_id, location.id
+		location = await lib.game.getInitialLocation request.uonline.db
+		await lib.game.changeLocation request.uonline.db, request.uonline.user.character_id, location.id
 	request.uonline.location = location
 	return
-).asyncMiddleware()
 
 
-fetchArea = ((request, response) ->
-	area = lib.game.getCharacterArea.sync null, request.uonline.db, request.uonline.user.character_id
+fetchArea = asyncMiddleware async (request, response) ->
+	area = await lib.game.getCharacterArea request.uonline.db, request.uonline.user.character_id
 	request.uonline.area = area
 	return
-).asyncMiddleware()
 
 
-fetchUsersNearby = ((request, response) ->
-	tmpUsers = lib.game.getNearbyUsers.sync null,
-		request.uonline.db, request.uonline.user.id, request.uonline.character.location
+fetchUsersNearby = asyncMiddleware async (request, response) ->
+	tmpUsers = await lib.game.getNearbyUsers request.uonline.db,
+		request.uonline.user.id, request.uonline.character.location
 	request.uonline.players_list = tmpUsers
 	return
-).asyncMiddleware()
 
 
-fetchMonstersNearby = ((request, response) ->
-	tmpMonsters = lib.game.getNearbyMonsters.sync null, request.uonline.db, request.uonline.character.location
+fetchMonstersNearby = asyncMiddleware async (request, response) ->
+	tmpMonsters = await lib.game.getNearbyMonsters request.uonline.db, request.uonline.character.location
 	request.uonline.monsters_list = tmpMonsters
 	request.uonline.monsters_list.in_fight = tmpMonsters.filter((m) -> m.fight_mode)
 	request.uonline.monsters_list.not_in_fight = tmpMonsters.filter((m) -> not m.fight_mode)
 	return
-).asyncMiddleware()
 
 
-#fetchStats = ((request, response) ->
-#	chars = lib.game.getUserCharacters.sync null, request.uonline.db, request.uonline.userid
+#fetchStats = asyncMiddleware async (request, response) ->
+#	chars = await lib.game.getUserCharacters request.uonline.db, request.uonline.userid
 #	for i of chars
 #		request.uonline[i] = chars[i]
 #	return
-#).asyncMiddleware()
 
 
-fetchStatsFromURL = ((request, response) ->
-	chars = lib.game.getUserCharacters.sync null, request.uonline.db, request.params.username
+fetchStatsFromURL = asyncMiddleware async (request, response) ->
+	chars = await lib.game.getUserCharacters request.uonline.db, request.params.username
 	if not chars?
 		throw new Error '404'
 	for i of chars
 		request.uonline[i] = chars[i]
 	return
-).asyncMiddleware()
 
 
-fetchBattleGroups = ((request, response) ->
+fetchBattleGroups = asyncMiddleware async (request, response) ->
 	if request.uonline.character.fight_mode
-		participants = lib.game.getBattleParticipants.sync null, request.uonline.db, request.uonline.user.character_id
+		participants = await lib.game.getBattleParticipants request.uonline.db, request.uonline.user.character_id
 		our_side = participants
 			.find((p) -> p.character_id is request.uonline.user.character_id)
 			.side
@@ -321,7 +319,6 @@ fetchBattleGroups = ((request, response) ->
 			participants: participants
 			our_side: our_side
 	return
-).asyncMiddleware()
 
 
 # Pages
@@ -333,9 +330,9 @@ app.get '/node/', (request, response) ->
 app.get '/explode/', (request, response) ->
 	throw new Error 'Emulated error.'
 
-app.get '/explode_db/', openTransaction, (request, response) ->
-	request.uonline.db.query.sync request.uonline.db, 'SELECT * FROM "Emulated DB error."'
-, commit
+app.get '/explode_db/', openTransaction, wrap(async (request, response) ->
+	await request.uonline.db.queryAsync 'SELECT * FROM "Emulated DB error."'
+), commit
 
 
 app.get '/', (request, response) ->
@@ -357,9 +354,9 @@ app.get '/login/',
 app.post '/action/login',
 	mustNotBeAuthed,
 	setInstance('login'),
-	(request, response) ->
-		if lib.user.accessGranted.sync null, request.uonline.db, request.body.username, request.body.password
-			sessid = lib.user.createSession.sync null, request.uonline.db, request.body.username
+	wrap async (request, response) ->
+		if await lib.user.accessGranted request.uonline.db, request.body.username, request.body.password
+			sessid = await lib.user.createSession request.uonline.db, request.body.username
 			response.cookie 'sessid', sessid
 			response.redirect 303, '/'
 		else
@@ -378,14 +375,13 @@ app.post '/action/register',
 	mustNotBeAuthed,
 	setInstance('register'),
 	openTransaction,
-	(request, response, next) ->
+	wrap(async (request, response, next) ->
 		usernameIsValid = lib.validation.usernameIsValid(request.body.username)
 		passwordIsValid = lib.validation.passwordIsValid(request.body.password)
-		userExists = lib.user.userExists.sync(null, request.uonline.db, request.body.username)
+		userExists = await lib.user.userExists request.uonline.db, request.body.username
 
 		if usernameIsValid and passwordIsValid and !userExists
-			result = lib.user.registerUser.sync(
-				null
+			result = await lib.user.registerUser(
 				request.uonline.db
 				request.body.username
 				request.body.password
@@ -404,7 +400,7 @@ app.post '/action/register',
 			request.uonline.options = options
 			request.uonline.userCreated = false
 		next()
-	,
+	),
 	commit,
 	(request, response) ->
 		if request.uonline.userCreated
@@ -445,9 +441,8 @@ app.get '/monster/:id/',
 
 app.post '/action/logout',
 	mustBeAuthed,
-	(request, response) ->
-		lib.user.closeSession.sync null,
-			request.uonline.db, request.uonline.user.sessid
+	wrap async (request, response) ->
+		await lib.user.closeSession request.uonline.db, request.uonline.user.sessid
 		response.redirect 303, '/'  # force GET
 
 
@@ -462,13 +457,12 @@ app.post '/action/newCharacter',
 	mustBeAuthed,
 	setInstance('new_character'),
 	openTransaction,
-	(request, response, next) ->
+	wrap(async (request, response, next) ->
 		nameIsValid = lib.validation.characterNameIsValid(request.body.character_name)
-		alreadyExists = lib.character.characterExists.sync(null, request.uonline.db, request.body.character_name)
+		alreadyExists = await lib.character.characterExists request.uonline.db, request.body.character_name
 
 		if nameIsValid and not alreadyExists
-			charid = lib.character.createCharacter.sync(
-				null
+			charid = await lib.character.createCharacter(
 				request.uonline.db
 				request.uonline.user.id
 				request.body.character_name
@@ -485,7 +479,7 @@ app.post '/action/newCharacter',
 			request.uonline.options = options
 			request.uonline._characterCreated = false
 		next()
-	,
+	),
 	commit,
 	(request, response) ->
 		if request.uonline._characterCreated
@@ -510,13 +504,13 @@ app.get '/inventory/',
 app.post '/action/go',
 	mustBeAuthed,
 	openTransaction,
-	(request, response, next) ->
-		result = lib.game.changeLocation.sync null,
-			request.uonline.db, request.uonline.user.character_id, request.body.to
+	wrap(async (request, response, next) ->
+		result = await lib.game.changeLocation request.uonline.db,
+			request.uonline.user.character_id, request.body.to
 		if result.result != 'ok'
 			console.error "Location change failed: #{result.reason}"
 		next()
-	,
+	),
 	commit,
 	redirect(303, '/game/')
 
@@ -524,10 +518,10 @@ app.post '/action/go',
 app.post '/action/attack',
 	mustBeAuthed,
 	openTransaction,
-	(request, response, next) ->
-		lib.game.goAttack.sync null, request.uonline.db, request.uonline.user.character_id
+	wrap(async (request, response, next) ->
+		await lib.game.goAttack request.uonline.db, request.uonline.user.character_id
 		next()
-	,
+	),
 	commit,
 	redirect(303, '/game/')
 
@@ -535,10 +529,10 @@ app.post '/action/attack',
 app.post '/action/escape',
 	mustBeAuthed,
 	openTransaction,
-	(request, response, next) ->
-		lib.game.goEscape.sync null, request.uonline.db, request.uonline.user.character_id
+	wrap(async (request, response, next) ->
+		await lib.game.goEscape request.uonline.db, request.uonline.user.character_id
 		next()
-	,
+	),
 	commit,
 	redirect(303, '/game/')
 
@@ -546,89 +540,91 @@ app.post '/action/escape',
 app.post '/action/hit',
 	mustBeAuthed,
 	openTransaction,
-	(request, response, next) ->
-		lib.game.hitOpponent.sync(
-			null, request.uonline.db,
+	wrap(async (request, response, next) ->
+		await lib.game.hitOpponent(
+			request.uonline.db,
 			request.uonline.user.character_id,
 			request.body.id,
 			request.body.with_item_id
 		)
 		next()
-	,
+	),
 	commit,
 	redirect(303, '/game/')
 
 
 app.get '/ajax/isNickBusy/:nick',
-	(request, response) ->
+	wrap async (request, response) ->
 		response.json
 			nick: request.params.nick
-			isNickBusy: lib.user.userExists.sync null, request.uonline.db, request.params.nick
+			isNickBusy: await lib.user.userExists request.uonline.db, request.params.nick
 
 
 app.get '/ajax/isCharacterNameBusy/:name',
-	(request, response) ->
+	wrap async (request, response) ->
 		response.json
 			name: request.params.name
-			isCharacterNameBusy: lib.character.characterExists.sync null, request.uonline.db, request.params.name
+			isCharacterNameBusy: await lib.character.characterExists request.uonline.db, request.params.name
 
 
 app.post '/ajax/cheatFixAll',
-	(request, response) ->
-		request.uonline.db.query.sync request.uonline.db,
+	wrap async (request, response) ->
+		await request.uonline.db.queryAsync(
 			'UPDATE items '+
-				'SET strength = '+
-				'(SELECT strength_max FROM items_proto '+
-				'WHERE items.prototype = items_proto.id)'+
-				'',
-			[]
+			'SET strength = '+
+				'(SELECT strength_max FROM items_proto'+
+				' WHERE items.prototype = items_proto.id)'
+		)
 		response.redirect 303, '/inventory/'
 
 
 app.post '/action/unequip',
 	mustBeAuthed,
-	(request, response) ->
-		request.uonline.db.query.sync request.uonline.db,
+	wrap async (request, response) ->
+		await request.uonline.db.queryAsync(
 			'UPDATE items '+
-				'SET equipped = false '+
-				'WHERE id = $1 AND owner = $2',
+			'SET equipped = false '+
+			'WHERE id = $1 AND owner = $2',
 			[request.body.id, request.uonline.user.character_id]
+		)
 		response.redirect 303, '/inventory/'
 
 
 app.post '/action/equip',
 	mustBeAuthed,
-	(request, response) ->
-		request.uonline.db.query.sync request.uonline.db,
+	wrap async (request, response) ->
+		await request.uonline.db.queryAsync(
 			'UPDATE items '+
-				'SET equipped = true '+
-				'WHERE id = $1 AND owner = $2',
+			'SET equipped = true '+
+			'WHERE id = $1 AND owner = $2',
 			[request.body.id, request.uonline.user.character_id]
+		)
 		response.redirect 303, '/inventory/'
 
 
 app.post '/action/switchCharacter',
 	mustBeAuthed,
-	(request, response) ->
-		lib.character.switchCharacter.sync null, request.uonline.db, request.uonline.user.id, request.body.id
+	wrap async (request, response) ->
+		await lib.character.switchCharacter request.uonline.db, request.uonline.user.id, request.body.id
 		response.redirect 303, 'back'
 
 
 app.post '/action/deleteCharacter',
 	mustBeAuthed,
-	(request, response) ->
-		lib.character.deleteCharacter.sync null, request.uonline.db, request.uonline.user.id, request.body.id
+	wrap async (request, response) ->
+		await lib.character.deleteCharacter request.uonline.db, request.uonline.user.id, request.body.id
 		response.redirect 303, '/account/'
 
 
 app.get '/state/',
-	(request, response, next) ->
-		players = request.uonline.db.query.sync request.uonline.db,
+	wrap(async (request, response, next) ->
+		players = await request.uonline.db.queryAsync(
 			"SELECT *, (sess_time > NOW() - $1 * INTERVAL '1 SECOND') AS online FROM uniusers",
 			[config.sessionExpireTime]
+		)
 		request.uonline.userstate = players.rows
 		next()
-	,
+	),
 	setInstance('state'), render('state')
 
 
@@ -639,8 +635,8 @@ app.get '*', (request, response) ->
 
 # Exception handling
 app.use (error, request, response, next) ->
-	#if request.uonline.db?.state() isnt 'closed'
-	request.uonline.db?.rollback()
+	if request.uonline.db.state? and request.uonline.db.state() isnt 'closed'
+		request.uonline.db.rollback()
 	code = 500
 	if error.message is '404'
 		code = 404

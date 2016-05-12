@@ -15,15 +15,19 @@
 'use strict'
 
 NS = 'locparse'; exports[NS] = {}  # namespace
-{test, t, requireCovered, config} = require '../lib/test-utils.coffee'
+{test, requireCovered, config} = require '../lib/test-utils.coffee'
 
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
+async = require 'asyncawait/async'
+await = require 'asyncawait/await'
+{promisify, promisifyAll} = require 'bluebird'
 mg = require '../lib/migration'
 fs = require 'fs'
 rmrf = require 'rmrf'
 copy = require('ncp').ncp
 copy.limit = 16 #concurrency limit
+copyAsync = promisify copy
 TMP_DIR = 'test/loctests_tmp'
 
 parser = requireCovered __dirname, '../lib/locparse.coffee'
@@ -80,9 +84,9 @@ sed = (pairs, file) ->
 	fs.writeFileSync file, data, 'utf-8'
 
 
-exports[NS].beforeEach = (done) ->
+exports[NS].beforeEach = async ->
 	rmrf TMP_DIR if fs.existsSync TMP_DIR
-	copy 'test/loctests', TMP_DIR, done
+	await copyAsync 'test/loctests', TMP_DIR
 
 
 exports[NS].afterEach = ->
@@ -252,8 +256,8 @@ exports[NS].errors =
 			"Большой и ленивый город.\n![image](image)"
 		)
 
-	'E15': t ->
-		copy.sync(copy,
+	'E15': async ->
+		await copyAsync(
 			"#{TMP_DIR}/Кронт - kront/Окрестности Кронта - outer"
 			"#{TMP_DIR}/Кронт - kront/Окрестности Кронта2 - outer"
 		)
@@ -266,17 +270,17 @@ exports[NS].errors =
 
 
 exports[NS].save =
-	'should save all areas and locations': t ->
-		_conn = anyDB.createConnection(config.DATABASE_URL_TEST)
-		mg.migrate.sync mg, _conn
-		conn = transaction(_conn)
+	'should save all areas and locations': async ->
+		_conn = promisifyAll anyDB.createConnection(config.DATABASE_URL_TEST)
+		await mg.migrate _conn
+		conn = promisifyAll transaction(_conn)
 
 		parseResult = parser.processDir "#{TMP_DIR}/Кронт - kront"
-		parseResult.save(conn)
+		await parseResult.save(conn)
 
-		result = conn.query.sync conn, 'SELECT count(*) AS cnt FROM areas'
+		result = await conn.queryAsync 'SELECT count(*) AS cnt FROM areas'
 		test.equal result.rows[0].cnt, parseResult.areas.length
-		result = conn.query.sync conn, 'SELECT count(*) AS cnt FROM locations'
+		result = await conn.queryAsync 'SELECT count(*) AS cnt FROM locations'
 		test.equal result.rows[0].cnt, parseResult.locations.length
 
-		conn.rollback.sync(conn)
+		await conn.rollbackAsync()

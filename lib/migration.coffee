@@ -14,7 +14,8 @@
 
 'use strict'
 
-sync = require 'sync'
+async = require 'asyncawait/async'
+await = require 'asyncawait/await'
 chalk = require 'chalk'
 tables = require '../lib/tables.coffee'
 qu = require '../lib/query_utils.coffee'
@@ -23,7 +24,7 @@ TABLE_NAME_COLUMN = 0
 FUNC_NAME_COLUMN = 1
 RAWSQL_COLUMN = 2
 
-exports._justMigrate = (dbConnection, revision, for_tables, verbose) ->
+exports._justMigrate = async (db, revision, for_tables, verbose) ->
 	migration = exports.getMigrationsData()[revision]
 	for params in migration
 		params = params.slice()
@@ -40,16 +41,15 @@ exports._justMigrate = (dbConnection, revision, for_tables, verbose) ->
 			continue
 		try
 			if params[FUNC_NAME_COLUMN] == 'rawsql'
-				dbConnection.query.sync dbConnection, params[RAWSQL_COLUMN]
+				await db.queryAsync params[RAWSQL_COLUMN]
 			else
 				funcName = params.splice(FUNC_NAME_COLUMN, 1)[0]
 				func = tables[funcName]
-				params.unshift dbConnection
-				params.unshift null
-				func.sync.apply func, params
+				params.unshift db
+				await func.apply(null, params)
 		catch ex
 			ex.message = "While performing #{funcName}: #{ex.message}"
-			Error.captureStackTrace(ex)
+			#Error.captureStackTrace(ex)
 			throw ex
 		if verbose
 			console.log " #{chalk.green 'ok'}"
@@ -384,45 +384,48 @@ migrationData = [
 exports.getMigrationsData = ->
 	migrationData
 
+
 #for testing
 exports.setMigrationsData = (data) ->
 	migrationData = data
 
+
 exports.getNewestRevision = ->
 	exports.getMigrationsData().length - 1
 
-exports.getCurrentRevision = ((dbConnection) ->
-	if tables.tableExists.sync(null, dbConnection, 'revision')
-		result = dbConnection.query.sync(dbConnection, 'SELECT revision FROM revision', [])
+
+exports.getCurrentRevision = async (db) ->
+	if await tables.tableExists(db, 'revision')
+		result = await db.queryAsync('SELECT revision FROM revision')
 		return result.rows[0].revision
 	else
 		return -1
-).async()
 
-exports.setRevision = ((dbConnection, revision) ->
-	dbConnection.query.sync dbConnection, 'CREATE TABLE IF NOT EXISTS revision (revision INT NOT NULL)', []
-	dbConnection.query.sync dbConnection, 'DELETE FROM revision', []
-	dbConnection.query.sync dbConnection, 'INSERT INTO revision VALUES ($1)', [ revision ]
+
+exports.setRevision = async (db, revision) ->
+	await db.queryAsync 'CREATE TABLE IF NOT EXISTS revision (revision INT NOT NULL)'
+	await db.queryAsync 'DELETE FROM revision'
+	await db.queryAsync 'INSERT INTO revision VALUES ($1)', [ revision ]
 	return
-).async()
 
-exports.migrate = ((dbConnection, opts = {}) ->
+
+exports.migrate = async (db, opts = {}) ->
 	unless opts.dest_revision?
 		opts.dest_revision = Infinity
 
 	opts.dest_revision = Math.min(opts.dest_revision, exports.getNewestRevision())
 	for_tables = opts.tables or (if opts.table then [ opts.table ] else undefined)
-	curRevision = exports.getCurrentRevision.sync(null, dbConnection)
+	curRevision = await exports.getCurrentRevision(db)
 
 	if curRevision < opts.dest_revision
 		for i in [curRevision + 1 .. opts.dest_revision]
 			if opts.verbose
 				console.log chalk.magenta '  Migrating ' +
 					(if for_tables then "<#{for_tables}> " else '') + 'to revision ' + i + '...'
-			qu.doInTransaction dbConnection, (tx) ->
-				exports._justMigrate tx, i, for_tables, !!opts.verbose
+			await qu.doInTransaction db, async (tx) ->
+				await exports._justMigrate tx, i, for_tables, !!opts.verbose
 				unless for_tables
-					exports.setRevision.sync null, tx, i
+					await exports.setRevision tx, i
 		if opts.verbose
 			console.log chalk.green "  Success, migrated from #{chalk.blue curRevision} to "+
 				"#{chalk.blue opts.dest_revision}."
@@ -431,5 +434,3 @@ exports.migrate = ((dbConnection, opts = {}) ->
 			console.log '  No action needed.'
 
 	return
-).async()
-

@@ -17,31 +17,34 @@
 config = require '../config'
 
 crypto = require 'crypto'
-sync = require 'sync'
+async = require 'asyncawait/async'
+await = require 'asyncawait/await'
 transaction = require 'any-db-transaction'
+promisifyAll = require("bluebird").promisifyAll
+
+promisifyAll crypto
 
 
 # Check if a user with the given username exists.
 # Returns true or false, or an error.
-exports.userExists = (dbConnection, username, callback) ->
-	dbConnection.query 'SELECT count(*) AS result FROM uniusers WHERE lower(username) = lower($1)',
-		[username],
-		(error, result) ->
-			callback error, error or (result.rows[0].result > 0)
+exports.userExists = async (db, username) ->
+	result = await db.queryAsync 'SELECT count(*) AS result FROM uniusers WHERE lower(username) = lower($1)',
+		[username]
+	return result.rows[0].result > 0
 
 
 # Check if a user with the given id exists.
 # Returns true or false, or an error.
-exports.idExists = (dbConnection, id, callback) ->
-	dbConnection.query 'SELECT count(*) AS result FROM uniusers WHERE id = $1', [id], (error, result) ->
-		callback error, error or (result.rows[0].result > 0)
+exports.idExists = async (db, id) ->
+	result = await db.queryAsync 'SELECT count(*) AS result FROM uniusers WHERE id = $1', [id]
+	return result.rows[0].result > 0
 
 
 # Check if a session with the given sessid exists.
 # Returns true or false, or an error.
-exports.sessionExists = (dbConnection, sess, callback) ->
-	dbConnection.query 'SELECT count(*) AS result FROM uniusers WHERE sessid = $1', [sess], (error, result) ->
-		callback error, error or (result.rows[0].result > 0)
+exports.sessionExists = async (db, sess) ->
+	result = await db.queryAsync 'SELECT count(*) AS result FROM uniusers WHERE sessid = $1', [sess]
+	return result.rows[0].result > 0
 
 
 # Get information about a user with the given sessid.
@@ -52,24 +55,24 @@ exports.sessionExists = (dbConnection, sess, callback) ->
 # - {other user's fields}
 #
 # or an error.
-exports.sessionInfoRefreshing = ((dbConnection, sessid, sess_timeexpire, asyncUpdate) ->
+exports.sessionInfoRefreshing = async (db, sessid, sess_timeexpire, asyncUpdate) ->
 	unless sessid?
 		return loggedIn: false
 
-	user = dbConnection.query.sync(dbConnection,
+	user = (await db.queryAsync(
 		"SELECT uniusers.* "+
 		"FROM uniusers "+
 		"WHERE sessid = $1 "+
 		"  AND sess_time > NOW() - $2 * INTERVAL '1 SECOND'",
 		[sessid, sess_timeexpire]
-	).rows[0]
+	)).rows[0]
 
 	unless user?
 		return loggedIn: false
 
 	if asyncUpdate is true
 		process.nextTick ->
-			dbConnection.query(
+			db.query(
 				'UPDATE uniusers SET sess_time = NOW() WHERE id = $1',
 				[user.id],
 				(error, result) ->
@@ -78,67 +81,53 @@ exports.sessionInfoRefreshing = ((dbConnection, sessid, sess_timeexpire, asyncUp
 						console.error error.stack
 			)
 	else
-		dbConnection.query.sync(dbConnection,
-			'UPDATE uniusers SET sess_time = NOW() WHERE id = $1',
-			[user.id]
-		)
+		await db.queryAsync 'UPDATE uniusers SET sess_time = NOW() WHERE id = $1', [user.id]
 
 	user.loggedIn = true
 	user.isAdmin = (user.permissions is 'admin')
 	return user
-).async()
 
 
 # Returns users's attributes
-exports.getUser = ((dbConnection, id_or_name) ->
+exports.getUser = async (db, id_or_name) ->
 	field = if typeof id_or_name is 'number' then 'uniusers.id' else 'username'
-	
-	user = dbConnection.query.sync(dbConnection,
-		"SELECT uniusers.* "+
-		"FROM uniusers "+
-		"WHERE #{field} = $1",
-		[id_or_name]
-	).rows[0]
-	
+
+	user = (await db.queryAsync "SELECT uniusers.* FROM uniusers WHERE #{field} = $1", [id_or_name]).rows[0]
 	unless user?
 		return null
-	
+
 	user.isAdmin = (user.permissions is 'admin')
 	return user
-).async()
 
 
 # Generate an unique sessid with the given length.
 # Returns a string, or an error.
-exports.generateSessId = ((dbConnection, sess_length) ->
+exports.generateSessId = async (db, sess_length) ->
 	# check random sessid for uniqueness
 	loop
 		sessid = exports.createSalt(sess_length)
-		exists = exports.sessionExists.sync null, dbConnection, sessid
+		exists = await exports.sessionExists(db, sessid)
 		unless exists
 			return sessid
-).async()
 
 
 # Get user id using his sessid.
 # Returns a number, or an error.
-exports.idBySession = (dbConnection, sess, callback) ->
-	dbConnection.query 'SELECT id FROM uniusers WHERE sessid = $1', [sess], (error, result) ->
-		if result? and result.rows.length is 0
-			error = new Error "wrong user's id"
-		callback error, error or result.rows[0].id
+exports.idBySession = async (db, sess) ->
+	result = await db.queryAsync 'SELECT id FROM uniusers WHERE sessid = $1', [sess]
+	if result.rows.length is 0
+		throw new Error "wrong user's id"
+	return result.rows[0].id
 
 
 # Close a session with given sessid.
 # Returns an error (if any), a string 'Not closing: empty sessid' (if it was empty), or nothing.
-exports.closeSession = ((dbConnection, sessid) ->
+exports.closeSession = async (db, sessid) ->
 	unless sessid?
 		return 'Not closing: empty sessid'
-	newSessid = exports.generateSessId.sync null, dbConnection, config.sessionLength
-	dbConnection.query.sync dbConnection,
-		'UPDATE uniusers SET sessid = $1 WHERE sessid = $2', [ newSessid, sessid ]
+	newSessid = await exports.generateSessId db, config.sessionLength
+	await db.queryAsync 'UPDATE uniusers SET sessid = $1 WHERE sessid = $2', [newSessid, sessid]
 	return
-).async()
 
 
 # Generate a random sequence of printable characters with given length.
@@ -150,46 +139,42 @@ exports.createSalt = (length) ->
 
 # Create a new user with given username, password and permissions (see config.js).
 # Returns a string with sessid, or an error.
-exports.registerUser = ((dbConnection, username, password, permissions) ->
-	if exports.userExists.sync(null, dbConnection, username) is true
+exports.registerUser = async (db, username, password, permissions) ->
+	if await exports.userExists(db, username)
 		throw new Error 'user already exists'
+
 	salt = exports.createSalt(16)
-	hash = crypto.pbkdf2.sync(null, password, salt, 4096, 256)
-	sessid = exports.generateSessId.sync(null, dbConnection, config.sessionLength)
-	
-	user_id = dbConnection.query.sync(dbConnection,
+	hash = await crypto.pbkdf2Async password, salt, 4096, 256, 'sha512'
+	sessid = await exports.generateSessId db, config.sessionLength
+
+	user_id = (await db.queryAsync(
 		'INSERT INTO uniusers ('+
 			'username, salt, hash, sessid, reg_time, sess_time, permissions, character_id'+
 			') VALUES ('+
 			'$1, $2, $3, $4, NOW(), NOW(), $5, $6'+
 		') RETURNING id',
 		[ username, salt, hash.toString('hex'), sessid, permissions, null ]
-	).rows[0].id
+	)).rows[0].id
 	return sessid: sessid, userid: user_id
-).async()
 
 
 # Check if the given username-password pair is valid.
 # Returns true or false, or an error.
-exports.accessGranted = ((dbConnection, username, password, callback) ->
-	userdata = dbConnection.query.sync dbConnection,
-		'SELECT salt, hash FROM uniusers WHERE lower(username) = lower($1)', [username]
+exports.accessGranted = async (db, username, password) ->
+	userdata = await db.queryAsync 'SELECT salt, hash FROM uniusers WHERE lower(username) = lower($1)', [username]
 	if userdata.rows.length is 0
 		return false  # Wrong username
 	userdata = userdata.rows[0]
-	hash = crypto.pbkdf2.sync null,
-		password, userdata.salt, 4096, 256
+	hash = await crypto.pbkdf2Async password, userdata.salt, 4096, 256, 'sha512'
 	return (hash.toString('hex') is userdata.hash)
-).async()
 
 
 # Create a new session for user with given username.
 # Returns a string with sessid, or an error.
-exports.createSession = ((dbConnection, username) ->
-	sessid = exports.generateSessId.sync null, dbConnection, config.sessionLength
-	dbConnection.query.sync dbConnection,
+exports.createSession = async (db, username) ->
+	sessid = await exports.generateSessId db, config.sessionLength
+	await db.queryAsync(
 		'UPDATE uniusers SET sess_time = NOW(), sessid = $1 '+
 		'WHERE lower(username) = lower($2)',
-		[ sessid, username ]
+		[ sessid, username ])
 	return sessid
-).async()

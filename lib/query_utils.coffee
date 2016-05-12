@@ -15,24 +15,27 @@
 'use strict'
 
 
-sync = require 'sync'
 transaction = require 'any-db-transaction'
+async = require 'asyncawait/async'
+await = require 'asyncawait/await'
+promisifyAll = require("bluebird").promisifyAll
 
-exports.getFor = (dbConnection) ->
+
+exports.getFor = (db) ->
 	query = (sql, params) ->
-		dbConnection.query.sync dbConnection, sql, params
+		return db.queryAsync sql, params
 	
-	query.all = (sql, params) ->
-		dbConnection.query.sync(dbConnection, sql, params).rows
+	query.all = async (sql, params) ->
+		(await db.queryAsync sql, params).rows
 	
-	query.row = (sql, params) ->
-		rows = @all sql, params
+	query.row = async (sql, params) ->
+		rows = await @all sql, params
 		if rows.length isnt 1
 			throw new Error("In query:\n#{sql}\nExpected one row, but got #{rows.length}")
 		rows[0]
 	
-	query.val = (sql, params) ->
-		row = @row sql, params
+	query.val = async (sql, params) ->
+		row = await @row sql, params
 		keys = Object.keys row
 		if keys.length isnt 1
 			throw new Error("In query:\n#{sql}\nExpected one value, but got #{keys.length} (#{keys.join(', ')})")
@@ -51,19 +54,21 @@ exports.getFor = (dbConnection) ->
 
 # Executes function passing a transaction as a first argument.
 # Rollbacks transaction if any error was thrown from passed function.
-exports.doInTransaction = (dbConnection, func) ->
-	tx = transaction(dbConnection, {autoRollback: false})
+exports.doInTransaction = async (db, func) ->
+	tx = promisifyAll transaction(db, {autoRollback: false})
 	try
-		func(tx)
-	catch e
+		await func(tx)
+	catch ex
 		if tx.state() isnt 'closed'
-			tx.rollback.sync(tx)
-		throw e
+			await tx.rollbackAsync()
+		throw ex
 	if tx.state() isnt 'closed'
-		tx.commit.sync(tx)
+		await tx.commitAsync()
 
 
-exports.unsafeInsert = (dbConnection, table, fields) ->
+# Inserts row to `table` with values from `fields`.
+# If value is object and not Date, it will be insert as json.
+exports.unsafeInsert = (db, table, fields) ->
 	names = []
 	formats = []
 	values = []
@@ -77,4 +82,4 @@ exports.unsafeInsert = (dbConnection, table, fields) ->
 		formats.push format
 		values.push value
 
-	dbConnection.query.sync dbConnection, "INSERT INTO #{table} (#{names}) VALUES (#{formats})", values
+	db.queryAsync "INSERT INTO #{table} (#{names}) VALUES (#{formats})", values

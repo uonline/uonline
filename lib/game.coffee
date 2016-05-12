@@ -14,56 +14,53 @@
 
 'use strict'
 
-sync = require 'sync'
+async = require 'asyncawait/async'
+await = require 'asyncawait/await'
 config = require '../config'
 math = require '../lib/math.coffee'
 sugar = require 'sugar'
 
 
-
 # Returns id of location where users must be sent by default
 # (after creation, in case of some errors, ...).
-exports.getInitialLocation = ((dbConnection) ->
-	result = dbConnection.query.sync(dbConnection, "SELECT * FROM locations WHERE initial = 1")
+exports.getInitialLocation = async (db) ->
+	result = await db.queryAsync "SELECT * FROM locations WHERE initial = 1"
 	if result.rows.length is 0
 		throw new Error 'initial location is not defined'
 	if result.rows.length > 1
 		throw new Error 'there is more than one initial location'
 	return result.rows[0]
-).async()
 
 
 # Returns id of character's current location.
-exports.getCharacterLocationId = (dbConnection, character_id, callback) ->
-	dbConnection.query 'SELECT location FROM characters WHERE id = $1', [character_id], (error, result) ->
-		if !!result and result.rows.length is 0
-			error = new Error "wrong character's id"
-		callback(error, error || result.rows[0].location)
+exports.getCharacterLocationId = async (db, character_id, callback) ->
+	result = await db.queryAsync 'SELECT location FROM characters WHERE id = $1', [character_id]
+	if result.rows.length is 0
+		throw new Error("wrong character's id")
+	return result.rows[0].location
 
 
 # Returns all attributes of character's current location.
-exports.getCharacterLocation = ((dbConnection, character_id) ->
-	result = dbConnection.query.sync(dbConnection, "SELECT locations.* FROM locations, characters "+
-		"WHERE characters.id=$1 AND locations.id = characters.location", [character_id])
+exports.getCharacterLocation = async (db, character_id) ->
+	result = await db.queryAsync "SELECT locations.* FROM locations, characters "+
+		"WHERE characters.id=$1 AND locations.id = characters.location", [character_id]
 	if result.rows.length is 0
 		throw new Error "wrong character's id or location"
 	return result.rows[0]
-).async()
 
 
 # Returns all attributes of character's current area.
-exports.getCharacterArea = ((dbConnection, character_id) ->
-	result = dbConnection.query.sync(dbConnection, "SELECT areas.* FROM areas, locations, characters "+
+exports.getCharacterArea = async (db, character_id) ->
+	result = await db.queryAsync "SELECT areas.* FROM areas, locations, characters "+
 		"WHERE characters.id=$1 AND locations.id = characters.location AND areas.id = locations.area",
-		[ character_id ])
+		[ character_id ]
 	if result.rows.length is 0
 		throw new Error "wrong character's id"
 	return result.rows[0]
-).async()
 
 
-#exports.getAllowedZones = function(dbConnection, sessid, callback) {
-#	dbConnection.query(
+#exports.getAllowedZones = function(db, sessid, callback) {
+#	db.query(
 #		'SELECT locations.goto FROM locations, uniusers '+
 #		'WHERE uniusers.sessid = ? AND locations.id = uniusers.location AND uniusers.fight_mode = 0',
 #		[sessid],
@@ -81,9 +78,9 @@ exports.getCharacterArea = ((dbConnection, character_id) ->
 
 
 # Returns wheter user can go to specified location.
-exports.isTherePathForCharacterToLocation = ((dbConnection, character_id, locid) ->
+exports.isTherePathForCharacterToLocation = async (db, character_id, locid) ->
 	locid = parseInt(locid, 10)
-	result = exports.getCharacterLocation.sync(null, dbConnection, character_id)
+	result = await exports.getCharacterLocation db, character_id
 
 	if result.id is locid
 		return false  # already here
@@ -92,7 +89,6 @@ exports.isTherePathForCharacterToLocation = ((dbConnection, character_id, locid)
 		if i.target is locid
 			return true
 	return false
-).async()
 
 
 # Creates battle on location between two groups of characters.
@@ -105,16 +101,15 @@ exports.isTherePathForCharacterToLocation = ((dbConnection, character_id, locid)
 # }
 # @param [Array] secondSide same as firstSide
 exports._createBattleBetween = (tx, locid, firstSide, secondSide) ->
-	newBattleId = tx.query.sync(tx,
-		'INSERT INTO battles (location) VALUES ($1) RETURNING id', [locid]
-	).rows[0].id
+	newBattleId = (await tx.queryAsync(
+		'INSERT INTO battles (location) VALUES ($1) RETURNING id',
+		[locid])).rows[0].id
 
 	participants = firstSide
 		.map((p) -> p.side = 0; return p)
 		.concat(secondSide.map((p) -> p.side = 1; return p))
 		.sort((a, b) -> b.initiative - a.initiative)
-	tx.query.sync(
-		tx
+	await tx.queryAsync(
 		'INSERT INTO battle_participants (battle, character_id, index, side) VALUES '+
 			participants.map((p, i) -> "(#{newBattleId}, #{p.id}, #{i}, #{p.side})").join(', ')
 	)
@@ -124,66 +119,66 @@ exports._createBattleBetween = (tx, locid, firstSide, secondSide) ->
 # Stops battle.
 # Sets autoinvolved_fm to 0 for all involved characters
 # and destroys battle and all participant records.
-exports._stopBattle = (tx, battleId) ->
-	tx.query.sync tx, 'UPDATE characters SET autoinvolved_fm = FALSE '+
+exports._stopBattle = async (tx, battleId) ->
+	await tx.queryAsync 'UPDATE characters SET autoinvolved_fm = FALSE '+
 		'WHERE id IN (SELECT id FROM battle_participants WHERE battle = $1)', [battleId]
-	tx.query.sync tx, 'DELETE FROM battle_participants WHERE battle = $1', [battleId]
-	tx.query.sync tx, 'DELETE FROM battles WHERE id = $1', [battleId]
+	await tx.queryAsync 'DELETE FROM battle_participants WHERE battle = $1', [battleId]
+	await tx.queryAsync 'DELETE FROM battles WHERE id = $1', [battleId]
 
 
 # Makes character leave battle.
 # If he was last on his battle side, stops battle.
-exports._leaveBattle = (tx, battleId, leaverId) ->
+exports._leaveBattle = async (tx, battleId, leaverId) ->
 	# removing leaver's battle_participant
-	leaver = tx.query.sync(tx,
+	leaver = (await tx.queryAsync(
 		'DELETE FROM battle_participants '+
 			'WHERE character_id = $1 '+
 			'RETURNING index, side',
 		[ leaverId ]
-	).rows[0]
+	)).rows[0]
 
 	unless leaver?
 		throw new Error "can't find participant character_id=#{leaverId} in battle ##{battleId}"
 
 	# shifting other participant's indexes
-	tx.query.sync(tx,
+	await tx.queryAsync(
 		'UPDATE battle_participants '+
 			'SET index = index - 1 '+
 			'WHERE battle = $1 AND index > $2',
 		[ battleId, leaver.index ]
 	)
 
-	tx.query.sync(tx, 'UPDATE characters SET autoinvolved_fm = FALSE WHERE id = $1', [leaverId])
+	await tx.query 'UPDATE characters SET autoinvolved_fm = FALSE WHERE id = $1', [leaverId]
 
-	teammatesCount = +tx.query.sync(tx,
+	teammatesCount = +(await tx.queryAsync(
 		"SELECT count(*) FROM battle_participants "+
 			"WHERE battle = $1 AND side = $2 ",
 			[ battleId, leaver.side ]
-	).rows[0].count
+	)).rows[0].count
 
 	if teammatesCount is 0
-		exports._stopBattle tx, battleId
+		await exports._stopBattle tx, battleId
 
 	return battleEnded: (teammatesCount is 0)
 
 
 # Changes character location and starts (maybe) battle with some monsters.
-exports.changeLocation = ((dbConnection, character_id, locid, throughSpaceAndTime) ->
-	battle = dbConnection.query.sync(dbConnection,
+exports.changeLocation = async (db, character_id, locid, throughSpaceAndTime) ->
+	battle = (await db.queryAsync(
 		"SELECT battle AS id FROM battle_participants WHERE character_id = $1 FOR UPDATE",
 		[ character_id ]
-	).rows[0]
+	)).rows[0]
 	isInFight = battle?
 
 	if throughSpaceAndTime
 		if isInFight
-			exports._leaveBattle dbConnection, battle.id, character_id
-		dbConnection.query.sync dbConnection, "UPDATE characters SET location = $1 WHERE id = $2", [locid, character_id]
+			await exports._leaveBattle db, battle.id, character_id
+		await db.queryAsync "UPDATE characters SET location = $1 WHERE id = $2", [locid, character_id]
 		return {
 			result: 'ok'
 		}
 
-	canGo = exports.isTherePathForCharacterToLocation.sync(null, dbConnection, character_id, locid)
+	canGo = await exports.isTherePathForCharacterToLocation db, character_id, locid
 	if isInFight
 		return {
 			result: 'fail'
@@ -195,8 +190,8 @@ exports.changeLocation = ((dbConnection, character_id, locid, throughSpaceAndTim
 			reason: "No path to location ##{locid} for character ##{character_id}"
 		}
 
-	dbConnection.query.sync(dbConnection, 'SELECT id FROM characters WHERE id = $1 FOR UPDATE', [character_id])
-	monsters = dbConnection.query.sync(dbConnection,
+	await db.queryAsync 'SELECT id FROM characters WHERE id = $1 FOR UPDATE', [character_id]
+	monsters = (await db.queryAsync(
 		"SELECT id, initiative, attack_chance "+
 			"FROM characters "+
 			"WHERE characters.location = $1 "+
@@ -206,32 +201,31 @@ exports.changeLocation = ((dbConnection, character_id, locid, throughSpaceAndTim
 				"WHERE character_id = characters.id) "+
 			"FOR UPDATE",
 		[ locid ]
-	).rows
+	)).rows
 
-	dbConnection.query.sync(dbConnection, 'UPDATE characters SET location = $1 WHERE id = $2', [locid, character_id])
+	await db.queryAsync 'UPDATE characters SET location = $1 WHERE id = $2', [locid, character_id]
 
 	pouncedMonsters = (if monsters.some((m) -> Math.random() * 100 <= m.attack_chance) then monsters else [])
 	if pouncedMonsters.length > 0
 		user =
 			id: character_id
-			initiative: dbConnection.query.sync(dbConnection,
-					'SELECT initiative FROM characters WHERE id = $1',
-					[ character_id ]
-				).rows[0].initiative
-		exports._createBattleBetween dbConnection, locid, pouncedMonsters, [user]
+			initiative: (await db.queryAsync(
+				'SELECT initiative FROM characters WHERE id = $1',
+				[ character_id ]
+			)).rows[0].initiative
+		await exports._createBattleBetween db, locid, pouncedMonsters, [user]
 
 	return {
 		result: 'ok'
 	}
-).async()
 
 
 # Starts battle with monsters on current location.
 # prevents starting battle with busy monster
 # prevents starting second battle
 # Returns true on success and false otherwise.
-exports.goAttack = ((dbConnection, character_id) ->
-	user = dbConnection.query.sync(dbConnection,
+exports.goAttack = async (db, character_id) ->
+	user = (await db.queryAsync(
 		'SELECT id, initiative, location '+
 		'FROM characters '+
 		'WHERE id = $1 '+
@@ -240,12 +234,12 @@ exports.goAttack = ((dbConnection, character_id) ->
 				"WHERE character_id = $1) = 0 "+
 		'FOR UPDATE',
 		[ character_id ]
-	).rows[0]
+	)).rows[0]
 
 	unless user?
 		return false
 
-	monsters = dbConnection.query.sync(dbConnection,
+	monsters = (await db.queryAsync(
 		"SELECT id, initiative "+
 			"FROM characters "+
 			"WHERE location = $1 "+
@@ -255,26 +249,24 @@ exports.goAttack = ((dbConnection, character_id) ->
 					"WHERE character_id = characters.id) = 0 "+
 			"FOR UPDATE",
 		[user.location]
-	).rows
+	)).rows
 
 	if monsters.length is 0
 		return false
 
-	exports._createBattleBetween dbConnection, user.location, monsters, [user]
+	await exports._createBattleBetween db, user.location, monsters, [user]
 	return true
-).async()
 
 
 # Escapes user from battle.
-exports.goEscape = ((dbConnection, character_id) ->
-	battle = dbConnection.query.sync(dbConnection,
+exports.goEscape = async (db, character_id) ->
+	battle = (await db.queryAsync(
 		"SELECT battle AS id FROM battle_participants WHERE character_id = $1 FOR UPDATE",
 		[character_id]
-	).rows[0]
+	)).rows[0]
 	if battle?
-		exports._leaveBattle dbConnection, battle.id, character_id
+		await exports._leaveBattle db, battle.id, character_id
 	return
-).async()
 
 
 # Returns user's battle participants as array of objects like
@@ -285,8 +277,8 @@ exports.goEscape = ((dbConnection, character_id) ->
 #    side: 0, // side in battle, 0 or 1
 #    player: 1 // id of character's player (null for monters)
 # }
-exports.getBattleParticipants = ((dbConnection, character_id) ->
-	return dbConnection.query.sync(dbConnection,
+exports.getBattleParticipants = async (db, character_id) ->
+	return (await db.queryAsync(
 		"SELECT character_id, index, side, name, player "+
 		"FROM battle_participants, characters "+
 		"WHERE battle = ("+
@@ -295,12 +287,12 @@ exports.getBattleParticipants = ((dbConnection, character_id) ->
 			"AND characters.id = battle_participants.character_id "+
 		"ORDER BY index",
 		[ character_id ]
-	).rows
-).async()
+	)).rows
 
 
-exports._lockAndGetStatsForBattle = (tx, character_id) ->
-	return tx.query.sync(tx,
+
+exports._lockAndGetStatsForBattle = async (tx, character_id) ->
+	return (await tx.queryAsync(
 		'SELECT battle, side, power '+
 			'FROM characters, battles, battle_participants AS bp '+
 			'WHERE characters.id = $1 '+
@@ -308,32 +300,32 @@ exports._lockAndGetStatsForBattle = (tx, character_id) ->
 				'AND battles.id = bp.battle '+
 			'FOR UPDATE',
 		[character_id]
-	).rows[0]
+	)).rows[0]
 
 
-exports._hitItem = (tx, attackerPower, item) ->
+exports._hitItem = async (tx, attackerPower, item) ->
 	delta = Math.min(attackerPower, item.strength)
-	tx.query.sync tx, 'UPDATE items SET strength = $1 WHERE id = $2', [
+	await tx.queryAsync 'UPDATE items SET strength = $1 WHERE id = $2', [
 		item.strength - delta
 		item.id
 	]
 	return delta
 
 
-exports._hitAndGetHealth = (tx, victimId, hunterPower) ->
-	items = tx.query.sync(tx,
+exports._hitAndGetHealth = async (tx, victimId, hunterPower) ->
+	items = (await tx.queryAsync(
 		'SELECT items.id, strength, coverage, type '+
 			'FROM items, items_proto '+
 			'WHERE items.owner = $1 '+
 			'AND items.equipped = true '+
 			'AND items.prototype = items_proto.id',
 		[victimId]
-	).rows
+	)).rows
 
 	# damage reduction by shield
 	shield = items.find (i) -> i.type == 'shield'
 	if shield? and Math.random() * 100 <= shield.coverage
-		hunterPower -= exports._hitItem(tx, hunterPower, shield)
+		hunterPower -= await exports._hitItem(tx, hunterPower, shield)
 
 	# damage reduction by armor
 	if hunterPower > 0
@@ -341,34 +333,34 @@ exports._hitAndGetHealth = (tx, victimId, hunterPower) ->
 		percent = 100
 		for item in armor
 			if Math.random() * percent <= item.coverage
-				hunterPower -= exports._hitItem(tx, hunterPower, item)
+				hunterPower -= await exports._hitItem(tx, hunterPower, item)
 				break
 			percent -= item.coverage
 
 	# hit itsef
 	if hunterPower > 0
-		tx.query.sync(tx,
+		return (await tx.queryAsync(
 			'UPDATE characters '+
 				'SET health = health - GREATEST(0, $1-defense)/2 * (0.8+RANDOM()*0.4) '+
 				'WHERE id = $2 '+
 				'RETURNING health',
 			[ hunterPower, victimId ]
-		).rows[0].health
+		)).rows[0].health
 	else
-		tx.query.sync(tx,
+		return (await tx.queryAsync(
 			'SELECT health FROM characters WHERE id = $1',
 			[ victimId ]
-		).rows[0].health
+		)).rows[0].health
 
 
-exports._handleDeathInBattle = (tx, victim_cid, hunter_cid) ->
-	victim = tx.query.sync(tx, 'SELECT level, player FROM characters WHERE id = $1', [victim_cid]).rows[0]
-	hunter = tx.query.sync(tx, 'SELECT level, exp, player FROM characters WHERE id = $1', [hunter_cid]).rows[0]
+exports._handleDeathInBattle = async (tx, victim_cid, hunter_cid) ->
+	victim = (await tx.queryAsync 'SELECT level, player FROM characters WHERE id = $1', [victim_cid]).rows[0]
+	hunter = (await tx.queryAsync 'SELECT level, exp, player FROM characters WHERE id = $1', [hunter_cid]).rows[0]
 	playerDied = !!victim.player
 	killerIsPlayer = !!hunter.player
 
 	if playerDied
-		tx.query.sync(tx,
+		await tx.queryAsync(
 			'UPDATE characters '+
 				'SET health = health_max, '+
 				'    location = (SELECT id FROM locations WHERE initial = 1) '+
@@ -376,14 +368,14 @@ exports._handleDeathInBattle = (tx, victim_cid, hunter_cid) ->
 			[victim_cid]
 		)
 	else
-		tx.query.sync tx, 'DELETE FROM characters WHERE id = $1', [victim_cid]
+		await tx.queryAsync 'DELETE FROM characters WHERE id = $1', [victim_cid]
 
 	if (killerIsPlayer) and (not playerDied)
 		hunter.exp += exports.expForKill(hunter.level, victim.level)
 		while hunter.exp >= exports.expToLevelup(hunter.level)
 			hunter.exp -= exports.expToLevelup(hunter.level)
 			hunter.level++
-		tx.query.sync(tx,
+		await tx.queryAsync(
 			'UPDATE characters '+
 				'SET exp = $2, level = $3 '+
 				'WHERE id = $1',
@@ -391,25 +383,25 @@ exports._handleDeathInBattle = (tx, victim_cid, hunter_cid) ->
 		)
 
 
-exports._hit = (dbConnection, hunterId, victimId, withItemId) ->
+exports._hit = (db, hunterId, victimId, withItemId) ->
 	cancel = (message) ->
 		return {
 			state: "cancelled"
 			reason: message
 		}
 
-	hunter = exports._lockAndGetStatsForBattle(dbConnection, hunterId)
+	hunter = await exports._lockAndGetStatsForBattle(db, hunterId)
 	unless hunter?
 		return cancel "hunter not found"
 
-	victim = exports._lockAndGetStatsForBattle(dbConnection, victimId)
+	victim = await exports._lockAndGetStatsForBattle(db, victimId)
 	unless victim?
 		return cancel "victim not found"
 
 	if withItemId?
-		withItem = dbConnection.query.sync(dbConnection, "SELECT damage, type FROM items, items_proto "+
+		withItem = (await db.queryAsync("SELECT damage, type FROM items, items_proto "+
 			"WHERE owner = $1 AND items.id = $2 AND equipped AND items.prototype = items_proto.id",
-			[ hunterId, withItemId ]).rows[0]
+			[ hunterId, withItemId ])).rows[0]
 		unless withItem?
 			return cancel "weapon item not found"
 		if withItem.damage == 0
@@ -425,12 +417,12 @@ exports._hit = (dbConnection, hunterId, victimId, withItemId) ->
 	if withItem?
 		power += withItem.damage
 
-	health = exports._hitAndGetHealth(dbConnection, victimId, power)
+	health = await exports._hitAndGetHealth(db, victimId, power)
 	victimKilled = (health <= 0)
 	battleEnded = false
 	if victimKilled
-		battleEnded = exports._leaveBattle(dbConnection, hunter.battle, victimId).battleEnded
-		exports._handleDeathInBattle dbConnection, victimId, hunterId
+		battleEnded = (await exports._leaveBattle db, hunter.battle, victimId).battleEnded
+		await exports._handleDeathInBattle db, victimId, hunterId
 
 	return {
 		state: "ok"
@@ -440,11 +432,11 @@ exports._hit = (dbConnection, hunterId, victimId, withItemId) ->
 
 
 # Deals damage to opponent in user's battle.
-exports.hitOpponent = ((dbConnection, hunterId, victimId, withItemId) ->
-	result = exports._hit(dbConnection, hunterId, victimId, withItemId)
+exports.hitOpponent = async (db, hunterId, victimId, withItemId) ->
+	result = exports._hit(db, hunterId, victimId, withItemId)
 	return if result.state isnt "ok" or result.battleEnded
 
-	opponents = dbConnection.query.sync(dbConnection,
+	opponents = (await db.queryAsync(
 		"SELECT opponents.character_id "+
 			"FROM battle_participants AS opponents, "+
 				"(SELECT battle, side FROM battle_participants"+
@@ -452,66 +444,58 @@ exports.hitOpponent = ((dbConnection, hunterId, victimId, withItemId) ->
 			"WHERE opponents.battle = hunter.battle "+
 			"AND opponents.side != hunter.side",
 		[ hunterId ]
-	).rows
+	)).rows
 
 	for opponent in opponents
-		result = exports._hit(dbConnection, opponent.character_id, hunterId)
+		result = exports._hit(db, opponent.character_id, hunterId)
 		return if result.battleEnded
-).async()
+
 
 
 # Returns id and name of users on specified location.
-exports.getUsersOnLocation = (dbConnection, locid, callback) ->
-	dbConnection.query(
+exports.getUsersOnLocation = async (db, locid) ->
+	return (await db.queryAsync(
 		"SELECT uniusers.id, characters.name FROM uniusers, characters "+
 		"WHERE uniusers.sess_time > NOW() - $1 * INTERVAL '1 SECOND' "+
 		"AND characters.location = $2 "+
 		"AND characters.player = uniusers.id",
-		[ config.userOnlineTimeout, locid ],
-		(error, result) ->
-			callback(error, error || result.rows)
-	)
+		[ config.userOnlineTimeout, locid ]
+	)).rows
 
 
 # Returns all users on locations except one.
-exports.getNearbyUsers = (dbConnection, userid, locid, callback) ->
-	exports.getUsersOnLocation dbConnection, locid, (error, result) ->
-		callback error, null if error?
-
-		result = result.filter (i) -> i.id != userid
-		callback null, result
+exports.getNearbyUsers = async (db, userid, locid) ->
+	users = await exports.getUsersOnLocation db, locid
+	return users.filter (i) -> i.id != userid
 
 
 # Select nearby monsters with their characteristics
-exports.getNearbyMonsters = (dbConnection, locid, callback) ->
-	dbConnection.query(
+exports.getNearbyMonsters = async (db, locid) ->
+	return (await db.queryAsync(
 		"SELECT *, "+
 		"  EXISTS(SELECT * FROM battle_participants WHERE character_id = characters.id) AS fight_mode "+
 		"FROM characters WHERE location = $1 AND player IS NULL"
-		[ locid ],
-		(error, result) ->
-			callback(error, error || result.rows)
-	)
+		[ locid ]
+	)).rows
 
 
 # Checks if character is in battle.
-exports.isInFight = ((dbConnection, character_id) ->
-	dbConnection.query.sync(dbConnection,
+exports.isInFight = async (db, character_id) ->
+	(await db.queryAsync(
 		"SELECT count(*) FROM battle_participants WHERE character_id = $1",
 		[ character_id ]
-	).rows[0].count > 0
-).async()
+	)).rows[0].count > 0
 
 
 # Checks if character was just involved in battle.
-exports.isAutoinvolved = (dbConnection, character_id, callback) ->
-	dbConnection.query "SELECT autoinvolved_fm FROM characters WHERE id = $1", [character_id], (error, result) ->
-		callback error, error or result.rows[0].autoinvolved_fm
+exports.isAutoinvolved = async (db, character_id) ->
+	result = await db.queryAsync "SELECT autoinvolved_fm FROM characters WHERE id = $1", [character_id]
+	return result.rows[0].autoinvolved_fm
 
 
 # Clears character's "just envolved" mark.
-exports.uninvolve = (dbConnection, character_id, callback) ->
-	dbConnection.query "UPDATE characters SET autoinvolved_fm = FALSE WHERE id = $1", [character_id], callback
+exports.uninvolve = async (db, character_id) ->
+	return await db.queryAsync "UPDATE characters SET autoinvolved_fm = FALSE WHERE id = $1", [character_id]
 
 
 # Calculates how much experience is required to advance to next level.
@@ -523,39 +507,36 @@ exports.expToLevelup = (level) ->
 exports.expForKill = (hunter_level, victim_level) ->
 	return Math.max(0, 50 + 5 * (victim_level - hunter_level))
 
-
 # Returns character's attributes.
-exports.getCharacter = ((dbConnection, character_id_or_name) ->
+exports.getCharacter = async (db, character_id_or_name) ->
 	field = if typeof(character_id_or_name) == 'number' then 'id' else 'name'
-	c = dbConnection.query.sync(dbConnection,
+	c = (await db.queryAsync(
 		"SELECT *, "+
 		"  EXISTS(SELECT * FROM battle_participants WHERE character_id = characters.id) AS fight_mode "+
-		"FROM characters WHERE #{field} = $1", [character_id_or_name]).rows[0]
+		"FROM characters WHERE #{field} = $1", [character_id_or_name])).rows[0]
 
 	unless c?
 		return null
 
 	c.exp_max = exports.expToLevelup c.level
 	return c
-).async()
+
 
 
 # Returns user's characters list with some basic attributes.
-exports.getCharacters = ((dbConnection, user_id) ->
-	dbConnection.query.sync(dbConnection,
-		"SELECT id, name, race, gender FROM characters WHERE player = $1 ORDER BY id", [ user_id ]).rows
-).async()
+exports.getCharacters = async (db, user_id) ->
+	return (await db.queryAsync(
+		"SELECT id, name, race, gender FROM characters WHERE player = $1 ORDER BY id", [ user_id ])).rows
 
 
 # Returns character's items.
-exports.getCharacterItems = ((dbConnection, character_id) ->
-	dbConnection.query.sync(dbConnection,
+exports.getCharacterItems = async (db, character_id) ->
+	return (await db.queryAsync(
 		"SELECT items.id, name, type, class, kind, armor_class, "+
 		"       coverage, strength, strength_max, equipped, damage "+
 		"FROM items, items_proto "+
 		"WHERE items.owner = $1 AND items.prototype = items_proto.id "+
 		"ORDER BY items.id",
 		[ character_id ]
-	).rows
-).async()
+	)).rows
 
