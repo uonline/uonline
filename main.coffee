@@ -118,14 +118,7 @@ if newrelic?
 	app.locals.newrelic = newrelic
 
 
-asyncMiddleware = (func) ->
-	return (req, res, next) ->
-		func(req, res).then((-> next()), next)
-
-
-wrap = (func) ->
-	return (req, res, next) ->
-		func(req, res, next).catch(next)
+{wrap, openTransaction, commit, asyncMiddleware, setInstance, render, redirect} = lib.middlewares
 
 
 # Hallway middleware
@@ -183,15 +176,6 @@ app.use asyncMiddleware async (request, response) ->
 
 
 # Middlewares
-
-openTransaction = (request, response, next) ->
-	request.uonline.db = promisifyAll transaction(request.uonline.db)
-	next()
-
-commit = asyncMiddleware async (request, response) ->
-	await request.uonline.db.commitAsync()
-
-
 mustBeAuthed = (request, response, next) ->
 	if request.uonline.user.loggedIn is true
 		next()
@@ -211,22 +195,6 @@ mustHaveCharacter = (request, response, next) ->
 		next()
 	else
 		response.redirect 303, '/account/'
-
-
-setInstance = (x) ->
-	(request, response, next) ->
-		request.uonline.instance = x
-		next()
-
-
-render = (template) ->
-	(request, response) ->
-		response.render template, request.uonline
-
-
-redirect = (code, url) ->
-	(request, response) ->
-		response.redirect(code, url)
 
 
 fetchCharacter = asyncMiddleware async (request, response) ->
@@ -323,27 +291,13 @@ fetchBattleGroups = asyncMiddleware async (request, response) ->
 
 # Pages
 
-app.get '/node/', (request, response) ->
-	response.send 'Node.js is up and running.'
-
-
-app.get '/explode/', (request, response) ->
-	throw new Error 'Emulated error.'
-
-app.get '/explode_db/', openTransaction, wrap(async (request, response) ->
-	await request.uonline.db.queryAsync 'SELECT * FROM "Emulated DB error."'
-), commit
-
-
-app.get '/', (request, response) ->
-	if request.uonline.user.loggedIn is true
-		response.redirect config.defaultInstanceForUsers
-	else
-		response.redirect config.defaultInstanceForGuests
-
-
-app.get '/about/',
-	setInstance('about'), render('about')
+routes = require './routes/stuff.coffee'
+for path of routes
+	for method of routes[path]
+		chain = routes[path][method]
+		if chain instanceof Function
+			chain = [chain]
+		app[method] path, chain
 
 
 app.get '/login/',
