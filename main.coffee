@@ -118,7 +118,7 @@ if newrelic?
 	app.locals.newrelic = newrelic
 
 
-{wrap, openTransaction, commit, asyncMiddleware, setInstance, render, redirect} = lib.middlewares
+{wrap, openTransaction, commit, asyncMiddleware, setInstance, render, redirect, mustBeAuthed, mustHaveCharacter} = lib.middlewares
 
 
 # Hallway middleware
@@ -176,34 +176,6 @@ app.use asyncMiddleware async (request, response) ->
 
 
 # Middlewares
-mustBeAuthed = (request, response, next) ->
-	if request.uonline.user.loggedIn is true
-		next()
-	else
-		response.redirect 303, '/login/'
-
-
-mustNotBeAuthed = (request, response, next) ->
-	if request.uonline.user.loggedIn is true
-		response.redirect 303, config.defaultInstanceForUsers
-	else
-		next()
-
-
-mustHaveCharacter = (request, response, next) ->
-	if request.uonline.character
-		next()
-	else
-		response.redirect 303, '/account/'
-
-
-fetchCharacter = asyncMiddleware async (request, response) ->
-	character = await lib.game.getCharacter request.uonline.db, request.uonline.user.character_id
-	request.uonline.character = character
-
-
-fetchCharacterFromURL = asyncMiddleware async (request, response) ->
-	request.uonline.fetched_character = await lib.game.getCharacter request.uonline.db, request.params.name
 
 
 fetchMonsterFromURL = asyncMiddleware async (request, response) ->
@@ -291,155 +263,22 @@ fetchBattleGroups = asyncMiddleware async (request, response) ->
 
 # Pages
 
-routes = require './routes/stuff.coffee'
-for path of routes
-	for method of routes[path]
-		chain = routes[path][method]
-		if chain instanceof Function
-			chain = [chain]
-		app[method] path, chain
-
-
-app.get '/login/',
-	mustNotBeAuthed,
-	setInstance('login'), render('login')
-
-
-app.post '/action/login',
-	mustNotBeAuthed,
-	setInstance('login'),
-	wrap async (request, response) ->
-		if await lib.user.accessGranted request.uonline.db, request.body.username, request.body.password
-			sessid = await lib.user.createSession request.uonline.db, request.body.username
-			response.cookie 'sessid', sessid
-			response.redirect 303, '/'
-		else
-			options = request.uonline
-			options.error = true
-			options.user.username = request.body.username
-			response.render 'login', options
-
-
-app.get '/register/',
-	mustNotBeAuthed,
-	setInstance('register'), render('register')
-
-
-app.post '/action/register',
-	mustNotBeAuthed,
-	setInstance('register'),
-	openTransaction,
-	wrap(async (request, response, next) ->
-		usernameIsValid = lib.validation.usernameIsValid(request.body.username)
-		passwordIsValid = lib.validation.passwordIsValid(request.body.password)
-		userExists = await lib.user.userExists request.uonline.db, request.body.username
-
-		if usernameIsValid and passwordIsValid and !userExists
-			result = await lib.user.registerUser(
-				request.uonline.db
-				request.body.username
-				request.body.password
-				'user'
-			)
-			request.uonline.userCreated = true
-			response.cookie 'sessid', result.sessid
-		else
-			options = request.uonline
-			options.error = true
-			options.invalidLogin = !usernameIsValid
-			options.invalidPass = !passwordIsValid
-			options.loginIsBusy = userExists
-			options.user.username = request.body.username
-			options.user.password = request.body.password
-			request.uonline.options = options
-			request.uonline.userCreated = false
-		next()
-	),
-	commit,
-	(request, response) ->
-		if request.uonline.userCreated
-			response.redirect 303, '/'
-		else
-			response.render 'register', request.uonline.options
-
-
-app.get '/character/',
-	mustBeAuthed, mustHaveCharacter,
-	setInstance('mycharacter'),
-	(request, response) ->
-		#request.uonline.fetched_character_owner = request.uonline.user  # пока не вижу смысла его запрашивать
-		request.uonline.fetched_character = request.uonline.character
-		response.render 'character', request.uonline
-
-
-app.get '/character/:name/',
-	mustBeAuthed,
-	fetchCharacterFromURL,
-	setInstance('character'),
-	(request, response) ->
-		#console.log(require('util').inspect(request.uonline, depth: null))
-		response.render 'character', request.uonline
-
-
-app.get '/account/',
-	mustBeAuthed,
-	setInstance('account'),
-	(request, response) ->
-		response.render 'account', request.uonline
+for filename in require('fs').readdirSync('./routes')
+	if not filename.endsWith('.coffee')
+		continue
+	routes = require './routes/'+filename
+	for path of routes
+		for method of routes[path]
+			chain = routes[path][method]
+			if chain instanceof Function
+				chain = [chain]
+			console.log(method, path)
+			app[method] path, chain
 
 
 app.get '/monster/:id/',
 	fetchMonsterFromURL,
 	setInstance('monster'), render('monster')
-
-
-app.post '/action/logout',
-	mustBeAuthed,
-	wrap async (request, response) ->
-		await lib.user.closeSession request.uonline.db, request.uonline.user.sessid
-		response.redirect 303, '/'  # force GET
-
-
-app.get '/newCharacter/',
-	mustBeAuthed,
-	setInstance('new_character'),
-	(request, response) ->
-		response.render 'new_character', request.uonline
-
-
-app.post '/action/newCharacter',
-	mustBeAuthed,
-	setInstance('new_character'),
-	openTransaction,
-	wrap(async (request, response, next) ->
-		nameIsValid = lib.validation.characterNameIsValid(request.body.character_name)
-		alreadyExists = await lib.character.characterExists request.uonline.db, request.body.character_name
-
-		if nameIsValid and not alreadyExists
-			charid = await lib.character.createCharacter(
-				request.uonline.db
-				request.uonline.user.id
-				request.body.character_name
-				request.body.character_race
-				request.body.character_gender
-			)
-			request.uonline._characterCreated = true
-		else
-			options = request.uonline
-			options.error = true
-			options.invalidName = !nameIsValid
-			options.nameIsBusy = alreadyExists
-			options.character_name = request.body.character_name
-			request.uonline.options = options
-			request.uonline._characterCreated = false
-		next()
-	),
-	commit,
-	(request, response) ->
-		if request.uonline._characterCreated
-			response.redirect 303, '/character/'
-		else
-			response.render 'new_character', request.uonline.options
 
 
 app.get '/game/',
@@ -554,20 +393,6 @@ app.post '/action/equip',
 			[request.body.id, request.uonline.user.character_id]
 		)
 		response.redirect 303, '/inventory/'
-
-
-app.post '/action/switchCharacter',
-	mustBeAuthed,
-	wrap async (request, response) ->
-		await lib.character.switchCharacter request.uonline.db, request.uonline.user.id, request.body.id
-		response.redirect 303, 'back'
-
-
-app.post '/action/deleteCharacter',
-	mustBeAuthed,
-	wrap async (request, response) ->
-		await lib.character.deleteCharacter request.uonline.db, request.uonline.user.id, request.body.id
-		response.redirect 303, '/account/'
 
 
 app.get '/state/',
