@@ -27,8 +27,8 @@ exports.asyncMiddleware = asyncMiddleware
 
 
 exports.wrap = (func) ->
-	return (req, res, next) ->
-		func(req, res, next).catch(next)
+	(req, res, next) ->
+		func(req, res).then((-> next()), next)
 
 
 exports.setInstance = (x) ->
@@ -38,8 +38,9 @@ exports.setInstance = (x) ->
 
 
 exports.render = (template) ->
-	(request, response) ->
+	(request, response, next) ->
 		response.render template, request.uonline
+		next()
 
 
 exports.redirect = (code, url) ->

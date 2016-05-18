@@ -38,11 +38,12 @@ module.exports =
 		]
 
 	'/':
-		get: (request, response) ->
+		get: (request, response, next) ->
 			if request.uonline.user.loggedIn is true
 				response.redirect config.defaultInstanceForUsers
 			else
 				response.redirect config.defaultInstanceForGuests
+			next()
 
 	'/about/':
 		get: [

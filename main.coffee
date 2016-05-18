@@ -124,6 +124,7 @@ if newrelic?
 # Hallway middleware
 app.use asyncMiddleware async (request, response) ->
 	# Basic stuff
+	request.routeMatched = false
 	request.uonline =
 		now: new Date()
 		pjax: request.header('X-PJAX')?
@@ -263,6 +264,11 @@ fetchBattleGroups = asyncMiddleware async (request, response) ->
 
 # Pages
 
+routeMatched = (request, response, next) ->
+	console.log('matched', request.url)
+	request.routeMatched = true
+	next()
+
 for filename in require('fs').readdirSync('./routes')
 	if not filename.endsWith('.coffee')
 		continue
@@ -272,7 +278,7 @@ for filename in require('fs').readdirSync('./routes')
 			chain = routes[path][method]
 			if chain instanceof Function
 				chain = [chain]
-			console.log(method, path)
+			chain.unshift(routeMatched)
 			app[method] path, chain
 
 
@@ -347,6 +353,7 @@ app.post '/action/hit',
 
 
 app.get '/ajax/isNickBusy/:nick',
+	routeMatched,
 	wrap async (request, response) ->
 		response.json
 			nick: request.params.nick
@@ -408,8 +415,12 @@ app.get '/state/',
 
 
 # 404 handling
-app.get '*', (request, response) ->
-	throw new Error '404'
+app.all '*', (request, response, next) ->
+	if request.uonline.db.state? and request.uonline.db.state() isnt 'closed'
+		throw new Error 'transaction not closed'
+	unless request.routeMatched
+		throw new Error '404'
+	next()
 
 
 # Exception handling
@@ -424,8 +435,9 @@ app.use (error, request, response, next) ->
 	options = request.uonline
 	options.code = code
 	options.instance = 'error'
-	response.status code
-	response.render 'error', options
+	unless response.headersSent
+		response.status code
+		response.render 'error', options
 
 
 # main

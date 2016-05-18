@@ -15,6 +15,7 @@
 'use strict'
 
 {async, await} = require 'asyncawait'
+lib = require "#{__dirname}/../lib.coffee"
 {wrap, openTransaction, setInstance, render, mustNotBeAuthed, mustBeAuthed} = require "#{__dirname}/../lib/middlewares.coffee"
 
 
@@ -62,7 +63,7 @@ module.exports =
 			mustNotBeAuthed
 			setInstance('register')
 			openTransaction
-			wrap async (request, response, next) ->
+			wrap async (request, response) ->
 				usernameIsValid = lib.validation.usernameIsValid(request.body.username)
 				passwordIsValid = lib.validation.passwordIsValid(request.body.password)
 				userExists = await lib.user.userExists request.uonline.db, request.body.username
