@@ -15,8 +15,9 @@
 'use strict'
 
 {async, await} = require 'asyncawait'
-lib = require "#{__dirname}/../lib.coffee"
-{wrap, openTransaction, setInstance, render, mustNotBeAuthed, mustBeAuthed} = require "#{__dirname}/../lib/middlewares.coffee"
+config = require '../config'
+lib = require '../lib.coffee'
+{wrap, openTransaction, setInstance, render, mustNotBeAuthed, mustBeAuthed} = lib.middlewares
 
 
 module.exports =
@@ -35,7 +36,7 @@ module.exports =
 				if await lib.user.accessGranted request.uonline.db, request.body.username, request.body.password
 					sessid = await lib.user.createSession request.uonline.db, request.body.username
 					response.cookie 'sessid', sessid
-					response.redirect 303, '/'
+					response.redirect 303, config.defaultInstanceForUsers
 				else
 					options = request.uonline
 					options.error = true
@@ -48,7 +49,7 @@ module.exports =
 			mustBeAuthed
 			wrap async (request, response) ->
 				await lib.user.closeSession request.uonline.db, request.uonline.user.sessid
-				response.redirect 303, '/'  # force GET
+				response.redirect 303, config.defaultInstanceForGuests  # force GET
 		]
 
 	'/register/':
@@ -77,7 +78,7 @@ module.exports =
 					)
 					await request.uonline.db.commitAsync()
 					response.cookie 'sessid', result.sessid
-					response.redirect 303, '/'
+					response.redirect 303, '/account/'
 				else
 					options = request.uonline
 					options.error = true
@@ -89,6 +90,12 @@ module.exports =
 					await request.uonline.db.rollbackAsync()
 					response.render 'register', request.uonline
 		]
+
+	'/ajax/isNickBusy/:nick':
+		get: wrap async (request, response) ->
+			response.json
+				nick: request.params.nick
+				isNickBusy: await lib.user.userExists request.uonline.db, request.params.nick
 
 	'/account/':
 		get: [

@@ -15,7 +15,8 @@
 'use strict'
 
 {async, await} = require 'asyncawait'
-mw = require "#{__dirname}/../lib/middlewares.coffee"
+lib = require '../lib.coffee'
+mw = lib.middlewares
 
 
 module.exports =
@@ -93,3 +94,9 @@ module.exports =
 				await lib.character.deleteCharacter request.uonline.db, request.uonline.user.id, request.body.id
 				response.redirect 303, '/account/'
 		]
+
+	'/ajax/isCharacterNameBusy/:name':
+		get: mw.wrap async (request, response) ->
+			response.json
+				name: request.params.name
+				isCharacterNameBusy: await lib.character.characterExists request.uonline.db, request.params.name

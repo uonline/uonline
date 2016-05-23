@@ -17,6 +17,7 @@
 transaction = require 'any-db-transaction'
 {async, await} = require 'asyncawait'
 promisifyAll = require('bluebird').promisifyAll
+lib = require '../lib.coffee'
 
 
 asyncMiddleware = (func) ->
@@ -85,3 +86,86 @@ exports.fetchCharacter = asyncMiddleware async (request, response) ->
 
 exports.fetchCharacterFromURL = asyncMiddleware async (request, response) ->
 	request.uonline.fetched_character = await lib.game.getCharacter request.uonline.db, request.params.name
+
+
+exports.fetchMonsterFromURL = asyncMiddleware async (request, response) ->
+	id = parseInt(request.params.id, 10)
+	if isNaN(id)
+		throw new Error '404'
+	chars = await lib.game.getCharacter request.uonline.db, id
+	if not chars?
+		throw new Error '404'
+	for i of chars
+		request.uonline.fetched_monster = chars
+	return
+
+
+exports.fetchItems = asyncMiddleware async (request, response) ->
+	items = await lib.game.getCharacterItems request.uonline.db, request.uonline.user.character_id
+	request.uonline.equipment = items.filter (x) -> x.equipped
+	request.uonline.equipment.shield = request.uonline.equipment.find (x) -> x.type == 'shield'
+	request.uonline.equipment.right_hand = request.uonline.equipment.find (x) -> x.type.startsWith 'weapon'
+	request.uonline.backpack = items.filter (x) -> !x.equipped
+	return
+
+
+exports.fetchLocation = asyncMiddleware async (request, response) ->
+	try
+		location = await lib.game.getCharacterLocation request.uonline.db, request.uonline.user.character_id
+		#request.uonline.pic = request.uonline.picture  if request.uonline.picture?  # TODO: LOLWHAT
+	catch e
+		console.error e.stack
+		location = await lib.game.getInitialLocation request.uonline.db
+		await lib.game.changeLocation request.uonline.db, request.uonline.user.character_id, location.id
+	request.uonline.location = location
+	return
+
+
+exports.fetchArea = asyncMiddleware async (request, response) ->
+	area = await lib.game.getCharacterArea request.uonline.db, request.uonline.user.character_id
+	request.uonline.area = area
+	return
+
+
+exports.fetchUsersNearby = asyncMiddleware async (request, response) ->
+	tmpUsers = await lib.game.getNearbyUsers request.uonline.db,
+		request.uonline.user.id, request.uonline.character.location
+	request.uonline.players_list = tmpUsers
+	return
+
+
+exports.fetchMonstersNearby = asyncMiddleware async (request, response) ->
+	tmpMonsters = await lib.game.getNearbyMonsters request.uonline.db, request.uonline.character.location
+	request.uonline.monsters_list = tmpMonsters
+	request.uonline.monsters_list.in_fight = tmpMonsters.filter((m) -> m.fight_mode)
+	request.uonline.monsters_list.not_in_fight = tmpMonsters.filter((m) -> not m.fight_mode)
+	return
+
+
+#fetchStats = asyncMiddleware async (request, response) ->
+#	chars = await lib.game.getUserCharacters request.uonline.db, request.uonline.userid
+#	for i of chars
+#		request.uonline[i] = chars[i]
+#	return
+
+
+exports.fetchStatsFromURL = asyncMiddleware async (request, response) ->
+	chars = await lib.game.getUserCharacters request.uonline.db, request.params.username
+	if not chars?
+		throw new Error '404'
+	for i of chars
+		request.uonline[i] = chars[i]
+	return
+
+
+exports.fetchBattleGroups = asyncMiddleware async (request, response) ->
+	if request.uonline.character.fight_mode
+		participants = await lib.game.getBattleParticipants request.uonline.db, request.uonline.user.character_id
+		our_side = participants
+			.find((p) -> p.character_id is request.uonline.user.character_id)
+			.side
+
+		request.uonline.battle =
+			participants: participants
+			our_side: our_side
+	return

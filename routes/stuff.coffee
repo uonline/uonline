@@ -15,11 +15,39 @@
 'use strict'
 
 {async, await} = require 'asyncawait'
-config = require "#{__dirname}/../config"
-{openTransaction, commit, wrap, setInstance, render, redirect} = require "#{__dirname}/../lib/middlewares.coffee"
+config = require '../config'
+{wrap, openTransaction, commit, setInstance, render, redirect} = require '../lib/middlewares.coffee'
 
 
 module.exports =
+	'/':
+		get: (request, response, next) ->
+			if request.uonline.user.loggedIn is true
+				response.redirect 303, config.defaultInstanceForUsers
+			else
+				response.redirect 303, config.defaultInstanceForGuests
+			next()
+
+	'/about/':
+		get: [
+			setInstance('about')
+			render('about')
+		]
+
+	'/state/':
+		get: [
+			wrap(async (request, response, next) ->
+				players = await request.uonline.db.queryAsync(
+					"SELECT *, (sess_time > NOW() - $1 * INTERVAL '1 SECOND') AS online FROM uniusers",
+					[config.sessionExpireTime]
+				)
+				request.uonline.userstate = players.rows
+				next()
+			)
+			setInstance('state')
+			render('state')
+		]
+
 	'/node/':
 		get: (request, response) ->
 			response.send 'Node.js is up and running.'
@@ -37,16 +65,12 @@ module.exports =
 			commit
 		]
 
-	'/':
-		get: (request, response, next) ->
-			if request.uonline.user.loggedIn is true
-				response.redirect config.defaultInstanceForUsers
-			else
-				response.redirect config.defaultInstanceForGuests
-			next()
-
-	'/about/':
-		get: [
-			setInstance('about')
-			render('about')
-		]
+	'/ajax/cheatFixAll':
+		post: wrap async (request, response) ->
+			await request.uonline.db.queryAsync(
+				'UPDATE items '+
+				'SET strength = '+
+					'(SELECT strength_max FROM items_proto'+
+					' WHERE items.prototype = items_proto.id)'
+			)
+			response.redirect 303, '/inventory/'
