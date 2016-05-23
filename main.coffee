@@ -34,12 +34,7 @@ sugar = require 'sugar'
 promisifyAll = require("bluebird").promisifyAll
 moment = require 'moment'
 moment.locale 'ru'
-plural = (n, f) ->
-	n %= 100
-	if n>10 and n<20 then return f[2]
-	n %= 10
-	if n>1 and n<5 then return f[1]
-	if n is 1 then return f[0] else return f[2]
+
 
 inspect = (x) ->
 	console.log require('util').inspect x, depth: null
@@ -118,7 +113,7 @@ if newrelic?
 	app.locals.newrelic = newrelic
 
 # Hallway middleware
-app.use lib.middlewares.hallway
+app.use lib.middlewares.hallway(moment, dbConnection)
 
 # Pages
 routeMatched = (request, response, next) ->
@@ -137,6 +132,33 @@ for filename in require('fs').readdirSync('./routes')
 			for mw, i in chain
 				unless typeof mw is 'function'
 					throw new Error("wrong middleware ##{i} '#{mw}' for route #{method}:#{path}")
+
+			# wrapping
+			chain.forEach (mw, i) ->
+				chain[i] = switch
+					# it is result of `async((req, res) -> ...)`,
+					# should always return promise
+					# TODO: fix when native async/await will be ready
+					when mw.prototype.constructor.name == 'f2'
+						(req, res, next) -> mw(req, res).then((-> next()), next)
+					# simple `(req, res, next) -> ...` function,
+					# assume it will call `next` inside
+					when mw.length == 3
+						mw
+					# other cases,
+					# funtion should return undefined if it is syncronous
+					# or promise if asyncronous
+					else
+						(request, response, next) ->
+							result = mw(request, response)
+							if typeof result is 'undefined'
+								next()
+							else if typeof result.then is 'function'
+								result.then((-> next()), next)
+							else
+								throw new Error("middleware ##{i} for route #{method}:#{path} returned wrong value: #{result}")
+							return
+
 			chain.unshift(routeMatched)
 			app[method] path, chain
 
@@ -152,8 +174,8 @@ app.all '*', (request, response, next) ->
 
 # Exception handling
 app.use (error, request, response, next) ->
-	if request.uonline.db.state? and request.uonline.db.state() isnt 'closed'
-		request.uonline.db.rollback()
+	#if request.uonline.db.state? and request.uonline.db.state() isnt 'closed'
+	#	request.uonline.db.rollback()
 	code = 500
 	if error.message is '404'
 		code = 404
