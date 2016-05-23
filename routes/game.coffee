@@ -31,8 +31,8 @@ module.exports =
 		get: [
 			mw.mustBeAuthed,
 			mw.mustHaveCharacter,
-			mw.fetchLocation,     mw.fetchArea,
-			mw.fetchUsersNearby,  mw.fetchMonstersNearby,
+			mw.fetchLocation, mw.fetchArea,
+			mw.fetchUsersNearby, mw.fetchMonstersNearby,
 			mw.fetchBattleGroups, mw.fetchItems,
 			mw.setInstance('game'), mw.render('game')
 		]
@@ -100,9 +100,7 @@ module.exports =
 			mw.mustBeAuthed
 			mw.wrap async (request, response) ->
 				await request.uonline.db.queryAsync(
-					'UPDATE items '+
-					'SET equipped = false '+
-					'WHERE id = $1 AND owner = $2',
+					'UPDATE items SET equipped = false WHERE id = $1 AND owner = $2',
 					[request.body.id, request.uonline.user.character_id]
 				)
 				response.redirect 303, '/inventory/'
@@ -113,9 +111,7 @@ module.exports =
 			mw.mustBeAuthed
 			mw.wrap async (request, response) ->
 				await request.uonline.db.queryAsync(
-					'UPDATE items '+
-					'SET equipped = true '+
-					'WHERE id = $1 AND owner = $2',
+					'UPDATE items SET equipped = true WHERE id = $1 AND owner = $2',
 					[request.body.id, request.uonline.user.character_id]
 				)
 				response.redirect 303, '/inventory/'

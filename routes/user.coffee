@@ -17,22 +17,22 @@
 {async, await} = require 'asyncawait'
 config = require '../config'
 lib = require '../lib.coffee'
-{wrap, openTransaction, setInstance, render, mustNotBeAuthed, mustBeAuthed} = lib.middlewares
+mw = lib.middlewares
 
 
 module.exports =
 	'/login/':
 		get: [
-			mustNotBeAuthed
-			setInstance('login')
-			render('login')
+			mw.mustNotBeAuthed
+			mw.setInstance('login')
+			mw.render('login')
 		]
 
 	'/action/login':
 		post: [
-			mustNotBeAuthed
-			setInstance('login')
-			wrap async (request, response) ->
+			mw.mustNotBeAuthed
+			mw.setInstance('login')
+			mw.wrap async (request, response) ->
 				if await lib.user.accessGranted request.uonline.db, request.body.username, request.body.password
 					sessid = await lib.user.createSession request.uonline.db, request.body.username
 					response.cookie 'sessid', sessid
@@ -46,25 +46,25 @@ module.exports =
 
 	'/action/logout':
 		post: [
-			mustBeAuthed
-			wrap async (request, response) ->
+			mw.mustBeAuthed
+			mw.wrap async (request, response) ->
 				await lib.user.closeSession request.uonline.db, request.uonline.user.sessid
 				response.redirect 303, config.defaultInstanceForGuests  # force GET
 		]
 
 	'/register/':
 		get: [
-			mustNotBeAuthed
-			setInstance('register')
-			render('register')
+			mw.mustNotBeAuthed
+			mw.setInstance('register')
+			mw.render('register')
 		]
 
 	'/action/register':
 		post: [
-			mustNotBeAuthed
-			setInstance('register')
-			openTransaction
-			wrap async (request, response) ->
+			mw.mustNotBeAuthed
+			mw.setInstance('register')
+			mw.openTransaction
+			mw.wrap async (request, response) ->
 				usernameIsValid = lib.validation.usernameIsValid(request.body.username)
 				passwordIsValid = lib.validation.passwordIsValid(request.body.password)
 				userExists = await lib.user.userExists request.uonline.db, request.body.username
@@ -92,15 +92,15 @@ module.exports =
 		]
 
 	'/ajax/isNickBusy/:nick':
-		get: wrap async (request, response) ->
+		get: mw.wrap async (request, response) ->
 			response.json
 				nick: request.params.nick
 				isNickBusy: await lib.user.userExists request.uonline.db, request.params.nick
 
 	'/account/':
 		get: [
-			mustBeAuthed
-			setInstance('account')
+			mw.mustBeAuthed
+			mw.setInstance('account')
 			(request, response) ->
 				response.render 'account', request.uonline
 		]

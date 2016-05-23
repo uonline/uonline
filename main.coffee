@@ -117,73 +117,11 @@ app.set 'views', "#{__dirname}/views"
 if newrelic?
 	app.locals.newrelic = newrelic
 
-
-{wrap, openTransaction, commit, asyncMiddleware, setInstance, render, redirect, mustBeAuthed, mustHaveCharacter} = lib.middlewares
-
-
 # Hallway middleware
-app.use asyncMiddleware async (request, response) ->
-	# Basic stuff
-	request.routeMatched = false
-	request.uonline =
-		now: new Date()
-		pjax: request.header('X-PJAX')?
-		moment: moment
-		plural: plural
-		db: dbConnection
-
-	# Read session data
-	user = await lib.user.sessionInfoRefreshing(
-		request.uonline.db, request.cookies.sessid, config.sessionExpireTime, true)
-	request.uonline.user = user
-
-	# utility
-	writeDisplayRace = (x) ->
-		tmp = {
-			'orc-male': 'орк'
-			'orc-female': 'женщина-орк'
-			'human-male': 'человек'
-			'human-female': 'человек'
-			'elf-male': 'эльф'
-			'elf-female': 'эльфийка'
-		}
-		key = "#{x.race}-#{x.gender}"
-		x.displayRace = tmp[key]
-
-	# Read character data
-	character = await lib.game.getCharacter request.uonline.db, request.uonline.user.character_id
-	if character?
-		writeDisplayRace(character)
-	request.uonline.character = character
-
-	# Read all user's characters data
-	characters = await lib.game.getCharacters request.uonline.db, request.uonline.user.id
-	if characters?
-		characters.forEach writeDisplayRace
-	request.uonline.characters = characters
-
-	# CSP
-	if !process.env.NOCSP
-		response.header 'Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'"
-
-	# Anti-clickjacking
-	response.header 'X-Frame-Options', 'DENY'
-
-	# PJAX
-	response.header 'X-PJAX-URL', request.url
-
-	# Necessary, or it will pass shit to callback
-	return
-
-
-# Middlewares
-# noop
-
+app.use lib.middlewares.hallway
 
 # Pages
-
 routeMatched = (request, response, next) ->
-	console.log('matched', request.url)
 	request.routeMatched = true
 	next()
 

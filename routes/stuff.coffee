@@ -16,7 +16,7 @@
 
 {async, await} = require 'asyncawait'
 config = require '../config'
-{wrap, openTransaction, commit, setInstance, render, redirect} = require '../lib/middlewares.coffee'
+mw = require '../lib/middlewares.coffee'
 
 
 module.exports =
@@ -30,13 +30,13 @@ module.exports =
 
 	'/about/':
 		get: [
-			setInstance('about')
-			render('about')
+			mw.setInstance('about')
+			mw.render('about')
 		]
 
 	'/state/':
 		get: [
-			wrap(async (request, response, next) ->
+			mw.wrap(async (request, response, next) ->
 				players = await request.uonline.db.queryAsync(
 					"SELECT *, (sess_time > NOW() - $1 * INTERVAL '1 SECOND') AS online FROM uniusers",
 					[config.sessionExpireTime]
@@ -44,8 +44,8 @@ module.exports =
 				request.uonline.userstate = players.rows
 				next()
 			)
-			setInstance('state')
-			render('state')
+			mw.setInstance('state')
+			mw.render('state')
 		]
 
 	'/node/':
@@ -58,15 +58,15 @@ module.exports =
 
 	'/explode_db/':
 		get: [
-			openTransaction
-			wrap(async (request, response) ->
+			mw.openTransaction
+			mw.wrap(async (request, response) ->
 				await request.uonline.db.queryAsync 'SELECT * FROM "Emulated DB error."'
 			)
-			commit
+			mw.commit
 		]
 
 	'/ajax/cheatFixAll':
-		post: wrap async (request, response) ->
+		post: mw.wrap async (request, response) ->
 			await request.uonline.db.queryAsync(
 				'UPDATE items '+
 				'SET strength = '+
