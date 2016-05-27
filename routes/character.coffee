@@ -36,17 +36,14 @@ module.exports =
 			mw.mustBeAuthed
 			mw.fetchCharacterFromURL
 			mw.setInstance('character')
-			(request, response) ->
-				#console.log(require('util').inspect(request.uonline, depth: null))
-				response.render 'character', request.uonline
+			mw.render('character')
 		]
 
 	'/newCharacter/':
 		get: [
 			mw.mustBeAuthed
 			mw.setInstance('new_character')
-			(request, response) ->
-				response.render 'new_character', request.uonline
+			mw.render('new_character')
 		]
 
 	'/action/newCharacter':
@@ -54,7 +51,7 @@ module.exports =
 			mw.mustBeAuthed
 			mw.setInstance('new_character')
 			mw.openTransaction
-			mw.wrap async (request, response, next) ->
+			async (request, response, next) ->
 				nameIsValid = lib.validation.characterNameIsValid(request.body.character_name)
 				alreadyExists = await lib.character.characterExists request.uonline.db, request.body.character_name
 
@@ -81,7 +78,7 @@ module.exports =
 	'/action/switchCharacter':
 		post: [
 			mw.mustBeAuthed
-			mw.wrap async (request, response) ->
+			async (request, response) ->
 				await lib.character.switchCharacter request.uonline.db, request.uonline.user.id, request.body.id
 				response.redirect 303, 'back'
 		]
@@ -90,13 +87,13 @@ module.exports =
 	'/action/deleteCharacter':
 		post: [
 			mw.mustBeAuthed
-			mw.wrap async (request, response) ->
+			async (request, response) ->
 				await lib.character.deleteCharacter request.uonline.db, request.uonline.user.id, request.body.id
 				response.redirect 303, '/account/'
 		]
 
 	'/ajax/isCharacterNameBusy/:name':
-		get: mw.wrap async (request, response) ->
+		get: async (request, response) ->
 			response.json
 				name: request.params.name
 				isCharacterNameBusy: await lib.character.characterExists request.uonline.db, request.params.name

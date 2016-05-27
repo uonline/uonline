@@ -47,7 +47,7 @@ module.exports =
 		post: [
 			mw.mustBeAuthed
 			mw.openTransaction
-			mw.wrap(async (request, response) ->
+			async((request, response) ->
 				result = await lib.game.changeLocation request.uonline.db,
 					request.uonline.user.character_id, request.body.to
 				if result.result != 'ok'
@@ -61,9 +61,8 @@ module.exports =
 		post: [
 			mw.mustBeAuthed
 			mw.openTransaction
-			mw.wrap(async (request, response) ->
+			async (request, response) ->
 				await lib.game.goAttack request.uonline.db, request.uonline.user.character_id
-			)
 			mw.commit
 			mw.redirect(303, '/game/')
 		]
@@ -72,9 +71,8 @@ module.exports =
 		post: [
 			mw.mustBeAuthed
 			mw.openTransaction
-			mw.wrap(async (request, response) ->
+			async (request, response) ->
 				await lib.game.goEscape request.uonline.db, request.uonline.user.character_id
-			)
 			mw.commit
 			mw.redirect(303, '/game/')
 		]
@@ -83,14 +81,13 @@ module.exports =
 		post: [
 			mw.mustBeAuthed
 			mw.openTransaction
-			mw.wrap(async (request, response) ->
+			async (request, response) ->
 				await lib.game.hitOpponent(
 					request.uonline.db,
 					request.uonline.user.character_id,
 					request.body.id,
 					request.body.with_item_id
 				)
-			)
 			mw.commit
 			mw.redirect(303, '/game/')
 		]
@@ -98,7 +95,7 @@ module.exports =
 	'/action/unequip':
 		post: [
 			mw.mustBeAuthed
-			mw.wrap async (request, response) ->
+			async (request, response) ->
 				await request.uonline.db.queryAsync(
 					'UPDATE items SET equipped = false WHERE id = $1 AND owner = $2',
 					[request.body.id, request.uonline.user.character_id]
@@ -109,7 +106,7 @@ module.exports =
 	'/action/equip':
 		post: [
 			mw.mustBeAuthed
-			mw.wrap async (request, response) ->
+			async (request, response) ->
 				await request.uonline.db.queryAsync(
 					'UPDATE items SET equipped = true WHERE id = $1 AND owner = $2',
 					[request.body.id, request.uonline.user.character_id]

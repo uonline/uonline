@@ -120,10 +120,10 @@ routeMatched = (request, response, next) ->
 	request.routeMatched = true
 	next()
 
-for filename in require('fs').readdirSync('./routes')
+for filename in require('fs').readdirSync("#{__dirname}/routes")
 	if not filename.endsWith('.coffee')
 		continue
-	routes = require './routes/'+filename
+	routes = require "#{__dirname}/routes/#{filename}"
 	for path of routes
 		for method of routes[path]
 			chain = routes[path][method]
@@ -146,24 +146,22 @@ for filename in require('fs').readdirSync('./routes')
 					when mw.length == 3
 						mw
 					# other cases,
-					# funtion should return undefined if it is syncronous
-					# or promise if asyncronous
+					# funtion should return thenable if it is asyncronous
+					# or something else if syncronous
 					else
 						(request, response, next) ->
 							result = mw(request, response)
-							if typeof result is 'undefined'
-								next()
-							else if typeof result.then is 'function'
+							if typeof result?.then is 'function'
 								result.then((-> next()), next)
 							else
-								throw new Error("middleware ##{i} for route #{method}:#{path} returned wrong value: #{result}")
+								next()
 							return
 
 			chain.unshift(routeMatched)
 			app[method] path, chain
 
 
-# 404 handling
+# 404 handling, transaction checking
 app.all '*', (request, response, next) ->
 	if request.uonline.db.state? and request.uonline.db.state() isnt 'closed'
 		throw new Error 'transaction not closed'
@@ -174,8 +172,8 @@ app.all '*', (request, response, next) ->
 
 # Exception handling
 app.use (error, request, response, next) ->
-	#if request.uonline.db.state? and request.uonline.db.state() isnt 'closed'
-	#	request.uonline.db.rollback()
+	if request.uonline.db.state? and request.uonline.db.state() isnt 'closed'
+		request.uonline.db.rollback()
 	code = 500
 	if error.message is '404'
 		code = 404

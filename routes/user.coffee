@@ -32,7 +32,7 @@ module.exports =
 		post: [
 			mw.mustNotBeAuthed
 			mw.setInstance('login')
-			mw.wrap async (request, response) ->
+			async (request, response) ->
 				if await lib.user.accessGranted request.uonline.db, request.body.username, request.body.password
 					sessid = await lib.user.createSession request.uonline.db, request.body.username
 					response.cookie 'sessid', sessid
@@ -47,7 +47,7 @@ module.exports =
 	'/action/logout':
 		post: [
 			mw.mustBeAuthed
-			mw.wrap async (request, response) ->
+			async (request, response) ->
 				await lib.user.closeSession request.uonline.db, request.uonline.user.sessid
 				response.redirect 303, config.defaultInstanceForGuests  # force GET
 		]
@@ -64,7 +64,7 @@ module.exports =
 			mw.mustNotBeAuthed
 			mw.setInstance('register')
 			mw.openTransaction
-			mw.wrap async (request, response) ->
+			async (request, response) ->
 				usernameIsValid = lib.validation.usernameIsValid(request.body.username)
 				passwordIsValid = lib.validation.passwordIsValid(request.body.password)
 				userExists = await lib.user.userExists request.uonline.db, request.body.username
@@ -92,7 +92,7 @@ module.exports =
 		]
 
 	'/ajax/isNickBusy/:nick':
-		get: mw.wrap async (request, response) ->
+		get: async (request, response) ->
 			response.json
 				nick: request.params.nick
 				isNickBusy: await lib.user.userExists request.uonline.db, request.params.nick
@@ -101,6 +101,5 @@ module.exports =
 		get: [
 			mw.mustBeAuthed
 			mw.setInstance('account')
-			(request, response) ->
-				response.render 'account', request.uonline
+			mw.render('account')
 		]

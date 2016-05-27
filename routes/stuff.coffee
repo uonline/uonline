@@ -36,14 +36,12 @@ module.exports =
 
 	'/state/':
 		get: [
-			mw.wrap(async (request, response, next) ->
+			async (request, response) ->
 				players = await request.uonline.db.queryAsync(
 					"SELECT *, (sess_time > NOW() - $1 * INTERVAL '1 SECOND') AS online FROM uniusers",
 					[config.sessionExpireTime]
 				)
 				request.uonline.userstate = players.rows
-				next()
-			)
 			mw.setInstance('state')
 			mw.render('state')
 		]
@@ -59,14 +57,13 @@ module.exports =
 	'/explode_db/':
 		get: [
 			mw.openTransaction
-			mw.wrap(async (request, response) ->
+			async (request, response) ->
 				await request.uonline.db.queryAsync 'SELECT * FROM "Emulated DB error."'
-			)
 			mw.commit
 		]
 
 	'/ajax/cheatFixAll':
-		post: mw.wrap async (request, response) ->
+		post: async (request, response) ->
 			await request.uonline.db.queryAsync(
 				'UPDATE items '+
 				'SET strength = '+

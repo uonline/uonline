@@ -30,18 +30,13 @@ plural = (n, f) ->
 
 
 asyncMiddleware = (func) ->
-	func
-	# return (req, res, next) ->
-	# 	func(req, res).then((-> next()), next)
-
-_asyncMiddleware = (func) ->
 	return (req, res, next) ->
 		func(req, res).then((-> next()), next)
 
 
 # Hallway middleware
 exports.hallway = (moment, dbConnection) ->
-	_asyncMiddleware async (request, response) ->
+	asyncMiddleware async (request, response) ->
 		# Basic stuff
 		request.routeMatched = false
 		request.uonline =
@@ -95,12 +90,6 @@ exports.hallway = (moment, dbConnection) ->
 		return
 
 
-exports.wrap = (func) ->
-	func
-	# (req, res, next) ->
-	# 	func(req, res).then((-> next()), next)
-
-
 exports.setInstance = (x) ->
 	(request, response, next) ->
 		request.uonline.instance = x
@@ -123,7 +112,7 @@ exports.openTransaction = (request, response, next) ->
 	next()
 
 
-exports.commit = asyncMiddleware async (request, response) ->
+exports.commit = async (request, response) ->
 	await request.uonline.db.commitAsync()
 
 
@@ -148,16 +137,19 @@ exports.mustHaveCharacter = (request, response, next) ->
 		response.redirect 303, '/account/'
 
 
-exports.fetchCharacter = asyncMiddleware async (request, response) ->
+exports.fetchCharacter = async (request, response) ->
 	character = await lib.game.getCharacter request.uonline.db, request.uonline.user.character_id
 	request.uonline.character = character
 
 
-exports.fetchCharacterFromURL = asyncMiddleware async (request, response) ->
-	request.uonline.fetched_character = await lib.game.getCharacter request.uonline.db, request.params.name
+exports.fetchCharacterFromURL = async (request, response) ->
+	character = await lib.game.getCharacter request.uonline.db, request.params.name
+	unless character?
+		throw new Error '404'
+	request.uonline.fetched_character = character
 
 
-exports.fetchMonsterFromURL = asyncMiddleware async (request, response) ->
+exports.fetchMonsterFromURL = async (request, response) ->
 	id = parseInt(request.params.id, 10)
 	if isNaN(id)
 		throw new Error '404'
@@ -169,7 +161,7 @@ exports.fetchMonsterFromURL = asyncMiddleware async (request, response) ->
 	return
 
 
-exports.fetchItems = asyncMiddleware async (request, response) ->
+exports.fetchItems = async (request, response) ->
 	items = await lib.game.getCharacterItems request.uonline.db, request.uonline.user.character_id
 	request.uonline.equipment = items.filter (x) -> x.equipped
 	request.uonline.equipment.shield = request.uonline.equipment.find (x) -> x.type == 'shield'
@@ -178,7 +170,7 @@ exports.fetchItems = asyncMiddleware async (request, response) ->
 	return
 
 
-exports.fetchLocation = asyncMiddleware async (request, response) ->
+exports.fetchLocation = async (request, response) ->
 	try
 		location = await lib.game.getCharacterLocation request.uonline.db, request.uonline.user.character_id
 		#request.uonline.pic = request.uonline.picture  if request.uonline.picture?  # TODO: LOLWHAT
@@ -190,20 +182,20 @@ exports.fetchLocation = asyncMiddleware async (request, response) ->
 	return
 
 
-exports.fetchArea = asyncMiddleware async (request, response) ->
+exports.fetchArea = async (request, response) ->
 	area = await lib.game.getCharacterArea request.uonline.db, request.uonline.user.character_id
 	request.uonline.area = area
 	return
 
 
-exports.fetchUsersNearby = asyncMiddleware async (request, response) ->
+exports.fetchUsersNearby = async (request, response) ->
 	tmpUsers = await lib.game.getNearbyUsers request.uonline.db,
 		request.uonline.user.id, request.uonline.character.location
 	request.uonline.players_list = tmpUsers
 	return
 
 
-exports.fetchMonstersNearby = asyncMiddleware async (request, response) ->
+exports.fetchMonstersNearby = async (request, response) ->
 	tmpMonsters = await lib.game.getNearbyMonsters request.uonline.db, request.uonline.character.location
 	request.uonline.monsters_list = tmpMonsters
 	request.uonline.monsters_list.in_fight = tmpMonsters.filter((m) -> m.fight_mode)
@@ -211,14 +203,14 @@ exports.fetchMonstersNearby = asyncMiddleware async (request, response) ->
 	return
 
 
-#fetchStats = asyncMiddleware async (request, response) ->
+#fetchStats = async (request, response) ->
 #	chars = await lib.game.getUserCharacters request.uonline.db, request.uonline.userid
 #	for i of chars
 #		request.uonline[i] = chars[i]
 #	return
 
 
-exports.fetchStatsFromURL = asyncMiddleware async (request, response) ->
+exports.fetchStatsFromURL = async (request, response) ->
 	chars = await lib.game.getUserCharacters request.uonline.db, request.params.username
 	if not chars?
 		throw new Error '404'
@@ -227,7 +219,7 @@ exports.fetchStatsFromURL = asyncMiddleware async (request, response) ->
 	return
 
 
-exports.fetchBattleGroups = asyncMiddleware async (request, response) ->
+exports.fetchBattleGroups = async (request, response) ->
 	if request.uonline.character.fight_mode
 		participants = await lib.game.getBattleParticipants request.uonline.db, request.uonline.user.character_id
 		our_side = participants
