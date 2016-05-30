@@ -36,6 +36,7 @@ moment = require 'moment'
 moment.locale 'ru'
 
 
+# Some useful stuff
 plural = (n, f) ->
 	n %= 100
 	if n>10 and n<20 then return f[2]
@@ -46,6 +47,11 @@ plural = (n, f) ->
 
 inspect = (x) ->
 	console.log require('util').inspect x, depth: null
+
+
+wrap = (func) ->
+	return (req, res, next) ->
+		func(req, res).then((-> next()), next)
 
 
 # Connect to database
@@ -121,7 +127,7 @@ if newrelic?
 	app.locals.newrelic = newrelic
 
 # Hallway middleware
-app.use lib.middlewares.asyncMiddleware async (request, response) ->
+app.use wrap async (request, response) ->
 	# Basic stuff
 	request.routeMatched = false
 	request.uonline =
@@ -207,7 +213,7 @@ for filename in require('fs').readdirSync("#{__dirname}/routes")
 						mw
 					# other cases,
 					# funtion should return thenable if it is asyncronous
-					# or something else if syncronous
+					# or something else if synchronous
 					else
 						(request, response, next) ->
 							result = mw(request, response)
@@ -226,7 +232,8 @@ app.all '*', (request, response, next) ->
 	if request.uonline.db.state? and request.uonline.db.state() isnt 'closed'
 		throw new Error 'transaction not closed'
 	unless request.routeMatched
-		throw new Error '404'
+		response.status 404
+		throw 'end'
 	next()
 
 
@@ -234,16 +241,19 @@ app.all '*', (request, response, next) ->
 app.use (error, request, response, next) ->
 	if request.uonline.db.state? and request.uonline.db.state() isnt 'closed'
 		request.uonline.db.rollback()
-	code = 500
-	if error.message is '404'
-		code = 404
+
+	if error is 'end'
+		if response.statusCode != 404
+			return  # not an error but an immiediate break from some route
 	else
+		unless response.headersSent
+			response.status 500
 		console.error error.stack
-	options = request.uonline
-	options.code = code
-	options.instance = 'error'
+
 	unless response.headersSent
-		response.status code
+		options = request.uonline
+		options.code = response.statusCode
+		options.instance = 'error'
 		response.render 'error', options
 
 

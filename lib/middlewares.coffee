@@ -21,11 +21,6 @@ config = require '../config'
 lib = require '../lib.coffee'
 
 
-exports.asyncMiddleware = (func) ->
-	return (req, res, next) ->
-		func(req, res).then((-> next()), next)
-
-
 exports.setInstance = (x) ->
 	(request, response, next) ->
 		request.uonline.instance = x
@@ -52,25 +47,22 @@ exports.commit = async (request, response) ->
 	await request.uonline.db.commitAsync()
 
 
-exports.mustNotBeAuthed = (request, response, next) ->
-	if request.uonline.user.loggedIn is true
+exports.mustNotBeAuthed = async (request, response) ->
+	if request.uonline.user.loggedIn
 		response.redirect 303, config.defaultInstanceForUsers
-	else
-		next()
+		throw 'end'
 
 
-exports.mustBeAuthed = (request, response, next) ->
-	if request.uonline.user.loggedIn is true
-		next()
-	else
+exports.mustBeAuthed = async (request, response) ->
+	unless request.uonline.user.loggedIn
 		response.redirect 303, '/login/'
+		throw 'end'
 
 
-exports.mustHaveCharacter = (request, response, next) ->
-	if request.uonline.character
-		next()
-	else
+exports.mustHaveCharacter = async (request, response) ->
+	unless request.uonline.character
 		response.redirect 303, '/account/'
+		throw 'end'
 
 
 exports.fetchCharacter = async (request, response) ->
@@ -81,17 +73,20 @@ exports.fetchCharacter = async (request, response) ->
 exports.fetchCharacterFromURL = async (request, response) ->
 	character = await lib.game.getCharacter request.uonline.db, request.params.name
 	unless character?
-		throw new Error '404'
+		response.status 404
+		throw 'end'
 	request.uonline.fetched_character = character
 
 
 exports.fetchMonsterFromURL = async (request, response) ->
 	id = parseInt(request.params.id, 10)
 	if isNaN(id)
-		throw new Error '404'
+		response.status 404
+		throw 'end'
 	chars = await lib.game.getCharacter request.uonline.db, id
 	if not chars?
-		throw new Error '404'
+		response.status 404
+		throw 'end'
 	for i of chars
 		request.uonline.fetched_monster = chars
 	return
@@ -149,7 +144,8 @@ exports.fetchMonstersNearby = async (request, response) ->
 exports.fetchStatsFromURL = async (request, response) ->
 	chars = await lib.game.getUserCharacters request.uonline.db, request.params.username
 	if not chars?
-		throw new Error '404'
+		response.status 404
+		throw 'end'
 	for i of chars
 		request.uonline[i] = chars[i]
 	return
