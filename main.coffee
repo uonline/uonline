@@ -240,6 +240,7 @@ app.all '*', (request, response, next) ->
 # Exception handling
 app.use (error, request, response, next) ->
 	if request.uonline.db.state? and request.uonline.db.state() isnt 'closed'
+		console.log 'Warning: transaction is still open. Rolling back.'
 		request.uonline.db.rollback()
 
 	if error is 'end'
