@@ -34,6 +34,9 @@ sugar = require 'sugar'
 promisifyAll = require("bluebird").promisifyAll
 moment = require 'moment'
 moment.locale 'ru'
+
+
+# Some useful stuff
 plural = (n, f) ->
 	n %= 100
 	if n>10 and n<20 then return f[2]
@@ -41,8 +44,14 @@ plural = (n, f) ->
 	if n>1 and n<5 then return f[1]
 	if n is 1 then return f[0] else return f[2]
 
+
 inspect = (x) ->
 	console.log require('util').inspect x, depth: null
+
+
+wrap = (func) ->
+	return (req, res, next) ->
+		func(req, res).then((-> next()), next)
 
 
 # Connect to database
@@ -117,20 +126,10 @@ app.set 'views', "#{__dirname}/views"
 if newrelic?
 	app.locals.newrelic = newrelic
 
-
-asyncMiddleware = (func) ->
-	return (req, res, next) ->
-		func(req, res).then((-> next()), next)
-
-
-wrap = (func) ->
-	return (req, res, next) ->
-		func(req, res, next).catch(next)
-
-
 # Hallway middleware
-app.use asyncMiddleware async (request, response) ->
+app.use wrap async (request, response) ->
 	# Basic stuff
+	request.routeMatched = false
 	request.uonline =
 		now: new Date()
 		pjax: request.header('X-PJAX')?
@@ -182,471 +181,81 @@ app.use asyncMiddleware async (request, response) ->
 	return
 
 
-# Middlewares
-
-openTransaction = (request, response, next) ->
-	request.uonline.db = promisifyAll transaction(request.uonline.db)
+# Pages
+routeMatched = (request, response, next) ->
+	request.routeMatched = true
 	next()
 
-commit = asyncMiddleware async (request, response) ->
-	await request.uonline.db.commitAsync()
-
-
-mustBeAuthed = (request, response, next) ->
-	if request.uonline.user.loggedIn is true
-		next()
-	else
-		response.redirect 303, '/login/'
-
-
-mustNotBeAuthed = (request, response, next) ->
-	if request.uonline.user.loggedIn is true
-		response.redirect 303, config.defaultInstanceForUsers
-	else
-		next()
-
-
-mustHaveCharacter = (request, response, next) ->
-	if request.uonline.character
-		next()
-	else
-		response.redirect 303, '/account/'
-
-
-setInstance = (x) ->
-	(request, response, next) ->
-		request.uonline.instance = x
-		next()
-
-
-render = (template) ->
-	(request, response) ->
-		response.render template, request.uonline
-
-
-redirect = (code, url) ->
-	(request, response) ->
-		response.redirect(code, url)
-
-
-fetchCharacter = asyncMiddleware async (request, response) ->
-	character = await lib.game.getCharacter request.uonline.db, request.uonline.user.character_id
-	request.uonline.character = character
-
-
-fetchCharacterFromURL = asyncMiddleware async (request, response) ->
-	request.uonline.fetched_character = await lib.game.getCharacter request.uonline.db, request.params.name
-
-
-fetchMonsterFromURL = asyncMiddleware async (request, response) ->
-	id = parseInt(request.params.id, 10)
-	if isNaN(id)
-		throw new Error '404'
-	chars = await lib.game.getCharacter request.uonline.db, id
-	if not chars?
-		throw new Error '404'
-	for i of chars
-		request.uonline.fetched_monster = chars
-	return
-
-
-fetchItems = asyncMiddleware async (request, response) ->
-	items = await lib.game.getCharacterItems request.uonline.db, request.uonline.user.character_id
-	request.uonline.equipment = items.filter (x) -> x.equipped
-	request.uonline.equipment.shield = request.uonline.equipment.find (x) -> x.type == 'shield'
-	request.uonline.equipment.right_hand = request.uonline.equipment.find (x) -> x.type.startsWith 'weapon'
-	request.uonline.backpack = items.filter (x) -> !x.equipped
-	return
-
-
-fetchLocation = asyncMiddleware async (request, response) ->
-	try
-		location = await lib.game.getCharacterLocation request.uonline.db, request.uonline.user.character_id
-		#request.uonline.pic = request.uonline.picture  if request.uonline.picture?  # TODO: LOLWHAT
-	catch e
-		console.error e.stack
-		location = await lib.game.getInitialLocation request.uonline.db
-		await lib.game.changeLocation request.uonline.db, request.uonline.user.character_id, location.id
-	request.uonline.location = location
-	return
-
-
-fetchArea = asyncMiddleware async (request, response) ->
-	area = await lib.game.getCharacterArea request.uonline.db, request.uonline.user.character_id
-	request.uonline.area = area
-	return
-
-
-fetchUsersNearby = asyncMiddleware async (request, response) ->
-	tmpUsers = await lib.game.getNearbyUsers request.uonline.db,
-		request.uonline.user.id, request.uonline.character.location
-	request.uonline.players_list = tmpUsers
-	return
-
-
-fetchMonstersNearby = asyncMiddleware async (request, response) ->
-	tmpMonsters = await lib.game.getNearbyMonsters request.uonline.db, request.uonline.character.location
-	request.uonline.monsters_list = tmpMonsters
-	request.uonline.monsters_list.in_fight = tmpMonsters.filter((m) -> m.fight_mode)
-	request.uonline.monsters_list.not_in_fight = tmpMonsters.filter((m) -> not m.fight_mode)
-	return
-
-
-#fetchStats = asyncMiddleware async (request, response) ->
-#	chars = await lib.game.getUserCharacters request.uonline.db, request.uonline.userid
-#	for i of chars
-#		request.uonline[i] = chars[i]
-#	return
-
-
-fetchStatsFromURL = asyncMiddleware async (request, response) ->
-	chars = await lib.game.getUserCharacters request.uonline.db, request.params.username
-	if not chars?
-		throw new Error '404'
-	for i of chars
-		request.uonline[i] = chars[i]
-	return
-
-
-fetchBattleGroups = asyncMiddleware async (request, response) ->
-	if request.uonline.character.fight_mode
-		participants = await lib.game.getBattleParticipants request.uonline.db, request.uonline.user.character_id
-		our_side = participants
-			.find((p) -> p.character_id is request.uonline.user.character_id)
-			.side
-
-		request.uonline.battle =
-			participants: participants
-			our_side: our_side
-	return
-
-
-# Pages
-
-app.get '/node/', (request, response) ->
-	response.send 'Node.js is up and running.'
-
-
-app.get '/explode/', (request, response) ->
-	throw new Error 'Emulated error.'
-
-app.get '/explode_db/', openTransaction, wrap(async (request, response) ->
-	await request.uonline.db.queryAsync 'SELECT * FROM "Emulated DB error."'
-), commit
-
-
-app.get '/', (request, response) ->
-	if request.uonline.user.loggedIn is true
-		response.redirect config.defaultInstanceForUsers
-	else
-		response.redirect config.defaultInstanceForGuests
-
-
-app.get '/about/',
-	setInstance('about'), render('about')
-
-
-app.get '/login/',
-	mustNotBeAuthed,
-	setInstance('login'), render('login')
-
-
-app.post '/action/login',
-	mustNotBeAuthed,
-	setInstance('login'),
-	wrap async (request, response) ->
-		if await lib.user.accessGranted request.uonline.db, request.body.username, request.body.password
-			sessid = await lib.user.createSession request.uonline.db, request.body.username
-			response.cookie 'sessid', sessid
-			response.redirect 303, '/'
-		else
-			options = request.uonline
-			options.error = true
-			options.user.username = request.body.username
-			response.render 'login', options
-
-
-app.get '/register/',
-	mustNotBeAuthed,
-	setInstance('register'), render('register')
-
-
-app.post '/action/register',
-	mustNotBeAuthed,
-	setInstance('register'),
-	openTransaction,
-	wrap(async (request, response, next) ->
-		usernameIsValid = lib.validation.usernameIsValid(request.body.username)
-		passwordIsValid = lib.validation.passwordIsValid(request.body.password)
-		userExists = await lib.user.userExists request.uonline.db, request.body.username
-
-		if usernameIsValid and passwordIsValid and !userExists
-			result = await lib.user.registerUser(
-				request.uonline.db
-				request.body.username
-				request.body.password
-				'user'
-			)
-			request.uonline.userCreated = true
-			response.cookie 'sessid', result.sessid
-		else
-			options = request.uonline
-			options.error = true
-			options.invalidLogin = !usernameIsValid
-			options.invalidPass = !passwordIsValid
-			options.loginIsBusy = userExists
-			options.user.username = request.body.username
-			options.user.password = request.body.password
-			request.uonline.options = options
-			request.uonline.userCreated = false
-		next()
-	),
-	commit,
-	(request, response) ->
-		if request.uonline.userCreated
-			response.redirect 303, '/'
-		else
-			response.render 'register', request.uonline.options
-
-
-app.get '/character/',
-	mustBeAuthed, mustHaveCharacter,
-	setInstance('mycharacter'),
-	(request, response) ->
-		#request.uonline.fetched_character_owner = request.uonline.user  # пока не вижу смысла его запрашивать
-		request.uonline.fetched_character = request.uonline.character
-		response.render 'character', request.uonline
-
-
-app.get '/character/:name/',
-	mustBeAuthed,
-	fetchCharacterFromURL,
-	setInstance('character'),
-	(request, response) ->
-		#console.log(require('util').inspect(request.uonline, depth: null))
-		response.render 'character', request.uonline
-
-
-app.get '/account/',
-	mustBeAuthed,
-	setInstance('account'),
-	(request, response) ->
-		response.render 'account', request.uonline
-
-
-app.get '/monster/:id/',
-	fetchMonsterFromURL,
-	setInstance('monster'), render('monster')
-
-
-app.post '/action/logout',
-	mustBeAuthed,
-	wrap async (request, response) ->
-		await lib.user.closeSession request.uonline.db, request.uonline.user.sessid
-		response.redirect 303, '/'  # force GET
-
-
-app.get '/newCharacter/',
-	mustBeAuthed,
-	setInstance('new_character'),
-	(request, response) ->
-		response.render 'new_character', request.uonline
-
-
-app.post '/action/newCharacter',
-	mustBeAuthed,
-	setInstance('new_character'),
-	openTransaction,
-	wrap(async (request, response, next) ->
-		nameIsValid = lib.validation.characterNameIsValid(request.body.character_name)
-		alreadyExists = await lib.character.characterExists request.uonline.db, request.body.character_name
-
-		if nameIsValid and not alreadyExists
-			charid = await lib.character.createCharacter(
-				request.uonline.db
-				request.uonline.user.id
-				request.body.character_name
-				request.body.character_race
-				request.body.character_gender
-			)
-			request.uonline._characterCreated = true
-		else
-			options = request.uonline
-			options.error = true
-			options.invalidName = !nameIsValid
-			options.nameIsBusy = alreadyExists
-			options.character_name = request.body.character_name
-			request.uonline.options = options
-			request.uonline._characterCreated = false
-		next()
-	),
-	commit,
-	(request, response) ->
-		if request.uonline._characterCreated
-			response.redirect 303, '/character/'
-		else
-			response.render 'new_character', request.uonline.options
-
-
-app.get '/game/',
-	mustBeAuthed,
-	mustHaveCharacter, fetchLocation, fetchArea,
-	fetchUsersNearby, fetchMonstersNearby,
-	fetchBattleGroups, fetchItems,
-	setInstance('game'), render('game')
-
-
-app.get '/inventory/',
-	mustBeAuthed, mustHaveCharacter, fetchItems,
-	setInstance('inventory'), render('inventory')
-
-
-app.post '/action/go',
-	mustBeAuthed,
-	openTransaction,
-	wrap(async (request, response, next) ->
-		result = await lib.game.changeLocation request.uonline.db,
-			request.uonline.user.character_id, request.body.to
-		if result.result != 'ok'
-			console.error "Location change failed: #{result.reason}"
-		next()
-	),
-	commit,
-	redirect(303, '/game/')
-
-
-app.post '/action/attack',
-	mustBeAuthed,
-	openTransaction,
-	wrap(async (request, response, next) ->
-		await lib.game.goAttack request.uonline.db, request.uonline.user.character_id
-		next()
-	),
-	commit,
-	redirect(303, '/game/')
-
-
-app.post '/action/escape',
-	mustBeAuthed,
-	openTransaction,
-	wrap(async (request, response, next) ->
-		await lib.game.goEscape request.uonline.db, request.uonline.user.character_id
-		next()
-	),
-	commit,
-	redirect(303, '/game/')
-
-
-app.post '/action/hit',
-	mustBeAuthed,
-	openTransaction,
-	wrap(async (request, response, next) ->
-		await lib.game.hitOpponent(
-			request.uonline.db,
-			request.uonline.user.character_id,
-			request.body.id,
-			request.body.with_item_id
-		)
-		next()
-	),
-	commit,
-	redirect(303, '/game/')
-
-
-app.get '/ajax/isNickBusy/:nick',
-	wrap async (request, response) ->
-		response.json
-			nick: request.params.nick
-			isNickBusy: await lib.user.userExists request.uonline.db, request.params.nick
-
-
-app.get '/ajax/isCharacterNameBusy/:name',
-	wrap async (request, response) ->
-		response.json
-			name: request.params.name
-			isCharacterNameBusy: await lib.character.characterExists request.uonline.db, request.params.name
-
-
-app.post '/ajax/cheatFixAll',
-	wrap async (request, response) ->
-		await request.uonline.db.queryAsync(
-			'UPDATE items '+
-			'SET strength = '+
-				'(SELECT strength_max FROM items_proto'+
-				' WHERE items.prototype = items_proto.id)'
-		)
-		response.redirect 303, '/inventory/'
-
-
-app.post '/action/unequip',
-	mustBeAuthed,
-	wrap async (request, response) ->
-		await request.uonline.db.queryAsync(
-			'UPDATE items '+
-			'SET equipped = false '+
-			'WHERE id = $1 AND owner = $2',
-			[request.body.id, request.uonline.user.character_id]
-		)
-		response.redirect 303, '/inventory/'
-
-
-app.post '/action/equip',
-	mustBeAuthed,
-	wrap async (request, response) ->
-		await request.uonline.db.queryAsync(
-			'UPDATE items '+
-			'SET equipped = true '+
-			'WHERE id = $1 AND owner = $2',
-			[request.body.id, request.uonline.user.character_id]
-		)
-		response.redirect 303, '/inventory/'
-
-
-app.post '/action/switchCharacter',
-	mustBeAuthed,
-	wrap async (request, response) ->
-		await lib.character.switchCharacter request.uonline.db, request.uonline.user.id, request.body.id
-		response.redirect 303, 'back'
-
-
-app.post '/action/deleteCharacter',
-	mustBeAuthed,
-	wrap async (request, response) ->
-		await lib.character.deleteCharacter request.uonline.db, request.uonline.user.id, request.body.id
-		response.redirect 303, '/account/'
-
-
-app.get '/state/',
-	wrap(async (request, response, next) ->
-		players = await request.uonline.db.queryAsync(
-			"SELECT *, (sess_time > NOW() - $1 * INTERVAL '1 SECOND') AS online FROM uniusers",
-			[config.sessionExpireTime]
-		)
-		request.uonline.userstate = players.rows
-		next()
-	),
-	setInstance('state'), render('state')
-
-
-# 404 handling
-app.get '*', (request, response) ->
-	throw new Error '404'
+for filename in require('fs').readdirSync("#{__dirname}/routes")
+	if not filename.endsWith('.coffee')
+		continue
+	routes = require "#{__dirname}/routes/#{filename}"
+	for path of routes
+		for method of routes[path]
+			chain = routes[path][method]
+			if chain instanceof Function
+				chain = [chain]
+			for mw, i in chain
+				unless typeof mw is 'function'
+					throw new Error("wrong middleware ##{i} '#{mw}' for route #{method}:#{path}")
+
+			# wrapping
+			chain.forEach (mw, i) ->
+				chain[i] = switch
+					# it is result of `async((req, res) -> ...)`,
+					# should always return promise
+					# TODO: fix when native async/await will be ready
+					when mw.prototype.constructor.name == 'f2'
+						(req, res, next) -> mw(req, res).then((-> next()), next)
+					# simple `(req, res, next) -> ...` function,
+					# assume it will call `next` inside
+					when mw.length == 3
+						mw
+					# other cases,
+					# funtion should return thenable if it is asyncronous
+					# or something else if synchronous
+					else
+						(request, response, next) ->
+							result = mw(request, response)
+							if typeof result?.then is 'function'
+								result.then((-> next()), next)
+							else
+								next()
+							return
+
+			chain.unshift(routeMatched)
+			app[method] path, chain
+
+
+# 404 handling, transaction checking
+app.all '*', (request, response, next) ->
+	if request.uonline.db.state? and request.uonline.db.state() isnt 'closed'
+		throw new Error 'transaction not closed'
+	unless request.routeMatched
+		response.status 404
+		throw 'end'
+	next()
 
 
 # Exception handling
 app.use (error, request, response, next) ->
 	if request.uonline.db.state? and request.uonline.db.state() isnt 'closed'
+		console.log 'Warning: transaction is still open. Rolling back.'
 		request.uonline.db.rollback()
-	code = 500
-	if error.message is '404'
-		code = 404
+
+	if error is 'end'
+		if response.statusCode != 404
+			return  # not an error but an immiediate break from some route
 	else
+		unless response.headersSent
+			response.status 500
 		console.error error.stack
-	options = request.uonline
-	options.code = code
-	options.instance = 'error'
-	response.status code
-	response.render 'error', options
+
+	unless response.headersSent
+		options = request.uonline
+		options.code = response.statusCode
+		options.instance = 'error'
+		response.render 'error', options
 
 
 # main
