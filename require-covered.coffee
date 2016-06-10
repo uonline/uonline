@@ -14,6 +14,8 @@
 
 'use strict'
 
+fs = require 'fs'
+
 requireFromString = (src, filename) ->
 	Module = module.constructor
 	m = new Module()
@@ -27,6 +29,8 @@ module.exports = (dirname, filename) ->
 	path = require('path')
 	filename = path.resolve(dirname, filename)
 	filename = path.relative(__dirname, filename)
+	if fs.lstatSync(filename).isDirectory()
+		filename += '/index.coffee'
 	#console.log "FILENAME: #{filename}"
 	cc = require 'coffee-coverage'
 	ci = new cc.CoverageInstrumentor(basePath: process.cwd(), path: 'relative')
