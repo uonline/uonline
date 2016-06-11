@@ -1,10 +1,10 @@
 {async, await} = require 'asyncawait'
 path = require 'path'
 
-User = require path.resolve(__dirname) + '/../../user'
+Account = require path.resolve(__dirname) + '/../../account'
 
 
-class UserPG extends User
+class AccountPG extends Account
 	constructor: (@db) ->
 
 	# Generate a random sequence of printable characters with given length.
@@ -23,16 +23,16 @@ class UserPG extends User
 				return sessid
 
 	existsID: (id) ->
-		db.one("SELECT count(*) FROM users WHERE id = $1", id).then(res -> res.count)
+		db.one("SELECT COUNT(*) FROM account WHERE id = $1", id).then(res -> res.count)
 
 	byID: (id) ->
-		db.one("SELECT * FROM users WHERE id = $1", id)
+		db.one("SELECT * FROM account WHERE id = $1", id)
 
 	existsName: (username) ->
-		@db.one("SELECT count(*)::int FROM uniusers WHERE lower(username) = lower($1)", username).then((res) -> res.count > 0)
+		@db.one("SELECT COUNT(*)::int FROM account WHERE lower(name) = lower($1)", username).then((res) -> res.count > 0)
 
 	byName: (username) ->
-		@db.oneOrNone("SELECT * FROM uniusers WHERE lower(username) = lower($1)", username)
+		@db.oneOrNone("SELECT * FROM account WHERE lower(name) = lower($1)", username)
 
 	existsSessid: (sessid) ->
 		#
@@ -46,11 +46,13 @@ class UserPG extends User
 		sessid = await @_generateSessId config.sessionLength
 
 		user_id = (await db.one(
-			'INSERT INTO uniusers ('+
-				'username, salt, hash, sessid, reg_time, sess_time, permissions, character_id'+
-				') VALUES ('+
-				'$1, $2, $3, $4, NOW(), NOW(), $5, $6'+
-			') RETURNING id',
+			'''
+			INSERT INTO account
+				(name, password_salt, password_hash, sessid, reg_time, sess_time, permissions, character_id)
+			VALUES
+				($1, $2, $3, $4, NOW(), NOW(), $5, $6)
+			RETURNING id
+			''',
 			[ username, salt, hash.toString('hex'), sessid, permissions, null ]
 		)).id
 		return sessid: sessid, userid: user_id
@@ -58,7 +60,11 @@ class UserPG extends User
 	# Check if the given username-password pair is valid.
 	# Returns true or false, or an error.
 	accessGranted: async (username, password) ->
-		userdata = await @db.oneOrNone 'SELECT salt, hash FROM uniusers WHERE lower(username) = lower($1)', [username] #???
+		userdata = await @db.oneOrNone '''
+			SELECT password_salt, password_hash
+			FROM account
+			WHERE lower(name) = lower($1)
+			''', [username] #???
 		unless userdata
 			return false  # Wrong username
 		hash = await crypto.pbkdf2Async password, userdata.salt, 4096, 256, 'sha512'
@@ -68,4 +74,4 @@ class UserPG extends User
 	updatePassword: (id, password) ->
 	delete: (user) ->
 
-module.exports = UserPG
+module.exports = AccountPG
