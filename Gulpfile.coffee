@@ -131,7 +131,7 @@ gulp.task 'check', ->
 		#.pipe __coffeeOnly.restore
 
 
-gulp.task 'test', seq 'nodeunit', 'mocha', 'jscoverage-report', 'force-exit'
+gulp.task 'test', seq 'mocha', 'jscoverage-report', 'force-exit'
 
 
 gulp.task 'mocha', ->
@@ -154,21 +154,6 @@ gulp.task 'mocha', ->
 	# TODO: --slow=value
 
 
-gulp.task 'nodeunit', ->
-	nodeunit = require 'gulp-nodeunit-runner'
-	sourcefiles = [
-		'tests/health-check.js'
-		'tests/health-check.coffee'
-		'tests/*.js'
-		'tests/*.coffee'
-	]
-	if args.single?
-		sourcefiles = "tests/#{args.single}"
-	return gulp
-		.src sourcefiles
-		.pipe nodeunit(reporter: 'minimal')
-
-
 gulp.task 'force-exit', ->
 	process.exit 0
 
@@ -189,4 +174,4 @@ gulp.task 'coveralls', ->
 		.pipe coveralls()
 
 
-gulp.task 'travis', seq 'check', 'build', 'nodeunit', 'mocha', 'jscoverage-report', 'coveralls', 'force-exit'
+gulp.task 'travis', seq 'check', 'build', 'mocha', 'jscoverage-report', 'coveralls', 'force-exit'
