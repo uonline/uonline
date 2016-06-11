@@ -9,7 +9,7 @@ mg = require '../../../lib/migration.coffee'
 
 Account = requireCovered __dirname, '../../../domain/account/pg/index.coffee'
 account = null
-db_pool = pgp(config.DATABASE_URL)
+db_pool = pgp(config.DATABASE_URL_TEST)
 db = null
 
 
