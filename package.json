@@ -58,6 +58,8 @@
     "multer": "^1.1.0",
     "newrelic": "^1.9.2",
     "pg-promise": "^4.6.1",
+    "require-r": "^0.1.2",
+    "root-path": "^0.2.0",
     "stream-stack": ">= 1.1.1",
     "stylus": "^0.52.4",
     "sugar": "^1.4.1",

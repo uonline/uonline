@@ -1,13 +1,15 @@
+ask = require 'require-r'
+
 NS = 'domain/account/pg'; exports[NS] = {}  # namespace
-{test, requireCovered, config} = require '../../../lib/test-utils.coffee'
+{test, requireCovered, askCovered, config} = ask 'lib/test-utils.coffee'
 
 {async, await} = require 'asyncawait'
 pgp = require('pg-promise')()
-config = require '../../../config.coffee'
+config = ask 'config'
 
-mg = require '../../../lib/migration.coffee'
+mg = ask 'lib/migration'
 
-Account = requireCovered __dirname, '../../../domain/account/pg/index.coffee'
+Account = askCovered 'domain/account/pg'
 account = null
 db_pool = pgp(config.DATABASE_URL_TEST)
 db = null
