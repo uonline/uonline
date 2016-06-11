@@ -141,8 +141,8 @@ gulp.task 'mocha', ->
 		.src [
 			'test/health-check.js'
 			'test/health-check.coffee'
-			'test/*.js'
-			'test/*.coffee'
+			'test/**/*.js'
+			'test/**/*.coffee'
 		]
 		.pipe mocha {
 			ui: 'exports'
