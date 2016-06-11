@@ -49,7 +49,7 @@ exports[NS].after = async ->
 exports[NS].search =
 	beforeEach: async ->
 		await db.none 'INSERT INTO account (name) VALUES ($1)', 'Sauron'
-		this.user = { id:1, name:'Sauron' }
+		@user = { id: 1, name: 'Sauron' }
 
 	existsName:
 		'should return true if user exists': async ->
@@ -62,11 +62,11 @@ exports[NS].search =
 
 	byName:
 		'should return user data if user exists': async ->
-			test.deepEqual (await account.byName 'Sauron'), this.user
+			test.deepEqual (await account.byName 'Sauron'), @user
 
 		'should return null if user does not exist': async ->
 			test.isNull (await account.byName 'Sauron2')
 
 		'should ignore capitalization': async ->
-			test.deepEqual (await account.byName 'SAURON'), this.user
-			test.deepEqual (await account.byName 'sauron'), this.user
+			test.deepEqual (await account.byName 'SAURON'), @user
+			test.deepEqual (await account.byName 'sauron'), @user
