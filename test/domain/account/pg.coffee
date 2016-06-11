@@ -20,8 +20,7 @@ ask = require 'require-r'
 {test, requireCovered, askCovered, config} = ask 'lib/test-utils.coffee'
 {async, await} = require 'asyncawait'
 
-pgp = require('pg-promise')()
-dbPool = pgp(config.DATABASE_URL_TEST)
+dbPool = null
 db = null
 
 mg = ask 'lib/migration'
@@ -31,6 +30,7 @@ account = null
 
 
 exports[NS].before = async ->
+	dbPool = (await ask('storage').spawn(config.storage)).pgTest
 	db = await dbPool.connect()
 	#await mg.migrate(_conn)
 	account = new Account(db)
