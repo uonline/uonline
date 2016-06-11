@@ -7,5 +7,5 @@ cd "$(dirname "$0")/.."
 set -x
 
 script/bootstrap
-./init.coffee --migrate-tables --unify-export --monsters --items --optimize-tables
+./init.coffee --migrate-tables --unify-export --monsters --items --optimize
 ./init.coffee --info
