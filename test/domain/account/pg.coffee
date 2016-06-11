@@ -15,24 +15,23 @@
 'use strict'
 
 
-ask = require 'require-r'
-
 NS = 'domain/account/pg'; exports[NS] = {}  # namespace
+ask = require 'require-r'
 {test, requireCovered, askCovered, config} = ask 'lib/test-utils.coffee'
-
 {async, await} = require 'asyncawait'
+
 pgp = require('pg-promise')()
+dbPool = pgp(config.DATABASE_URL_TEST)
+db = null
 
 mg = ask 'lib/migration'
 
 Account = askCovered 'domain/account/pg'
 account = null
-db_pool = pgp(config.DATABASE_URL_TEST)
-db = null
 
 
 exports[NS].before = async ->
-	db = await db_pool.connect()
+	db = await dbPool.connect()
 	#await mg.migrate(_conn)
 	account = new Account(db)
 
