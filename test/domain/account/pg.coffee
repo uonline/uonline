@@ -21,19 +21,16 @@ ask = require 'require-r'
 {async, await} = require 'asyncawait'
 require 'sugar'
 
-dbPool = null
 db = null
-
-mg = ask 'lib/migration'
 
 Account = askCovered 'domain/account/pg'
 account = null
 
 
-exports[NS].before = async ->
-	dbPool = (await ask('storage').spawn(config.storage)).pgTest
-	db = await dbPool.connect()
-	#await mg.migrate(_conn)
+exports.NS = NS
+
+exports.useDB = (_db) ->
+	db = _db
 	account = new Account(db)
 
 exports[NS].beforeEach = async ->
@@ -42,9 +39,6 @@ exports[NS].beforeEach = async ->
 
 exports[NS].afterEach = async ->
 	await db.none 'ROLLBACK'
-
-exports[NS].after = async ->
-	db.done()
 
 
 exports[NS].search =
