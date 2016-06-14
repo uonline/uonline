@@ -17,7 +17,10 @@
 
 ask = require 'require-r'
 {async, await} = require 'asyncawait'
+promisifyAll = require("bluebird").promisifyAll
+crypto = promisifyAll require 'crypto'
 
+config = require '../config'
 Account = ask 'domain/account'
 
 
@@ -26,13 +29,13 @@ module.exports = class AccountPG extends Account
 
 	# Generate a random sequence of printable characters with given length.
 	# Returns a string.
-	createSalt: (length) ->
+	_createSalt: (length) ->
 		dict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 		return (dict[Math.floor(Math.random() * dict.length)] for i in [0...length]).join('')
 
 	# Generate an unique sessid with the given length.
 	# Returns a string, or an error.
-	generateSessId: async (sess_length) ->
+	_generateSessId: async (sess_length) ->
 		# check random sessid for uniqueness
 		loop
 			sessid = @_createSalt(sess_length)
@@ -40,10 +43,10 @@ module.exports = class AccountPG extends Account
 				return sessid
 
 	existsID: (id) ->
-		db.one("SELECT COUNT(*) FROM account WHERE id = $1", id).then(res -> res.count)
+		@db.one("SELECT COUNT(*) FROM account WHERE id = $1", id).then((res) -> res.count > 0)
 
 	byID: (id) ->
-		db.one("SELECT * FROM account WHERE id = $1", id)
+		@db.oneOrNone("SELECT * FROM account WHERE id = $1", id)
 
 	existsName: (username) ->
 		@db.one("SELECT COUNT(*)::int FROM account WHERE lower(name) = lower($1)", username).then((res) -> res.count > 0)
@@ -52,8 +55,10 @@ module.exports = class AccountPG extends Account
 		@db.oneOrNone("SELECT * FROM account WHERE lower(name) = lower($1)", username)
 
 	existsSessid: (sessid) ->
-		#
+		@db.one('SELECT count(*)::int FROM account WHERE sessid = $1', sessid).then((res) -> res.count > 0)
 
+	# Create a new user with given username, password and permissions (see config.js).
+	# Returns a string with sessid, or an error.
 	create: async (username, password, permissions) ->
 		if await @existsName(username)
 			throw new Error 'user already exists'
@@ -62,7 +67,7 @@ module.exports = class AccountPG extends Account
 		hash = await crypto.pbkdf2Async password, salt, 4096, 256, 'sha512'
 		sessid = await @_generateSessId config.sessionLength
 
-		user_id = (await db.one(
+		id = (await @db.one(
 			'''
 			INSERT INTO account
 				(name, password_salt, password_hash, sessid, reg_time, sess_time, permissions, character_id)
@@ -72,21 +77,34 @@ module.exports = class AccountPG extends Account
 			''',
 			[ username, salt, hash.toString('hex'), sessid, permissions, null ]
 		)).id
-		return sessid: sessid, userid: user_id
+		return sessid: sessid, id: id
 
 	# Check if the given username-password pair is valid.
 	# Returns true or false, or an error.
-	accessGranted: async (username, password) ->
+	accessGranted: async (name, password) ->
 		userdata = await @db.oneOrNone '''
 			SELECT password_salt, password_hash
 			FROM account
 			WHERE lower(name) = lower($1)
-			''', [username] #???
+			''', name
 		unless userdata
 			return false  # Wrong username
-		hash = await crypto.pbkdf2Async password, userdata.salt, 4096, 256, 'sha512'
-		return (hash.toString('hex') is userdata.hash)
+		hash = await crypto.pbkdf2Async password, userdata.password_salt, 4096, 256, 'sha512'
+		return (hash.toString('hex') is userdata.password_hash)
 
-	update: (user) ->
-	updatePassword: (id, password) ->
-	delete: (user) ->
+	update: (account) ->
+		@db.none '''
+			UPDATE account
+			SET name=${name}, sessid=${sessid},
+				reg_time=${reg_time}, sess_time=${sess_time},
+				permissions=${permissions}, character_id=${character_id}
+			WHERE id = ${id}
+			''', account
+
+	updatePassword: async (id, password) ->
+		salt = @_createSalt 16
+		hash = await crypto.pbkdf2Async password, salt, 4096, 256, 'sha512'
+		await @db.none 'UPDATE account SET password_salt = $1, password_hash = $2 WHERE id = $3', [salt, hash.toString('hex'), id]
+
+	remove: (id) ->
+		@db.none 'DELETE FROM account WHERE id = $1', id
