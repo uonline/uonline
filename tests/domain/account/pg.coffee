@@ -119,7 +119,8 @@ exports.update =
 	beforeEach: async ->
 		await db.none '''
 			INSERT INTO account (id, name, password_salt, password_hash)
-			VALUES (1, 'User1', 'salt', 'hash'), (2, 'User2', NULL, NULL)'''
+			VALUES (1, 'User1', 'salt', 'hash'), (2, 'User2', NULL, NULL)
+			'''
 		@acc1 = account.byID 1
 		@params = {
 			id: 1, name: 'user_1', sessid: 'some_id',
@@ -133,10 +134,10 @@ exports.update =
 		await account.update(@params)
 		updated = await account.byID 1
 
-		params = Object.reject(@params, 'extra_param')
-		params.password_salt = 'salt'
-		params.password_hash = 'hash'
-		test.deepEqual updated, params
+		delete @params.extra_param
+		@params.password_salt = 'salt'
+		@params.password_hash = 'hash'
+		test.deepEqual updated, @params
 
 	'should not affect other accounts': async ->
 		await account.update(@params)

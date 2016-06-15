@@ -42,14 +42,14 @@ module.exports = class AccountPG extends Account
 			unless await @existsSessid(sessid)
 				return sessid
 
-	existsID: (id) ->
-		@db.one("SELECT COUNT(*) FROM account WHERE id = $1", id).then((res) -> res.count > 0)
+	existsID: async (id) ->
+		(await @db.one("SELECT COUNT(*) FROM account WHERE id = $1", id)).count > 0
 
 	byID: (id) ->
 		@db.oneOrNone("SELECT * FROM account WHERE id = $1", id)
 
-	existsName: (username) ->
-		@db.one("SELECT COUNT(*)::int FROM account WHERE lower(name) = lower($1)", username).then((res) -> res.count > 0)
+	existsName: async (username) ->
+		(await @db.one("SELECT COUNT(*)::int FROM account WHERE lower(name) = lower($1)", username)).count > 0
 
 	byName: (username) ->
 		@db.oneOrNone("SELECT * FROM account WHERE lower(name) = lower($1)", username)
