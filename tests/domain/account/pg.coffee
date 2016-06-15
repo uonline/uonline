@@ -15,7 +15,6 @@
 'use strict'
 
 
-NS = 'domain/account/pg'; exports[NS] = {}  # namespace
 ask = require 'require-r'
 {test, requireCovered, askCovered, config} = ask 'lib/test-utils.coffee'
 {async, await} = require 'asyncawait'
@@ -27,21 +26,15 @@ Account = askCovered 'domain/account/pg'
 account = null
 
 
-exports.NS = NS
-
 exports.useDB = (_db) ->
 	db = _db
 	account = new Account(db)
 
-exports[NS].beforeEach = async ->
-	await db.none 'BEGIN'
+exports.beforeEach = async ->
 	await db.none 'CREATE TABLE account (id SERIAL, name TEXT, password_salt TEXT, password_hash TEXT, sessid TEXT, reg_time TIMESTAMPTZ, sess_time TIMESTAMPTZ, permissions TEXT, character_id INT)'
 
-exports[NS].afterEach = async ->
-	await db.none 'ROLLBACK'
 
-
-exports[NS].search =
+exports.search =
 	beforeEach: async ->
 		await db.none 'INSERT INTO account (id, name) VALUES (1, $1)', 'Sauron'
 		await db.none 'INSERT INTO account (id, sessid) VALUES (2, $1)', 'someid'
@@ -85,7 +78,7 @@ exports[NS].search =
 			test.isFalse await account.existsSessid('wrongid')
 
 
-exports[NS].create =
+exports.create =
 	'should register correct user': async ->
 		res = await account.create 'TheUser', 'password', 'admin'
 		acc = await db.one 'SELECT * FROM account'
@@ -106,7 +99,7 @@ exports[NS].create =
 		await test.isRejected account.create('TheUser', 'password', 1), /user already exists/
 
 
-exports[NS].accessGranted = new ->
+exports.accessGranted = new ->
 	@beforeEach = async ->
 		await account.create 'TheUser', 'password', 'user'
 
@@ -122,7 +115,7 @@ exports[NS].accessGranted = new ->
 			test.strictEqual granted, ok
 
 
-exports[NS].update =
+exports.update =
 	beforeEach: async ->
 		await db.none '''
 			INSERT INTO account (id, name, password_salt, password_hash)
@@ -150,7 +143,7 @@ exports[NS].update =
 		test.isTrue await account.existsName 'User2'
 
 
-exports[NS].updatePassword =
+exports.updatePassword =
 	beforeEach: async ->
 		await account.create 'TheUser', 'passwd', 'user'
 		@account = await db.one 'SELECT * FROM account'
@@ -162,7 +155,7 @@ exports[NS].updatePassword =
 		test.notStrictEqual @account.password_hash, updated.password_hash
 		test.isTrue (await account.accessGranted 'TheUser', 'newpasswd')
 
-	'should not affet other users': async ->
+	'should not affect other users': async ->
 		await account.create 'Admin', 'admin', 'admin'
 		await account.updatePassword @account.id, 'newpasswd'
 		test.isTrue (await account.accessGranted 'Admin', 'admin')
@@ -172,7 +165,7 @@ exports[NS].updatePassword =
 		test.isTrue (await account.accessGranted 'TheUser', 'passwd')
 
 
-exports[NS].remove =
+exports.remove =
 	beforeEach: async ->
 		await db.none "INSERT INTO account (id, name) VALUES (1, 'User1'), (2, 'User2')"
 		@acc1 = await account.byName('user1')

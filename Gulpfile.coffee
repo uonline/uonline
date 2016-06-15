@@ -91,11 +91,12 @@ gulp.task 'check', ->
 		.src [
 			'*.js'
 			'lib/*.js'
-			'tests/*.js'
+			'test/*.js'
 			'grunt-custom-tasks/*.js'
 			'gulp-tasks/*.js'
 			'*.coffee'
 			'lib/*.coffee'
+			'test/*.coffee'
 			'tests/*.coffee'
 			'grunt-custom-tasks/*.coffee'
 			'gulp-tasks/*.coffee'
@@ -131,7 +132,7 @@ gulp.task 'check', ->
 		#.pipe __coffeeOnly.restore
 
 
-gulp.task 'test', seq 'mocha', 'jscoverage-report', 'force-exit'
+gulp.task 'test', seq 'mocha', 'mocha2', 'jscoverage-report', 'force-exit'
 
 
 gulp.task 'mocha', ->
@@ -152,6 +153,21 @@ gulp.task 'mocha', ->
 		}
 	# TODO later: mocha-fivemat-reporter
 	# TODO: --slow=value
+
+
+gulp.task 'mocha2', ->
+	mocha = require 'gulp-mocha'
+
+	return gulp
+		.src [
+			'tests.coffee'
+		]
+		.pipe mocha {
+			ui: 'exports'
+			reporter: args.reporter || 'spec'
+			slow: 50
+			grep: args.grep || undefined
+		}
 
 
 gulp.task 'force-exit', ->

@@ -3,6 +3,7 @@ ask = require 'require-r'
 {async, await} = require 'asyncawait'
 
 {config} = ask 'lib/test-utils.coffee'
+TESTS_DIR = 'tests'
 
 dbPool = null
 db = null
@@ -16,10 +17,12 @@ useDB = {}
 			iter(fpath)
 		else if fname.endsWith('.coffee')
 			test = ask fpath
-			# NS = fpath.substr(0, fname.length-7)
-			useDB[test.NS] = test.useDB
-			exports[test.NS] = test[test.NS]
-)('test/domain')
+			NS = fpath.substring(TESTS_DIR.length+1, fpath.length-7)
+			console.log(fpath, fname, NS)
+			useDB[NS] = test.useDB
+			delete test.useDB
+			exports[NS] = test
+)(TESTS_DIR)
 
 
 exports.before = async ->
