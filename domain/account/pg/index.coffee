@@ -20,27 +20,13 @@ ask = require 'require-r'
 promisifyAll = require("bluebird").promisifyAll
 crypto = promisifyAll require 'crypto'
 
-config = require '../config'
+config = ask 'config'
 Account = ask 'domain/account'
+math = ask 'lib/math'
 
 
 module.exports = class AccountPG extends Account
 	constructor: (@db) ->
-
-	# Generate a random sequence of printable characters with given length.
-	# Returns a string.
-	_createSalt: (length) ->
-		dict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-		return (dict[Math.floor(Math.random() * dict.length)] for i in [0...length]).join('')
-
-	# Generate an unique sessid with the given length.
-	# Returns a string, or an error.
-	_generateSessId: async (sess_length) ->
-		# check random sessid for uniqueness
-		loop
-			sessid = @_createSalt(sess_length)
-			unless await @existsSessid(sessid)
-				return sessid
 
 	existsID: async (id) ->
 		(await @db.one("SELECT COUNT(*) FROM account WHERE id = $1", id)).count > 0
@@ -63,9 +49,9 @@ module.exports = class AccountPG extends Account
 		if await @existsName(username)
 			throw new Error 'user already exists'
 
-		salt = @_createSalt 16
+		salt = math.createSalt 16
 		hash = await crypto.pbkdf2Async password, salt, 4096, 256, 'sha512'
-		sessid = await @_generateSessId config.sessionLength
+		sessid = await math.generateSessId this, config.sessionLength
 
 		id = (await @db.one(
 			'''
@@ -102,7 +88,7 @@ module.exports = class AccountPG extends Account
 			''', account
 
 	updatePassword: async (id, password) ->
-		salt = @_createSalt 16
+		salt = math.createSalt 16
 		hash = await crypto.pbkdf2Async password, salt, 4096, 256, 'sha512'
 		await @db.none 'UPDATE account SET password_salt = $1, password_hash = $2 WHERE id = $3', [salt, hash.toString('hex'), id]
 
