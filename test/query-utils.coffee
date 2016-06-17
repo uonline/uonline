@@ -15,7 +15,7 @@
 'use strict'
 
 NS = 'query-utils'; exports[NS] = {}  # namespace
-{test, requireCovered, config} = require '../lib/test-utils.coffee'
+{test, requireCovered, legacyConfig} = require '../lib/test-utils.coffee'
 
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
@@ -32,7 +32,7 @@ conn = null
 query = null
 
 exports[NS].before = ->
-	_conn = promisifyAll anyDB.createConnection(config.DATABASE_URL_TEST)
+	_conn = promisifyAll anyDB.createConnection(legacyConfig.DATABASE_URL_TEST)
 
 exports[NS].beforeEach = async ->
 	conn = promisifyAll transaction(_conn)

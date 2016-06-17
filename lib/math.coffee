@@ -26,12 +26,3 @@ exports.ap = (a1, n, step) ->
 exports.createSalt = (length) ->
 	dict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 	return (dict[Math.floor(Math.random() * dict.length)] for i in [0...length]).join('')
-
-# Generate an unique sessid with the given length.
-# Returns a string, or an error.
-exports.generateSessId = async (account, sess_length) ->
-	# check random sessid for uniqueness
-	loop
-		sessid = exports.createSalt(sess_length)
-		unless await account.existsSessid(sessid)
-			return sessid

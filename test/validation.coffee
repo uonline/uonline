@@ -15,7 +15,7 @@
 'use strict'
 
 NS = 'validation'; exports[NS] = {}  # namespace
-{test, requireCovered, config} = require '../lib/test-utils.coffee'
+{test, requireCovered, legacyConfig} = require '../lib/test-utils.coffee'
 
 validation = requireCovered __dirname, '../lib/validation.coffee'
 

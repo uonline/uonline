@@ -83,11 +83,6 @@ exports.search =
 			test.deepEqual (await account.byName 'SAURON'), @acc
 			test.deepEqual (await account.byName 'sauron'), @acc
 
-	existsSessid:
-		'should return if sessid exists': async ->
-			test.isTrue await account.existsSessid('someid')
-			test.isFalse await account.existsSessid('wrongid')
-
 
 exports.create =
 	'should register correct user': async ->
@@ -99,7 +94,6 @@ exports.create =
 
 		test.isAbove acc.password_salt.length, 0, 'should generate salt'
 		test.isAbove acc.password_hash.length, 0, 'should generate hash'
-		test.isAbove acc.sessid.length, 0, 'should generate sessid'
 		test.closeTo +acc.reg_time, Date.now(), 1000, 'should set registration time to (almost) current time'
 		test.closeTo +acc.sess_time, Date.now(), 1000, 'should set session timestamp to (almost) current time'
 		test.strictEqual acc.permissions, 'admin', 'should set specified permissions'

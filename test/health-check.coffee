@@ -15,7 +15,7 @@
 'use strict'
 
 NS = 'health-check'; exports[NS] = {}  # namespace
-{test, requireCovered, config} = require '../lib/test-utils.coffee'
+{test, requireCovered, legacyConfig} = require '../lib/test-utils.coffee'
 
 async = require 'asyncawait/async'
 

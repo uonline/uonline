@@ -41,9 +41,6 @@ module.exports = class AccountPG extends Account
 	byName: (username) ->
 		@db.oneOrNone("SELECT * FROM account WHERE lower(name) = lower($1)", username)
 
-	existsSessid: (sessid) ->
-		@db.one('SELECT count(*)::int FROM account WHERE sessid = $1', sessid).then((res) -> res.count > 0)
-
 	# Create a new user with given username, password and permissions (see config.js).
 	# Returns a string with sessid, or an error.
 	create: async (username, password, permissions) ->
@@ -52,7 +49,7 @@ module.exports = class AccountPG extends Account
 
 		salt = math.createSalt 16
 		hash = await crypto.pbkdf2Async password, salt, 4096, 256, 'sha512'
-		sessid = await math.generateSessId this, config.sessionLength
+		sessid = null
 
 		id = (await @db.one(
 			'''

@@ -15,7 +15,7 @@
 'use strict'
 
 NS = 'character'; exports[NS] = {}  # namespace
-{test, requireCovered, config} = require '../lib/test-utils.coffee'
+{test, requireCovered, legacyConfig} = require '../lib/test-utils.coffee'
 
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
@@ -39,7 +39,7 @@ insert = (table, fields) ->
 
 
 exports[NS].before = async ->
-	_conn = promisifyAll anyDB.createConnection(config.DATABASE_URL_TEST)
+	_conn = promisifyAll anyDB.createConnection(legacyConfig.DATABASE_URL_TEST)
 	await mg.migrate _conn
 
 exports[NS].beforeEach = async ->

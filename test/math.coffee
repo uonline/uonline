@@ -26,20 +26,6 @@ dbPool = null
 db = null
 
 
-exports[NS].before = async ->
-	dbPool = (await ask('storage').spawn(config.storage)).pgTest
-	db = await dbPool.connect()
-
-exports[NS].beforeEach = async ->
-	await db.none 'BEGIN'
-	await db.none 'CREATE TABLE account (sessid TEXT)'
-
-exports[NS].afterEach = async ->
-	await db.none 'ROLLBACK'
-
-exports[NS].after = async ->
-	db.done()
-
 exports[NS].ap =
 	'should return n-th number in arithmetical progression': ->
 		test.strictEqual math.ap(1,2,3), 5
@@ -54,18 +40,3 @@ exports[NS].createSalt =
 	'should use printable characters': async ->
 		for i in [0..10]
 			test.match math.createSalt(10), /^[a-zA-Z0-9]+$/
-
-
-exports[NS].generateSessId =
-	'should generate uniq sessids': async ->
-		_createSalt = math.createSalt
-		i = 0
-		math.createSalt = (len) ->
-			'someid' + (++i)
-
-		await db.none "INSERT INTO account (sessid) VALUES ('someid1')"
-		await db.none "INSERT INTO account (sessid) VALUES ('someid2')"
-		sessid = await math.generateSessId new AccountPG(db), 16
-
-		math.createSalt = _createSalt
-		test.strictEqual sessid, 'someid3', 'sessid should be unique'
