@@ -5,8 +5,8 @@ ask = require 'require-r'
 {config} = ask 'lib/test-utils.coffee'
 TESTS_DIR = 'tests'
 
-dbPool = null
-db = null
+pgPool = null
+pg = null
 useDB = {}
 
 
@@ -26,19 +26,11 @@ useDB = {}
 
 
 exports.before = async ->
-	dbPool = (await ask('storage').spawn(config.storage)).pgTest
-	db = await dbPool.connect()
+	pgPool = (await ask('storage').spawn(config.storage)).pgTest
+	pg = await pgPool.connect()
 	for NS of useDB
-		useDB[NS](db)
-
-
-exports.beforeEach = async ->
-	await db.none 'BEGIN'
-
-
-exports.afterEach = async ->
-	await db.none 'ROLLBACK'
+		useDB[NS]({pg})
 
 
 exports.after = async ->
-	db.done()
+	pg.done()

@@ -26,12 +26,22 @@ Account = askCovered 'domain/account/pg'
 account = null
 
 
-exports.useDB = (_db) ->
-	db = _db
+exports.useDB = ({pg}) ->
+	db = pg
 	account = new Account(db)
 
-exports.beforeEach = async ->
+exports.before = async ->
+	await db.none 'BEGIN'
 	await db.none 'CREATE TABLE account (id SERIAL, name TEXT, password_salt TEXT, password_hash TEXT, sessid TEXT, reg_time TIMESTAMPTZ, sess_time TIMESTAMPTZ, permissions TEXT, character_id INT)'
+
+exports.beforeEach = async ->
+	await db.none 'SAVEPOINT test_sp'
+
+exports.afterEach = async ->
+	await db.none 'ROLLBACK TO SAVEPOINT test_sp'
+
+exports.after = async ->
+	await db.none 'ROLLBACK'
 
 
 exports.search =
