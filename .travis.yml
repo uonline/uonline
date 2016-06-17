@@ -3,15 +3,8 @@ node_js:
   - "stable"
 addons:
   postgresql: "9.3"
-  # <DIRTY HACK>
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - g++-4.8
-  # </DIRTY HACK>
 env:
-  - CXX=g++-4.8 DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test"
+  - DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test"
 before_script:
   - # test scripts
   - ./init.coffee --info || true
@@ -20,8 +13,8 @@ before_script:
   - ./add-admin.coffee admin password
   - ./init.coffee --drop-database both
   - ./init.coffee --info || true
-  - # Create test database
-  - ./init.coffee --create-database test
+  - # Create databases
+  - ./init.coffee --create-database both
 script:
   - gulp travis
 # New stack
