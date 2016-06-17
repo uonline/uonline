@@ -2,27 +2,19 @@ language: node_js
 node_js:
   - "stable"
 addons:
-  postgresql: "9.3"
-  # <DIRTY HACK>
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - g++-4.8
-  # </DIRTY HACK>
+  postgresql: "9.5"
 env:
-  - CXX=g++-4.8 DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test"
-  # ^^^^^^^^^^^ DIRTY HACK
+  - DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test"
 before_script:
   - # test scripts
   - ./init.coffee --info || true
-  - ./init.coffee --create-database both --migrate-tables --unify-export --monsters --optimize
+  - ./init.coffee --create-database both --migrate-tables --unify-export --monsters --items --optimize
   - ./init.coffee --info
   - ./add-admin.coffee admin password
   - ./init.coffee --drop-database both
   - ./init.coffee --info || true
   - # Create test database
-  - psql -c 'create database uonline_test;' -U postgres
+  - ./init.coffee --create-database test
 script:
   - gulp travis
 # New stack
