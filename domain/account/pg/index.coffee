@@ -98,7 +98,7 @@ module.exports = class AccountPG extends Account
 		account = await @db.oneOrNone '''
 			UPDATE account SET email_confirmed = TRUE
 			WHERE account.id = $1
-			  AND EXISTS (SELECT * FROM email_confirmation WHERE account_id = $1 AND code = $2)
+				AND EXISTS (SELECT * FROM email_confirmation WHERE account_id = $1 AND code = $2)
 			RETURNING id
 			''', [id, code]
 		unless account

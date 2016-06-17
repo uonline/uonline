@@ -26,3 +26,9 @@ module.exports =
 		params: process.env.DATABASE_URL_TEST or
 			'postgres://anonymous:nopassword@localhost/uonline_test'
 	]
+
+	domain: [
+		domain: 'account'
+		type: 'pg'
+		storage: 'main'
+	]

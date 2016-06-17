@@ -14,18 +14,18 @@
 
 'use strict'
 
+ask = require 'require-r'
+{test, requireCovered, askCovered, config} = ask 'lib/test-utils.coffee'
+{async, await} = require 'asyncawait'
+require 'sugar'
 
-module.exports =
 
-	storage: [
-		name: 'main'
-		type: 'pg-promise'
-		params: process.env.DATABASE_URL or
-			'postgres://anonymous:nopassword@localhost/uonline'
-	]
+exports.useDB = ->
 
-	domain: [
-		domain: 'account'
-		type: 'pg'
-		storage: 'main'
-	]
+
+exports.spawn = async ->
+	ds = ask 'domain'
+	sc = ask 'storage'
+	storage = await sc.spawn(config.storage)
+	dc = await ds.spawn(config.domain, storage)
+	test.isAbove Object.keys(dc).length, 0

@@ -15,17 +15,18 @@
 'use strict'
 
 
-module.exports =
+ask = require 'require-r'
+{async, await} = require 'asyncawait'
 
-	storage: [
-		name: 'main'
-		type: 'pg-promise'
-		params: process.env.DATABASE_URL or
-			'postgres://anonymous:nopassword@localhost/uonline'
-	]
-
-	domain: [
-		domain: 'account'
-		type: 'pg'
-		storage: 'main'
-	]
+exports.spawn = async (domainConfig, storage) ->
+	result = {}
+	for i in domainConfig
+		# get domain spawner
+		Domain = ask "domain/#{i.domain}/#{i.type}"
+		# spawn domain with requested storage
+		domain = new Domain(storage[i.storage])
+		if domain.init?
+			await domain.init()
+		# save
+		result[i.domain] = domain
+	return result
