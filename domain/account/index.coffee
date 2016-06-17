@@ -32,5 +32,9 @@ module.exports = class Account
 		throw new Error 'not implemented'
 	updatePassword: (id, password) ->
 		throw new Error 'not implemented'
+	getEmailValidationCode: (id) ->  # string
+		throw new Error 'not implemented'
+	validateEmail: (id, code) ->  # boolean
+		throw new Error 'not implemented'
 	remove: (id) ->
 		throw new Error 'not implemented'

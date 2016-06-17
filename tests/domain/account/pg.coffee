@@ -32,7 +32,8 @@ exports.useDB = ({pg}) ->
 
 exports.before = async ->
 	await db.none 'BEGIN'
-	await db.none 'CREATE TABLE account (id SERIAL, name TEXT, password_salt TEXT, password_hash TEXT, sessid TEXT, reg_time TIMESTAMPTZ, sess_time TIMESTAMPTZ, permissions TEXT, character_id INT)'
+	await db.none 'CREATE TABLE account (id SERIAL, name TEXT, password_salt TEXT, password_hash TEXT, sessid TEXT, reg_time TIMESTAMPTZ, sess_time TIMESTAMPTZ, permissions TEXT, email TEXT, email_confirmed BOOLEAN, character_id INT)'
+	await db.none 'CREATE TABLE email_confirmation (account_id INT, code UUID)'
 
 exports.beforeEach = async ->
 	await db.none 'SAVEPOINT test_sp'
@@ -137,6 +138,7 @@ exports.update =
 			permissions: 'user', character_id: 1,
 			sess_time: new Date().beginningOfDay(), reg_time: new Date().beginningOfMonth(),
 			password_salt: 'mewsalt', password_hash: 'newhash',
+			email: 'some@mail.com', email_confirmed: true,
 			extra_param: 'something'
 		}
 
@@ -175,6 +177,59 @@ exports.updatePassword =
 		await account.updatePassword -1, 'newpasswd'
 		test.isTrue (await account.accessGranted 'TheUser', 'passwd')
 
+
+exports.getEmailValidationCode =
+	beforeEach: async ->
+		@confirms = (code) -> await db.manyOrNone 'SELECT account_id FROM email_confirmation WHERE code = $1', code
+
+	'should generate uniq code, save it and return': async ->
+		for i in [1..20]
+			account_id = i>>2
+			code = await account.getEmailValidationCode(account_id)
+			confirms = await @confirms(code)
+			test.strictEqual confirms.length, 1, 'there should be only one such code'
+			test.strictEqual confirms[0].account_id, account_id, 'should save code for corect account'
+
+	'should remove old codes if any': async ->
+		othersCode = await account.getEmailValidationCode(100)
+		oldCode = await account.getEmailValidationCode(5)
+		newCode = await account.getEmailValidationCode(5)
+		test.strictEqual (await @confirms(othersCode)).length, 1, 'should not affect other users codes'
+		test.strictEqual (await @confirms(oldCode)).length, 0
+		test.strictEqual (await @confirms(newCode)).length, 1
+
+
+exports.validateEmail =
+	beforeEach: async ->
+		await db.none "INSERT INTO account (id, email_confirmed) VALUES (1, FALSE)"
+		await db.none "INSERT INTO account (id, email_confirmed) VALUES (2, FALSE)"
+		@emailValidated = async (id) -> (await db.one 'SELECT * FROM account WHERE id = $1', id).email_confirmed
+		@codesCount = async (id) ->
+			(await db.one 'SELECT count(*)::int FROM email_confirmation WHERE account_id = $1', id).count
+		@code1 = await account.getEmailValidationCode(1)
+		await account.getEmailValidationCode(2)
+
+	'should return if email has been validated': async ->
+		test.isTrue await account.validateEmail(1, @code1)
+		test.isFalse await account.validateEmail(2, @code1)
+
+	'should update account email validation flag': async ->
+		await account.validateEmail(2, @code1)
+		test.isFalse await @emailValidated(1)
+		test.isFalse await @emailValidated(2)
+
+		await account.validateEmail(1, @code1)
+		test.isTrue await @emailValidated(1)
+		test.isFalse await @emailValidated(2)
+
+	'should remove validation codes if validated': async ->
+		await account.validateEmail(2, @code1)
+		test.strictEqual (await @codesCount(1)), 1
+		test.strictEqual (await @codesCount(2)), 1
+
+		await account.validateEmail(1, @code1)
+		test.strictEqual (await @codesCount(1)), 0
+		test.strictEqual (await @codesCount(2)), 1
 
 exports.remove =
 	beforeEach: async ->

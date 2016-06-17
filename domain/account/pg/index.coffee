@@ -19,6 +19,7 @@ ask = require 'require-r'
 {async, await} = require 'asyncawait'
 promisifyAll = require("bluebird").promisifyAll
 crypto = promisifyAll require 'crypto'
+uuid = require 'node-uuid'
 
 config = ask 'config'
 Account = ask 'domain/account'
@@ -83,7 +84,8 @@ module.exports = class AccountPG extends Account
 			UPDATE account
 			SET name=${name}, sessid=${sessid},
 				reg_time=${reg_time}, sess_time=${sess_time},
-				permissions=${permissions}, character_id=${character_id}
+				permissions=${permissions}, character_id=${character_id},
+				email=${email}, email_confirmed=${email_confirmed}
 			WHERE id = ${id}
 			''', account
 
@@ -91,6 +93,24 @@ module.exports = class AccountPG extends Account
 		salt = math.createSalt 16
 		hash = await crypto.pbkdf2Async password, salt, 4096, 256, 'sha512'
 		await @db.none 'UPDATE account SET password_salt = $1, password_hash = $2 WHERE id = $3', [salt, hash.toString('hex'), id]
+
+	getEmailValidationCode: async (id) ->
+		code = uuid.v4()
+		await @db.none 'INSERT INTO email_confirmation (account_id, code) VALUES ($1, $2)', [id, code]
+		await @db.none 'DELETE FROM email_confirmation WHERE account_id = $1 AND code != $2', [id, code]
+		return code
+
+	validateEmail: async (id, code) ->
+		account = await @db.oneOrNone '''
+			UPDATE account SET email_confirmed = TRUE
+			WHERE account.id = $1
+			  AND EXISTS (SELECT * FROM email_confirmation WHERE account_id = $1 AND code = $2)
+			RETURNING id
+			''', [id, code]
+		unless account
+			return false
+		await @db.none 'DELETE FROM email_confirmation WHERE account_id = $1', id
+		return true
 
 	remove: (id) ->
 		@db.none 'DELETE FROM account WHERE id = $1', id
