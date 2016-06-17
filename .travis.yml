@@ -12,7 +12,7 @@ addons:
     - postgresql-9.5
   # </DIRTY HACK>
 env:
-  - CXX=g++-4.8 DATABASE_URL="postgres://travis:@localhost:5433/uonline" DATABASE_URL_TEST="postgres://travis:@localhost:5433/uonline_test"
+  - CXX=g++-4.8 DATABASE_URL="postgres://postgres:@localhost:5433/uonline" DATABASE_URL_TEST="postgres://postgres:@localhost:5433/uonline_test"
 before_script:
   - # test scripts
   - ./init.coffee --info || true
