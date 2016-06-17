@@ -2,20 +2,18 @@ language: node_js
 node_js:
   - "stable"
 addons:
-  postgresql: "9.5"
+  postgresql: "9.3"
   # <DIRTY HACK>
   apt:
     sources:
     - ubuntu-toolchain-r-test
     packages:
     - g++-4.8
-    - postgresql-9.5
   # </DIRTY HACK>
 env:
-  - CXX=g++-4.8 DATABASE_URL="postgres://postgres:nopassword@localhost:5433/uonline" DATABASE_URL_TEST="postgres://postgres:nopassword@localhost:5433/uonline_test"
+  - CXX=g++-4.8 DATABASE_URL="postgres://travis:@localhost/uonline" DATABASE_URL_TEST="postgres://travis:@localhost/uonline_test"
 before_script:
   - # test scripts
-  - psql -p 5433 -c "ALTER ROLE postgres WITH PASSWORD 'nopassword';" -U postgres
   - ./init.coffee --info || true
   - ./init.coffee --create-database both --migrate-tables --unify-export --monsters --items --optimize
   - ./init.coffee --info
