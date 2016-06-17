@@ -14,27 +14,19 @@
 
 'use strict'
 
-NS = 'health-check'; exports[NS] = {}  # namespace
-{test, requireCovered, legacyConfig} = require '../lib/test-utils.coffee'
+ask = require 'require-r'
+{async, await} = require 'asyncawait'
 
-async = require 'asyncawait/async'
-
-
-exports[NS] =
-	'2+2 should be 4': ->
-		test.strictEqual 2 + 2, 4
-	'2+2 should be 4 in asynchronous manner': (done) ->
-		test.strictEqual 2 + 2, 4
-		process.nextTick done
-	'2+2 should be 4 with async wrapper': async ->
-		test.strictEqual 2 + 2, 4
-
-
-# describe = require('mocha').describe
-# it = require('mocha').it
-
-# describe 'BDD via require UI', ->
-# 	it 'should just work', ->
-# 		test.isTrue true
-# 	it '2+2 should also be 4', ->
-# 		test.strictEqual 2+2, 4
+exports.spawn = async (storageConfig) ->
+	result = {}
+	for i in storageConfig
+		# Get storage spawner of given type
+		spawner = ask "storage/#{i.type}"
+		# Spawn the storage
+		storage = await spawner.spawn(i.params)
+		# Assign names to it
+		names = i.names
+		if i.name? then names = [i.name]
+		for name in names
+			result[name] = storage
+	return result

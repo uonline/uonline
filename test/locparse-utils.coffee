@@ -15,7 +15,7 @@
 'use strict'
 
 NS = 'locparse-utils'; exports[NS] = {}  # namespace
-{test, requireCovered, config} = require '../lib/test-utils.coffee'
+{test, requireCovered, legacyConfig} = require '../lib/test-utils.coffee'
 
 parser = requireCovered __dirname, '../lib/locparse.coffee'
 

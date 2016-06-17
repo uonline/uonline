@@ -91,11 +91,12 @@ gulp.task 'check', ->
 		.src [
 			'*.js'
 			'lib/*.js'
-			'tests/*.js'
+			'test/*.js'
 			'grunt-custom-tasks/*.js'
 			'gulp-tasks/*.js'
 			'*.coffee'
 			'lib/*.coffee'
+			'test/*.coffee'
 			'tests/*.coffee'
 			'grunt-custom-tasks/*.coffee'
 			'gulp-tasks/*.coffee'
@@ -131,7 +132,7 @@ gulp.task 'check', ->
 		#.pipe __coffeeOnly.restore
 
 
-gulp.task 'test', seq 'nodeunit', 'mocha', 'jscoverage-report', 'force-exit'
+gulp.task 'test', seq 'mocha', 'jscoverage-report', 'force-exit'
 
 
 gulp.task 'mocha', ->
@@ -141,8 +142,9 @@ gulp.task 'mocha', ->
 		.src [
 			'test/health-check.js'
 			'test/health-check.coffee'
-			'test/*.js'
-			'test/*.coffee'
+			'test/**/*.js'
+			'test/**/*.coffee'
+			'tests.coffee'
 		]
 		.pipe mocha {
 			ui: 'exports'
@@ -152,21 +154,6 @@ gulp.task 'mocha', ->
 		}
 	# TODO later: mocha-fivemat-reporter
 	# TODO: --slow=value
-
-
-gulp.task 'nodeunit', ->
-	nodeunit = require 'gulp-nodeunit-runner'
-	sourcefiles = [
-		'tests/health-check.js'
-		'tests/health-check.coffee'
-		'tests/*.js'
-		'tests/*.coffee'
-	]
-	if args.single?
-		sourcefiles = "tests/#{args.single}"
-	return gulp
-		.src sourcefiles
-		.pipe nodeunit(reporter: 'minimal')
 
 
 gulp.task 'force-exit', ->
@@ -189,4 +176,4 @@ gulp.task 'coveralls', ->
 		.pipe coveralls()
 
 
-gulp.task 'travis', seq 'check', 'build', 'nodeunit', 'mocha', 'jscoverage-report', 'coveralls', 'force-exit'
+gulp.task 'travis', seq 'check', 'build', 'mocha', 'jscoverage-report', 'coveralls', 'force-exit'

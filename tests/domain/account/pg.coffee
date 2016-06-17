@@ -1,0 +1,251 @@
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+'use strict'
+
+
+ask = require 'require-r'
+{test, requireCovered, askCovered, config} = ask 'lib/test-utils.coffee'
+{async, await} = require 'asyncawait'
+require 'sugar'
+
+db = null
+
+AccountPG = askCovered 'domain/account/pg'
+account = null
+
+
+exports.useDB = ({pg}) ->
+	db = pg
+	account = new AccountPG(db)
+
+exports.before = async ->
+	await db.none 'BEGIN'
+	await db.none '''
+		CREATE TABLE account (
+			id SERIAL,
+			name VARCHAR(30),
+			password_salt VARCHAR(20),
+			password_hash TEXT,  -- TODO
+			reg_time TIMESTAMPTZ,
+			email TEXT,
+			email_confirmed BOOLEAN,
+			character_id INT
+		)
+		'''
+	await db.none '''
+		CREATE TABLE email_confirmation (
+			account_id INT,
+			code UUID
+		)
+		'''
+
+exports.beforeEach = async ->
+	await db.none 'SAVEPOINT test_sp'
+
+exports.afterEach = async ->
+	await db.none 'ROLLBACK TO SAVEPOINT test_sp'
+
+exports.after = async ->
+	await db.none 'ROLLBACK'
+
+
+exports.search =
+	beforeEach: async ->
+		await db.none 'INSERT INTO account (id, name) VALUES (1, $1)', 'Sauron'
+		@acc = await account.byName 'Sauron'
+
+	existsID:
+		'should return true if id exists': async ->
+			test.isTrue (await account.existsID 1)
+			test.isFalse (await account.existsID 3)
+
+	byID:
+		'should return account data if exists': async ->
+			test.deepEqual (await account.byID 1), @acc
+
+		'should return null if does not exist': async ->
+			test.isNull (await account.byID 4)
+
+	existsName:
+		'should return true if user exists': async ->
+			test.isTrue (await account.existsName 'Sauron')
+			test.isFalse (await account.existsName 'Sauron2')
+
+		'should ignore capitalization': async ->
+			test.isTrue (await account.existsName 'SAURON')
+			test.isTrue (await account.existsName 'sauron')
+
+	byName:
+		'should return account data if account exists': async ->
+			test.deepEqual (await account.byName 'Sauron'), @acc
+
+		'should return null if user does not exist': async ->
+			test.isNull (await account.byName 'Sauron2')
+
+		'should ignore capitalization': async ->
+			test.deepEqual (await account.byName 'SAURON'), @acc
+			test.deepEqual (await account.byName 'sauron'), @acc
+
+
+exports.create =
+	'should register correct user': async ->
+		id = await account.create 'TheUser', 'password', 'admin'
+		acc = await db.one 'SELECT * FROM account'
+
+		test.strictEqual id, acc.id, 'should return new account id'
+
+		test.isAbove acc.password_salt.length, 0, 'should generate salt'
+		test.isAbove acc.password_hash.length, 0, 'should generate hash'
+		test.closeTo +acc.reg_time, Date.now(), 1000, 'should set registration time to (almost) current time'
+		test.isNull acc.character_id, 'should not assign character'
+
+	'should fail if user exists': async ->
+		await db.none "INSERT INTO account (name) VALUES ('TheUser')"
+		await test.isRejected account.create('TheUser', 'password', 1), /user already exists/
+
+
+exports.accessGranted = new ->
+	@beforeEach = async ->
+		await account.create 'TheUser', 'password', 'user'
+
+	[
+		{name:'TheUser',   pass:'password',  ok:true,  msg:'should return true for valid data'}
+		{name:'WrongUser', pass:'password',  ok:false, msg:'should return false if user does not exist'}
+		{name:'WrongUser', pass:'wrongpass', ok:false, msg:'should return false if password is wrong'}
+		{name:'THEUSER',   pass:'password',  ok:true,  msg:'should ignore capitalization'}
+		{name:'theuser',   pass:'password',  ok:true,  msg:'should ignore capitalization (2)'}
+	].forEach ({name, pass, ok, msg}) =>
+		@[msg] = async ->
+			granted = await account.accessGranted name, pass
+			test.strictEqual granted, ok
+
+
+exports.update =
+	beforeEach: async ->
+		await db.none '''
+			INSERT INTO account (id, name, password_salt, password_hash)
+			VALUES (1, 'User1', 'salt', 'hash'), (2, 'User2', NULL, NULL)
+			'''
+		@acc1 = account.byID 1
+		@params = {
+			id: 1,
+			name: 'user_1',
+			character_id: 1,
+			reg_time: new Date().beginningOfMonth(),
+			password_salt: 'mewsalt',
+			password_hash: 'newhash',
+			email: 'some@mail.com',
+			email_confirmed: true,
+			extra_param: 'something'
+		}
+
+	'should update all except password hash and salt and extra attributes': async ->
+		await account.update(@params)
+		updated = await account.byID 1
+
+		delete @params.extra_param
+		@params.password_salt = 'salt'
+		@params.password_hash = 'hash'
+		test.deepEqual updated, @params
+
+	'should not affect other accounts': async ->
+		await account.update(@params)
+		test.isTrue await account.existsName 'User2'
+
+
+exports.updatePassword =
+	beforeEach: async ->
+		await account.create 'TheUser', 'passwd', 'user'
+		@account = await db.one 'SELECT * FROM account'
+
+	'should update hash and salt': async ->
+		await account.updatePassword @account.id, 'newpasswd'
+		updated = await db.one 'SELECT * FROM account'
+		test.notStrictEqual @account.password_salt, updated.password_salt
+		test.notStrictEqual @account.password_hash, updated.password_hash
+		test.isTrue (await account.accessGranted 'TheUser', 'newpasswd')
+
+	'should not affect other users': async ->
+		await account.create 'Admin', 'admin', 'admin'
+		await account.updatePassword @account.id, 'newpasswd'
+		test.isTrue (await account.accessGranted 'Admin', 'admin')
+
+	'should do nothing if id is wrong': async ->
+		await account.updatePassword -1, 'newpasswd'
+		test.isTrue (await account.accessGranted 'TheUser', 'passwd')
+
+
+exports.getEmailValidationCode =
+	beforeEach: async ->
+		@confirms = (code) -> await db.manyOrNone 'SELECT account_id FROM email_confirmation WHERE code = $1', code
+
+	'should generate uniq code, save it and return': async ->
+		for i in [1..20]
+			account_id = i>>2
+			code = await account.getEmailValidationCode(account_id)
+			confirms = await @confirms(code)
+			test.strictEqual confirms.length, 1, 'there should be only one such code'
+			test.strictEqual confirms[0].account_id, account_id, 'should save code for corect account'
+
+	'should remove old codes if any': async ->
+		othersCode = await account.getEmailValidationCode(100)
+		oldCode = await account.getEmailValidationCode(5)
+		newCode = await account.getEmailValidationCode(5)
+		test.strictEqual (await @confirms(othersCode)).length, 1, 'should not affect other users codes'
+		test.strictEqual (await @confirms(oldCode)).length, 0
+		test.strictEqual (await @confirms(newCode)).length, 1
+
+
+exports.validateEmail =
+	beforeEach: async ->
+		await db.none "INSERT INTO account (id, email_confirmed) VALUES (1, FALSE)"
+		await db.none "INSERT INTO account (id, email_confirmed) VALUES (2, FALSE)"
+		@emailValidated = async (id) -> (await db.one 'SELECT * FROM account WHERE id = $1', id).email_confirmed
+		@codesCount = async (id) ->
+			(await db.one 'SELECT count(*)::int FROM email_confirmation WHERE account_id = $1', id).count
+		@code1 = await account.getEmailValidationCode(1)
+		await account.getEmailValidationCode(2)
+
+	'should return if email has been validated': async ->
+		test.isTrue await account.validateEmail(1, @code1)
+		test.isFalse await account.validateEmail(2, @code1)
+
+	'should update account email validation flag': async ->
+		await account.validateEmail(2, @code1)
+		test.isFalse await @emailValidated(1)
+		test.isFalse await @emailValidated(2)
+
+		await account.validateEmail(1, @code1)
+		test.isTrue await @emailValidated(1)
+		test.isFalse await @emailValidated(2)
+
+	'should remove validation codes if validated': async ->
+		await account.validateEmail(2, @code1)
+		test.strictEqual (await @codesCount(1)), 1
+		test.strictEqual (await @codesCount(2)), 1
+
+		await account.validateEmail(1, @code1)
+		test.strictEqual (await @codesCount(1)), 0
+		test.strictEqual (await @codesCount(2)), 1
+
+exports.remove =
+	beforeEach: async ->
+		await db.none "INSERT INTO account (id, name) VALUES (1, 'User1'), (2, 'User2')"
+		@acc1 = await account.byName('user1')
+
+	'should remove account by id': async ->
+		await account.remove @acc1.id
+		test.isFalse await account.existsName 'User1'
+		test.isTrue await account.existsName 'User2'

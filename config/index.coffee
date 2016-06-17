@@ -14,27 +14,18 @@
 
 'use strict'
 
-NS = 'health-check'; exports[NS] = {}  # namespace
-{test, requireCovered, legacyConfig} = require '../lib/test-utils.coffee'
 
-async = require 'asyncawait/async'
+module.exports =
 
+	storage: [
+		name: 'main'
+		type: 'pg-promise'
+		params: process.env.DATABASE_URL or
+			'postgres://anonymous:nopassword@localhost/uonline'
+	]
 
-exports[NS] =
-	'2+2 should be 4': ->
-		test.strictEqual 2 + 2, 4
-	'2+2 should be 4 in asynchronous manner': (done) ->
-		test.strictEqual 2 + 2, 4
-		process.nextTick done
-	'2+2 should be 4 with async wrapper': async ->
-		test.strictEqual 2 + 2, 4
-
-
-# describe = require('mocha').describe
-# it = require('mocha').it
-
-# describe 'BDD via require UI', ->
-# 	it 'should just work', ->
-# 		test.isTrue true
-# 	it '2+2 should also be 4', ->
-# 		test.strictEqual 2+2, 4
+	domain: [
+		domain: 'account'
+		type: 'pg'
+		storage: 'main'
+	]

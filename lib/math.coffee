@@ -14,6 +14,15 @@
 
 'use strict'
 
+{async, await} = require 'asyncawait'
+
+
 exports.ap = (a1, n, step) ->
 	(2 * a1 + (n - 1) * step) * n / 2
 
+
+# Generate a random sequence of printable characters with given length.
+# Returns a string.
+exports.createSalt = (length) ->
+	dict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+	return (dict[Math.floor(Math.random() * dict.length)] for i in [0...length]).join('')

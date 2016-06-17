@@ -14,24 +14,26 @@
 
 'use strict'
 
-exports.DATABASE_URL = process.env.DATABASE_URL or
-	'postgres://anonymous:nopassword@localhost/uonline'
-exports.DATABASE_URL_TEST = process.env.DATABASE_URL_TEST or
-	'postgres://anonymous:nopassword@localhost/uonline_test'
+# TODO: DEPRECATE: `config` and `config/test` should be used instead
+module.exports =
 
-exports.sessionLength = 64
-exports.sessionExpireTime = 3600 # seconds
-exports.userOnlineTimeout = 300 # seconds
+	DATABASE_URL: process.env.DATABASE_URL or
+		'postgres://anonymous:nopassword@localhost/uonline'
+	DATABASE_URL_TEST: process.env.DATABASE_URL_TEST or
+		'postgres://anonymous:nopassword@localhost/uonline_test'
 
-exports.defaultInstanceForGuests = '/about/'
-exports.defaultInstanceForUsers = '/game/'
+	sessionLength: 64
+	sessionExpireTime: 3600 # seconds
+	userOnlineTimeout: 300 # seconds
 
-exports.expStart = 1000
-exports.expStep = 1000
+	defaultInstanceForGuests: '/about/'
+	defaultInstanceForUsers: '/game/'
 
-exports.PERMISSIONS_USER = 'user'
-exports.PERMISSIONS_ADMIN = 'admin'
+	expStart: 1000
+	expStep: 1000
 
-exports.EXP_STEP = 1000
-exports.EXP_MAX_START = 1000
+	PERMISSIONS_USER: 'user'
+	PERMISSIONS_ADMIN: 'admin'
 
+	EXP_STEP: 1000
+	EXP_MAX_START: 1000

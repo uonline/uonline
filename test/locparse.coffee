@@ -15,7 +15,7 @@
 'use strict'
 
 NS = 'locparse'; exports[NS] = {}  # namespace
-{test, requireCovered, config} = require '../lib/test-utils.coffee'
+{test, requireCovered, legacyConfig} = require '../lib/test-utils.coffee'
 
 anyDB = require 'any-db'
 transaction = require 'any-db-transaction'
@@ -271,7 +271,7 @@ exports[NS].errors =
 
 exports[NS].save =
 	'should save all areas and locations': async ->
-		_conn = promisifyAll anyDB.createConnection(config.DATABASE_URL_TEST)
+		_conn = promisifyAll anyDB.createConnection(legacyConfig.DATABASE_URL_TEST)
 		await mg.migrate _conn
 		conn = promisifyAll transaction(_conn)
 

@@ -14,12 +14,13 @@
 
 'use strict'
 
+
+# Chai, its extensions and customizations
+
 chai = require 'chai'
 chai.use require 'chai-as-promised'
 
-
 exports.test = chai.assert
-
 
 exports.test.throwsPgError = (fn, code) ->
 	try
@@ -29,7 +30,6 @@ exports.test.throwsPgError = (fn, code) ->
 		return
 	throw new Error "Expected block to throw PG error with code #{code}"
 
-
 exports.test.isRejectedWithPgError = (promise, code) ->
 	return promise.then(
 		(ok) -> throw new Error "Expected block to throw PG error with code #{code}"
@@ -37,7 +37,44 @@ exports.test.isRejectedWithPgError = (promise, code) ->
 	)
 
 
-exports.requireCovered = require '../require-covered.coffee'
+# App config
+
+ask = require 'require-r'
+exports.config = ask 'config/test'
+
+exports.legacyConfig = require '../config.coffee'
 
 
-exports.config = require '../config.coffee'
+# require() with coverage
+
+fs = require 'fs'
+
+requireFromString = (src, filename) ->
+	Module = module.constructor
+	m = new Module()
+	m.paths = module.paths
+	#console.log "Paths: #{m.paths}"
+	m._compile(src, filename)
+	return m.exports
+
+cover = (filename) ->
+	root = require 'root-path'
+	cc = require 'coffee-coverage'
+	ci = new cc.CoverageInstrumentor(basePath: root(), path: 'relative')
+	tmp = ci.instrumentFile(filename)
+	return requireFromString "#{tmp.init}#{tmp.js}", filename
+
+exports.requireCovered = (dirname, filename) ->
+	path = require 'path'
+	filename = path.resolve(dirname, filename)
+	#filename = path.relative(__dirname, filename)
+	if fs.lstatSync(filename).isDirectory()
+		filename += '/index.coffee'
+	return cover(filename)
+
+exports.askCovered = (filename) ->
+	root = require 'root-path'
+	filename = root(filename)
+	if fs.lstatSync(filename).isDirectory()
+		filename += '/index.coffee'
+	return cover(filename)

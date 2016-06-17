@@ -14,29 +14,38 @@
 
 'use strict'
 
-NS = 'math'; exports[NS] = {}  # namespace
+fs = require 'fs'
+ask = require 'require-r'
 {async, await} = require 'asyncawait'
 
-ask = require 'require-r'
-{test, askCovered, config} = ask 'lib/test-utils.coffee'
-AccountPG = ask 'domain/account/pg'
-math = askCovered 'lib/math.coffee'
+{config} = ask 'lib/test-utils.coffee'
+TESTS_DIR = 'tests'
 
-dbPool = null
-db = null
-
-
-exports[NS].ap =
-	'should return n-th number in arithmetical progression': ->
-		test.strictEqual math.ap(1,2,3), 5
-		test.strictEqual math.ap(3,6,9), 153
+pgPool = null
+pg = null
+useDB = {}
 
 
-exports[NS].createSalt =
-	'should keep specified length': ->
-		for len in [0, 1, 2, 5, 10, 20, 50]
-			test.strictEqual math.createSalt(len).length, len
+iter = (dirname) ->
+	for fname in fs.readdirSync(dirname)
+		fpath = dirname+'/'+fname
+		if fs.statSync(fpath).isDirectory()
+			iter(fpath)
+		else if fname.endsWith('.coffee')
+			test = ask fpath
+			NS = fpath.substring(TESTS_DIR.length+1, fpath.length-7)
+			useDB[NS] = test.useDB
+			delete test.useDB
+			exports[NS] = test
+iter(TESTS_DIR)
 
-	'should use printable characters': async ->
-		for i in [0..10]
-			test.match math.createSalt(10), /^[a-zA-Z0-9]+$/
+
+exports.before = async ->
+	pgPool = (await ask('storage').spawn(config.storage)).pgp
+	pg = await pgPool.connect()
+	for NS of useDB
+		useDB[NS]({pg})
+
+
+exports.after = async ->
+	pg.done()

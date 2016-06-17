@@ -14,27 +14,10 @@
 
 'use strict'
 
-NS = 'health-check'; exports[NS] = {}  # namespace
-{test, requireCovered, legacyConfig} = require '../lib/test-utils.coffee'
+{async, await} = require 'asyncawait'
 
-async = require 'asyncawait/async'
-
-
-exports[NS] =
-	'2+2 should be 4': ->
-		test.strictEqual 2 + 2, 4
-	'2+2 should be 4 in asynchronous manner': (done) ->
-		test.strictEqual 2 + 2, 4
-		process.nextTick done
-	'2+2 should be 4 with async wrapper': async ->
-		test.strictEqual 2 + 2, 4
-
-
-# describe = require('mocha').describe
-# it = require('mocha').it
-
-# describe 'BDD via require UI', ->
-# 	it 'should just work', ->
-# 		test.isTrue true
-# 	it '2+2 should also be 4', ->
-# 		test.strictEqual 2+2, 4
+exports.spawn = async (params) ->
+	pgp = require('pg-promise')()
+	dbPool = pgp(params)
+	await dbPool.one 'SELECT VERSION()'
+	return dbPool
