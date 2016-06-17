@@ -32,8 +32,24 @@ exports.useDB = ({pg}) ->
 
 exports.before = async ->
 	await db.none 'BEGIN'
-	await db.none 'CREATE TABLE account (id SERIAL, name TEXT, password_salt TEXT, password_hash TEXT, sessid TEXT, reg_time TIMESTAMPTZ, sess_time TIMESTAMPTZ, permissions TEXT, email TEXT, email_confirmed BOOLEAN, character_id INT)'
-	await db.none 'CREATE TABLE email_confirmation (account_id INT, code UUID)'
+	await db.none '''
+		CREATE TABLE account (
+			id SERIAL,
+			name VARCHAR(30),
+			password_salt VARCHAR(20),
+			password_hash TEXT,  -- TODO
+			reg_time TIMESTAMPTZ,
+			email TEXT,
+			email_confirmed BOOLEAN,
+			character_id INT
+		)
+		'''
+	await db.none '''
+		CREATE TABLE email_confirmation (
+			account_id INT,
+			code UUID
+		)
+		'''
 
 exports.beforeEach = async ->
 	await db.none 'SAVEPOINT test_sp'
@@ -48,7 +64,6 @@ exports.after = async ->
 exports.search =
 	beforeEach: async ->
 		await db.none 'INSERT INTO account (id, name) VALUES (1, $1)', 'Sauron'
-		await db.none 'INSERT INTO account (id, sessid) VALUES (2, $1)', 'someid'
 		@acc = await account.byName 'Sauron'
 
 	existsID:
@@ -86,17 +101,14 @@ exports.search =
 
 exports.create =
 	'should register correct user': async ->
-		res = await account.create 'TheUser', 'password', 'admin'
+		id = await account.create 'TheUser', 'password', 'admin'
 		acc = await db.one 'SELECT * FROM account'
 
-		test.strictEqual res.id, acc.id, 'should return new account id'
-		test.strictEqual res.sessid, acc.sessid, 'should return new account sessid'
+		test.strictEqual id, acc.id, 'should return new account id'
 
 		test.isAbove acc.password_salt.length, 0, 'should generate salt'
 		test.isAbove acc.password_hash.length, 0, 'should generate hash'
 		test.closeTo +acc.reg_time, Date.now(), 1000, 'should set registration time to (almost) current time'
-		test.closeTo +acc.sess_time, Date.now(), 1000, 'should set session timestamp to (almost) current time'
-		test.strictEqual acc.permissions, 'admin', 'should set specified permissions'
 		test.isNull acc.character_id, 'should not assign character'
 
 	'should fail if user exists': async ->
@@ -128,11 +140,14 @@ exports.update =
 			'''
 		@acc1 = account.byID 1
 		@params = {
-			id: 1, name: 'user_1', sessid: 'some_id',
-			permissions: 'user', character_id: 1,
-			sess_time: new Date().beginningOfDay(), reg_time: new Date().beginningOfMonth(),
-			password_salt: 'mewsalt', password_hash: 'newhash',
-			email: 'some@mail.com', email_confirmed: true,
+			id: 1,
+			name: 'user_1',
+			character_id: 1,
+			reg_time: new Date().beginningOfMonth(),
+			password_salt: 'mewsalt',
+			password_hash: 'newhash',
+			email: 'some@mail.com',
+			email_confirmed: true,
 			extra_param: 'something'
 		}
 

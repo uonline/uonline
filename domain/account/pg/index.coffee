@@ -42,26 +42,25 @@ module.exports = class AccountPG extends Account
 		@db.oneOrNone("SELECT * FROM account WHERE lower(name) = lower($1)", username)
 
 	# Create a new user with given username, password and permissions (see config.js).
-	# Returns a string with sessid, or an error.
+	# Returns ID, or an error.
 	create: async (username, password, permissions) ->
 		if await @existsName(username)
 			throw new Error 'user already exists'
 
-		salt = math.createSalt 16
+		salt = math.createSalt 20
 		hash = await crypto.pbkdf2Async password, salt, 4096, 256, 'sha512'
-		sessid = null
 
 		id = (await @db.one(
 			'''
 			INSERT INTO account
-				(name, password_salt, password_hash, sessid, reg_time, sess_time, permissions, character_id)
+				(name, password_salt, password_hash, reg_time, character_id)
 			VALUES
-				($1, $2, $3, $4, NOW(), NOW(), $5, $6)
+				($1, $2, $3, NOW(), $4)
 			RETURNING id
 			''',
-			[ username, salt, hash.toString('hex'), sessid, permissions, null ]
+			[ username, salt, hash.toString('hex'), null ]
 		)).id
-		return sessid: sessid, id: id
+		return id
 
 	# Check if the given username-password pair is valid.
 	# Returns true or false, or an error.
@@ -79,9 +78,7 @@ module.exports = class AccountPG extends Account
 	update: (account) ->
 		@db.none '''
 			UPDATE account
-			SET name=${name}, sessid=${sessid},
-				reg_time=${reg_time}, sess_time=${sess_time},
-				permissions=${permissions}, character_id=${character_id},
+			SET name=${name}, character_id=${character_id}, reg_time=${reg_time},
 				email=${email}, email_confirmed=${email_confirmed}
 			WHERE id = ${id}
 			''', account
