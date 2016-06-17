@@ -15,7 +15,7 @@ env:
   - CXX=g++-4.8 DATABASE_URL="postgres://postgres:nopassword@localhost:5433/uonline" DATABASE_URL_TEST="postgres://postgres:nopassword@localhost:5433/uonline_test"
 before_script:
   - # test scripts
-  - psql -c "ALTER ROLE postgres WITH PASSWORD 'nopassword';" -U postgres
+  - psql -p 5433 -c "ALTER ROLE postgres WITH PASSWORD 'nopassword';" -U postgres
   - ./init.coffee --info || true
   - ./init.coffee --create-database both --migrate-tables --unify-export --monsters --items --optimize
   - ./init.coffee --info
