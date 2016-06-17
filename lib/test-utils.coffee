@@ -39,7 +39,8 @@ exports.test.isRejectedWithPgError = (promise, code) ->
 
 # App config
 
-exports.config = require '../config.coffee'
+ask = require 'require-r'
+exports.config = ask 'config/test'
 
 
 # require() with coverage

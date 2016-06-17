@@ -22,13 +22,13 @@ require 'sugar'
 
 db = null
 
-Account = askCovered 'domain/account/pg'
+AccountPG = askCovered 'domain/account/pg'
 account = null
 
 
 exports.useDB = ({pg}) ->
 	db = pg
-	account = new Account(db)
+	account = new AccountPG(db)
 
 exports.before = async ->
 	await db.none 'BEGIN'

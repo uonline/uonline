@@ -14,26 +14,15 @@
 
 'use strict'
 
-# TODO: DEPRECATE: `config` and `config/test` should be used instead
+
 module.exports =
 
-	DATABASE_URL: process.env.DATABASE_URL or
-		'postgres://anonymous:nopassword@localhost/uonline'
-	DATABASE_URL_TEST: process.env.DATABASE_URL_TEST or
-		'postgres://anonymous:nopassword@localhost/uonline_test'
-
-	sessionLength: 64
-	sessionExpireTime: 3600 # seconds
-	userOnlineTimeout: 300 # seconds
-
-	defaultInstanceForGuests: '/about/'
-	defaultInstanceForUsers: '/game/'
-
-	expStart: 1000
-	expStep: 1000
-
-	PERMISSIONS_USER: 'user'
-	PERMISSIONS_ADMIN: 'admin'
-
-	EXP_STEP: 1000
-	EXP_MAX_START: 1000
+	storage: [
+		names: [
+			'main'  # for core tests
+			'pgp'  # for domain tests
+		]
+		type: 'pg-promise'
+		params: process.env.DATABASE_URL_TEST or
+			'postgres://anonymous:nopassword@localhost/uonline_test'
+	]

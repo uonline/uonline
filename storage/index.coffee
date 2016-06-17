@@ -20,7 +20,13 @@ ask = require 'require-r'
 exports.spawn = async (storageConfig) ->
 	result = {}
 	for i in storageConfig
+		# Get storage spawner of given type
 		spawner = ask "storage/#{i.type}"
+		# Spawn the storage
 		storage = await spawner.spawn(i.params)
-		result[i.name] = storage
+		# Assign names to it
+		names = i.names
+		if i.name? then names = [i.name]
+		for name in names
+			result[name] = storage
 	return result

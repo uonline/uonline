@@ -41,7 +41,7 @@ iter(TESTS_DIR)
 
 
 exports.before = async ->
-	pgPool = (await ask('storage').spawn(config.storage)).pgTest
+	pgPool = (await ask('storage').spawn(config.storage)).pgp
 	pg = await pgPool.connect()
 	for NS of useDB
 		useDB[NS]({pg})
